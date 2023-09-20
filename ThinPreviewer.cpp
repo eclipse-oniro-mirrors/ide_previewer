@@ -149,8 +149,9 @@ int main(int argc, char* argv[])
     CommandParser& parser = CommandParser::GetInstance();
     vector<string> strs;
     for (int i = 1; i < argc; ++i) {
-        if (parser.IsMainArgLengthInvalid(argv[i]))
+        if (parser.IsMainArgLengthInvalid(argv[i])) {
             return START_PARAM_INVALID_CODE;
+        }
         strs.push_back(argv[i]);
     }
 
@@ -192,6 +193,6 @@ int main(int argc, char* argv[])
         this_thread::sleep_for(chrono::milliseconds(1));
     }
     JsAppImpl::GetInstance().Stop();
-    this_thread::sleep_for(chrono::milliseconds(500));
+    this_thread::sleep_for(chrono::milliseconds(500)); // sleep 500 ms
     return 0;
 }
