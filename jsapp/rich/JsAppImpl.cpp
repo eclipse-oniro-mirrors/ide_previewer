@@ -854,6 +854,6 @@ void JsAppImpl::SetMockJsonInfo()
         simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
 #endif
     } else {
-        ability->SetMockJsonInfo(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
+        ability->SetMockModuleList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
     }
 }
