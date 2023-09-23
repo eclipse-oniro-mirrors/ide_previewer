@@ -10,10 +10,10 @@
 DevEco Studio预览器通过命令行启动预览器组件，传递ArkTS编译产物路径及预览规格等参数数据，预览器组件启动时拉起ArkUI渲染引擎，根据启动参数渲染页面并输出图片给DevEco Studio预览器前端。DevEco Studio预览器通过命名管道发送命令给预览器组件处理页面动态变更信息，预览器组件根据不同命令调用ArkUI处理接口刷新渲染页面输出图片。
 ## 目录
 
-预览器组件源代码在/tools_previewer下，目录结构如下图所示：
+预览器组件源代码在/ide_previewer下，目录结构如下图所示：
 
 ```
-/tools_previewer
+/ide_previewer
 ├── cli                       # 命令处理
 ├── gn                        # 编译依赖及工具链配置
 ├── jsapp                     # 渲染引擎调用
@@ -31,7 +31,7 @@ DevEco Studio预览器通过命令行启动预览器组件，传递ArkTS编译�
 
 ## 相关仓
 
-**tools_previewer**
+**ide_previewer**
 
 [arkui\_ace\_engine\_lite](https://gitee.com/openharmony/arkui_ace_engine_lite)
 
