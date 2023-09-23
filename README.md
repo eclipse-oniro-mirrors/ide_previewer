@@ -11,10 +11,10 @@ The Previewer is a component that empowers the DevEco Studio Previewer to levera
 To start with, the DevEco Studio Previewer launches the Previewer component through the command line and passes to it startup parameters such as the ArkTS build product path and preview specifications. When starting up, the Previewer component launches the ArkUI rendering engine, which then renders pages based on the startup parameters and delivers preview images for the DevEco Studio Previewer. When page information changes, the DevEco Studio Previewer sends page refresh commands through the named pipe to the Previewer component. Based on the received commands, the Previewer component calls the ArkUI processing APIs to refresh and render the pages and deliver the images.
 ## Directory Structure
 
-The source code of the Previewer component is stored in **/tools_previewer**. The following shows the directory structure.
+The source code of the Previewer component is stored in **/ide_previewer**. The following shows the directory structure.
 
 ```
-/tools_previewer
+/ide_previewer
 ├── cli                       # Command processing
 ├── gn                        # Build dependencies and toolchain configuration
 ├── jsapp                     # Rendering engine invoking
@@ -32,7 +32,7 @@ For details, see the README in the [build](https://gitee.com/openharmony/build) 
 
 ## Repositories Involved
 
-**tools_previewer**
+**ide_previewer**
 
 [arkui\_ace\_engine\_lite](https://gitee.com/openharmony/arkui_ace_engine_lite)
 
