@@ -16,7 +16,7 @@
 #ifndef COMMANDLINE_H
 #define COMMANDLINE_H
 
-#include <json.h>
+#include <json/json.h>
 #include <set>
 #include <vector>
 

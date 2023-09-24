@@ -21,7 +21,7 @@
 
 #include "font/ui_font.h"
 #include "global.h"
-#include "json.h"
+#include "json/json.h"
 #include "task_manager.h"
 
 #include "AsyncWorkManager.h"

@@ -20,7 +20,7 @@
 #include "CommandParser.h"
 #include "FileSystem.h"
 #include "PreviewerEngineLog.h"
-#include "json.h"
+#include "json/json.h"
 
 using namespace std;
 SystemCapability& SystemCapability::GetInstance()

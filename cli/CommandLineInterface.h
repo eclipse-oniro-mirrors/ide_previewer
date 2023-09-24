@@ -21,7 +21,7 @@
 
 #include "CommandLine.h"
 #include "LocalSocket.h"
-#include "json.h"
+#include "json/json.h"
 
 class CommandLineInterface {
 public:
