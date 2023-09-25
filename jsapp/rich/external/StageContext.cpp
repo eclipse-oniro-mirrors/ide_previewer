@@ -152,4 +152,25 @@ bool StageContext::ContainsRelativePath(const std::string& path) const
 {
     return (path.find("../") != std::string::npos || path.find("./") != std::string::npos);
 }
+
+std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mockJsonFilePath)
+{
+    std::map<string, string> mapInfo;
+    if (!FileSystem::IsFileExists(mockJsonFilePath)) {
+        ELOG("the mockJsonFilePath:%s is not exist.", mockJsonFilePath.c_str());
+        return mapInfo;
+    }
+    std::string jsonStr = JsonReader::ReadFile(mockJsonFilePath);
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
+        ELOG("get mock-config.json content failed.");
+        return mapInfo;
+    }
+    for (const auto& key : rootJson.getMemberNames()) {
+        if (!rootJson[key].isNull() && rootJson[key].isMember("source") && rootJson[key]["source"].isString()) {
+            mapInfo[key] = rootJson[key]["source"].asString();
+        }
+    }
+    return mapInfo;
+}
 }

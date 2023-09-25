@@ -34,6 +34,7 @@ public:
     void SetLoaderJsonPath(const std::string& assetPath);
     void GetModulePathMapFromLoaderJson();
     void ReleaseHspBuffers();
+    std::map<std::string, std::string> ParseMockJsonFile(const std::string& mockJsonFilePath);
     // for ArkUI and Ability
     std::vector<uint8_t>* GetModuleBuffer(const std::string& inputPath);
 private:

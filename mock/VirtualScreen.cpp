@@ -283,7 +283,7 @@ bool VirtualScreen::StopSendStaticCardImage(const int duration)
         }
         auto endTime = std::chrono::system_clock::now();
         int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
-                             VirtualScreen::staticCardStartTime).count();
+            VirtualScreen::staticCardStartTime).count();
         if (timePassed > duration) {
             return true;
         }
