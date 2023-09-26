@@ -101,6 +101,15 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
   }
 
   classBody += '}\n};';
+  if ((classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
+    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
+    !isInnerMockFunction) {
+    classBody += `
+      if (!global.${className}) {
+        global.${className} = ${className};\n
+      }
+    `;
+  }
   if (!filename.startsWith('system_')) {
     if (classEntity.staticMethods.length > 0) {
       let staticMethodBody = '';
@@ -110,8 +119,7 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
       classBody += staticMethodBody;
     }
   }
-  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword))
-  {
+  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
     classBody += `\nexport default ${className};`;
   }
   return classBody;
