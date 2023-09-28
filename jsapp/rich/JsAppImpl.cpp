@@ -171,7 +171,6 @@ void JsAppImpl::Interrupt()
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 {
-    SetMockJsonInfo();
     SetAssetPath(args, jsAppPath);
     SetProjectModel(args);
     SetPageProfile(args, CommandParser::GetInstance().GetPages());
@@ -843,17 +842,4 @@ void JsAppImpl::InitGlfwEnv()
         return;
     }
     glfwRenderContext->CreateGlfwWindow(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight, false);
-}
-
-void JsAppImpl::SetMockJsonInfo()
-{
-    string filePath = CommandParser::GetInstance().GetAppResourcePath() +
-        FileSystem::GetSeparator() + "mock-config.json";
-    if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
-        simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
-#endif
-    } else {
-        ability->SetMockModuleList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
-    }
 }
