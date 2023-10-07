@@ -171,7 +171,6 @@ void JsAppImpl::Interrupt()
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 {
-    SetMockJsonInfo();
     SetAssetPath(args, jsAppPath);
     SetProjectModel(args);
     SetPageProfile(args, CommandParser::GetInstance().GetPages());
@@ -230,6 +229,7 @@ void JsAppImpl::RunNormalAbility()
         ELOG("JsApp::Run ability create failed.");
         return;
     }
+    SetMockJsonInfo();
     OHOS::Rosen::WMError errCode;
     OHOS::sptr<OHOS::Rosen::WindowOption> sp = nullptr;
     auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
@@ -253,6 +253,7 @@ void JsAppImpl::RunDebugAbility()
         ELOG("JsApp::Run simulator create failed.");
         return;
     }
+    SetMockJsonInfo();
     std::string abilitySrcPath = CommandParser::GetInstance().GetAbilityPath();
     debugAbilityId = simulator->StartAbility(abilitySrcPath, [](int64_t abilityId) {});
     if (debugAbilityId < 0) {
