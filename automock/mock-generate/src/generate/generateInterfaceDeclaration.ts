@@ -143,7 +143,9 @@ function addExtraImport(
     }
     for (let i = 0; i < specialFilesList.length; i++) {
       const specialFilePath = specialFilesList[i];
-      const specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
+      let specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
+      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+      specialFileContent = specialFileContent.replace(removeNoteRegx, '');
       const regex = new RegExp(`\\s${propertyTypeName}\\s({|=|extends)`);
       const results = specialFileContent.match(regex);
       if (!results) {
