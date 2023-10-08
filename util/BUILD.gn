@@ -68,7 +68,6 @@ ohos_source_set("util_rich") {
   libs = []
   sources = [
     "CallbackQueue.cpp",
-    "CommandParser.cpp",
     "CppTimer.cpp",
     "CppTimerManager.cpp",
     "EndianUtil.cpp",
@@ -78,7 +77,6 @@ ohos_source_set("util_rich") {
     "PublicMethods.cpp",
     "SharedDataManager.cpp",
     "TimeTool.cpp",
-    "TraceTool.cpp",
     "WebSocketServer.cpp",
   ]
   cflags = [ "-std=c++17" ]
