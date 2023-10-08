@@ -19,6 +19,8 @@ import path from 'path';
 import fs from 'fs';
 import type { SourceFile } from 'typescript';
 
+const interceptIndex = 2;
+
 /**
  * generate type alias
  * @param typeAliasEntity
@@ -56,7 +58,7 @@ function getImportFileFullPath(typeName: string): string {
   if (!importRelatePathTmp) {
     return '';
   }
-  const importRelatePath = importRelatePathTmp[0].substring(2, importRelatePathTmp[0].length - 2);
+  const importRelatePath = importRelatePathTmp[0].substring(interceptIndex, importRelatePathTmp[0].length - interceptIndex);
   const tmpRealPath = getOhosInterfacesDir() + importRelatePath.replace('../api', '').replace(/\//g, path.sep);
   if (fs.existsSync(tmpRealPath + '.d.ts')) {
     return tmpRealPath + '.d.ts';

@@ -8,3 +8,9 @@ ui_*
 /cmake-build-debug/
 .idea
 .vscode/
+automock/.babelrc
+automock/.eslintrc
+automock/dist/
+automock/package.json
+automock/runtime/
+automock/tsconfig.json
