@@ -337,6 +337,15 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
   return importElements;
 }
 
+/**
+ * generate mock import already exist
+ * @param mockApi
+ * @param importElement
+ * @returns boolean
+ */
+function checkMockAlreadyexists(mockApi: string, importElementData:ImportElementEntity): boolean {
+  return true;
+}
 
 interface MockFunctionElementEntity {
   elementName: string,
