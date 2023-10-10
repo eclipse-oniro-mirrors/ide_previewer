@@ -303,7 +303,10 @@ const paramsTypeStart = {
   '{': '{}',
   'string': '""',
   'number': 0,
-  'boolean': false
+  'boolean': false,
+  'ArrayBuffer': 'new ArrayBuffer(0)',
+  'Uint8Array': 'new Uint8Array()',
+  'unknown': '[PC Preview] unknown type'
 };
 
 const removeCallback = (str: string) => {
@@ -312,18 +315,14 @@ const removeCallback = (str: string) => {
     value: ''
   };
   if (str.startsWith('Callback')) {
-    const reg = /callback<(.*?)>/;
-    const matchValue = str.match(reg);
-    callbackParams.value = matchValue ? matchValue[1] : '';
+    callbackParams.value = str.slice(0, str.length - 1).slice(9).trim();
     callbackParams.type = 'Callback';
   } else if (str.startsWith('AsyncCallback')) {
-    const reg = /AsyncCallback<(.*?)>/;
-    const matchValue = str.match(reg);
-    callbackParams.value = matchValue ? matchValue[1] : '';
+    callbackParams.value = str.slice(0, str.length - 1).slice(14).trim();
     callbackParams.type = 'AsyncCallback';
   }
   if (callbackParams.value.includes(',')) {
-    callbackParams.value = callbackParams.value.split(',')[0];
+    callbackParams.value = callbackParams.value.split(',')[0].trim();
   }
   return callbackParams;
 };
@@ -331,7 +330,7 @@ const removeCallback = (str: string) => {
 const isInImportType = (mockApi: string, value: string) => {
   let hasDotFirstWorld = '';
   if (value.includes('.')) {
-    hasDotFirstWorld = value.split('.')[0];
+    hasDotFirstWorld = value.split('.')[0].trim();
   }
   if (hasDotFirstWorld && mockApi.includes(`import { mock${firstLetterWord(hasDotFirstWorld)} `)) {
     return 'isHasDotImportMock';
@@ -390,6 +389,9 @@ const setCallbackData = (mockApi: string, paramTypeString: string): {data: strin
       });
       if (paramsTypeNoHas) {
         callbackData = callbackParams.value;
+        if (callbackParams.value.includes('<')) {
+          callbackData = `${callbackParams.value.split('<')[0]}`;
+        }
       }
       if (callbackParams.value === 'Date') {
         callbackData = 'new Date()';
@@ -479,4 +481,196 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
   }
 
   return iteratorMethod;
+}
+
+/**
+ * generate more function name return statement;
+ * @param isReturnPromise
+ * @param returnType
+ * @param sourceFile
+ * @param mockApi
+ * @returns
+ */
+export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, returnType: ReturnTypeEntity, sourceFile: SourceFile, mockApi: string): string {
+  // If the return value is an iterator IterableIterator, then IteratorEntriesMock is directly returned
+  if (returnType.returnKindName.startsWith('IterableIterator')) {
+    if (returnType.returnKindName.includes(',')) {
+      return `let index = 0;
+        const IteratorEntriesMock = {
+          *[Symbol.iterator]() {
+            yield ['[PC Preview] unknown paramIterMock_K', '[PC Preview] unknown paramIterMock_V'];
+          },
+          next: () => {
+            if (index < 1) {
+              const returnValue = ['[PC Previwe] unknown paramIterMock_K', '[PC Previwe] unknown paramIterMock_V'];
+              index++;
+              return {
+                value: returnValue,
+                done: false
+              };
+            } else {
+              return {
+                done: true
+              };
+            }
+          }
+        };
+        return IteratorEntriesMock;`;
+    } else {
+      return `let index = 0;
+        const IteratorStringMock = {
+          *[Symbol.iterator]() {
+            yield '[PC Preview] unknown string';
+          },
+          next: () => {
+            if (index < 1) {
+              const returnValue = '[PC Previwe] unknown string';
+              index++;
+              return {
+                value: returnValue,
+                done: false
+              };
+            } else {
+              return {
+                done: true
+              };
+            }
+          }
+        };
+        return IteratorStringMock;`;
+    }
+  }
+  // If it is a promise, intercept the content of x in promise<x>, which may have the following formats:
+  // fun(): y | Promise<y>、 fun(): Promise<x | y | z>、 fun(): Promise<x>、 fun(): Promise<x.y>
+  // If it is not a promise, the returned type may be x, x | y | z, x.y
+  let returnPromiseParams = returnType.returnKindName;
+  if (isReturnPromise) {
+    if (returnType.returnKind === SyntaxKind.UnionType) {
+      // fun(): y | Promise<y>
+      const returnNames = returnPromiseParams.split('|');
+      for (let i = 0; i < returnNames.length; i++) {
+        if (returnNames[i].trim().startsWith('Promise<')) {
+          // Promise<y>
+          returnPromiseParams = returnNames[i].trim();
+          break;
+        }
+      }
+    }
+    // At this point, obtain the values in these formats: Promise<x | y | z>, Promise<y>, Promise<x.y>, Promise<x>
+    const kindName = returnPromiseParams;
+    returnPromiseParams = kindName.slice(0, kindName.length - 1).slice(8).trim();
+  }
+  // At this point, the value type of param in promise<param>may be x, x | y | z, x.y
+  if (returnPromiseParams.includes('|')) {
+    returnPromiseParams = getSeparatorParam(returnPromiseParams);
+  }
+
+  // At this point, the possible types of promiseParam are x, x.y x [] Array<x>
+  // Check if it was imported
+  let returnData = '"[PC Preview] unknown type"';
+  const importType = isInImportType(mockApi, returnPromiseParams);
+  if (importType === 'isHasDotImportMock') {
+    const upperWord = firstLetterWord(returnPromiseParams); // Image.PixelMap
+    const firstWord = hasDotFirstWord(upperWord); // Image
+    returnData = `mock${firstWord}()${upperWord.slice(firstWord.length)}`;
+  } else if (importType === 'isNoHasDotImportMock') {
+    returnData = returnPromiseParams;
+  } else if (importType === 'isImportMock') {
+    returnData = `mock${firstLetterWord(returnPromiseParams)}()`;
+  } else if (importType === 'isImport') {
+    returnData = returnPromiseParams;
+  } else if (importType === 'noImport') {
+    if (returnPromiseParams.endsWith(']')) {
+      returnData = '[]';
+    } else {
+      let paramsTypeNoHas = true;
+      Object.keys(paramsTypeStart).forEach(item => {
+        if (returnPromiseParams.startsWith(item)) {
+          returnData = paramsTypeStart[item];
+          paramsTypeNoHas = false;
+        }
+      });
+      if (paramsTypeNoHas) {
+        returnData = returnPromiseParams;
+        if (returnPromiseParams.includes('<')) {
+          returnData = `${returnPromiseParams.split('<')[0]}`;
+        }
+      }
+      if (returnPromiseParams === 'Date') {
+        returnData = 'new Date()';
+      }
+      if (returnPromiseParams === 'T') {
+        returnData = '"[PC Preview] unknown type"';
+      }
+      if (returnType.returnKindName.startsWith('Readonly')) {
+        returnData = `${returnType.returnKindName.split('<')[1].split('>')[0]}`;
+      }
+      if (checkIsGenericSymbol(returnType.returnKindName)) {
+        returnData = `'[PC Preview] unknown iterableiterator_${returnType.returnKindName}'`;
+      }
+    }
+  } else {
+    returnData = '"[PC Preview] unknown type"';
+  }
+  const data = typeof returnData === 'string' && returnData.startsWith('[PC Preview] unknown') ? `'${returnData}'` : `${returnData}`;
+  if (isReturnPromise) {
+    if (isCallBack) {
+      return `else {
+        return new Promise((resolve, reject) => {
+          resolve(${data});
+        })
+      }`;
+    } else {
+      return `
+        return new Promise((resolve, reject) => {
+          resolve(${data});
+        })
+      `;
+    }
+  } else {
+    return `return ${data}`;
+  }
+}
+
+/**
+ *
+ * @param returnPromiseParams
+ * @returns
+ */
+function getSeparatorParam(returnPromiseParams: string): string {
+  let hasObj = '';
+  let hasArr = '';
+  let hasUint8Array = '';
+  let hasArrayBuffer = '';
+  let otherValue = '';
+  const paramsArr = returnPromiseParams.split('|');
+  for (let i = 0; i < paramsArr.length; i++) {
+    const param = paramsArr[i].trim();
+    if (param.startsWith('{') || param.startsWith('Object')) {
+      hasObj = '{}';
+    } else if (param.endsWith(']') || param.startsWith('[') || param.startsWith('Array<')) {
+      hasArr = '[]';
+    } else if (param.startsWith('Uint8Array')) {
+      hasUint8Array = 'Uint8Array';
+    } else if (param.startsWith('ArrayBuffer')) {
+      hasArrayBuffer = 'ArrayBuffer';
+    } else {
+      if (param !== null) {
+        otherValue = param;
+      }
+    }
+  }
+  if (hasObj) {
+    return hasObj;
+  }
+  if (hasArr) {
+    return hasArr;
+  }
+  if (hasUint8Array) {
+    return hasUint8Array;
+  }
+  if (hasArrayBuffer) {
+    return hasArrayBuffer;
+  }
+  return otherValue;
 }

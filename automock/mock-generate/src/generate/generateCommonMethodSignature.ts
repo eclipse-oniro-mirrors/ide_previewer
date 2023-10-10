@@ -16,7 +16,7 @@
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
-import { getCallbackStatement, getReturnStatement, getWarnConsole } from './generateCommonUtil';
+import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData } from './generateCommonUtil';
 
 /**
  * generate interface signature method
@@ -64,17 +64,50 @@ export function generateCommonMethodSignature(rootName: string, methodSignatureA
       methodSignatureBody += getCallbackStatement(mockApi, argParamsSet);
     }
     let isReturnPromise = false;
+    let promiseReturnValue = '';
+    let otherReturnValue = '';
     returnSet.forEach(value => {
-      if (value.startsWith('Promise')) {
+      if (value.includes('Promise<')) {
         isReturnPromise = true;
+        promiseReturnValue = value;
+      } else {
+        if (!otherReturnValue) {
+          otherReturnValue = value;
+        }
       }
     });
-    if (isReturnPromise && isCallBack) {
-      methodSignatureBody += `else {
-        return new Promise((resolve, reject) => {
-          resolve('[PC Preview] unknow boolean');
-        })
-      }`;
+    if (isReturnPromise) {
+      if (promiseReturnValue) {
+        let returnType = null;
+        methodSignatureArray.forEach(value => {
+          if (value.returnType.returnKindName === promiseReturnValue) {
+            returnType = value.returnType;
+          }
+        });
+        methodSignatureBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
+      } else {
+        if (isCallBack) {
+          methodSignatureBody += `else {
+              return new Promise((resolve, reject) => {
+                resolve('[PC Preview] unknow boolean');
+              })
+            }`;
+        } else {
+          methodSignatureBody += `
+              return new Promise((resolve, reject) => {
+                resolve('[PC Preview] unknow boolean');
+              })
+            `;
+        }
+      }
+    } else if (otherReturnValue) {
+      let returnType = null;
+      methodSignatureArray.forEach(value => {
+        if (value.returnType.returnKindName === otherReturnValue) {
+          returnType = value.returnType;
+        }
+      });
+      methodSignatureBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
     }
   }
   methodSignatureBody += '},\n';
