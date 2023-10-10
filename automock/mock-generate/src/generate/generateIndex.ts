@@ -66,12 +66,10 @@ export function generateIndex(): string {
   indexBody += `export function mockRequireNapiFun() {
     global.requireNapi = function(...args) {
       const globalNapi = global.requireNapiPreview(...args);
-      if (globalNapi !== undefined) {\n\t`;
-  indexBody += 'console.log(`${JSON.stringify(args)} called the dynamic library Api (${JSON.stringify(globalNapi)})`);\n';
-  indexBody += `return globalNapi;
-      }\n`;
-  indexBody += 'console.log(`${JSON.stringify(args[0])} called the mockApi`);\n';
-  indexBody += `switch (args[0]) {`;
+      if (globalNapi !== undefined) {
+        return globalNapi;
+      }
+      switch (args[0]) {`;
   indexBody += caseBody;
   const endBody = `}
       if (global.hosMockFunc !== undefined) {

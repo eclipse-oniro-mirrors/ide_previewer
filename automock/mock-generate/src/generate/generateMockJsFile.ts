@@ -185,8 +185,10 @@ export function generateImportDeclaration(
   let importPath = importPathSplit.slice(0, -1).join('/') + '/';
   importPath += getImportPathName(importPathSplit);
 
-  const importElements = generateImportElements(importEntity, heritageClausesArray);
-  
+  let importElements = generateImportElements(importEntity, heritageClausesArray);
+  if (importElements === '{ mockWantAgent }' && importPath.includes('ohos_app_ability_wantAgent')) {
+    importElements = '{ mockWantAgent as mockAbilityWantAgent }'
+  }
   const testPath = importPath.replace(/"/g, '').replace(/'/g, '').split('/');
   if (!getAllFileNameList().has(testPath[testPath.length - 1]) && testPath[testPath.length - 1] !== 'ohos_application_want') {
     return '';
@@ -337,15 +339,6 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
   return importElements;
 }
 
-/**
- * generate mock import already exist
- * @param mockApi
- * @param importElement
- * @returns boolean
- */
-function checkMockAlreadyexists(mockApi: string, importElementData:ImportElementEntity): boolean {
-  return true;
-}
 
 interface MockFunctionElementEntity {
   elementName: string,
