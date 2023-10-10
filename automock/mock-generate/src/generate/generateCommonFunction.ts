@@ -16,7 +16,7 @@
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { FunctionEntity } from '../declaration-node/functionDeclaration';
-import { getCallbackStatement, getReturnStatement, getWarnConsole } from './generateCommonUtil';
+import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData } from './generateCommonUtil';
 
 /**
  * generate function
@@ -67,18 +67,50 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
       functionBody += getCallbackStatement(mockApi, argParamsSet);
     }
     let isReturnPromise = false;
+    let promiseReturnValue = '';
+    let otherReturnValue = '';
     returnSet.forEach(value => {
-      if (value.startsWith('Promise')) {
+      if (value.includes('Promise<')) {
         isReturnPromise = true;
+        promiseReturnValue = value;
+      } else {
+        if (!otherReturnValue) {
+          otherReturnValue = value;
+        }
       }
     });
-
-    if (isReturnPromise && isCallBack) {
-      functionBody += `else {
-        return new Promise((resolve, reject) => {
-          resolve('[PC Preview] unknow boolean');
-        })
-      }`;
+    if (isReturnPromise) {
+      if (promiseReturnValue) {
+        let returnType = null;
+        functionArray.forEach(value => {
+          if (value.returnType.returnKindName === promiseReturnValue) {
+            returnType = value.returnType;
+          }
+        });
+        functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
+      } else {
+        if (isCallBack) {
+          functionBody += `else {
+              return new Promise((resolve, reject) => {
+                resolve('[PC Preview] unknow boolean');
+              })
+            }`;
+        } else {
+          functionBody += `
+              return new Promise((resolve, reject) => {
+                resolve('[PC Preview] unknow boolean');
+              })
+            `;
+        }
+      }
+    } else if (otherReturnValue) {
+      let returnType = null;
+      functionArray.forEach(value => {
+        if (value.returnType.returnKindName === otherReturnValue) {
+          returnType = value.returnType;
+        }
+      });
+      functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
     }
   }
   functionBody += '},';
