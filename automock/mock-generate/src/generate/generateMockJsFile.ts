@@ -187,7 +187,7 @@ export function generateImportDeclaration(
 
   let importElements = generateImportElements(importEntity, heritageClausesArray);
   if (importElements === '{ mockWantAgent }' && importPath.includes('ohos_app_ability_wantAgent')) {
-    importElements = '{ mockWantAgent as mockAbilityWantAgent }'
+    importElements = '{ mockWantAgent as mockAbilityWantAgent }';
   }
   const testPath = importPath.replace(/"/g, '').replace(/'/g, '').split('/');
   if (!getAllFileNameList().has(testPath[testPath.length - 1]) && testPath[testPath.length - 1] !== 'ohos_application_want') {
