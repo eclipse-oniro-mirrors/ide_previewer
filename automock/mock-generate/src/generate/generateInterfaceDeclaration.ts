@@ -79,9 +79,9 @@ export function generateInterfaceDeclaration(rootName: string, interfaceEntity: 
   interfaceBody += '}\n';
   if (interfaceEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) {
     interfaceBody += `
-    if (!global.${interfaceName}) {
-      global.${interfaceName} = ${interfaceName};\n
-    }
+      if (!global.${interfaceName}) {
+        global.${interfaceName} = ${interfaceName};\n
+      }
     `;
   }
   return interfaceBody;
