@@ -18,7 +18,10 @@ config("cli_config") {
   cflags = [ "-std=c++17" ]
 }
 ohos_source_set("cli_lite") {
-  configs = [ ":cli_config" ]
+  configs = [
+    ":cli_config",
+    "//third_party/jsoncpp:jsoncpp_public_config",
+  ]
   sources = [
     "CommandLine.cpp",
     "CommandLineFactory.cpp",
@@ -38,7 +41,6 @@ ohos_source_set("cli_lite") {
     "../util/",
     "../jsapp/",
     "../jsapp/lite/",
-    "//third_party/jsoncpp/include/json/",
     "//foundation/arkui/ui_lite/frameworks/",
     "//foundation/arkui/ui_lite/frameworks/dock/",
     "//foundation/graphic/graphic_utils_lite/interfaces/innerkits/",
@@ -59,7 +61,10 @@ ohos_source_set("cli_lite") {
 }
 
 ohos_source_set("cli_rich") {
-  configs = [ ":cli_config" ]
+  configs = [
+    ":cli_config",
+    "//third_party/jsoncpp:jsoncpp_public_config",
+  ]
   sources = [
     "CommandLine.cpp",
     "CommandLineFactory.cpp",
@@ -78,7 +83,6 @@ ohos_source_set("cli_rich") {
     "../util/",
     "../jsapp/",
     "../jsapp/rich/",
-    "//third_party/jsoncpp/include/json/",
   ]
   include_dirs += [
     "../mock/",

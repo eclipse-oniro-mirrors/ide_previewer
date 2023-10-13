@@ -52,16 +52,19 @@ ohos_source_set("mock_rich") {
     "rich/VirtualScreenImpl.cpp",
   ]
 
-  include_dirs += [
-    "./rich/",
-    "//third_party/jsoncpp/include/json/",
-  ]
+  include_dirs += [ "./rich/" ]
+
+  configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
+
   part_name = "previewer"
   subsystem_name = "ide"
 }
 
 ohos_source_set("mock_lite") {
-  configs = [ ":myconfig" ]
+  configs = [
+    ":myconfig",
+    "//third_party/jsoncpp:jsoncpp_public_config",
+  ]
   include_dirs = [
     ".",
     "../util/",
@@ -107,7 +110,6 @@ ohos_source_set("mock_lite") {
   include_dirs += [
     "./lite/",
     "//foundation/arkui/ui_lite/interfaces/innerkits/dock/",
-    "//third_party/jsoncpp/include/json/",
     "//foundation/arkui/ui_lite/interfaces/innerkits/",
     "//foundation/arkui/ui_lite/frameworks/",
     "//foundation/arkui/ui_lite/frameworks/dock/",

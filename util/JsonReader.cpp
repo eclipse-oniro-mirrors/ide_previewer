@@ -18,7 +18,7 @@
 #include <fstream>
 
 #include "PreviewerEngineLog.h"
-#include "json.h"
+#include "json/json.h"
 
 using namespace std;
 string JsonReader::ReadFile(const string path)

@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "json.h"
+#include "json/json.h"
 
 class JsApp {
 public:

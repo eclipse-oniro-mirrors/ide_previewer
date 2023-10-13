@@ -43,7 +43,7 @@
 #include "TimerTaskHandler.h"
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
-#include "json.h"
+#include "json/json.h"
 
 using namespace OHOS;
 using namespace ACELite;

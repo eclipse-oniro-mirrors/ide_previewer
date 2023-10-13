@@ -15,7 +15,7 @@
 
 #include "StageContext.h"
 #include <fstream>
-#include "json.h"
+#include "json/json.h"
 #include "JsonReader.h"
 #include "FileSystem.h"
 #include "TraceTool.h"

@@ -56,9 +56,11 @@ ohos_source_set("util_lite") {
     ".",
     "../cli/",
     "../mock/lite/",
-    "//third_party/jsoncpp/include/json/",
     "//third_party/bounds_checking_function/include/",
   ]
+
+  configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
+
   deps = [ "//third_party/libwebsockets:websockets_static" ]
   part_name = "previewer"
   subsystem_name = "ide"
@@ -96,9 +98,11 @@ ohos_source_set("util_rich") {
     ".",
     "../cli/",
     "../mock/rich/",
-    "//third_party/jsoncpp/include/json/",
     "//third_party/bounds_checking_function/include/",
   ]
+
+  configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
+
   deps = [
     ":ide_util",
     "//third_party/libwebsockets:websockets_static",
@@ -163,7 +167,6 @@ ohos_shared_library("ide_util") {
     include_dirs = [
       ".",
       "//third_party/bounds_checking_function/include/",
-      "//third_party/jsoncpp/include/json/",
     ]
 
     deps = [

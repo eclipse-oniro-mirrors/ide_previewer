@@ -26,7 +26,6 @@ template("previewer_executable") {
       "./cli/",
       "./mock/",
       "./jsapp/",
-      "//third_party/jsoncpp/include/json/",
     ]
 
     include_dirs += invoker.includes
