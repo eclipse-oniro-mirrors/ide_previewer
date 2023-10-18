@@ -61,7 +61,10 @@ ohos_source_set("util_lite") {
 
   configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
 
-  deps = [ "//third_party/libwebsockets:websockets_static" ]
+  deps = [
+    "//third_party/jsoncpp:jsoncpp_static",
+    "//third_party/libwebsockets:websockets_static",
+  ]
   part_name = "previewer"
   subsystem_name = "ide"
 }
