@@ -39,6 +39,7 @@ void MouseInputImpl::SetMouseStatus(int status)
     if (status == moveType) {
         return;
     }
-    touchAction = status;
+    int xorFlag = 1;
+    touchAction = status ^ xorFlag; // lite and rich touch type is opposite
 }
 
