@@ -30,8 +30,6 @@ template("previewer_executable") {
     ]
 
     include_dirs += invoker.includes
-    external_deps = []
-    external_deps += invoker.external_deps
     deps = [
       "//third_party/bounds_checking_function:libsec_static",
       "//third_party/jsoncpp:jsoncpp_static",
@@ -89,7 +87,6 @@ previewer_executable("rich_previewer") {
     "./jsapp/rich/",
   ]
   libs = []
-  external_deps = [ "ace_engine:libace" ]
   deps = [
     "cli:cli_rich",
     "jsapp:jsapp_rich",
@@ -112,7 +109,6 @@ previewer_executable("lite_previewer") {
     "//foundation/graphic/graphic_utils_lite/interfaces/innerkits/",
     "//foundation/arkui/ui_lite/frameworks/dock/",
   ]
-  external_deps = []
   deps = [
     "cli:cli_lite",
     "jsapp:jsapp_lite",

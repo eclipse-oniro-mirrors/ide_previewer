@@ -14,10 +14,11 @@
  */
 
 #include "TraceTool.h"
-
+#include "json.h"
 #include "CommandParser.h"
 #include "PreviewerEngineLog.h"
 #include "TimeTool.h"
+#include "LocalSocket.h"
 
 using namespace std;
 

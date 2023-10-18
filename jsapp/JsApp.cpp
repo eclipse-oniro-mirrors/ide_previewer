@@ -182,12 +182,3 @@ bool JsApp::MemoryRefresh(const std::string) const
 }
 
 void JsApp::LoadDocument(const std::string, const std::string, const Json::Value) {};
-
-void JsApp::GetModuleJsonInfo(const std::string& path)
-{
-    if (!FileSystem::IsFileExists(path)) {
-        ELOG("The module.json file is not exist.");
-        return;
-    }
-    OHOS::Ide::StageContext::GetInstance().ParseJsonFile(path);
-}

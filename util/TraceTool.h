@@ -18,8 +18,11 @@
 
 #include <memory>
 
-#include "LocalSocket.h"
-#include "json.h"
+namespace Json {
+    class Value;
+}
+
+class LocalSocket;
 
 class TraceTool {
 public:

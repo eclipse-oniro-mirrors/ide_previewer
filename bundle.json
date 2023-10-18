@@ -15,6 +15,7 @@
       "syscap": [],
       "features": [],
       "adapted_system_type": [
+          "mini",
           "standard"
       ],
       "rom": "25600KB",
@@ -66,7 +67,8 @@
             "header": {
               "header_files": [
                 "EventRunner.h",
-                "EventHandler.h"
+                "EventHandler.h",
+                "StageContext.h"
               ],
               "header_base": "//ide/tools/previewer/jsapp/rich/external"
             }

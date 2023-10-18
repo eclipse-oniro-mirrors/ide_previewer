@@ -32,7 +32,6 @@ ohos_source_set("jsapp_rich") {
   configs = [ ":jsapp_config" ]
   sources = [
     "JsApp.cpp",
-    "StageContext.cpp",
     "rich/JsAppImpl.cpp",
   ]
   include_dirs = [
@@ -45,13 +44,14 @@ ohos_source_set("jsapp_rich") {
     "./external/",
   ]
   include_dirs += os_include_dirs
-  external_deps = [
-    "graphic_2d:librender_service_client",
-    "window_manager:previewer_window",
-  ]
   deps = [
     "rich/external:ide_extension",
     "//third_party/libwebsockets:websockets_static",
+  ]
+  external_deps = [
+    "ace_engine:libace",
+    "graphic_2d:librender_service_client",
+    "window_manager:previewer_window",
   ]
   if (platform != "linux_x64") {
     external_deps += [ "ability_runtime:ability_simulator" ]
@@ -68,7 +68,6 @@ ohos_source_set("jsapp_lite") {
   configs = [ ":jsapp_config" ]
   sources = [
     "JsApp.cpp",
-    "StageContext.cpp",
     "lite/JsAppImpl.cpp",
     "lite/TimerTaskHandler.cpp",
   ]
