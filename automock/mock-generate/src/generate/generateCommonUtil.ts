@@ -45,7 +45,11 @@ export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: Sou
       })`;
     } else if (returnType.returnKindName === 'T') {
       return 'return \'[PC Preview] unknown type\'';
-    } else if (returnType.returnKindName === 'String') {
+    } else if (returnType.returnKindName === 'object' || returnType.returnKindName === 'Object') {
+      return 'return {}';
+    } else if (returnType.returnKindName === 'Function') {
+      return 'return \'[PC Preview] unknown type\'';
+    } else if (returnType.returnKindName === 'String' || returnType.returnKindName === 'string') {
       return `return ${returnType.returnKindName}(...args)`;
     } else if (returnType.returnKindName === 'ArrayBuffer') {
       return `return new ${returnType.returnKindName}(0)`;
@@ -147,7 +151,23 @@ export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: Sou
       return `return ${getBaseReturnValue(returnName.trimStart().trimEnd())}`;
     }
   } else {
-    return 'return \'[PC Preview] unknown type\'';
+    let returnName = returnType.returnKindName.trim();
+    let temp = true;
+    if (returnName.endsWith(']')) {
+      returnName = '[]';
+      temp = false;
+    } else {
+      Object.keys(paramsTypeStart).forEach(key => {
+        if (returnType.returnKindName.startsWith(key)) {
+          returnName = paramsTypeStart[key];
+          temp = false;
+        }
+      });
+    }
+    if (temp) {
+      return 'return \'[PC Preview] unknown type\'';
+    }
+    return `return ${returnName};`;
   }
   return 'return \'[PC Preview] unknown type\'';
 }
@@ -300,10 +320,14 @@ const paramsTypeStart = {
   'void': '[PC Preview] unknown type',
   'Array': '[]',
   'Object': '{}',
+  'object': '{}',
   '{': '{}',
   'string': '""',
+  'String': '""',
   'number': 0,
+  'Number': 0,
   'boolean': false,
+  'Boolean': false,
   'ArrayBuffer': 'new ArrayBuffer(0)',
   'Uint8Array': 'new Uint8Array()',
   'unknown': '[PC Preview] unknown type'
