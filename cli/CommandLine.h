@@ -82,7 +82,7 @@ protected:
 
     bool IsBoolType(std::string arg) const;
     bool IsIntType(std::string arg) const;
-    bool IsOneDigitFloatType(std::string arg) const;
+    bool IsOneDigitFloatType(std::string arg, bool allowNegativeNumber) const;
 
 private:
     void Run();
