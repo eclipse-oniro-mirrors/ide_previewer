@@ -85,7 +85,7 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
 
   if (sourceFileEntity.typeAliasDeclarations.length > 0) {
     sourceFileEntity.typeAliasDeclarations.forEach(value => {
-      mockApi += generateTypeAliasDeclaration(value, false, sourceFile, extraImport) + '\n';
+      mockApi += generateTypeAliasDeclaration(value, false, sourceFile, extraImport, mockApi) + '\n';
       mockFunctionElements.push({ elementName: value.typeAliasName, type: 'typeAlias' });
     });
   }

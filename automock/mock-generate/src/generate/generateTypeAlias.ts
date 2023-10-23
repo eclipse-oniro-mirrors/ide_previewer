@@ -30,7 +30,7 @@ const interceptIndex = 2;
  * @returns
  */
 export function generateTypeAliasDeclaration(
-  typeAliasEntity: TypeAliasEntity, isInner: boolean, sourceFile: SourceFile, extraImport: string[]
+  typeAliasEntity: TypeAliasEntity, isInner: boolean, sourceFile: SourceFile, extraImport: string[], mockApi: string
 ): string {
   let typeAliasName = '';
   if (!isInner) {
@@ -44,7 +44,7 @@ export function generateTypeAliasDeclaration(
   const typeAliasTypeElements = typeAliasEntity.typeAliasTypeElements;
 
   if (typeAliasTypeElements) {
-    typeAliasValue += parseImportExpression(typeAliasTypeElements, sourceFile, extraImport);
+    typeAliasValue += parseImportExpression(typeAliasTypeElements, sourceFile, extraImport, mockApi);
   }
 
   if (!typeAliasValue) {
@@ -99,12 +99,22 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
 }
 
 function parseImportExpression(
-  typeAliasTypeElements: TypeAliasTypeEntity[], sourceFile: SourceFile, extraImport: string[]
+  typeAliasTypeElements: TypeAliasTypeEntity[], sourceFile: SourceFile, extraImport: string[], mockApi: string
 ): string {
   for (let i = 0; i < typeAliasTypeElements.length; i++) {
     const typeAliasTypeElement = typeAliasTypeElements[i];
     const typeName = typeAliasTypeElement.typeName;
+    if (!typeName) {
+      continue;
+    }
     if (!typeName?.trim().startsWith('import(')) {
+      let name = typeName.trim();
+      if (name.includes('.')) {
+        name = name.trim().split('.')[0];
+      }
+      if (mockApi.includes(`import { ${name}`) || mockApi.includes(` as ${name.trim()}`) || mockApi.includes(`import ${name}`)) {
+        return typeName.trim();
+      }
       continue;
     }
     const splitTypeName = typeName.split(')');
