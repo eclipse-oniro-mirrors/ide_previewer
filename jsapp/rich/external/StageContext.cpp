@@ -14,7 +14,11 @@
  */
 
 #include "StageContext.h"
+#include <fstream>
+#include "json.h"
 #include "JsonReader.h"
+#include "FileSystem.h"
+#include "TraceTool.h"
 #include "PreviewerEngineLog.h"
 using namespace std;
 
@@ -180,5 +184,147 @@ const AbilityInfo& StageContext::GetAbilityInfo(const std::string srcEntryVal) c
         }
     }
     return hapModuleInfo.abilities[0];
+}
+
+void StageContext::SetLoaderJsonPath(const std::string& assetPath)
+{
+    // Concatenate loader.json path
+    std::string flag = assetPath.find(".preview") == std::string::npos ? "loader_out" : "assets";
+    size_t pos = assetPath.rfind(flag);
+    if (pos == std::string::npos) {
+        ELOG("assetPath: %s format error.", assetPath.c_str());
+        return;
+    }
+    std::string assetDir = assetPath.substr(0, pos);
+    SetMiddlePath(assetPath);
+    loaderJsonPath = assetDir + "loader/default/loader.json";
+    ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
+}
+
+void StageContext::GetModulePathMapFromLoaderJson()
+{
+    if (!FileSystem::IsFileExists(loaderJsonPath)) {
+        ELOG("the loaderJsonPath is not exist.");
+        return;
+    }
+    string jsonStr = JsonReader::ReadFile(loaderJsonPath);
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
+        ELOG("Get loader.json content failed.");
+        return;
+    }
+    if (!rootJson.isMember("modulePathMap")) {
+        ELOG("Don't find modulePathMap node in loader.json.");
+        return;
+    }
+    std::unique_ptr<Json::Value> jsonObj = JsonReader::GetObject(rootJson, "modulePathMap");
+
+    for (const auto& key : jsonObj->getMemberNames()) {
+        string val = JsonReader::GetString(*jsonObj, key);
+        modulePathMap[key] = val;
+    }
+}
+
+void StageContext::ReleaseHspBuffers()
+{
+    for (std::vector<uint8_t>* ptr : hspBufferPtrsVec) {
+        delete ptr;
+    }
+    hspBufferPtrsVec.clear();
+    ILOG("ReleaseHspBuffers finished.");
+}
+
+std::map<std::string, std::string> StageContext::GetModulePathMap() const
+{
+    return modulePathMap;
+}
+
+std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath)
+{
+    ILOG("inputPath is:%s.", inputPath.c_str());
+    TraceTool::GetInstance().HandleTrace("HSP is loaded");
+    std::string spliter = "/";
+    size_t pos = inputPath.rfind(spliter);
+    if (pos == std::string::npos) {
+        ELOG("inputPath: %s format error.", inputPath.c_str());
+        return nullptr;
+    }
+    std::string moduleName = inputPath.substr(pos + spliter.size());
+    ILOG("moduleName is:%s.", moduleName.c_str());
+    if (modulePathMap.empty()) {
+        ELOG("modulePathMap is empty.");
+    }
+    std::string modulePath = StageContext::GetInstance().modulePathMap[moduleName];
+    if (modulePath.empty()) {
+        ELOG("modulePath is empty.");
+        return nullptr;
+    }
+    ILOG("get modulePath: %s successed.", modulePath.c_str());
+    if (!FileSystem::IsDirectoryExists(modulePath)) {
+        ELOG("don't find moduleName: %s in modulePathMap from loader.json.", moduleName.c_str());
+        return nullptr;
+    }
+    if (ContainsRelativePath(modulePath)) {
+        ELOG("modulePath format error: %s.", modulePath.c_str());
+        return nullptr;
+    }
+    std::string abcPath = modulePath + middlePath + "/modules.abc";
+    if (!FileSystem::IsFileExists(abcPath)) {
+        ELOG("the abcPath:%s is not exist.", abcPath.c_str());
+        return nullptr;
+    }
+    ILOG("get modules.abc path: %s successed.", abcPath.c_str());
+    std::optional<std::vector<uint8_t>> opt = ReadFileContents(abcPath);
+    if (!opt.has_value()) {
+        ELOG("read modules.abc buffer failed.");
+        return nullptr;
+    }
+    std::vector<uint8_t> *buf = new std::vector<uint8_t>(opt.value());
+    hspBufferPtrsVec.push_back(buf);
+    return buf;
+}
+
+bool StageContext::ContainsRelativePath(const std::string& path) const
+{
+    return (path.find("../") != std::string::npos || path.find("./") != std::string::npos);
+}
+
+const std::optional<std::vector<uint8_t>> StageContext::ReadFileContents(const std::string& filePath) const
+{
+    if (!FileSystem::IsFileExists(filePath)) {
+        ELOG("file %s is not exist.", filePath.c_str());
+        return std::nullopt;
+    }
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+    if (!file) {
+        ELOG("open file %s failed.", filePath.c_str());
+        return std::nullopt;
+    }
+    std::streamsize fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<uint8_t> data(fileSize);
+    if (file.read(reinterpret_cast<char*>(data.data()), fileSize)) {
+        return data;
+    } else {
+        ELOG("read file %s failed.", filePath.c_str());
+        return std::nullopt;
+    }
+}
+
+void StageContext::SetMiddlePath(const std::string& assetPath)
+{
+    std::string::size_type pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str());
+    std::string::size_type count = 0;
+    int upwardLevel = 5;
+    while (count < upwardLevel) {
+        if (pos == std::string::npos) {
+            ELOG("set middlePath:%s failed.");
+            return;
+        }
+        pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str(), pos - 1);
+        ++count;
+    }
+    middlePath = assetPath.substr(pos);
+    ILOG("set middlePath:%s successed.", middlePath.c_str());
 }
 }

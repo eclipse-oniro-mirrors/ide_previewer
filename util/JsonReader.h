@@ -17,8 +17,11 @@
 #define JSONREADER_H
 
 #include <string>
+#include <memory>
 
-#include "json.h"
+namespace Json {
+    class Value;
+}
 
 class JsonReader {
 public:

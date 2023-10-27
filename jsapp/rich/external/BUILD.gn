@@ -20,11 +20,17 @@ ohos_shared_library("ide_extension") {
       "EventHandler.cpp",
       "EventQueue.cpp",
       "EventRunner.cpp",
+      "StageContext.cpp",
     ]
     cflags = [ "-std=c++17" ]
     cflags_cc = cflags
 
-    include_dirs = [ "." ]
+    include_dirs = [
+      ".",
+      "../../../util/",
+      "//third_party/jsoncpp/include/json/",
+    ]
+    deps = [ "../../../util:ide_util" ]
   }
   subsystem_name = "ide"
   part_name = "previewer"

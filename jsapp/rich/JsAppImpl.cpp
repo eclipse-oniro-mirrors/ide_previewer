@@ -23,6 +23,7 @@
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
 #include "external/EventHandler.h"
+#include "external/StageContext.h"
 #include "viewport_config.h"
 #include "glfw_render_context.h"
 #include "window_model.h"
@@ -85,6 +86,7 @@ void JsAppImpl::Restart()
     } else {
         ability = nullptr;
     }
+    OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
 }
 
 std::string JsAppImpl::GetJSONTree()
@@ -164,6 +166,7 @@ void JsAppImpl::Interrupt()
     } else {
         ability = nullptr;
     }
+    OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
 }
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
@@ -205,6 +208,8 @@ void JsAppImpl::RunJsApp()
                                  VirtualScreenImpl::GetInstance().GetCompressionWidth(),
                                  VirtualScreenImpl::GetInstance().GetCompressionHeight());
     SetJsAppArgs(aceRunArgs);
+    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath);
+    OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     InitGlfwEnv();
     if (isDebug && debugServerPort >= 0) {
         RunDebugAbility(); // for debug preview
@@ -323,7 +328,11 @@ void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
 {
     const string path = CommandParser::GetInstance().GetAppResourcePath() +
                         FileSystem::GetSeparator() + "module.json";
-    GetModuleJsonInfo(path);
+    if (!FileSystem::IsFileExists(path)) {
+        ELOG("The module.json file is not exist.");
+        return;
+    }
+    OHOS::Ide::StageContext::GetInstance().ParseJsonFile(path);
     SetSimulatorCommonParams(options);
     SetSimulatorConfigParams(options);
     ILOG("setted bundleName:%s moduleName:%s", options.bundleName.c_str(), options.moduleName.c_str());

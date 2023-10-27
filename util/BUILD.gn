@@ -68,19 +68,15 @@ ohos_source_set("util_rich") {
   libs = []
   sources = [
     "CallbackQueue.cpp",
-    "CommandParser.cpp",
     "CppTimer.cpp",
     "CppTimerManager.cpp",
     "EndianUtil.cpp",
-    "FileSystem.cpp",
     "Interrupter.cpp",
-    "JsonReader.cpp",
     "ModelManager.cpp",
     "PreviewerEngineLog.cpp",
     "PublicMethods.cpp",
     "SharedDataManager.cpp",
     "TimeTool.cpp",
-    "TraceTool.cpp",
     "WebSocketServer.cpp",
   ]
   cflags = [ "-std=c++17" ]
@@ -115,8 +111,12 @@ ohos_shared_library("ide_util") {
   if (is_linux || is_mac || is_mingw) {
     libs = []
     sources = [
+      "CommandParser.cpp",
+      "FileSystem.cpp",
+      "JsonReader.cpp",
       "PreviewerEngineLog.cpp",
       "TimeTool.cpp",
+      "TraceTool.cpp",
     ]
     cflags = [ "-std=c++17" ]
     cflags_cc = cflags
@@ -125,6 +125,7 @@ ohos_shared_library("ide_util") {
         "windows/ClipboardHelper.cpp",
         "windows/KeyboardHelper.cpp",
         "windows/LocalDate.cpp",
+        "windows/LocalSocket.cpp",
         "windows/StringHelper.cpp",
       ]
     } else if (platform == "mac_arm64" || platform == "mac_x64") {
@@ -135,6 +136,7 @@ ohos_shared_library("ide_util") {
         "unix/KeyboardHelper.cpp",
         "unix/KeyboardObjc.mm",
         "unix/LocalDate.cpp",
+        "unix/LocalSocket.cpp",
       ]
       if (defined(enable_gn_2021)) {
         frameworks = [
@@ -153,6 +155,7 @@ ohos_shared_library("ide_util") {
         "linux/ClipboardX11.cpp",
         "linux/KeyboardHelper.cpp",
         "unix/LocalDate.cpp",
+        "unix/LocalSocket.cpp",
       ]
       libs += [ "X11" ]
     }
@@ -160,9 +163,13 @@ ohos_shared_library("ide_util") {
     include_dirs = [
       ".",
       "//third_party/bounds_checking_function/include/",
+      "//third_party/jsoncpp/include/json/",
     ]
 
-    deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/jsoncpp:jsoncpp_static",
+    ]
   }
   part_name = "previewer"
   subsystem_name = "ide"

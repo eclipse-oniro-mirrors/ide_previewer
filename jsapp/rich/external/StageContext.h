@@ -18,7 +18,13 @@
 
 #include <string>
 #include <vector>
-#include "JsonReader.h"
+#include <optional>
+#include <map>
+#include <memory>
+
+namespace Json {
+    class Value;
+}
 
 namespace OHOS::Ide {
 struct SkillInfo {
@@ -95,11 +101,25 @@ public:
     const AppInfo& GetAppInfo() const;
     const HapModuleInfo& GetHapModuleInfo() const;
     const AbilityInfo& GetAbilityInfo(const std::string srcEntryVal) const;
+    // for Previewer
+    void SetLoaderJsonPath(const std::string& assetPath);
+    void GetModulePathMapFromLoaderJson();
+    void ReleaseHspBuffers();
+    // for ArkUI and Ability
+    std::vector<uint8_t>* GetModuleBuffer(const std::string& inputPath);
+    const std::optional<std::vector<uint8_t>> ReadFileContents(const std::string& filePath) const;
 private:
     StageContext() = default;
     ~StageContext() = default;
     AppInfo appInfo;
     HapModuleInfo hapModuleInfo;
+    bool ContainsRelativePath(const std::string& path) const;
+    std::map<std::string, std::string> GetModulePathMap() const;
+    std::string loaderJsonPath;
+    std::map<std::string, std::string> modulePathMap;
+    std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
+    void SetMiddlePath(const std::string& assetPath);
+    std::string middlePath;
 };
 }
 #endif // STAGE_CONTEXT_H
