@@ -112,7 +112,7 @@ function parseImportExpression(
       if (name.includes('.')) {
         name = name.trim().split('.')[0];
       }
-      if (mockApi.includes(`import { ${name}`) || mockApi.includes(` as ${name.trim()}`) || mockApi.includes(`import ${name}`)) {
+      if (mockApi.includes(`import { ${name} `) || mockApi.includes(` as ${name.trim()} `) || mockApi.includes(`import ${name} `)) {
         return typeName.trim();
       }
       continue;
