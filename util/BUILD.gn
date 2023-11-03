@@ -37,18 +37,21 @@ ohos_source_set("util_lite") {
       "windows/CrashHandler.cpp",
       "windows/LocalDate.cpp",
       "windows/LocalSocket.cpp",
+      "windows/NativeFileSystem.cpp",
     ]
   } else if (platform == "mac_arm64" || platform == "mac_x64") {
     sources += [
       "unix/CrashHandler.cpp",
       "unix/LocalDate.cpp",
       "unix/LocalSocket.cpp",
+      "unix/NativeFileSystem.cpp",
     ]
   } else if (platform == "linux_x64") {
     sources += [
       "unix/CrashHandler.cpp",
       "unix/LocalDate.cpp",
       "unix/LocalSocket.cpp",
+      "unix/NativeFileSystem.cpp",
     ]
   }
 
@@ -134,6 +137,7 @@ ohos_shared_library("ide_util") {
         "windows/LocalDate.cpp",
         "windows/LocalSocket.cpp",
         "windows/StringHelper.cpp",
+        "windows/NativeFileSystem.cpp",
       ]
     } else if (platform == "mac_arm64" || platform == "mac_x64") {
       cflags += [ "-DNS_FORMAT_ARGUMENT(A)=" ]
@@ -144,6 +148,7 @@ ohos_shared_library("ide_util") {
         "unix/KeyboardObjc.mm",
         "unix/LocalDate.cpp",
         "unix/LocalSocket.cpp",
+        "unix/NativeFileSystem.cpp",
       ]
       if (defined(enable_gn_2021)) {
         frameworks = [
@@ -163,6 +168,7 @@ ohos_shared_library("ide_util") {
         "linux/KeyboardHelper.cpp",
         "unix/LocalDate.cpp",
         "unix/LocalSocket.cpp",
+        "unix/NativeFileSystem.cpp",
       ]
       libs += [ "X11" ]
     }

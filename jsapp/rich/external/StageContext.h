@@ -31,22 +31,30 @@ public:
     static StageContext& GetInstance();
     const std::optional<std::vector<uint8_t>> ReadFileContents(const std::string& filePath) const;
     // for Previewer
-    void SetLoaderJsonPath(const std::string& assetPath);
+    void SetLoaderJsonPath(const std::string& assetPath, const bool isDebug);
     void GetModulePathMapFromLoaderJson();
     void ReleaseHspBuffers();
     std::map<std::string, std::string> ParseMockJsonFile(const std::string& mockJsonFilePath);
     // for ArkUI and Ability
     std::vector<uint8_t>* GetModuleBuffer(const std::string& inputPath);
+    std::vector<uint8_t>* GetLocalModuleBuffer(const std::string& moduleName);
+    std::vector<uint8_t>* GetCloudModuleBuffer(const std::string& moduleName);
+    std::vector<uint8_t>* GetModuleBufferFromHsp(const std::string& hspFilePath,
+        const std::string& fileName);
 private:
     StageContext() = default;
     ~StageContext() = default;
     bool ContainsRelativePath(const std::string& path) const;
     std::map<std::string, std::string> GetModulePathMap() const;
+    std::string GetCloudHspPath(const std::string& hspDir, const std::string& moduleName);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
     void SetMiddlePath(const std::string& assetPath);
+    int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string middlePath;
+    bool isDebugPreview;
+    std::string localBundleName = "bundle";
 };
 }
 #endif // STAGE_CONTEXT_H
