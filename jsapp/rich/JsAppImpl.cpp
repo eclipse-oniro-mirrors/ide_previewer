@@ -208,7 +208,8 @@ void JsAppImpl::RunJsApp()
                                  VirtualScreenImpl::GetInstance().GetCompressionWidth(),
                                  VirtualScreenImpl::GetInstance().GetCompressionHeight());
     SetJsAppArgs(aceRunArgs);
-    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath);
+    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath,
+        (isDebug && debugServerPort >= 0));
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     InitGlfwEnv();
     if (isDebug && debugServerPort >= 0) {

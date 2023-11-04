@@ -12,14 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "StageContext.h"
+#include <sstream>
 #include <fstream>
 #include "json/json.h"
 #include "JsonReader.h"
 #include "FileSystem.h"
 #include "TraceTool.h"
 #include "PreviewerEngineLog.h"
+#include "zlib.h"
+#include "contrib/minizip/unzip.h"
 using namespace std;
 
 namespace OHOS::Ide {
@@ -51,10 +53,11 @@ const std::optional<std::vector<uint8_t>> StageContext::ReadFileContents(const s
     }
 }
 
-void StageContext::SetLoaderJsonPath(const std::string& assetPath)
+void StageContext::SetLoaderJsonPath(const std::string& assetPath, const bool isDebug)
 {
     // Concatenate loader.json path
-    std::string flag = assetPath.find(".preview") == std::string::npos ? "loader_out" : "assets";
+    isDebugPreview = isDebug;
+    std::string flag = isDebugPreview ? "loader_out" : "assets";
     size_t pos = assetPath.rfind(flag);
     if (pos == std::string::npos) {
         ELOG("assetPath: %s format error.", assetPath.c_str());
@@ -114,11 +117,27 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
         ELOG("inputPath: %s format error.", inputPath.c_str());
         return nullptr;
     }
+    std::string bundleName = inputPath.substr(0, pos);
+    ILOG("bundleName is:%s.", bundleName.c_str());
+    if (bundleName.empty()) {
+        ELOG("bundleName is empty.");
+        return nullptr;
+    }
     std::string moduleName = inputPath.substr(pos + spliter.size());
     ILOG("moduleName is:%s.", moduleName.c_str());
     if (modulePathMap.empty()) {
         ELOG("modulePathMap is empty.");
+        return nullptr;
     }
+    if (bundleName == localBundleName) { // locla hsp
+        return GetLocalModuleBuffer(moduleName);
+    } else { // cloud hsp
+        return GetCloudModuleBuffer(moduleName);
+    }
+}
+
+std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& moduleName)
+{
     std::string modulePath = StageContext::GetInstance().modulePathMap[moduleName];
     if (modulePath.empty()) {
         ELOG("modulePath is empty.");
@@ -149,6 +168,92 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
     return buf;
 }
 
+std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& moduleName)
+{
+    // 1.以entry拆分，拼接oh_modules/.hsp,在这个拼接目录下查找以moduleName@开头的文件夹
+    // 2.获取拼接目录下的moduleName.hsp文件
+    // 3.使用zlib获取hsp压缩包下的ets/modules.abc内容
+    int upwardLevel = 3;
+    int pos = GetUpwardDirIndex(loaderJsonPath, upwardLevel);
+    if (pos < 0) {
+        ILOG("set middlePath:%s failed.", middlePath.c_str());
+    }
+    std::string entryPath = loaderJsonPath.substr(0, pos);
+    ILOG("get entryPath:%s", entryPath.c_str());
+    std::string hspDir = entryPath + "/oh_modules/.hsp";
+    if (!FileSystem::IsDirectoryExists(hspDir)) {
+        ELOG("hspDir: %s is not exist.", hspDir.c_str());
+        return nullptr;
+    }
+    std::string hspPath = GetCloudHspPath(hspDir, moduleName);
+    ILOG("get hspPath:%s moduleName:%s", hspPath.c_str(), moduleName.c_str());
+    if (!FileSystem::IsDirectoryExists(hspPath)) {
+        ELOG("hspPath: %s is not exist.", hspPath.c_str());
+        return nullptr;
+    }
+    std::string moduleHspFile = hspPath + "/" + moduleName + ".hsp";
+    ILOG("get moduleHspFile:%s.", moduleHspFile.c_str());
+    if (!FileSystem::IsFileExists(moduleHspFile)) {
+        ELOG("the moduleHspFile:%s is not exist.", moduleHspFile.c_str());
+        return nullptr;
+    }
+    // unzip and get ets/moudles.abc buffer
+    std::vector<uint8_t>* buf = GetModuleBufferFromHsp(moduleHspFile, "ets/modules.abc");
+    if (!buf) {
+        ELOG("read modules.abc buffer failed.");
+    }
+    return buf;
+}
+
+std::string StageContext::GetCloudHspPath(const std::string& hspDir, const std::string& moduleName)
+{
+    string flag = "@";
+    std::string partName = moduleName + flag;
+    return FileSystem::FindSubfolderByName(hspDir, partName);
+}
+
+std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hspFilePath,
+    const std::string& fileName)
+{
+    unzFile zipfile = unzOpen2(hspFilePath.c_str(), nullptr);
+    if (zipfile == NULL) {
+        printf("Failed to open the zip file: %s\n", hspFilePath.c_str());
+        return nullptr;
+    }
+
+    if (unzLocateFile(zipfile, fileName.c_str(), 1) != UNZ_OK) {
+        printf("Failed to locate the file: %s\n", fileName.c_str());
+        unzClose(zipfile);
+        return nullptr;
+    }
+
+    unz_file_info file_info;
+    if (unzGetCurrentFileInfo(zipfile, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
+        printf("Failed to get the file info: %s\n", fileName.c_str());
+        unzClose(zipfile);
+        return nullptr;
+    }
+
+    if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
+        printf("Failed to open the file: %s\n", fileName.c_str());
+        unzClose(zipfile);
+        return nullptr;
+    }
+
+    char buffer[1024];
+    int bytesRead;
+    std::vector<uint8_t>* fileContent = new std::vector<uint8_t>();
+    while ((bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer))) > 0) {
+        fileContent->insert(fileContent->end(), buffer, buffer + bytesRead);
+    }
+    hspBufferPtrsVec.push_back(fileContent);
+    unzCloseCurrentFile(zipfile);
+    unzClose(zipfile);
+
+    printf("File extracted and content saved: %s\n", fileName.c_str());
+    return fileContent;
+}
+
 bool StageContext::ContainsRelativePath(const std::string& path) const
 {
     return (path.find("../") != std::string::npos || path.find("./") != std::string::npos);
@@ -177,18 +282,29 @@ std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mock
 
 void StageContext::SetMiddlePath(const std::string& assetPath)
 {
-    std::string::size_type pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str());
-    std::string::size_type count = 0;
     int upwardLevel = 5;
-    while (count < upwardLevel) {
-        if (pos == std::string::npos) {
-            ELOG("set middlePath:%s failed.");
-            return;
-        }
-        pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str(), pos - 1);
-        ++count;
+    int pos = GetUpwardDirIndex(assetPath, upwardLevel);
+    if (pos < 0) {
+        ILOG("set middlePath:%s failed.", middlePath.c_str());
     }
     middlePath = assetPath.substr(pos);
     ILOG("set middlePath:%s successed.", middlePath.c_str());
+}
+
+int StageContext::GetUpwardDirIndex(const std::string& path, const int upwardLevel) const
+{
+    std::string::size_type pos = path.find_last_of(FileSystem::GetSeparator().c_str());
+    std::string::size_type count = 0;
+    while (count < upwardLevel) {
+        if (pos == std::string::npos) {
+            ELOG("GetUpwardDir:%s failed.");
+            int errCode = -1;
+            return errCode;
+        }
+        pos = path.find_last_of(FileSystem::GetSeparator().c_str(), pos - 1);
+        ++count;
+    }
+    ILOG("GetUpwardDir path:%s pos:%d", path.c_str(), pos);
+    return pos;
 }
 }

@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 #include "PreviewerEngineLog.h"
-
+#include "NativeFileSystem.h"
 using namespace std;
 
 vector<string> FileSystem::pathList = {"file_system", "app", "ace", "data"};
@@ -104,4 +104,9 @@ unsigned short FileSystem::GetFileMode(string path)
 string FileSystem::GetSeparator()
 {
     return separator;
+}
+
+std::string FileSystem::FindSubfolderByName(const std::string& parentFolderPath, const std::string& subfolderName)
+{
+    return OHOS::Ide::NativeFileSystem::FindSubfolderByName(parentFolderPath, subfolderName);
 }
