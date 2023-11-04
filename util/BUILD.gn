@@ -136,8 +136,8 @@ ohos_shared_library("ide_util") {
         "windows/KeyboardHelper.cpp",
         "windows/LocalDate.cpp",
         "windows/LocalSocket.cpp",
-        "windows/StringHelper.cpp",
         "windows/NativeFileSystem.cpp",
+        "windows/StringHelper.cpp",
       ]
     } else if (platform == "mac_arm64" || platform == "mac_x64") {
       cflags += [ "-DNS_FORMAT_ARGUMENT(A)=" ]

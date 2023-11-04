@@ -244,7 +244,7 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
     int bytesRead;
     std::vector<uint8_t>* fileContent = new std::vector<uint8_t>();
     while ((bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer))) > 0) {
-        fileContent->insert(fileContent->end(), buffer, buffer + bytesRead); 
+        fileContent->insert(fileContent->end(), buffer, buffer + bytesRead);
     }
     hspBufferPtrsVec.push_back(fileContent);
     unzCloseCurrentFile(zipfile);
@@ -304,7 +304,7 @@ int StageContext::GetUpwardDirIndex(const std::string& path, const int upwardLev
         pos = path.find_last_of(FileSystem::GetSeparator().c_str(), pos - 1);
         ++count;
     }
-    ILOG("GetUpwardDir path:%s pos:%d", path.c_str(),pos);
+    ILOG("GetUpwardDir path:%s pos:%d", path.c_str(), pos);
     return pos;
 }
 }

@@ -32,7 +32,8 @@
             "bounds_checking_function",
             "jsoncpp",
             "libjpeg-turbo",
-            "libwebsockets"
+            "libwebsockets",
+            "zlib"
           ]
       },
       "build": {

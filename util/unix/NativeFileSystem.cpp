@@ -32,7 +32,7 @@ std::string NativeFileSystem::FindSubfolderByName(const std::string& parentFolde
         struct stat entryStat;
         std::string filePath = parentFolderPath + "/" + dirEntry->d_name;
         if (stat(filePath.c_str(), &entryStat) != -1 && S_ISDIR(entryStat.st_mode)) {
-			std::string dirName(dirEntry->d_name);
+            std::string dirName(dirEntry->d_name);
             if (dirName.find(subfolderName) == 0) {
                 closedir(dir);
                 return filePath;
