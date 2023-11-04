@@ -492,4 +492,14 @@ protected:
     bool IsArgsExist() const;
     bool IsArgsValid() const;
 };
+
+class FoldStatusCommand : public CommandLine {
+public:
+    FoldStatusCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ~FoldStatusCommand() override {}
+
+protected:
+    void RunSet() override;
+    bool IsSetArgValid() const override;
+};
 #endif // COMMANDLINE_H

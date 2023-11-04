@@ -46,6 +46,30 @@ static void InitDeviceOrientation()
     }
 }
 
+static void InitResolution()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    VirtualScreenImpl::GetInstance().SetOrignalWidth(parser.GetOrignalResolutionWidth());
+    VirtualScreenImpl::GetInstance().SetOrignalHeight(parser.GetOrignalResolutionHeight());
+    VirtualScreenImpl::GetInstance().SetCompressionWidth(parser.GetCompressionResolutionWidth());
+    VirtualScreenImpl::GetInstance().SetCompressionHeight(parser.GetCompressionResolutionHeight());
+}
+
+static void InitFoldParams()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    if (parser.IsSet("foldable")) {
+        VirtualScreenImpl::GetInstance().SetFoldable(parser.IsFoldable());
+    }
+    if (parser.IsSet("foldStatus")) {
+        VirtualScreenImpl::GetInstance().SetFoldStatus(parser.GetFoldStatus());
+    }
+    if (parser.IsSet("fr")) {
+        VirtualScreenImpl::GetInstance().SetFoldResolution(parser.GetFoldResolutionWidth(),
+            parser.GetFoldResolutionHeight());
+    }
+}
+
 static void InitJsApp()
 {
     CommandParser& parser = CommandParser::GetInstance();
@@ -88,6 +112,8 @@ static void InitJsApp()
             JsAppImpl::GetInstance().SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
         }
     }
+    InitResolution();
+    InitFoldParams();
 
     JsAppImpl::GetInstance().Start();
 }

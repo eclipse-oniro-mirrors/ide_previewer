@@ -83,6 +83,9 @@ CommandParser::CommandParser()
     Register("-cpm", 1, "Set previewer start mode.");
     Register("-abp", 1, "Set abilityPath for debug.");
     Register("-staticCard", 1, "Set card mode.");
+    Register("-foldable", 1, "Set foldable for Previewer.");
+    Register("-foldStatus", 1, "Set fold status for Previewer.");
+    Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -121,6 +124,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsScreenModeValid() && IsAppResourcePathValid();
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
+    partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
     if (partRet) {
         return true;
     }
@@ -512,7 +516,7 @@ bool CommandParser::IsResolutionArgValid(string command)
 bool CommandParser::IsResolutionRangeValid(string value)
 {
     if (CheckParamInvalidity(value, true)) {
-        errorInfo = "Launch -or/-cr parameters is not match regex.";
+        errorInfo = "Launch -or/-cr or -fr parameters is not match regex.";
         return false;
     }
     int32_t temp = atoi(value.c_str());
@@ -858,4 +862,78 @@ bool CommandParser::IsMainArgLengthInvalid(const char* str) const
         return true;
     }
     return false;
+}
+
+bool CommandParser::IsFoldableValid()
+{
+    ELOG("param size is more than %d", maxMainArgLength);
+    if (!IsSet("foldable")) {
+        return true;
+    }
+    string val = Value("foldable");
+    if (val != "true" && val != "false") {
+        errorInfo = string("The foldable argument unsupported.");
+        ELOG("Launch -foldable parameters abnormal!");
+        return false;
+    }
+    if (val == "true") {
+        foldable = true;
+    }
+    return true;
+}
+
+bool CommandParser::IsFoldStatusValid()
+{
+    if ((!IsSet("foldable")) || Value("foldable") != "true") {
+        return true;
+    }
+    if (IsSet("foldStatus")) {
+        if (Value("foldStatus") == "fold" || Value("foldStatus") == "unfold" ||
+            Value("foldStatus") == "unknown" || Value("foldStatus") == "half_fold") {
+            foldStatus = Value("foldStatus");
+            return true;
+        }
+    }
+    ELOG("Launch -foldStatus parameters abnormal!");
+    return false;
+}
+
+bool CommandParser::IsFoldResolutionValid()
+{
+    if ((!IsSet("foldable")) || Value("foldable") != "true") {
+        return true;
+    }
+    if (IsSet("fr")) {
+        if (IsResolutionArgValid(string("-fr"))) {
+            foldResolutionWidth = atoi(Values("-fr")[0].c_str());
+            foldResolutionHeight = atoi(Values("-fr")[1].c_str());
+            ILOG("CommandParser fold resolution: %d %d", foldResolutionWidth, foldResolutionHeight);
+            return true;
+        }
+        ELOG("Launch -fr parameters abnormal!");
+        return false;
+    }
+    ELOG("Launch -fr parameters abnormal!");
+    errorInfo = string("Fold resolution must be setted.");
+    return false;
+}
+
+bool CommandParser::IsFoldable() const
+{
+    return foldable;
+}
+
+std::string CommandParser::GetFoldStatus() const
+{
+    return foldStatus;
+}
+
+int32_t CommandParser::GetFoldResolutionWidth() const
+{
+    return foldResolutionWidth;
+}
+
+int32_t CommandParser::GetFoldResolutionHeight() const
+{
+    return foldResolutionHeight;
 }

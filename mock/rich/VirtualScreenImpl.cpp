@@ -112,10 +112,6 @@ bool VirtualScreenImpl::CallBack(const void* data, const size_t length,
     if (VirtualScreenImpl::GetInstance().JudgeAndDropFrame()) {
         return false;
     }
-    VirtualScreenImpl::GetInstance().SetOrignalWidth(width);
-    VirtualScreenImpl::GetInstance().SetOrignalHeight(height);
-    VirtualScreenImpl::GetInstance().SetCompressionWidth(width);
-    VirtualScreenImpl::GetInstance().SetCompressionHeight(height);
 
     bool staticRet = VirtualScreen::JudgeStaticImage(SEND_IMG_DURATION_MS);
     if (!staticRet) {

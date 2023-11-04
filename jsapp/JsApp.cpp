@@ -155,7 +155,7 @@ void JsApp::SetArgsAceVersion(const string& value)
 void JsApp::ColorModeChanged(const std::string commandColorMode)
 {
     colorMode = commandColorMode;
-};
+}
 
 std::string JsApp::GetColorMode() const
 {
@@ -170,15 +170,17 @@ std::string JsApp::GetOrientation() const
 void JsApp::OrientationChanged(std::string commandOrientation)
 {
     orientation = commandOrientation;
-};
+}
 
-void JsApp::ResolutionChanged(int32_t, int32_t, int32_t, int32_t, int32_t) {};
+void JsApp::ResolutionChanged(int32_t, int32_t, int32_t, int32_t, int32_t) {}
 
-void JsApp::ReloadRuntimePage(const std::string) {};
+void JsApp::ReloadRuntimePage(const std::string) {}
 
 bool JsApp::MemoryRefresh(const std::string) const
 {
     return false;
 }
 
-void JsApp::LoadDocument(const std::string, const std::string, const Json::Value) {};
+void JsApp::LoadDocument(const std::string, const std::string, const Json::Value) {}
+
+void JsApp::FoldStatusChanged(const std::string commandFoldStatus) {}

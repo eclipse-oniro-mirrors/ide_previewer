@@ -55,6 +55,7 @@ public:
     virtual void SetConfigChanges(const std::string value);
     virtual bool MemoryRefresh(const std::string) const;
     virtual void LoadDocument(const std::string, const std::string, const Json::Value);
+    virtual void FoldStatusChanged(const std::string commandFoldStatus);
 
 protected:
     JsApp();

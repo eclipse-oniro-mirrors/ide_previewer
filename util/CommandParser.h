@@ -59,6 +59,10 @@ public:
     std::string GetAbilityPath() const;
     bool IsStaticCard() const;
     bool IsMainArgLengthInvalid(const char* str) const;
+    bool IsFoldable() const;
+    std::string GetFoldStatus() const;
+    int32_t GetFoldResolutionWidth() const;
+    int32_t GetFoldResolutionHeight() const;
 
 private:
     CommandParser();
@@ -114,6 +118,10 @@ private:
     std::string abilityPath;
     bool staticCard;
     const size_t maxMainArgLength = 1024;
+    bool foldable;
+    std::string foldStatus;
+    int32_t foldResolutionWidth;
+    int32_t foldResolutionHeight;
 
     bool IsDebugPortValid();
     bool IsAppPathValid();
@@ -147,6 +155,9 @@ private:
     bool IsComponentModeValid();
     bool IsAbilityPathValid();
     bool IsStaticCardValid();
+    bool IsFoldableValid();
+    bool IsFoldStatusValid();
+    bool IsFoldResolutionValid();
     std::string HelpText();
     void ProcessingCommand(const std::vector<std::string>& strs);
 };

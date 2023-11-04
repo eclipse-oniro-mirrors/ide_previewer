@@ -317,3 +317,38 @@ void VirtualScreen::RgbToJpg(unsigned char* data, const int32_t width, const int
     jpeg_finish_compress(&jpeg);
     jpeg_destroy_compress(&jpeg);
 }
+
+void VirtualScreen::SetFoldable(const bool value)
+{
+    foldable = value;
+}
+
+bool VirtualScreen::GetFoldable() const
+{
+    return foldable;
+}
+
+void VirtualScreen::SetFoldStatus(const std::string& value)
+{
+    foldStatus = value;
+}
+
+std::string VirtualScreen::GetFoldStatus() const
+{
+    return foldStatus;
+}
+
+void VirtualScreen::SetFoldResolution(int32_t changedFoldWidth, int32_t changedFoldHeight)
+{
+    foldWidth = changedFoldWidth;
+    foldHeight = changedFoldHeight;
+}
+
+int32_t VirtualScreen::GetFoldWidth() const
+{
+    return foldWidth;
+}
+int32_t VirtualScreen::GetFoldHeight() const
+{
+    return foldHeight;
+}
