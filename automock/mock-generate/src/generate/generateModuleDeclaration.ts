@@ -44,8 +44,9 @@ import { generateVariableStatementDelcatation } from './generateVariableStatemen
  */
 export function generateModuleDeclaration(rootName: string, moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
   filename: string, mockApi: string, extraImport: string[]): string {
-  let moduleName = moduleEntity.moduleName.replace(/["']/g, '');
+  const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `export function mock${firstCharacterToUppercase(moduleName)}() {\n`;
+  let enumBody = '';
   if (!(moduleEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword) &&
     (moduleEntity.moduleName.startsWith('"') || moduleEntity.moduleName.startsWith('\''))) &&
     path.basename(sourceFile.fileName).startsWith('@ohos')
@@ -84,7 +85,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
 
   if (moduleEntity.typeAliasDeclarations.length > 0) {
     moduleEntity.typeAliasDeclarations.forEach(value => {
-      outBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport) + '\n';
+      outBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport, mockApi) + '\n';
     });
   }
 
@@ -119,7 +120,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
       if (value.exportModifiers.length > 0) {
         outBody += generateEnumDeclaration(moduleName, value) + '\n';
       } else {
-        moduleBody += '\t' + generateEnumDeclaration(moduleName, value) + '\n';
+        enumBody += generateEnumDeclaration(moduleName, value);
       }
     });
   }
@@ -174,6 +175,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   moduleBody += '\t};';
   moduleBody += `\n\treturn ${moduleName};}\n`;
   moduleBody += outBody;
+  moduleBody = enumBody + moduleBody;
   return moduleBody;
 }
 
@@ -200,7 +202,7 @@ function generateInnerDeclareModule(moduleEntity: ModuleBlockEntity): string {
  * @param extraImport
  * @returns
  */
-function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile, extraImport: string[]): string {
+function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile, extraImport: string[], mockApi: string): string {
   const moduleName = moduleEntity.moduleName;
   let innerModuleBody = `const ${moduleName} = (()=> {`;
 
@@ -212,7 +214,7 @@ function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: Source
 
   if (moduleEntity.typeAliasDeclarations.length > 0) {
     moduleEntity.typeAliasDeclarations.forEach(value => {
-      innerModuleBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport) + '\n';
+      innerModuleBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport, mockApi) + '\n';
     });
   }
 

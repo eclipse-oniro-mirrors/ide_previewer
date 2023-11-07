@@ -45,6 +45,8 @@ private:
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
+    void SetMiddlePath(const std::string& assetPath);
+    std::string middlePath;
 };
 }
 #endif // STAGE_CONTEXT_H

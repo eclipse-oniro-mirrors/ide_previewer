@@ -154,10 +154,15 @@ bool CommandLine::IsIntType(string arg) const
     return regex_match(arg, isInt);
 }
 
-bool CommandLine::IsOneDigitFloatType(string arg) const
+bool CommandLine::IsOneDigitFloatType(string arg, bool allowNegativeNumber) const
 {
-    regex isFloat("^\\d(\\.\\d+)?$");
-    return regex_match(arg, isFloat);
+    if (allowNegativeNumber) {
+        regex isFloat("^-?\\d+(\\.\\d+)?$");
+        return regex_match(arg, isFloat);
+    } else {
+        regex isFloat("^\\d(\\.\\d+)?$");
+        return regex_match(arg, isFloat);
+    }
 }
 
 void TouchAndMouseCommand::SetEventParams(EventParams& params)
@@ -227,7 +232,7 @@ void TouchPressCommand::RunAction()
 
 bool MouseWheelCommand::IsActionArgValid() const
 {
-    if (args.isNull() || !args.isMember("rotate") || !IsOneDigitFloatType(args["rotate"].asString())) {
+    if (args.isNull() || !args.isMember("rotate") || !IsOneDigitFloatType(args["rotate"].asString(), true)) {
         return false;
     }
     return true;
@@ -316,7 +321,7 @@ PowerCommand::PowerCommand(CommandType commandType, const Json::Value& arg, cons
 
 bool PowerCommand::IsSetArgValid() const
 {
-    if (args.isNull() || !args.isMember("Power") || !IsOneDigitFloatType(args["Power"].asString())) {
+    if (args.isNull() || !args.isMember("Power") || !IsOneDigitFloatType(args["Power"].asString(), false)) {
         ELOG("Invalid number of arguments!");
         return false;
     }

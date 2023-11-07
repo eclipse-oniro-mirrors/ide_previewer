@@ -61,6 +61,7 @@ void StageContext::SetLoaderJsonPath(const std::string& assetPath)
         return;
     }
     std::string assetDir = assetPath.substr(0, pos);
+    SetMiddlePath(assetPath);
     loaderJsonPath = assetDir + "loader/default/loader.json";
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
 }
@@ -132,9 +133,9 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
         ELOG("modulePath format error: %s.", modulePath.c_str());
         return nullptr;
     }
-    std::string abcPath = modulePath + "/.preview/default/intermediates/assets/default/ets/modules.abc";
+    std::string abcPath = modulePath + middlePath + "/modules.abc";
     if (!FileSystem::IsFileExists(abcPath)) {
-        ELOG("the abcPath is not exist.");
+        ELOG("the abcPath:%s is not exist.", abcPath.c_str());
         return nullptr;
     }
     ILOG("get modules.abc path: %s successed.", abcPath.c_str());
@@ -172,5 +173,22 @@ std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mock
         }
     }
     return mapInfo;
+}
+
+void StageContext::SetMiddlePath(const std::string& assetPath)
+{
+    std::string::size_type pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str());
+    std::string::size_type count = 0;
+    int upwardLevel = 5;
+    while (count < upwardLevel) {
+        if (pos == std::string::npos) {
+            ELOG("set middlePath:%s failed.");
+            return;
+        }
+        pos = assetPath.find_last_of(FileSystem::GetSeparator().c_str(), pos - 1);
+        ++count;
+    }
+    middlePath = assetPath.substr(pos);
+    ILOG("set middlePath:%s successed.", middlePath.c_str());
 }
 }
