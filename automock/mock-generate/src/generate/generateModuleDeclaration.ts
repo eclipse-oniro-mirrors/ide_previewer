@@ -32,6 +32,7 @@ import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateVariableStatementDelcatation } from './generateVariableStatementDeclaration';
+import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 
 /**
  * generate declare
@@ -43,7 +44,7 @@ import { generateVariableStatementDelcatation } from './generateVariableStatemen
  * @returns
  */
 export function generateModuleDeclaration(rootName: string, moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
-  filename: string, mockApi: string, extraImport: string[]): string {
+  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
   const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `export function mock${firstCharacterToUppercase(moduleName)}() {\n`;
   let enumBody = '';
@@ -108,9 +109,9 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   if (moduleEntity.interfaceDeclarations.length > 0) {
     moduleEntity.interfaceDeclarations.forEach(value => {
       if (value.exportModifiers.length > 0) {
-        outBody += generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations) + ';\n';
+        outBody += generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       } else {
-        moduleBody += '\t' + generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations) + ';\n';
+        moduleBody += '\t' + generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       }
     });
   }
