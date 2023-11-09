@@ -55,7 +55,7 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
 
   if (sourceFileEntity.moduleDeclarations.length > 0) {
     sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport) + '\n';
+      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
     });
   }
 
@@ -327,7 +327,11 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
   let importElements = importEntity.importElements;
   if (!importElements.includes('{') && !importElements.includes('* as') && !heritageClausesArray.includes(importElements) && importEntity.importPath.includes('@ohos')) {
     const tmpArr = importEntity.importPath.split('.');
-    importElements = `{ mock${firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''))} }`;
+    const mockModuleName = firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''));
+    if (importElements === 'observer' && importEntity.importPath.includes('@ohos.arkui.observer')) {
+      return `{ mockUIObserver as ${importElements}}`;
+    }
+    importElements = `{ mock${mockModuleName} }`;
   } else {
     // adapt no rules .d.ts
     if (importElements.trimRight().trimEnd() === 'AccessibilityExtensionContext, { AccessibilityElement }') {
