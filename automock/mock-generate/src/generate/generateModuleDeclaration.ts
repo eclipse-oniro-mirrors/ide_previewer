@@ -167,7 +167,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   const exports = getModuleExportElements(moduleEntity);
   let exportString = '';
   exports.forEach(value => {
-    exportString += `${value.name}: ${value.name},\n`;
+    exportString += `${value.name}: ${value.name === 'BLE' ? '""' : value.name},\n`;
   });
   if (exportString !== '') {
     moduleBody += '\t' + exportString;
