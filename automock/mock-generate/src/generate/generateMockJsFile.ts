@@ -24,12 +24,13 @@ import type { SourceFileEntity } from '../declaration-node/sourceFileElementsAss
 import { generateClassDeclaration } from './generateClassDeclaration';
 import { generateEnumDeclaration } from './generateEnumDeclaration';
 import { addToIndexArray } from './generateIndex';
+
 import { generateInterfaceDeclaration } from './generateInterfaceDeclaration';
 import { generateModuleDeclaration } from './generateModuleDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
-import { generateExportFunction } from './generateExportFunction';
+import { generateCommonFunction } from './generateCommonFunction';
 
 /**
  * generate mock file string
@@ -40,7 +41,6 @@ import { generateExportFunction } from './generateExportFunction';
  * @returns
  */
 export function generateSourceFileElements(rootName: string, sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, fileName: string): string {
-  
   let mockApi = '';
   const mockFunctionElements: Array<MockFunctionElementEntity> = [];
   const dependsSourceFileList = collectReferenceFiles(sourceFile);
@@ -55,7 +55,7 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
 
   if (sourceFileEntity.moduleDeclarations.length > 0) {
     sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport) + '\n';
+      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
     });
   }
 
@@ -90,9 +90,9 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
     });
   }
 
-  if (sourceFileEntity.functionDeclarations.length > 0) {
-    sourceFileEntity.functionDeclarations.forEach(value => {
-      mockApi += generateExportFunction(value, sourceFile, mockApi) + '\n';
+  if (sourceFileEntity.functionDeclarations.size > 0) {
+    Array.from(sourceFileEntity.functionDeclarations.keys()).forEach(key => {
+      mockApi += generateCommonFunction(key, sourceFileEntity.functionDeclarations.get(key), sourceFile, mockApi, true) + '\n';
     });
   }
 
@@ -327,7 +327,11 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
   let importElements = importEntity.importElements;
   if (!importElements.includes('{') && !importElements.includes('* as') && !heritageClausesArray.includes(importElements) && importEntity.importPath.includes('@ohos')) {
     const tmpArr = importEntity.importPath.split('.');
-    importElements = `{ mock${firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''))} }`;
+    const mockModuleName = firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''));
+    if (importElements === 'observer' && importEntity.importPath.includes('@ohos.arkui.observer')) {
+      return `{ mockUIObserver as ${importElements}}`;
+    }
+    importElements = `{ mock${mockModuleName} }`;
   } else {
     // adapt no rules .d.ts
     if (importElements.trimRight().trimEnd() === 'AccessibilityExtensionContext, { AccessibilityElement }') {

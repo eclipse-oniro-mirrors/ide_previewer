@@ -35,6 +35,7 @@ export function getIndexArray(): Array<IndexEntity> {
 export function generateIndex(): string {
   let indexBody = '';
   let caseBody = '';
+  indexBody += 'import * as etsglobal from \'./@internal/ets/global\';\n';
   const filterSet: Set<string> = new Set<string>();
 
   indexArray.forEach(value => {

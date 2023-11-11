@@ -36,7 +36,13 @@ export function generatePropertySignatureDeclaration(rootName: string, propertyS
     propertySignatureBody += getCallbackStatement(mockApi);
     propertySignatureBody += '},\n';
   } else {
-    if (propertySignature.propertyTypeName.startsWith('{')) {
+    if (
+      (propertySignature.propertyTypeName.startsWith('{') ||
+      propertySignature.propertyTypeName.startsWith('Record<') ||
+      propertySignature.propertyTypeName.startsWith('Object') ||
+      propertySignature.propertyTypeName.startsWith('object')) &&
+      !propertySignature.propertyTypeName.endsWith(']')
+    ) {
       propertySignatureBody = `${propertySignature.propertyName}: {},`;
     } else if (propertySignature.kind === SyntaxKind.TypeReference) {
       if (propertySignature.propertyTypeName.startsWith('Array')) {

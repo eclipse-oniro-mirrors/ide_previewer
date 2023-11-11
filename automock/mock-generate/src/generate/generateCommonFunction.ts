@@ -16,19 +16,38 @@
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { FunctionEntity } from '../declaration-node/functionDeclaration';
-import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData } from './generateCommonUtil';
+import {
+  getCallbackStatement,
+  getReturnStatement,
+  getWarnConsole,
+  getReturnData,
+  getOverloadedFunctionCallbackStatement,
+  overloadedFunctionArr
+} from './generateCommonUtil';
 
 /**
  * generate function
  * @param rootName
  * @param functionArray
  * @param sourceFile
+ * @param mockApi
+ * @param isRoot
  * @returns
  */
-export function generateCommonFunction(rootName: string, functionArray: Array<FunctionEntity>, sourceFile: SourceFile, mockApi: string): string {
+export function generateCommonFunction(
+  rootName: string,
+  functionArray: Array<FunctionEntity>,
+  sourceFile: SourceFile,
+  mockApi: string,
+  isRoot: boolean
+): string {
   let functionBody = '';
   const functionEntity = functionArray[0];
-  functionBody = `${functionEntity.functionName}: function(...args) {`;
+  if (isRoot) {
+    functionBody = `const ${functionEntity.functionName} = function(...args) {`;
+  } else {
+    functionBody = `${functionEntity.functionName}: function(...args) {`;
+  }
   functionBody += getWarnConsole(rootName, functionEntity.functionName);
 
   if (functionArray.length === 1) {
@@ -51,6 +70,7 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
     let argParamsSet: string = '';
     const returnSet: Set<string> = new Set<string>();
     let isCallBack = false;
+    let needOverloaded = false;
     functionArray.forEach(value => {
       returnSet.add(value.returnType.returnKindName);
       value.args.forEach(arg => {
@@ -61,10 +81,20 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
             argParamsSet = arg.paramTypeString;
           }
         }
+        if (
+          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
+          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
+        ) {
+          needOverloaded = true;
+        }
       });
     });
     if (isCallBack) {
-      functionBody += getCallbackStatement(mockApi, argParamsSet);
+      if (overloadedFunctionArr.includes(functionEntity.functionName) && needOverloaded) {
+        functionBody += getOverloadedFunctionCallbackStatement(functionArray, sourceFile, mockApi);
+      } else {
+        functionBody += getCallbackStatement(mockApi, argParamsSet);
+      }
     }
     let isReturnPromise = false;
     let promiseReturnValue = '';
@@ -89,19 +119,11 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
         });
         functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
       } else {
-        if (isCallBack) {
-          functionBody += `else {
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            }`;
-        } else {
-          functionBody += `
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            `;
-        }
+        functionBody += `
+            return new Promise((resolve, reject) => {
+              resolve('[PC Preview] unknow boolean');
+            })
+          `;
       }
     } else if (otherReturnValue) {
       let returnType = null;
@@ -113,6 +135,13 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
       functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
     }
   }
-  functionBody += '},';
+  functionBody += isRoot ? '};' : '},';
+  if (isRoot) {
+    functionBody += `
+      if (!global.${functionEntity.functionName}) {
+        global.${functionEntity.functionName} = ${functionEntity.functionName};
+      }
+    `;
+  }
   return functionBody;
 }
