@@ -31,6 +31,22 @@ export function getWarnConsole(interfaceNameOrClassName: string, functionNameOrP
   return `console.warn('The ${interfaceNameOrClassName}.${functionNameOrPropertyName} interface in the Previewer is a mocked implementation and may behave differently than on a real device.');\n`;
 }
 
+function handlePromiseParams(returnType: ReturnTypeEntity): string {
+  const returnKindName = returnType.returnKindName.slice(0, returnType.returnKindName.length - 1).slice(8).trim();
+  let returnName = `return new Promise((resolve, reject) => {
+    resolve('[PC Preview] unknown type');
+  })`;
+  Object.keys(paramsTypeStart).forEach(key => {
+    if (returnKindName.startsWith(key)) {
+      const data = paramsTypeStart[key] === '[PC Preview] unknown type' ? `'${paramsTypeStart[key]}'` : `${paramsTypeStart[key]}`;
+      returnName = `return new Promise((resolve, reject) => {
+        resolve(${data});
+      })`;
+    }
+  });
+  return returnName;
+}
+
 /**
  * generate return statement;
  * @param returnType
@@ -40,9 +56,7 @@ export function getWarnConsole(interfaceNameOrClassName: string, functionNameOrP
 export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
   if (returnType.returnKind === SyntaxKind.TypeReference) {
     if (returnType.returnKindName.startsWith('Promise')) {
-      return `return new Promise((resolve, reject) => {
-        resolve('[PC Preview] unknown type');
-      })`;
+      return handlePromiseParams(returnType);
     } else if (returnType.returnKindName === 'T') {
       return 'return \'[PC Preview] unknown type\'';
     } else if (returnType.returnKindName === 'object' || returnType.returnKindName === 'Object') {
@@ -51,6 +65,10 @@ export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: Sou
       return 'return \'[PC Preview] unknown type\'';
     } else if (returnType.returnKindName === 'String' || returnType.returnKindName === 'string') {
       return `return ${returnType.returnKindName}(...args)`;
+    } else if (returnType.returnKindName === 'number' || returnType.returnKindName === 'Number') {
+      return 'return 0';
+    } else if (returnType.returnKindName === 'boolean' || returnType.returnKindName === 'Boolean') {
+      return 'return false';
     } else if (returnType.returnKindName === 'ArrayBuffer') {
       return `return new ${returnType.returnKindName}(0)`;
     } else if (returnType.returnKindName.startsWith('Array')) {
