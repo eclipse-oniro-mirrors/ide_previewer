@@ -45,6 +45,7 @@ import type { ImportElementEntity } from '../declaration-node/importAndExportDec
  */
 export function generateModuleDeclaration(rootName: string, moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
   filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
+  let innerModuleBody = '';
   const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `export function mock${firstCharacterToUppercase(moduleName)}() {\n`;
   let enumBody = '';
@@ -133,6 +134,17 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
     });
   }
 
+  if (moduleEntity.moduleDeclarations.length > 0) {
+    moduleEntity.moduleDeclarations.forEach(value => {
+      if (!value.moduleName.startsWith("'") && !value.moduleName.startsWith('"')) {
+        innerModuleBody += generateInnerModuleDeclaration(value, sourceFile, filename, mockApi, extraImport, importDeclarations);
+      }
+    });
+  }
+  if (innerModuleBody) {
+    moduleBody += innerModuleBody + '\n';
+  }
+
   moduleBody += '\t' + `const ${moduleName} = {`;
   if (moduleEntity.variableStatements.length > 0) {
     moduleEntity.variableStatements.forEach(value => {
@@ -146,7 +158,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   let sourceFileFunctionBody = '';
   if (sourceFileFunctions.size > 0) {
     sourceFileFunctions.forEach(value => {
-      sourceFileFunctionBody += generateCommonFunction(moduleName, value, sourceFile, mockApi);
+      sourceFileFunctionBody += '\n' + generateCommonFunction(moduleName, value, sourceFile, mockApi);
     });
   }
 
@@ -155,7 +167,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   if (sourceFileVariableStatements.length > 0) {
     sourceFileVariableStatements.forEach(value => {
       value.forEach(val => {
-        sourceFileStatementBody += generateVariableStatementDelcatation(val, false);
+        sourceFileStatementBody += '\n' + generateVariableStatementDelcatation(val, false);
       });
     });
   }
@@ -167,7 +179,11 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   const exports = getModuleExportElements(moduleEntity);
   let exportString = '';
   exports.forEach(value => {
-    exportString += `${value.name}: ${value.name},\n`;
+    if (value.type === 'module' && !value.name.startsWith("'") && !value.name.startsWith('"')) {
+      exportString += `${value.name}: mock${value.name}(),\n`;
+    } else {
+      exportString += `${value.name}: ${value.name},\n`;
+    }
   });
   if (exportString !== '') {
     moduleBody += '\t' + exportString;
@@ -177,6 +193,103 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   moduleBody += `\n\treturn ${moduleName};}\n`;
   moduleBody += outBody;
   moduleBody = enumBody + moduleBody;
+  return moduleBody;
+}
+
+function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
+  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
+  let innerModuleBody = '';
+  const innerModuleName = moduleEntity.moduleName.replace(/["']/g, '');
+  let moduleBody = `function mock${innerModuleName}() {\n`;
+  let innerOutBody = '';
+  let innerFunctionBody = '';
+
+  if (moduleEntity.typeAliasDeclarations.length) {
+    moduleEntity.typeAliasDeclarations.forEach(value => {
+      innerOutBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport, mockApi) + '\n';
+    });
+  }
+
+  if (moduleEntity.moduleImportEquaqls.length) {
+    moduleEntity.moduleImportEquaqls.forEach(value => {
+      innerOutBody += generateImportEqual(value) + '\n';
+    });
+  }
+
+  if (moduleEntity.classDeclarations.length) {
+    moduleEntity.classDeclarations.forEach(value => {
+      if (value.exportModifiers.length && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+        innerOutBody += generateClassDeclaration(innerModuleName, value, false, '', '', sourceFile, false, mockApi) + '\n';
+      } else {
+        moduleBody += '\t' + generateClassDeclaration(innerModuleName, value, false, '', '', sourceFile, true, mockApi) + '\n';
+      }
+    });
+  }
+
+  if (moduleEntity.interfaceDeclarations.length) {
+    moduleEntity.interfaceDeclarations.forEach(value => {
+      if (value.exportModifiers.length) {
+        innerOutBody += generateInterfaceDeclaration(innerModuleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+      } else {
+        moduleBody += '\t' + generateInterfaceDeclaration(innerModuleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+      }
+    });
+  }
+
+  if (moduleEntity.enumDeclarations.length) {
+    moduleEntity.enumDeclarations.forEach(value => {
+      if (value.exportModifiers.length) {
+        innerOutBody += generateEnumDeclaration(innerModuleName, value) + '\n';
+      } else {
+        moduleBody += generateEnumDeclaration(innerModuleName, value);
+      }
+    });
+  }
+
+  if (moduleEntity.functionDeclarations.size) {
+    moduleEntity.functionDeclarations.forEach(value => {
+      innerFunctionBody += '\n' + generateCommonFunction(innerModuleName, value, sourceFile, mockApi) + '\n';
+    });
+  }
+
+  if (moduleEntity.moduleDeclarations.length) {
+    moduleEntity.moduleDeclarations.forEach(value => {
+      if (!value.moduleName.startsWith("'") && !value.moduleName.startsWith('"')) {
+        innerModuleBody += generateInnerModuleDeclaration(value, sourceFile, filename, mockApi, extraImport, importDeclarations);
+      }
+    });
+  }
+  if (innerModuleBody) {
+    moduleBody += innerModuleBody + '\n';
+  }
+
+  moduleBody += `const ${innerModuleName} = {\n`;
+  if (moduleEntity.variableStatements.length) {
+    moduleEntity.variableStatements.forEach(value => {
+      value.forEach(val => {
+        moduleBody += generateVariableStatementDelcatation(val, false) + '\n';
+      });
+    });
+  }
+
+  moduleBody += innerFunctionBody + '\n';
+
+  const exportArr = getModuleExportElements(moduleEntity);
+  let innerExportString = '';
+  exportArr.forEach(value => {
+    if (value.type === 'module' && !value.name.startsWith("'") && !value.name.startsWith('"')) {
+      innerExportString += `${value.name}: mock${value.name}(),\n`;
+    } else {
+      innerExportString += `${value.name}: ${value.name},\n`;
+    }
+  });
+  if (innerExportString !== '') {
+    moduleBody += '\t' + innerExportString;
+  }
+
+  moduleBody += '\t};';
+  moduleBody += `\n\treturn ${innerModuleName};}\n`;
+  moduleBody += innerOutBody;
   return moduleBody;
 }
 
