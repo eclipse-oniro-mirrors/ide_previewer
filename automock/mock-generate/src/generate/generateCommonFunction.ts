@@ -23,12 +23,18 @@ import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData
  * @param rootName
  * @param functionArray
  * @param sourceFile
+ * @param mockApi
+ * @param isRoot
  * @returns
  */
-export function generateCommonFunction(rootName: string, functionArray: Array<FunctionEntity>, sourceFile: SourceFile, mockApi: string): string {
+export function generateCommonFunction(rootName: string, functionArray: Array<FunctionEntity>, sourceFile: SourceFile, mockApi: string, isRoot: boolean): string {
   let functionBody = '';
   const functionEntity = functionArray[0];
-  functionBody = `${functionEntity.functionName}: function(...args) {`;
+  if (isRoot) {
+    functionBody = `const ${functionEntity.functionName} = function(...args) {`;
+  } else {
+    functionBody = `${functionEntity.functionName}: function(...args) {`;
+  }
   functionBody += getWarnConsole(rootName, functionEntity.functionName);
 
   if (functionArray.length === 1) {
@@ -113,6 +119,13 @@ export function generateCommonFunction(rootName: string, functionArray: Array<Fu
       functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
     }
   }
-  functionBody += '},';
+  functionBody += isRoot ? '};' : '},';
+  if (isRoot) {
+    functionBody += `
+      if (!global.${functionEntity.functionName}) {
+        global.${functionEntity.functionName} = ${functionEntity.functionName};
+      }
+    `;
+  }
   return functionBody;
 }
