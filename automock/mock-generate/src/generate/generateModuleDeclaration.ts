@@ -130,7 +130,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   let functionBody = '';
   if (moduleEntity.functionDeclarations.size > 0) {
     moduleEntity.functionDeclarations.forEach(value => {
-      functionBody += '\t' + generateCommonFunction(moduleName, value, sourceFile, mockApi) + '\n';
+      functionBody += '\t' + generateCommonFunction(moduleName, value, sourceFile, mockApi, false) + '\n';
     });
   }
 
@@ -158,7 +158,7 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   let sourceFileFunctionBody = '';
   if (sourceFileFunctions.size > 0) {
     sourceFileFunctions.forEach(value => {
-      sourceFileFunctionBody += '\n' + generateCommonFunction(moduleName, value, sourceFile, mockApi);
+      sourceFileFunctionBody += '\n' + generateCommonFunction(moduleName, value, sourceFile, mockApi, false);
     });
   }
 
@@ -248,7 +248,7 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
 
   if (moduleEntity.functionDeclarations.size) {
     moduleEntity.functionDeclarations.forEach(value => {
-      innerFunctionBody += '\n' + generateCommonFunction(innerModuleName, value, sourceFile, mockApi) + '\n';
+      innerFunctionBody += '\n' + generateCommonFunction(innerModuleName, value, sourceFile, mockApi, false) + '\n';
     });
   }
 
@@ -347,7 +347,7 @@ function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: Source
   let functionBody = 'return {';
   if (moduleEntity.functionDeclarations.size > 0) {
     moduleEntity.functionDeclarations.forEach(value => {
-      functionBody += generateCommonFunction(moduleName, value, sourceFile, '') + '\n';
+      functionBody += generateCommonFunction(moduleName, value, sourceFile, '', false) + '\n';
     });
   }
 

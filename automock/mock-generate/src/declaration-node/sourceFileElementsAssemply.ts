@@ -53,7 +53,7 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
   let exportAssignment: Array<string> = [];
   const staticMethods: Array<Array<StaticMethodEntity>> = [];
   const exportDeclarations: Array<string> = [];
-  const functionDeclarations: Array<FunctionEntity> = [];
+  const functionDeclarations: Map<string, Array<FunctionEntity>> = new Map<string, Array<FunctionEntity>>();
 
   sourceFile.forEachChild(node => {
     if (isImportDeclaration(node)) {
@@ -86,10 +86,16 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
       enumDeclarations.push(getEnumDeclaration(node, sourceFile));
     } else if (isExportDeclaration(node)) {
       exportDeclarations.push(sourceFile.text.substring(node.pos, node.end).trimStart().trimEnd());
-    } else if (isFunctionDeclaration(node)){
-      functionDeclarations.push(getFunctionDeclaration(node, sourceFile));
-    }
-    else {
+    } else if (isFunctionDeclaration(node)) {
+      const functionEntity = getFunctionDeclaration(node, sourceFile);
+      if (functionDeclarations.get(functionEntity.functionName) !== undefined) {
+        functionDeclarations.get(functionEntity.functionName)?.push(functionEntity);
+      } else {
+        const functionArray: Array<FunctionEntity> = [];
+        functionArray.push(functionEntity);
+        functionDeclarations.set(functionEntity.functionName, functionArray);
+      }
+    } else {
       if (node.kind !== SyntaxKind.EndOfFileToken && !isFunctionDeclaration(node) && !isVariableStatement(node)) {
         console.log('--------------------------- uncaught sourceFile type start -----------------------');
         console.log('fileName: ' + fileName);
@@ -175,5 +181,5 @@ export interface SourceFileEntity {
   exportAssignment: Array<string>,
   staticMethods: Array<Array<StaticMethodEntity>>,
   exportDeclarations: Array<string>,
-  functionDeclarations: Array<FunctionEntity>
+  functionDeclarations: Map<string, Array<FunctionEntity>>
 }
