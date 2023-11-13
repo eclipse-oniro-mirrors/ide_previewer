@@ -24,12 +24,13 @@ import type { SourceFileEntity } from '../declaration-node/sourceFileElementsAss
 import { generateClassDeclaration } from './generateClassDeclaration';
 import { generateEnumDeclaration } from './generateEnumDeclaration';
 import { addToIndexArray } from './generateIndex';
+
 import { generateInterfaceDeclaration } from './generateInterfaceDeclaration';
 import { generateModuleDeclaration } from './generateModuleDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
-import { generateExportFunction } from './generateExportFunction';
+import { generateCommonFunction } from './generateCommonFunction';
 
 /**
  * generate mock file string
@@ -40,7 +41,6 @@ import { generateExportFunction } from './generateExportFunction';
  * @returns
  */
 export function generateSourceFileElements(rootName: string, sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, fileName: string): string {
-  
   let mockApi = '';
   const mockFunctionElements: Array<MockFunctionElementEntity> = [];
   const dependsSourceFileList = collectReferenceFiles(sourceFile);
@@ -90,9 +90,9 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
     });
   }
 
-  if (sourceFileEntity.functionDeclarations.length > 0) {
-    sourceFileEntity.functionDeclarations.forEach(value => {
-      mockApi += generateExportFunction(value, sourceFile, mockApi) + '\n';
+  if (sourceFileEntity.functionDeclarations.size > 0) {
+    Array.from(sourceFileEntity.functionDeclarations.keys()).forEach(key => {
+      mockApi += generateCommonFunction(key, sourceFileEntity.functionDeclarations.get(key), sourceFile, mockApi, true) + '\n';
     });
   }
 
