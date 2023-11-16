@@ -20,6 +20,8 @@ import type { ReturnTypeEntity } from '../common/commonUtils';
 import { getImportDeclarationArray } from '../declaration-node/importAndExportDeclaration';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 import type { MethodEntity } from '../declaration-node/methodDeclaration';
+import type { FunctionEntity } from '../declaration-node/functionDeclaration';
+import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
 
 /**
  * get warn console template
@@ -477,6 +479,70 @@ export function getCallbackStatement(mockApi: string, paramTypeString?: string):
 }
 
 /**
+ * get callback statement
+ * @returns callback statement
+ */
+export function getOverloadedFunctionCallbackStatement(
+  entityArray: Array<FunctionEntity> | Array<MethodEntity> | Array<MethodSignatureEntity>,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
+  let overloadedCallbackBody = '';
+  entityArray.forEach(functionBody => {
+    let content = '';
+    let firstParamContent = '';
+    let callbackParamContent = '';
+    functionBody.args.forEach(arg => {
+      if (
+        arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
+        arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
+      ) {
+        const paramTypeStringArr = arg.paramTypeString.split('|');
+        firstParamContent += `if (args && [${paramTypeStringArr}].includes(args[0])) {\n`;
+      }
+      if (['callback', 'observercallback', 'listener', 'synccallback'].includes(arg.paramName.toLowerCase())) {
+        callbackParamContent += getCallbackBody(mockApi, arg.paramTypeString);
+      }
+    });
+    if (firstParamContent) {
+      content = `${firstParamContent}${callbackParamContent}\n}` + content;
+    } else {
+      content += callbackParamContent;
+    }
+    overloadedCallbackBody += content;
+  });
+  overloadedCallbackBody += '\n';
+  return overloadedCallbackBody;
+}
+
+/**
+ * get callback statement
+ * @returns callback statement
+ */
+function getCallbackBody(mockApi: string, paramString: string): string {
+  let bodyInfo = `if (args && typeof args[args.length - 1] === 'function') {
+    args[args.length - 1].call(this,`;
+  const callbackError = "{'code': '','data': '','name': '','message': '','stack': ''}";
+  if (paramString === 'ErrorCallback') {
+    bodyInfo += callbackError + ');\n}';
+    return bodyInfo;
+  }
+  let callbackDataParams = {
+    type: '',
+    data: '[PC Preview] unknown type'
+  };
+  if (paramString) {
+    callbackDataParams = setCallbackData(mockApi, paramString);
+  }
+  if (callbackDataParams?.type === 'AsyncCallback') {
+    bodyInfo += ` ${callbackError},`;
+  }
+  bodyInfo += callbackDataParams.data === '[PC Preview] unknown type' ? ` '${callbackDataParams.data}');\n` : ` ${callbackDataParams.data});\n`;
+  bodyInfo += '}';
+  return bodyInfo;
+}
+
+/**
  * get iterator template string
  * @param methodEntity
  * @returns
@@ -656,19 +722,11 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
   }
   const data = typeof returnData === 'string' && returnData.startsWith('[PC Preview] unknown') ? `'${returnData}'` : `${returnData}`;
   if (isReturnPromise) {
-    if (isCallBack) {
-      return `else {
-        return new Promise((resolve, reject) => {
-          resolve(${data});
-        })
-      }`;
-    } else {
-      return `
+    return `
         return new Promise((resolve, reject) => {
           resolve(${data});
         })
       `;
-    }
   } else {
     return `return ${data}`;
   }
@@ -716,3 +774,5 @@ function getSeparatorParam(returnPromiseParams: string): string {
   }
   return otherValue;
 }
+
+export const overloadedFunctionArr = ['on', 'off'];

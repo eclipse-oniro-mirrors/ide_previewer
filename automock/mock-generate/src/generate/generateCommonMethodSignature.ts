@@ -16,7 +16,14 @@
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
-import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData } from './generateCommonUtil';
+import {
+  getCallbackStatement,
+  getReturnStatement,
+  getWarnConsole,
+  getReturnData,
+  getOverloadedFunctionCallbackStatement,
+  overloadedFunctionArr
+} from './generateCommonUtil';
 
 /**
  * generate interface signature method
@@ -25,7 +32,13 @@ import { getCallbackStatement, getReturnStatement, getWarnConsole, getReturnData
  * @param sourceFile
  * @returns
  */
-export function generateCommonMethodSignature(rootName: string, methodSignatureArray: Array<MethodSignatureEntity>, sourceFile: SourceFile, mockApi: string): string {
+export function generateCommonMethodSignature(
+  rootName: string,
+  methodSignatureArray:
+  Array<MethodSignatureEntity>,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let methodSignatureBody = '';
   const methodEntity = methodSignatureArray[0];
   methodSignatureBody += `${methodEntity.functionName}: function(...args) {`;
@@ -48,6 +61,7 @@ export function generateCommonMethodSignature(rootName: string, methodSignatureA
     let argParamsSet: string = '';
     const returnSet: Set<string> = new Set<string>();
     let isCallBack = false;
+    let needOverloaded = false;
     methodSignatureArray.forEach(value => {
       returnSet.add(value.returnType.returnKindName);
       value.args.forEach(arg => {
@@ -58,10 +72,20 @@ export function generateCommonMethodSignature(rootName: string, methodSignatureA
             argParamsSet = arg.paramTypeString;
           }
         }
+        if (
+          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
+          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
+        ) {
+          needOverloaded = true;
+        }
       });
     });
     if (isCallBack) {
-      methodSignatureBody += getCallbackStatement(mockApi, argParamsSet);
+      if (overloadedFunctionArr.includes(methodEntity.functionName) && needOverloaded) {
+        methodSignatureBody += getOverloadedFunctionCallbackStatement(methodSignatureArray, sourceFile, mockApi);
+      } else {
+        methodSignatureBody += getCallbackStatement(mockApi, argParamsSet);
+      }
     }
     let isReturnPromise = false;
     let promiseReturnValue = '';
@@ -86,19 +110,11 @@ export function generateCommonMethodSignature(rootName: string, methodSignatureA
         });
         methodSignatureBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
       } else {
-        if (isCallBack) {
-          methodSignatureBody += `else {
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            }`;
-        } else {
-          methodSignatureBody += `
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            `;
-        }
+        methodSignatureBody += `
+            return new Promise((resolve, reject) => {
+              resolve('[PC Preview] unknow boolean');
+            })
+          `;
       }
     } else if (otherReturnValue) {
       let returnType = null;
