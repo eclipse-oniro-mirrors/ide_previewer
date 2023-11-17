@@ -776,3 +776,5 @@ function getSeparatorParam(returnPromiseParams: string): string {
 }
 
 export const overloadedFunctionArr = ['on', 'off'];
+
+export const needToAddBrace = ['ViewData', 'AutoFillType'];

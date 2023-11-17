@@ -31,6 +31,7 @@ import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateCommonFunction } from './generateCommonFunction';
+import { needToAddBrace } from './generateCommonUtil';
 
 /**
  * generate mock file string
@@ -206,6 +207,9 @@ export function generateImportDeclaration(
   if (sourceFileName === 'AbilityContext' && tmpImportPath === '../ohos_application_Ability' ||
     sourceFileName === 'Context' && tmpImportPath === './ApplicationContext') {
     return '';
+  }
+  if (!importElements.includes('{') && !importElements.includes('}') && needToAddBrace.includes(importElements)) {
+    importElements = `{ ${importElements} }`;
   }
   collectAllLegalImports(importElements);
   return `import ${importElements} from ${importPath}\n`;
