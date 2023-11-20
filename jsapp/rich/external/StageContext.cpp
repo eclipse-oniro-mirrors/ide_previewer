@@ -53,11 +53,10 @@ const std::optional<std::vector<uint8_t>> StageContext::ReadFileContents(const s
     }
 }
 
-void StageContext::SetLoaderJsonPath(const std::string& assetPath, const bool isDebug)
+void StageContext::SetLoaderJsonPath(const std::string& assetPath)
 {
     // Concatenate loader.json path
-    isDebugPreview = isDebug;
-    std::string flag = isDebugPreview ? "loader_out" : "assets";
+    std::string flag = assetPath.find(".preview") == std::string::npos ? "loader_out" : "assets";
     size_t pos = assetPath.rfind(flag);
     if (pos == std::string::npos) {
         ELOG("assetPath: %s format error.", assetPath.c_str());

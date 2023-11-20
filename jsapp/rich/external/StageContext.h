@@ -31,7 +31,7 @@ public:
     static StageContext& GetInstance();
     const std::optional<std::vector<uint8_t>> ReadFileContents(const std::string& filePath) const;
     // for Previewer
-    void SetLoaderJsonPath(const std::string& assetPath, const bool isDebug);
+    void SetLoaderJsonPath(const std::string& assetPath);
     void GetModulePathMapFromLoaderJson();
     void ReleaseHspBuffers();
     std::map<std::string, std::string> ParseMockJsonFile(const std::string& mockJsonFilePath);
@@ -53,7 +53,6 @@ private:
     void SetMiddlePath(const std::string& assetPath);
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string middlePath;
-    bool isDebugPreview;
     std::string localBundleName = "bundle";
 };
 }
