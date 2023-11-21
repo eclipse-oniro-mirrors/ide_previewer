@@ -27,6 +27,8 @@
 #include "viewport_config.h"
 #include "glfw_render_context.h"
 #include "window_model.h"
+#include "ace_preview_helper.h"
+#include "ClipboardHelper.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -211,6 +213,11 @@ void JsAppImpl::RunJsApp()
     OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath);
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     InitGlfwEnv();
+    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
+    Platform::AcePreviewHelper::GetInstance()->
+        SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
+    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfSetClipboardData(ClipboardHelper::SetClipboardData);
+    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfGetClipboardData(ClipboardHelper::GetClipboardData);
     if (isDebug && debugServerPort >= 0) {
         RunDebugAbility(); // for debug preview
     } else {
@@ -220,6 +227,19 @@ void JsAppImpl::RunJsApp()
 
 void JsAppImpl::RunNormalAbility()
 {
+    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfHspBufferTracker(
+        [](const std::string& inputPath, uint8_t** buff, size_t* buffSize) -> bool {
+            if (!buff || !buffSize || inputPath.empty()) {
+                return false;
+            }
+            auto data = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer(inputPath);
+            if (!data) {
+                return false;
+            }
+            *buff = data->data();
+            *buffSize = data->size();
+            return true;
+        });
     if (ability != nullptr) {
         ability.reset();
     }
