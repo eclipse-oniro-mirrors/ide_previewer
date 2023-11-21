@@ -49,7 +49,10 @@ SourceTool MouseInputImpl::ConvertToOsTool(int tools) const
 void MouseInputImpl::DispatchOsTouchEvent() const
 {
     auto pointerEvent = std::make_shared<PointerEvent>();
-    pointerEvent->time = std::chrono::high_resolution_clock::now();
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    std::chrono::duration<long, std::nano> duration(ts.tv_sec * SEC_TO_NANOSEC + ts.tv_nsec);
+    pointerEvent->time = std::chrono::high_resolution_clock::time_point(duration);
     pointerEvent->id = 1;
     pointerEvent->x = mouseXPosition;
     pointerEvent->y = mouseYPosition;
