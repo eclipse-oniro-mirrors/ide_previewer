@@ -54,9 +54,28 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
     });
   }
 
-  if (sourceFileEntity.moduleDeclarations.length > 0) {
-    sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
+  if (sourceFileEntity.enumDeclarations.length > 0) {
+    sourceFileEntity.enumDeclarations.forEach(value => {
+      mockApi += generateEnumDeclaration('', value) + '\n';
+      mockFunctionElements.push({ elementName: value.enumName, type: 'enum' });
+    });
+  }
+
+  if (sourceFileEntity.typeAliasDeclarations.length > 0) {
+    sourceFileEntity.typeAliasDeclarations.forEach(value => {
+      mockApi += generateTypeAliasDeclaration(value, false, sourceFile, extraImport, mockApi) + '\n';
+      mockFunctionElements.push({ elementName: value.typeAliasName, type: 'typeAlias' });
+    });
+  }
+
+  if (sourceFileEntity.interfaceDeclarations.length > 0) {
+    sourceFileEntity.interfaceDeclarations.forEach(value => {
+      if (value.interfaceName === 'PointLightStyle') {
+        console.log(222);
+      }
+      mockApi += generateInterfaceDeclaration('', value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
+        sourceFileEntity.importDeclarations, extraImport) + '\n';
+      mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
     });
   }
 
@@ -69,25 +88,9 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
     });
   }
 
-  if (sourceFileEntity.interfaceDeclarations.length > 0) {
-    sourceFileEntity.interfaceDeclarations.forEach(value => {
-      mockApi += generateInterfaceDeclaration('', value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
-        sourceFileEntity.importDeclarations, extraImport) + '\n';
-      mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
-    });
-  }
-
-  if (sourceFileEntity.enumDeclarations.length > 0) {
-    sourceFileEntity.enumDeclarations.forEach(value => {
-      mockApi += generateEnumDeclaration('', value) + '\n';
-      mockFunctionElements.push({ elementName: value.enumName, type: 'enum' });
-    });
-  }
-
-  if (sourceFileEntity.typeAliasDeclarations.length > 0) {
-    sourceFileEntity.typeAliasDeclarations.forEach(value => {
-      mockApi += generateTypeAliasDeclaration(value, false, sourceFile, extraImport, mockApi) + '\n';
-      mockFunctionElements.push({ elementName: value.typeAliasName, type: 'typeAlias' });
+  if (sourceFileEntity.moduleDeclarations.length > 0) {
+    sourceFileEntity.moduleDeclarations.forEach(value => {
+      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
     });
   }
 
