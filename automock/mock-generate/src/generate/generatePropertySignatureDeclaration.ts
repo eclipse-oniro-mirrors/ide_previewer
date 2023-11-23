@@ -52,6 +52,8 @@ export function generatePropertySignatureDeclaration(rootName: string, propertyS
       } else if (propertySignature.propertyTypeName === 'string' || checkIsGenericSymbol(propertySignature.propertyTypeName) ||
         propertySignature.propertyTypeName === 'bool' || propertySignature.propertyTypeName === 'Data') {
         propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
+      } else if (propertySignature.propertyTypeName === 'IlluminateType') {
+        propertySignatureBody = `${propertySignature.propertyName}: '',`;
       } else {
         if (propertySignature.propertyTypeName.includes('<')) {
           if (propertySignature.propertyTypeName.startsWith('AsyncCallback')) {
