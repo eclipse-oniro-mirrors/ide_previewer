@@ -31,6 +31,7 @@ private:
     virtual ~MouseInputImpl() {}
     OHOS::MMI::TouchType ConvertToOsType(int status) const;
     OHOS::MMI::SourceTool ConvertToOsTool(int tools) const;
+    static constexpr int64_t SEC_TO_NANOSEC = 1000000000;
 };
 
 #endif // MOUSEINPUTIMPL_H

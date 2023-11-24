@@ -27,11 +27,11 @@ import { getCallbackStatement, getReturnStatement } from './generateCommonUtil';
  * @returns
  */
 export function generateExportFunction(functionEntity: FunctionEntity, sourceFile: SourceFile, mockApi: string): string {
-  if (functionEntity.functionName !== 'getContext') {
+  let functionBody = '';
+  functionBody = `const ${functionEntity.functionName} = function (...args) {`;
+  if (mockApi.includes(functionBody)) {
     return '';
   }
-  let functionBody = '';
-  functionBody = `global.${functionEntity.functionName} = function (...args) {`;
   functionBody += `console.warn('The ${functionEntity.functionName} interface in the Previewer is a mocked implementation and may behave differently than on a real device.');\n`;
 
   const args = functionEntity.args;
@@ -40,8 +40,14 @@ export function generateExportFunction(functionEntity: FunctionEntity, sourceFil
     functionBody += getCallbackStatement(mockApi);
   }
   if (functionEntity.returnType.returnKind !== SyntaxKind.VoidKeyword) {
-      functionBody += getReturnStatement(functionEntity.returnType, sourceFile);
+    functionBody += getReturnStatement(functionEntity.returnType, sourceFile);
   }
   functionBody += '}';
+  functionBody += `
+    if (!global.${functionEntity.functionName}) {
+      global.${functionEntity.functionName} = ${functionEntity.functionName}
+    }
+  `;
   return functionBody;
 }
+

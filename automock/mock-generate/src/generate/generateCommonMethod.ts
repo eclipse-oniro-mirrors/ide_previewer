@@ -17,8 +17,13 @@ import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { MethodEntity } from '../declaration-node/methodDeclaration';
 import {
-  generateSymbolIterator, getCallbackStatement,
-  getReturnStatement, getWarnConsole, getReturnData
+  generateSymbolIterator,
+  getCallbackStatement,
+  getReturnStatement,
+  getWarnConsole,
+  getReturnData,
+  getOverloadedFunctionCallbackStatement,
+  overloadedFunctionArr
 } from './generateCommonUtil';
 
 /**
@@ -28,7 +33,12 @@ import {
  * @param sourceFile
  * @returns
  */
-export function generateCommonMethod(rootName: string, methodArray: Array<MethodEntity>, sourceFile: SourceFile, mockApi: string): string {
+export function generateCommonMethod(
+  rootName: string,
+  methodArray: Array<MethodEntity>,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let methodBody = '';
   const methodEntity = methodArray[0];
   if (methodEntity.functionName.name === 'Symbol.iterator') {
@@ -60,6 +70,7 @@ export function generateCommonMethod(rootName: string, methodArray: Array<Method
     let argParamsSet: string = '';
     const returnSet: Set<string> = new Set<string>();
     let isCallBack = false;
+    let needOverloaded = false;
     methodArray.forEach(value => {
       returnSet.add(value.returnType.returnKindName);
       value.args.forEach(arg => {
@@ -70,10 +81,20 @@ export function generateCommonMethod(rootName: string, methodArray: Array<Method
             argParamsSet = arg.paramTypeString;
           }
         }
+        if (
+          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
+          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
+        ) {
+          needOverloaded = true;
+        }
       });
     });
     if (isCallBack) {
-      methodBody += getCallbackStatement(mockApi, argParamsSet);
+      if (overloadedFunctionArr.includes(methodEntity.functionName.name) && needOverloaded) {
+        methodBody += getOverloadedFunctionCallbackStatement(methodArray, sourceFile, mockApi);
+      } else {
+        methodBody += getCallbackStatement(mockApi, argParamsSet);
+      }
     }
     let isReturnPromise = false;
     let promiseReturnValue = '';
@@ -98,19 +119,11 @@ export function generateCommonMethod(rootName: string, methodArray: Array<Method
         });
         methodBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
       } else {
-        if (isCallBack) {
-          methodBody += `else {
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            }`;
-        } else {
-          methodBody += `
-              return new Promise((resolve, reject) => {
-                resolve('[PC Preview] unknow boolean');
-              })
-            `;
-        }
+        methodBody += `
+            return new Promise((resolve, reject) => {
+              resolve('[PC Preview] unknow boolean');
+            })
+          `;
       }
     } else if (otherReturnValue) {
       let returnType = null;

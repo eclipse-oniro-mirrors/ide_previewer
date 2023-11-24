@@ -359,5 +359,6 @@ export const specialFiles = [
   '@internal/component/ets/common_ts_ets_api.d.ts',
   '@internal/component/ets/enums.d.ts',
   '@internal/component/ets/alert_dialog.d.ts',
-  '@internal/component/ets/ability_component.d.ts'
+  '@internal/component/ets/ability_component.d.ts',
+  '@internal/component/ets/rich_editor.d.ts'
 ];
