@@ -337,7 +337,7 @@ export function generateGenericTypeToMockValue(kindName: string): string | numbe
 }
 
 const paramsTypeStart = {
-  'void': '[PC Preview] unknown type',
+  'void': '\'[PC Preview] unknown type\'',
   'Array': '[]',
   'Object': '{}',
   'object': '{}',
@@ -350,7 +350,7 @@ const paramsTypeStart = {
   'Boolean': false,
   'ArrayBuffer': 'new ArrayBuffer(0)',
   'Uint8Array': 'new Uint8Array()',
-  'unknown': '[PC Preview] unknown type'
+  'unknown': '\'[PC Preview] unknown type\''
 };
 
 const removeCallback = (str: string) => {

@@ -28,7 +28,12 @@ import {
  * @param sourceFile
  * @returns
  */
-export function generatePropertySignatureDeclaration(rootName: string, propertySignature: PropertySignatureEntity, sourceFile: SourceFile, mockApi: string): string {
+export function generatePropertySignatureDeclaration(
+  rootName: string,
+  propertySignature: PropertySignatureEntity,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let propertySignatureBody = '';
   if (propertySignature.kind === SyntaxKind.FunctionType) {
     propertySignatureBody += `${propertySignature.propertyName}: function(...args) {`;
@@ -45,32 +50,7 @@ export function generatePropertySignatureDeclaration(rootName: string, propertyS
     ) {
       propertySignatureBody = `${propertySignature.propertyName}: {},`;
     } else if (propertySignature.kind === SyntaxKind.TypeReference) {
-      if (propertySignature.propertyTypeName.startsWith('Array')) {
-        propertySignatureBody = `${propertySignature.propertyName}: [],`;
-      } else if (propertySignature.propertyTypeName.startsWith('Map')) {
-        propertySignatureBody = `${propertySignature.propertyName}: {key: {}},`;
-      } else if (propertySignature.propertyTypeName === 'string' || checkIsGenericSymbol(propertySignature.propertyTypeName) ||
-        propertySignature.propertyTypeName === 'bool' || propertySignature.propertyTypeName === 'Data') {
-        propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
-      } else if (propertySignature.propertyTypeName === 'IlluminateType') {
-        propertySignatureBody = `${propertySignature.propertyName}: '',`;
-      } else {
-        if (propertySignature.propertyTypeName.includes('<')) {
-          if (propertySignature.propertyTypeName.startsWith('AsyncCallback')) {
-            propertySignatureBody = `${propertySignature.propertyName}: ()=>{},`;
-          } else {
-            const preSplit = propertySignature.propertyTypeName.split('<');
-            const genericArg = preSplit[preSplit.length - 1].split('>')[0];
-            propertySignatureBody = `${propertySignature.propertyName}: ${genericArg},`;
-          }
-        } else {
-          if (propertyTypeWhiteList(propertySignature.propertyTypeName) === propertySignature.propertyTypeName) {
-            propertySignatureBody = `${propertySignature.propertyName}: ${getTheRealReferenceFromImport(sourceFile, propertySignature.propertyTypeName)},`;
-          } else {
-            propertySignatureBody = `${propertySignature.propertyName}: ${propertyTypeWhiteList(propertySignature.propertyTypeName)},`;
-          }
-        }
-      }
+      propertySignatureBody = generatePropertySignatureForTypeReference(propertySignature, sourceFile);
     } else if (propertySignature.kind === SyntaxKind.NumberKeyword) {
       propertySignatureBody = `${propertySignature.propertyName}: 0,`;
     } else if (propertySignature.kind === SyntaxKind.StringKeyword) {
@@ -78,38 +58,91 @@ export function generatePropertySignatureDeclaration(rootName: string, propertyS
     } else if (propertySignature.kind === SyntaxKind.BooleanKeyword) {
       propertySignatureBody = `${propertySignature.propertyName}: true,`;
     } else if (propertySignature.kind === SyntaxKind.UnionType) {
-      let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trimStart().trimEnd();
-      if (unionFirstElement.includes('[]')) {
-        unionFirstElement = '[]';
-      }
-      if (unionFirstElement.startsWith('"') || unionFirstElement.startsWith("'")) {
-        propertySignatureBody = `${propertySignature.propertyName}: ${unionFirstElement},`;
-      } else if (unionFirstElement === 'string') {
-        propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
-      } else if (unionFirstElement === 'number') {
-        propertySignatureBody = `${propertySignature.propertyName}: 0,`;
-      } else if (unionFirstElement === 'boolean') {
-        propertySignatureBody = `${propertySignature.propertyName}: true,`;
-      } else if (unionFirstElement === 'Uint8Array') {
-        propertySignatureBody = `${propertySignature.propertyName}: new ${unionFirstElement}(),`;
-      } else {
-        let element = unionFirstElement;
-        if (element === 'HTMLCanvasElement') {
-          element = `'[PC Preview] unknown ${propertySignature.propertyName}'`;
-        } else if (element === 'WebGLActiveInfo') {
-          element = '{size: \'[PC Preview] unknown GLint\', type: 0, name: \'[PC Preview] unknown name\'}';
-        } else if (element.startsWith('Array')) {
-          element = '[]';
-        } else if (propertyTypeWhiteList(unionFirstElement) === unionFirstElement) {
-          element = getTheRealReferenceFromImport(sourceFile, unionFirstElement);
-        }
-        propertySignatureBody = `${propertySignature.propertyName}: ${element},`;
-      }
+      propertySignatureBody = generatePropertySignatureForUnionType(propertySignature, sourceFile);
     } else if (propertySignature.kind === SyntaxKind.ArrayType) {
       propertySignatureBody = `${propertySignature.propertyName}: [],`;
     } else {
       propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
     }
+  }
+  return propertySignatureBody;
+}
+
+/**
+ * generate interface signature property for TypeReference
+ * @param propertySignature
+ * @param sourceFile
+ * @returns
+ */
+function generatePropertySignatureForTypeReference(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
+  let propertySignatureBody = '';
+  if (propertySignature.propertyTypeName.startsWith('Array')) {
+    propertySignatureBody = `${propertySignature.propertyName}: [],`;
+  } else if (propertySignature.propertyTypeName.startsWith('Map')) {
+    propertySignatureBody = `${propertySignature.propertyName}: {key: {}},`;
+  } else if (
+    propertySignature.propertyTypeName === 'string' ||
+    checkIsGenericSymbol(propertySignature.propertyTypeName) ||
+    propertySignature.propertyTypeName === 'bool' ||
+    propertySignature.propertyTypeName === 'Data'
+  ) {
+    propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
+  } else if (propertySignature.propertyTypeName === 'IlluminateType') {
+    propertySignatureBody = `${propertySignature.propertyName}: '',`;
+  } else {
+    if (propertySignature.propertyTypeName.includes('<')) {
+      if (propertySignature.propertyTypeName.startsWith('AsyncCallback')) {
+        propertySignatureBody = `${propertySignature.propertyName}: ()=>{},`;
+      } else {
+        const preSplit = propertySignature.propertyTypeName.split('<');
+        const genericArg = preSplit[preSplit.length - 1].split('>')[0];
+        propertySignatureBody = `${propertySignature.propertyName}: ${genericArg},`;
+      }
+    } else {
+      if (propertyTypeWhiteList(propertySignature.propertyTypeName) === propertySignature.propertyTypeName) {
+        propertySignatureBody = `${propertySignature.propertyName}: ${getTheRealReferenceFromImport(sourceFile, propertySignature.propertyTypeName)},`;
+      } else {
+        propertySignatureBody = `${propertySignature.propertyName}: ${propertyTypeWhiteList(propertySignature.propertyTypeName)},`;
+      }
+    }
+  }
+  return propertySignatureBody;
+}
+
+/**
+ * generate interface signature property for UnionType
+ * @param propertySignature
+ * @param sourceFile
+ * @returns
+ */
+function generatePropertySignatureForUnionType(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
+  let propertySignatureBody = '';
+  let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trimStart().trimEnd();
+  if (unionFirstElement.includes('[]')) {
+    unionFirstElement = '[]';
+  }
+  if (unionFirstElement.startsWith('"') || unionFirstElement.startsWith("'")) {
+    propertySignatureBody = `${propertySignature.propertyName}: ${unionFirstElement},`;
+  } else if (unionFirstElement === 'string') {
+    propertySignatureBody = `${propertySignature.propertyName}: '[PC Preview] unknown ${propertySignature.propertyName}',`;
+  } else if (unionFirstElement === 'number') {
+    propertySignatureBody = `${propertySignature.propertyName}: 0,`;
+  } else if (unionFirstElement === 'boolean') {
+    propertySignatureBody = `${propertySignature.propertyName}: true,`;
+  } else if (unionFirstElement === 'Uint8Array') {
+    propertySignatureBody = `${propertySignature.propertyName}: new ${unionFirstElement}(),`;
+  } else {
+    let element = unionFirstElement;
+    if (element === 'HTMLCanvasElement') {
+      element = `'[PC Preview] unknown ${propertySignature.propertyName}'`;
+    } else if (element === 'WebGLActiveInfo') {
+      element = '{size: \'[PC Preview] unknown GLint\', type: 0, name: \'[PC Preview] unknown name\'}';
+    } else if (element.startsWith('Array')) {
+      element = '[]';
+    } else if (propertyTypeWhiteList(unionFirstElement) === unionFirstElement) {
+      element = getTheRealReferenceFromImport(sourceFile, unionFirstElement);
+    }
+    propertySignatureBody = `${propertySignature.propertyName}: ${element},`;
   }
   return propertySignatureBody;
 }

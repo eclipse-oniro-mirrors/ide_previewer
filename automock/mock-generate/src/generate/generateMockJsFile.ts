@@ -33,6 +33,11 @@ import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateCommonFunction } from './generateCommonFunction';
 import { needToAddBrace } from './generateCommonUtil';
 
+interface ReturnDataParams {
+  mockData: string,
+  mockFunctionElements: Array<MockFunctionElementEntity>
+}
+
 /**
  * generate mock file string
  * @param rootName
@@ -43,113 +48,34 @@ import { needToAddBrace } from './generateCommonUtil';
  */
 export function generateSourceFileElements(rootName: string, sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, fileName: string): string {
   let mockApi = '';
-  const mockFunctionElements: Array<MockFunctionElementEntity> = [];
+  let mockFunctionElements: Array<MockFunctionElementEntity> = [];
   const dependsSourceFileList = collectReferenceFiles(sourceFile);
   const heritageClausesArray = getCurrentApiHeritageArray(sourceFileEntity, sourceFile);
   const extraImport = [];
 
-  if (sourceFileEntity.importDeclarations.length > 0) {
-    sourceFileEntity.importDeclarations.forEach(value => {
-      mockApi += generateImportDeclaration(value, fileName, heritageClausesArray, sourceFile.fileName, dependsSourceFileList);
-    });
-  }
+  mockApi += importDeclarationsGenerate(sourceFileEntity, sourceFile, fileName, heritageClausesArray, dependsSourceFileList);
+  const enumDeclarationsData = enumDeclarationsGenerate(sourceFileEntity, mockFunctionElements);
+  mockApi += enumDeclarationsData.mockData;
+  mockFunctionElements = enumDeclarationsData.mockFunctionElements;
 
-  if (sourceFileEntity.enumDeclarations.length > 0) {
-    sourceFileEntity.enumDeclarations.forEach(value => {
-      mockApi += generateEnumDeclaration('', value) + '\n';
-      mockFunctionElements.push({ elementName: value.enumName, type: 'enum' });
-    });
-  }
+  const typeAliasDeclarationsData = typeAliasDeclarationsGenerate(sourceFileEntity, mockFunctionElements, sourceFile, extraImport, mockApi);
+  mockApi += typeAliasDeclarationsData.mockData;
+  mockFunctionElements = typeAliasDeclarationsData.mockFunctionElements;
 
-  if (sourceFileEntity.typeAliasDeclarations.length > 0) {
-    sourceFileEntity.typeAliasDeclarations.forEach(value => {
-      mockApi += generateTypeAliasDeclaration(value, false, sourceFile, extraImport, mockApi) + '\n';
-      mockFunctionElements.push({ elementName: value.typeAliasName, type: 'typeAlias' });
-    });
-  }
+  const interfaceDeclarationsData = interfaceDeclarationsGenerate(sourceFileEntity, mockFunctionElements, sourceFile, extraImport, mockApi);
+  mockApi += interfaceDeclarationsData.mockData;
+  mockFunctionElements = interfaceDeclarationsData.mockFunctionElements;
 
-  if (sourceFileEntity.interfaceDeclarations.length > 0) {
-    sourceFileEntity.interfaceDeclarations.forEach(value => {
-      if (value.interfaceName === 'PointLightStyle') {
-        console.log(222);
-      }
-      mockApi += generateInterfaceDeclaration('', value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
-        sourceFileEntity.importDeclarations, extraImport) + '\n';
-      mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
-    });
-  }
+  const classDeclarationsData = classDeclarationsGenerate(sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName);
+  mockApi += classDeclarationsData.mockData;
+  mockFunctionElements = classDeclarationsData.mockFunctionElements;
 
-  if (sourceFileEntity.classDeclarations.length > 0) {
-    sourceFileEntity.classDeclarations.forEach(value => {
-      if (!fileName.startsWith('system_') && !value.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
-        mockApi += generateClassDeclaration('', value, false, '', fileName, sourceFile, false, mockApi) + '\n';
-        mockFunctionElements.push({ elementName: value.className, type: 'class' });
-      }
-    });
-  }
+  mockApi += moduleDeclarationsGenerate(sourceFileEntity, sourceFile, mockApi, fileName, extraImport);
 
-  if (sourceFileEntity.moduleDeclarations.length > 0) {
-    sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockApi += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
-    });
-  }
+  mockApi += functionDeclarationsGenerate(sourceFileEntity, sourceFile, mockApi);
 
-  if (sourceFileEntity.functionDeclarations.size > 0) {
-    Array.from(sourceFileEntity.functionDeclarations.keys()).forEach(key => {
-      mockApi += generateCommonFunction(key, sourceFileEntity.functionDeclarations.get(key), sourceFile, mockApi, true) + '\n';
-    });
-  }
+  mockApi += otherDeclarationsGenerate(rootName, sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName).mockData;
 
-  if (sourceFileEntity.moduleDeclarations.length === 0 && (fileName.startsWith('ohos_') || fileName.startsWith('system_') || fileName.startsWith('webgl'))) {
-    const mockNameArr = fileName.split('_');
-    const mockName = mockNameArr[mockNameArr.length - 1];
-    const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
-    if (defaultExportClass.length > 0) {
-      defaultExportClass.forEach(value => {
-        mockApi += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
-        mockFunctionElements.push({ elementName: value.className, type: 'class' });
-      });
-    }
-    mockApi += `export function mock${firstCharacterToUppercase(mockName)}() {\n`;
-    if (fileName.startsWith('system_')) {
-      addToSystemIndexArray({
-        filename: fileName,
-        mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
-      });
-      mockApi += `global.systemplugin.${mockName} = {`;
-      const defaultClass = getDefaultExportClassDeclaration(sourceFile);
-      let staticMethodBody = '';
-      if (defaultClass.length > 0) {
-        defaultClass.forEach(value => {
-          value.staticMethods.forEach(val => {
-            staticMethodBody += generateStaticFunction(val, true, sourceFile, mockApi);
-          });
-        });
-      }
-      mockApi += staticMethodBody;
-      mockApi += '}';
-    } else {
-      if (!fileName.startsWith('webgl')) {
-        addToIndexArray({ fileName: fileName, mockFunctionName: `mock${firstCharacterToUppercase(mockName)}` });
-      }
-    }
-    mockApi += `\nconst mockModule${firstCharacterToUppercase(mockName)} = {`;
-    mockFunctionElements.forEach(val => {
-      mockApi += `${val.elementName}: ${val.elementName},`;
-    });
-    mockApi += '}\n';
-    mockApi += `return mockModule${firstCharacterToUppercase(mockName)}.${firstCharacterToUppercase(mockName)}\n`;
-    mockApi += '}';
-  } else {
-    const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
-    if (defaultExportClass.length > 0) {
-      const mockNameArr = fileName.split('_');
-      const mockName = mockNameArr[mockNameArr.length - 1];
-      defaultExportClass.forEach(value => {
-        mockApi += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
-      });
-    }
-  }
   if (sourceFileEntity.exportDeclarations.length > 0) {
     sourceFileEntity.exportDeclarations.forEach(value => {
       if (value.includes('export type {')) {
@@ -162,6 +88,256 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
   }
   mockApi = extraImport.join('') + mockApi;
   return mockApi;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param sourceFile
+ * @param fileName
+ * @param heritageClausesArray
+ * @param dependsSourceFileList
+ * @returns
+ */
+function importDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  sourceFile: SourceFile,
+  fileName: string,
+  heritageClausesArray: string[],
+  dependsSourceFileList: SourceFile[]
+): string {
+  let mockData = '';
+  if (sourceFileEntity.importDeclarations.length > 0) {
+    sourceFileEntity.importDeclarations.forEach(value => {
+      mockData += generateImportDeclaration(value, fileName, heritageClausesArray, sourceFile.fileName, dependsSourceFileList);
+    });
+  }
+  return mockData;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param mockFunctionElements
+ * @returns
+ */
+function enumDeclarationsGenerate(sourceFileEntity: SourceFileEntity, mockFunctionElements: Array<MockFunctionElementEntity>): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  if (sourceFileEntity.enumDeclarations.length > 0) {
+    sourceFileEntity.enumDeclarations.forEach(value => {
+      data.mockData += generateEnumDeclaration('', value) + '\n';
+      data.mockFunctionElements.push({ elementName: value.enumName, type: 'enum' });
+    });
+  }
+  return data;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param mockFunctionElements
+ * @param sourceFile
+ * @param extraImport
+ * @param mockApi
+ * @returns
+ */
+function typeAliasDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  mockFunctionElements: Array<MockFunctionElementEntity>,
+  sourceFile: SourceFile,
+  extraImport: string[],
+  mockApi: string
+): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  if (sourceFileEntity.typeAliasDeclarations.length > 0) {
+    sourceFileEntity.typeAliasDeclarations.forEach(value => {
+      data.mockData += generateTypeAliasDeclaration(value, false, sourceFile, extraImport, mockApi) + '\n';
+      data.mockFunctionElements.push({ elementName: value.typeAliasName, type: 'typeAlias' });
+    });
+  }
+  return data;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param mockFunctionElements
+ * @param sourceFile
+ * @param extraImport
+ * @param mockApi
+ * @returns
+ */
+function interfaceDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  mockFunctionElements: Array<MockFunctionElementEntity>,
+  sourceFile: SourceFile,
+  extraImport: string[],
+  mockApi: string
+): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  if (sourceFileEntity.interfaceDeclarations.length > 0) {
+    sourceFileEntity.interfaceDeclarations.forEach(value => {
+      data.mockData += generateInterfaceDeclaration('', value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
+        sourceFileEntity.importDeclarations, extraImport) + '\n';
+      data.mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
+    });
+  }
+  return data;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param mockFunctionElements
+ * @param sourceFile
+ * @param mockApi
+ * @param fileName
+ * @returns
+ */
+function classDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  mockFunctionElements: Array<MockFunctionElementEntity>,
+  sourceFile: SourceFile,
+  mockApi: string,
+  fileName: string
+): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  if (sourceFileEntity.classDeclarations.length > 0) {
+    sourceFileEntity.classDeclarations.forEach(value => {
+      if (!fileName.startsWith('system_') && !value.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
+        data.mockData += generateClassDeclaration('', value, false, '', fileName, sourceFile, false, mockApi) + '\n';
+        data.mockFunctionElements.push({ elementName: value.className, type: 'class' });
+      }
+    });
+  }
+  return data;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param sourceFile
+ * @param mockApi
+ * @param fileName
+ * @param extraImport
+ * @returns
+ */
+function moduleDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  sourceFile: SourceFile,
+  mockApi: string,
+  fileName: string,
+  extraImport: string[]
+): string {
+  let mockData = '';
+  if (sourceFileEntity.moduleDeclarations.length > 0) {
+    sourceFileEntity.moduleDeclarations.forEach(value => {
+      mockData += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
+    });
+  }
+  return mockData;
+}
+
+/**
+ * generate mock file string
+ * @param sourceFileEntity
+ * @param sourceFile
+ * @param mockApi
+ * @returns
+ */
+function functionDeclarationsGenerate(sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, mockApi: string): string {
+  let mockData = '';
+  if (sourceFileEntity.functionDeclarations.size > 0) {
+    Array.from(sourceFileEntity.functionDeclarations.keys()).forEach(key => {
+      mockData += generateCommonFunction(key, sourceFileEntity.functionDeclarations.get(key), sourceFile, mockApi, true) + '\n';
+    });
+  }
+  return mockData;
+}
+
+/**
+ * generate mock file string
+ * @param rootName
+ * @param sourceFileEntity
+ * @param mockFunctionElements
+ * @param sourceFile
+ * @param mockApi
+ * @param fileName
+ * @returns
+ */
+function otherDeclarationsGenerate(
+  rootName: string, sourceFileEntity: SourceFileEntity, mockFunctionElements: Array<MockFunctionElementEntity>,
+  sourceFile: SourceFile, mockApi: string, fileName: string
+): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  if (sourceFileEntity.moduleDeclarations.length === 0 &&
+    (fileName.startsWith('ohos_') || fileName.startsWith('system_') || fileName.startsWith('webgl'))
+  ) {
+    const mockNameArr = fileName.split('_');
+    const mockName = mockNameArr[mockNameArr.length - 1];
+    const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
+    if (defaultExportClass.length > 0) {
+      defaultExportClass.forEach(value => {
+        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
+        data.mockFunctionElements.push({ elementName: value.className, type: 'class' });
+      });
+    }
+    data.mockData += `export function mock${firstCharacterToUppercase(mockName)}() {\n`;
+    if (fileName.startsWith('system_')) {
+      addToSystemIndexArray({
+        filename: fileName,
+        mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
+      });
+      data.mockData += `global.systemplugin.${mockName} = {`;
+      const defaultClass = getDefaultExportClassDeclaration(sourceFile);
+      let staticMethodBody = '';
+      if (defaultClass.length > 0) {
+        defaultClass.forEach(value => {
+          value.staticMethods.forEach(val => {
+            staticMethodBody += generateStaticFunction(val, true, sourceFile, mockApi);
+          });
+        });
+      }
+      data.mockData += staticMethodBody;
+      data.mockData += '}';
+    } else {
+      if (!fileName.startsWith('webgl')) {
+        addToIndexArray({ fileName: fileName, mockFunctionName: `mock${firstCharacterToUppercase(mockName)}` });
+      }
+    }
+    data.mockData += `\nconst mockModule${firstCharacterToUppercase(mockName)} = {`;
+    data.mockFunctionElements.forEach(val => {
+      data.mockData += `${val.elementName}: ${val.elementName},`;
+    });
+    data.mockData += '}\n';
+    data.mockData += `return mockModule${firstCharacterToUppercase(mockName)}.${firstCharacterToUppercase(mockName)}\n`;
+    data.mockData += '}';
+  } else {
+    const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
+    if (defaultExportClass.length > 0) {
+      const mockNameArr = fileName.split('_');
+      const mockName = mockNameArr[mockNameArr.length - 1];
+      defaultExportClass.forEach(value => {
+        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
+      });
+    }
+  }
+  return data;
 }
 
 /**
@@ -349,7 +525,6 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
   }
   return importElements;
 }
-
 
 interface MockFunctionElementEntity {
   elementName: string,
