@@ -57,6 +57,7 @@ void StageContext::SetLoaderJsonPath(const std::string& assetPath)
 {
     // Concatenate loader.json path
     std::string flag = assetPath.find(".preview") == std::string::npos ? "loader_out" : "assets";
+    std::string separator = FileSystem::GetSeparator();
     size_t pos = assetPath.rfind(flag);
     if (pos == std::string::npos) {
         ELOG("assetPath: %s format error.", assetPath.c_str());
@@ -64,7 +65,7 @@ void StageContext::SetLoaderJsonPath(const std::string& assetPath)
     }
     std::string assetDir = assetPath.substr(0, pos);
     SetMiddlePath(assetPath);
-    loaderJsonPath = assetDir + "loader/default/loader.json";
+    loaderJsonPath = assetDir + "loader" + separator + "default" + separator + "loader.json";
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
 }
 
@@ -172,7 +173,7 @@ std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& modu
     // 1.以entry拆分，拼接oh_modules/.hsp,在这个拼接目录下查找以moduleName@开头的文件夹
     // 2.获取拼接目录下的moduleName.hsp文件
     // 3.使用zlib获取hsp压缩包下的ets/modules.abc内容
-    int upwardLevel = 3;
+    int upwardLevel = 5;
     int pos = GetUpwardDirIndex(loaderJsonPath, upwardLevel);
     if (pos < 0) {
         ILOG("set middlePath:%s failed.", middlePath.c_str());
