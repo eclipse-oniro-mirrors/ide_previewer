@@ -512,7 +512,7 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
     const tmpArr = importEntity.importPath.split('.');
     const mockModuleName = firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''));
     if (importElements === 'observer' && importEntity.importPath.includes('@ohos.arkui.observer')) {
-      return `{ mockUIObserver as ${importElements}}`;
+      return `{ mockUiObserver as ${importElements}}`;
     }
     importElements = `{ mock${mockModuleName} }`;
   } else {
