@@ -47,6 +47,7 @@ void CommandLineFactory::InitCommandMap()
         typeMap["DropFrame"] = &CommandLineFactory::CreateObject<DropFrameCommand>;
         typeMap["KeyPress"] = &CommandLineFactory::CreateObject<KeyPressCommand>;
         typeMap["LoadContent"] = &CommandLineFactory::CreateObject<LoadContentCommand>;
+        typeMap["FoldStatus"] = &CommandLineFactory::CreateObject<FoldStatusCommand>;
     } else {
         typeMap["Power"] = &CommandLineFactory::CreateObject<PowerCommand>;
         typeMap["Volume"] = &CommandLineFactory::CreateObject<VolumeCommand>;

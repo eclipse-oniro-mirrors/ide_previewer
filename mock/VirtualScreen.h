@@ -91,11 +91,23 @@ public:
     static uint32_t inputKeyCountPerMinute;
     static uint32_t inputMethodCountPerMinute;
 
+    void SetFoldable(const bool value);
+    bool GetFoldable() const;
+    void SetFoldStatus(const std::string& value);
+    std::string GetFoldStatus() const;
+    void SetFoldResolution(int32_t changedFoldWidth, int32_t changedFoldHeight);
+    int32_t GetFoldWidth() const;
+    int32_t GetFoldHeight() const;
+
 protected:
     int32_t orignalResolutionWidth;
     int32_t orignalResolutionHeight;
     int32_t compressionResolutionWidth;
     int32_t compressionResolutionHeight;
+    int32_t foldWidth = 0;
+    int32_t foldHeight = 0;
+    std::string foldStatus = "unfold";
+    bool foldable = false;
     static uint32_t validFrameCountPerMinute;
     static uint32_t invalidFrameCountPerMinute;
     static uint32_t sendFrameCountPerMinute;

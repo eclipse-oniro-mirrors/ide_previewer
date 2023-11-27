@@ -113,6 +113,7 @@ void CommandLineInterface::ProcessCommand() const
 
 void CommandLineInterface::ProcessCommandMessage(std::string message) const
 {
+    ILOG("***cmd*** message:%s", message.c_str());
     Json::CharReaderBuilder builder;
     Json::CharReader* reader = builder.newCharReader();
     if (reader == nullptr) {

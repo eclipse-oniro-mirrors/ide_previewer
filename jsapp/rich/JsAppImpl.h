@@ -30,9 +30,11 @@
 namespace OHOS {
 namespace Previewer {
     struct PreviewerWindowModel;
+    class PreviewerDisplay;
 }
 namespace Rosen {
     class GlfwRenderContext;
+    enum class FoldStatus: uint32_t;
 }
 #if defined(__APPLE__) || defined(_WIN32)
 namespace AbilityRuntime {
@@ -74,6 +76,7 @@ public:
     void SetConfigChanges(const std::string value) override;
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
     void LoadDocument(const std::string, const std::string, const Json::Value) override;
+    void FoldStatusChanged(const std::string commandFoldStatus) override;
 
     void DispatchBackPressedEvent() const;
     void DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const;
@@ -125,6 +128,7 @@ private:
     void SetSystemParams(OHOS::Ace::Platform::SystemParams& args, Json::Value paramObj);
     void SetDeviceScreenDensity(const int32_t screenDensity, const std::string type);
     std::string GetDeviceTypeName(const OHOS::Ace::DeviceType) const;
+    OHOS::Rosen::FoldStatus ConvertFoldStatus(std::string value) const;
     void InitGlfwEnv();
     const double BASE_SCREEN_DENSITY = 160; // Device Baseline Screen Density
     std::unique_ptr<OHOS::Ace::Platform::AceAbility> ability;

@@ -27,12 +27,14 @@
 #include "viewport_config.h"
 #include "glfw_render_context.h"
 #include "window_model.h"
+#include "window_display.h"
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
 #endif
+#include <fstream>
 
 using namespace std;
 using namespace OHOS;
@@ -118,13 +120,7 @@ void JsAppImpl::OrientationChanged(std::string commandOrientation)
     aceRunArgs.deviceWidth = height;
     aceRunArgs.deviceHeight = width;
     VirtualScreenImpl::GetInstance().WidthAndHeightReverse();
-
-    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(),
-                    VirtualScreenImpl::GetInstance().GetOrignalWidth());
-    AssignValueForWidthAndHeight(VirtualScreenImpl::GetInstance().GetOrignalWidth(),
-                                 VirtualScreenImpl::GetInstance().GetOrignalHeight(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionWidth(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionHeight());
+    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(), aceRunArgs.deviceWidth);
     if (commandOrientation == "portrait") {
         aceRunArgs.deviceConfig.orientation = DeviceOrientation::PORTRAIT;
     } else {
@@ -173,11 +169,18 @@ void JsAppImpl::Interrupt()
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 {
+    ILOG("***SetJsAppArgs*** foldStatus:%s foldWidth:%d foldHeight:%d",
+        VirtualScreenImpl::GetInstance().GetFoldStatus().c_str(), VirtualScreenImpl::GetInstance().GetFoldWidth(),
+        VirtualScreenImpl::GetInstance().GetFoldHeight());
     SetAssetPath(args, jsAppPath);
     SetProjectModel(args);
     SetPageProfile(args, CommandParser::GetInstance().GetPages());
-    SetDeviceWidth(args, width);
-    SetDeviceHeight(args, height);
+    SetDeviceWidth(args, ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
+        VirtualScreenImpl::GetInstance().GetOrignalWidth());
+    SetDeviceHeight(args, ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
+        VirtualScreenImpl::GetInstance().GetOrignalHeight());
     SetWindowTitle(args, "Ace");
     SetUrl(args, urlPath);
     SetConfigChanges(args, configChanges);
@@ -194,12 +197,14 @@ void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
     SetFormsEnabled(args, CommandParser::GetInstance().IsCardDisplay());
     SetContainerSdkPath(args, CommandParser::GetInstance().GetContainerSdkPath());
     AdaptDeviceType(args, CommandParser::GetInstance().GetDeviceType(),
-                    VirtualScreenImpl::GetInstance().GetOrignalWidth());
+        ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
+        VirtualScreenImpl::GetInstance().GetOrignalWidth());
     SetOnRender(args);
     SetOnRouterChange(args);
     SetOnError(args);
     SetComponentModeEnabled(args, CommandParser::GetInstance().IsComponentMode());
-    ILOG("start abilit: %d %d %f", args.deviceWidth, args.deviceHeight, args.deviceConfig.density);
+    ILOG("start ability: %d %d %f", args.deviceWidth, args.deviceHeight, args.deviceConfig.density);
 }
 
 void JsAppImpl::RunJsApp()
@@ -212,6 +217,9 @@ void JsAppImpl::RunJsApp()
     SetJsAppArgs(aceRunArgs);
     OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath);
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
+    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(VirtualScreenImpl::GetInstance().GetFoldable());
+    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(
+        VirtualScreenImpl::GetInstance().GetFoldStatus()));
     InitGlfwEnv();
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
     Platform::AcePreviewHelper::GetInstance()->
@@ -597,7 +605,7 @@ void JsAppImpl::ResolutionChanged(int32_t changedOriginWidth, int32_t changedOri
             return;
         }
         OHOS::AppExecFwk::EventHandler::PostTask([this]() {
-            glfwRenderContext->SetWindowSize(width, height);
+            glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
         simulator->UpdateConfiguration(*(UpdateConfiguration(aceRunArgs).get()));
         window->SetViewportConfig(config);
@@ -605,7 +613,7 @@ void JsAppImpl::ResolutionChanged(int32_t changedOriginWidth, int32_t changedOri
     } else {
         if (ability != nullptr) {
             OHOS::AppExecFwk::EventHandler::PostTask([this]() {
-                glfwRenderContext->SetWindowSize(width, height);
+                glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
             });
             ability->SurfaceChanged(aceRunArgs.deviceConfig.orientation, aceRunArgs.deviceConfig.density,
                                     aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
@@ -620,16 +628,9 @@ void JsAppImpl::SetResolutionParams(int32_t changedOriginWidth, int32_t changedO
     SetDeviceHeight(aceRunArgs, changedHeight);
     orignalWidth = changedOriginWidth;
     orignalHeight = changedOriginHeight;
-    VirtualScreenImpl::GetInstance().SetVirtualScreenWidthAndHeight(changedOriginWidth, changedOriginHeight,
-                                                                    changedWidth, changedHeight);
-    SetDeviceScreenDensity(screenDensity,
-                           CommandParser::GetInstance().GetDeviceType());
-    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(),
-                    VirtualScreenImpl::GetInstance().GetOrignalWidth());
-    AssignValueForWidthAndHeight(VirtualScreenImpl::GetInstance().GetOrignalWidth(),
-                                 VirtualScreenImpl::GetInstance().GetOrignalHeight(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionWidth(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionHeight());
+    SetDeviceScreenDensity(screenDensity, CommandParser::GetInstance().GetDeviceType());
+    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(), changedOriginWidth);
+    AssignValueForWidthAndHeight(changedOriginWidth, changedOriginHeight, changedWidth, changedHeight);
     if (changedWidth <= changedHeight) {
         JsAppImpl::GetInstance().SetDeviceOrentation("portrait");
     } else {
@@ -733,8 +734,7 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, Json::V
         SetOrientation(args, orientation);
         SetDeviceScreenDensity(atoi(screenDensity.c_str()),
                                CommandParser::GetInstance().GetDeviceType());
-        AdaptDeviceType(args, CommandParser::GetInstance().GetDeviceType(),
-                        VirtualScreenImpl::GetInstance().GetOrignalWidth());
+        AdaptDeviceType(args, CommandParser::GetInstance().GetDeviceType(), aceRunArgs.deviceWidth);
         SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
         SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
     } else {
@@ -789,7 +789,7 @@ void JsAppImpl::LoadDocument(const std::string filePath,
              ((params.orientation == DeviceOrientation::LANDSCAPE) ? "landscape" : "portrait"),
              GetDeviceTypeName(params.deviceType).c_str());
         OHOS::AppExecFwk::EventHandler::PostTask([this]() {
-            glfwRenderContext->SetWindowSize(width, height);
+            glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
         ability->LoadDocument(filePath, componentName, params);
     }
@@ -877,4 +877,56 @@ void JsAppImpl::SetMockJsonInfo()
     } else {
         ability->SetMockModuleList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
     }
+}
+
+void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus)
+{
+    ILOG("FoldStatusChanged commandFoldStatus:%s", commandFoldStatus.c_str());
+    VirtualScreenImpl::GetInstance().SetFoldStatus(commandFoldStatus);
+    OHOS::Rosen::FoldStatus status = ConvertFoldStatus(commandFoldStatus);
+    // execute callback
+    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(status);
+    OHOS::Previewer::PreviewerDisplay::GetInstance().ExecStatusChangedCallback();
+    // change resolution
+    if (status == OHOS::Rosen::FoldStatus::EXPAND) {
+        ResolutionChanged(
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetOrignalWidth() :
+                VirtualScreenImpl::GetInstance().GetOrignalHeight(),
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetOrignalHeight() :
+                VirtualScreenImpl::GetInstance().GetOrignalWidth(),
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetCompressionWidth() :
+                VirtualScreenImpl::GetInstance().GetCompressionHeight(),
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetCompressionHeight() :
+                VirtualScreenImpl::GetInstance().GetCompressionWidth(), atoi(screenDensity.c_str()));
+    } else if (status == OHOS::Rosen::FoldStatus::FOLDED) {
+        ResolutionChanged(
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
+                VirtualScreenImpl::GetInstance().GetFoldHeight(),
+
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
+                VirtualScreenImpl::GetInstance().GetFoldWidth(),
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
+                VirtualScreenImpl::GetInstance().GetFoldHeight(),
+            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
+                VirtualScreenImpl::GetInstance().GetFoldWidth(), atoi(screenDensity.c_str()));
+    } else if (status == OHOS::Rosen::FoldStatus::HALF_FOLD) {
+        return; // not support now
+    } else {
+        return; // unknown status do nothing
+    }
+}
+
+OHOS::Rosen::FoldStatus JsAppImpl::ConvertFoldStatus(std::string value) const
+{
+    OHOS::Rosen::FoldStatus foldStatus = OHOS::Rosen::FoldStatus::EXPAND;
+    if (value == "fold") {
+        foldStatus = OHOS::Rosen::FoldStatus::FOLDED;
+    } else if (value == "unfold") {
+        foldStatus = OHOS::Rosen::FoldStatus::EXPAND;
+    } else if (value == "half_fold") {
+        foldStatus = OHOS::Rosen::FoldStatus::HALF_FOLD;
+    } else {
+        foldStatus = OHOS::Rosen::FoldStatus::UNKNOWN;
+    }
+    return foldStatus;
 }

@@ -490,8 +490,8 @@ bool OrientationCommand::IsSetArgValid() const
 void OrientationCommand::RunSet()
 {
     std::string commandOrientation = args["Orientation"].asString();
-    std::string curruntOrientation = JsAppImpl::GetInstance().GetOrientation();
-    if (commandOrientation != curruntOrientation) {
+    std::string currentOrientation = JsAppImpl::GetInstance().GetOrientation();
+    if (commandOrientation != currentOrientation) {
         JsAppImpl::GetInstance().OrientationChanged(commandOrientation);
     }
     SetCommandResult("result", true);
@@ -1465,4 +1465,34 @@ void PointEventCommand::RunAction()
     param.name = "PointEvent";
     SetEventParams(param);
     SetCommandResult("result", true);
+}
+
+FoldStatusCommand::FoldStatusCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
+    : CommandLine(commandType, arg, socket)
+{
+}
+
+bool FoldStatusCommand::IsSetArgValid() const
+{
+    if (args.isNull() || !args.isMember("FoldStatus") || !args["FoldStatus"].isString()) {
+        ELOG("Invalid FoldStatus of arguments!");
+        return false;
+    }
+    if (args["FoldStatus"].asString() == "fold" || args["FoldStatus"].asString() == "unfold" ||
+        args["FoldStatus"].asString() == "unknown" || args["FoldStatus"].asString() == "half_fold") {
+        return true;
+    }
+    ELOG("FoldStatus param must be \"fold\" or \"unfold\" or \"unknown\" or \"half_fold\"");
+    return false;
+}
+
+void FoldStatusCommand::RunSet()
+{
+    std::string commandStatus = args["FoldStatus"].asString();
+    std::string currentStatus = VirtualScreenImpl::GetInstance().GetFoldStatus();
+    if (commandStatus != currentStatus) {
+        JsAppImpl::GetInstance().FoldStatusChanged(commandStatus);
+    }
+    SetCommandResult("result", true);
+    ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].asString().c_str());
 }
