@@ -16,6 +16,14 @@
 import { SyntaxKind } from 'typescript';
 import type { EnumEntity } from '../declaration-node/enumDeclaration';
 
+const colorSpaceSpecialData = {
+  LINEAR_BT709: 24,
+  DISPLAY_SRGB: 4,
+  DISPLAY_P3_SRGB: 3,
+  DISPLAY_P3_HLG: 11,
+  DISPLAY_P3_PQ: 12
+};
+
 /**
  * generate enum
  * @param rootName
@@ -45,7 +53,11 @@ export function generateEnumDeclaration(rootName: string, enumDeclaration: EnumE
         enumBody += `${member.enumValueName}: ${defaultValue},\n`;
         defaultValue++;
       } else {
-        enumBody += `${member.enumValueName}: ${member.enumValue},\n`;
+        if (Object.keys(colorSpaceSpecialData).includes(member.enumValueName)) {
+          enumBody += `${member.enumValueName}: ${colorSpaceSpecialData[member.enumValueName]},\n`;
+        } else {
+          enumBody += `${member.enumValueName}: ${member.enumValue},\n`;
+        }
       }
     }
   });
