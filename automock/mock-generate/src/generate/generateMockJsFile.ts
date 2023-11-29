@@ -38,6 +38,8 @@ interface ReturnDataParams {
   mockFunctionElements: Array<MockFunctionElementEntity>
 }
 
+const paramIndex = 2;
+
 /**
  * generate mock file string
  * @param rootName
@@ -87,8 +89,21 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
     });
   }
   mockApi = extraImport.join('') + mockApi;
+  const reg = /export\sconst\s.*\s=/g;
+  const regDefault = /export\sdefault\s/g;
+  const regFunc = /export\sfunction\s/g;
+  const results = mockApi.match(reg);
+  const resultDefaults = mockApi.match(regDefault);
+  const resultFuncs = mockApi.match(regFunc);
+  if (results && results.length === 1 && !resultDefaults && !resultFuncs) {
+    const arr = results[0].split(' ');
+    const moduleName = arr[arr.length - paramIndex];
+    mockApi += `\nexport default ${moduleName};`;
+  }
   return mockApi;
 }
+
+const needAddExtraClass = ['date_picker.d.ts', 'rich_editor.d.ts', 'text_picker.d.ts', 'text_timer.d.ts'];
 
 /**
  * generate mock file string
@@ -107,9 +122,19 @@ function importDeclarationsGenerate(
   dependsSourceFileList: SourceFile[]
 ): string {
   let mockData = '';
+  if (needAddExtraClass.includes(`${fileName}.d.ts`)) {
+    mockData += 'import { CommonMethod } from \'./common\';\n';
+  }
   if (sourceFileEntity.importDeclarations.length > 0) {
     sourceFileEntity.importDeclarations.forEach(value => {
-      mockData += generateImportDeclaration(value, fileName, heritageClausesArray, sourceFile.fileName, dependsSourceFileList);
+      if (
+        sourceFile.fileName.endsWith('@ohos.arkui.UIContext.d.ts') &&
+        ['\'DatePickerDialogParam\'', '\'TimePickerDialogParam\'', '\'textPickerDialogParam\''].includes(value.importPath)
+      ) {
+        mockData += '';
+      } else {
+        mockData += generateImportDeclaration(value, fileName, heritageClausesArray, sourceFile.fileName, dependsSourceFileList);
+      }
     });
   }
   return mockData;

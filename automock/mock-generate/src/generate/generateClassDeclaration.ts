@@ -69,7 +69,7 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
           if (index !== value.types.length - 1) {
             classBody += `${extendClassName},`;
           } else {
-            classBody += `${extendClassName}`;
+            classBody += val === 'uri.URI' ? 'mockUri().URI' : `${extendClassName}`;
           }
         });
       }
