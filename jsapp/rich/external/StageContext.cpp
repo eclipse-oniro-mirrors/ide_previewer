@@ -64,9 +64,13 @@ void StageContext::SetLoaderJsonPath(const std::string& assetPath)
         ELOG("assetPath: %s format error.", assetPath.c_str());
         return;
     }
-    std::string assetDir = assetPath.substr(0, pos);
-    SetMiddlePath(assetPath);
-    loaderJsonPath = assetDir + "loader" + separator + "default" + separator + "loader.json";
+    std::string temp = ReplaceLastStr(assetPath, "ets", "");
+    temp = ReplaceLastStr(temp, flag, "loader");
+    loaderJsonPath = temp + "loader.json";
+    if (!FileSystem::IsFileExists(loaderJsonPath)) {
+        ELOG("the loaderJsonPath %s is not exist.", loaderJsonPath.c_str());
+        return;
+    }
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
 }
 
@@ -92,6 +96,25 @@ void StageContext::GetModulePathMapFromLoaderJson()
         string val = JsonReader::GetString(*jsonObj, key);
         modulePathMap[key] = val;
     }
+}
+
+std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
+{
+    if (!FileSystem::IsFileExists(hspConfigPath)) {
+        ELOG("hspConfigPath: %s is not exist.", hspConfigPath.c_str());
+        return "";
+    }
+    string jsonStr = JsonReader::ReadFile(hspConfigPath);
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
+        ELOG("Get hsp buildConfig.json content failed.");
+        return "";
+    }
+    if (!rootJson.isMember("aceModuleBuild")) {
+        ELOG("Don't find aceModuleBuild node in hsp buildConfig.json.");
+        return "";
+    }
+    return JsonReader::GetString(rootJson, "aceModuleBuild");
 }
 
 void StageContext::ReleaseHspBuffers()
@@ -130,7 +153,7 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
         ELOG("modulePathMap is empty.");
         return nullptr;
     }
-    if (bundleName == localBundleName) { // locla hsp
+    if (bundleName == localBundleName) { // local hsp
         if (modulePathMap.count(moduleName) > 0) { // exist local hsp
             return GetLocalModuleBuffer(moduleName);
         } else { // local hsp not exist, load cloud hsp
@@ -158,7 +181,16 @@ std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& modu
         ELOG("modulePath format error: %s.", modulePath.c_str());
         return nullptr;
     }
-    std::string abcPath = modulePath + middlePath + "/modules.abc";
+    std::string separator = FileSystem::GetSeparator();
+    // 读取hsp的.preview/config/buildConfig.json获取aceModuleBuild值就是hsp的modules.abc所在文件夹
+    std::string hspConfigPath = modulePath + separator + ".preview" + separator + "config" +
+        separator + "buildConfig.json";
+    std::string abcDir = GetHspAceModuleBuild(hspConfigPath);
+    if (!FileSystem::IsDirectoryExists(abcDir)) {
+        ELOG("the abcDir:%s is not exist.", abcDir.c_str());
+        return nullptr;
+    }
+    std::string abcPath = abcDir + separator + "modules.abc";
     if (!FileSystem::IsFileExists(abcPath)) {
         ELOG("the abcPath:%s is not exist.", abcPath.c_str());
         return nullptr;
@@ -182,7 +214,7 @@ std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& modu
     int upwardLevel = 5;
     int pos = GetUpwardDirIndex(loaderJsonPath, upwardLevel);
     if (pos < 0) {
-        ILOG("set middlePath:%s failed.", middlePath.c_str());
+        ILOG("GetUpwardDirIndex:%d failed.", pos);
     }
     std::string entryPath = loaderJsonPath.substr(0, pos);
     ILOG("get entryPath:%s", entryPath.c_str());
@@ -262,7 +294,9 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
 
 bool StageContext::ContainsRelativePath(const std::string& path) const
 {
-    return (path.find("../") != std::string::npos || path.find("./") != std::string::npos);
+    std::string flg1 = ".." + FileSystem::GetSeparator();
+    std::string flg2 = "." + FileSystem::GetSeparator();
+    return (path.find(flg1) != std::string::npos || path.find(flg2) != std::string::npos);
 }
 
 std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mockJsonFilePath)
@@ -284,17 +318,6 @@ std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mock
         }
     }
     return mapInfo;
-}
-
-void StageContext::SetMiddlePath(const std::string& assetPath)
-{
-    int upwardLevel = 5;
-    int pos = GetUpwardDirIndex(assetPath, upwardLevel);
-    if (pos < 0) {
-        ILOG("set middlePath:%s failed.", middlePath.c_str());
-    }
-    middlePath = assetPath.substr(pos);
-    ILOG("set middlePath:%s successed.", middlePath.c_str());
 }
 
 int StageContext::GetUpwardDirIndex(const std::string& path, const int upwardLevel) const
@@ -319,6 +342,16 @@ std::string StageContext::ConvertToLowerCase(const std::string& str)
     std::string ret = str;
     for (auto& c : ret) {
         c = std::tolower(c);
+    }
+    return ret;
+}
+
+std::string StageContext::ReplaceLastStr(const std::string& str, const std::string& find, const std::string& replace)
+{
+    std::string ret = str;
+    size_t pos = ret.rfind(find);
+    if (pos != std::string::npos) {
+        ret.replace(pos, find.size(), replace);
     }
     return ret;
 }

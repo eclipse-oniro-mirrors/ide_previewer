@@ -33,6 +33,7 @@ public:
     // for Previewer
     void SetLoaderJsonPath(const std::string& assetPath);
     void GetModulePathMapFromLoaderJson();
+    std::string GetHspAceModuleBuild(const std::string& hspConfigPath);
     void ReleaseHspBuffers();
     std::map<std::string, std::string> ParseMockJsonFile(const std::string& mockJsonFilePath);
     // for ArkUI and Ability
@@ -48,12 +49,11 @@ private:
     std::map<std::string, std::string> GetModulePathMap() const;
     std::string GetCloudHspPath(const std::string& hspDir, const std::string& moduleName);
     std::string ConvertToLowerCase(const std::string& str);
+    std::string ReplaceLastStr(const std::string& str, const std::string& find, const std::string& replace);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
-    void SetMiddlePath(const std::string& assetPath);
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
-    std::string middlePath;
     std::string localBundleName = "bundle";
 };
 }
