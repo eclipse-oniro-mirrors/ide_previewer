@@ -419,7 +419,7 @@ void JsAppImpl::AdaptDeviceType(Platform::AceRunArgs& args, const std::string ty
         return;
     }
     if (type == "2in1") {
-        args.deviceConfig.deviceType = DeviceType::TABLET;
+        args.deviceConfig.deviceType = DeviceType::TWO_IN_ONE;
         double density = screenDendity > 0 ? screenDendity : twoInOneScreenDensity;
         double adaptWidthPhone = realDeviceWidth * BASE_SCREEN_DENSITY / density;
         args.deviceConfig.density = args.deviceWidth / adaptWidthPhone;
