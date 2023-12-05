@@ -169,7 +169,7 @@ void JsAppImpl::Interrupt()
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 {
-    ILOG("***SetJsAppArgs*** foldStatus:%s foldWidth:%d foldHeight:%d",
+    ILOG("foldStatus:%s foldWidth:%d foldHeight:%d",
         VirtualScreenImpl::GetInstance().GetFoldStatus().c_str(), VirtualScreenImpl::GetInstance().GetFoldWidth(),
         VirtualScreenImpl::GetInstance().GetFoldHeight());
     SetAssetPath(args, jsAppPath);
@@ -637,6 +637,7 @@ void JsAppImpl::SetResolutionParams(int32_t changedOriginWidth, int32_t changedO
         JsAppImpl::GetInstance().SetDeviceOrentation("landscape");
     }
     SetOrientation(aceRunArgs, orientation);
+    VirtualScreenImpl::GetInstance().SetCurrentResolution(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
     ILOG("ResolutionChanged: %s %d %d %f", orientation.c_str(), aceRunArgs.deviceWidth,
          aceRunArgs.deviceHeight, aceRunArgs.deviceConfig.density);
 }

@@ -98,14 +98,21 @@ public:
     void SetFoldResolution(int32_t changedFoldWidth, int32_t changedFoldHeight);
     int32_t GetFoldWidth() const;
     int32_t GetFoldHeight() const;
+    void SetCurrentResolution(int32_t width, int32_t height);
+    int32_t GetCurrentWidth() const;
+    int32_t GetCurrentHeight() const;
 
 protected:
+    // start width and height
     int32_t orignalResolutionWidth;
     int32_t orignalResolutionHeight;
     int32_t compressionResolutionWidth;
     int32_t compressionResolutionHeight;
     int32_t foldWidth = 0;
     int32_t foldHeight = 0;
+    // width and height after resize
+    int32_t currentWidth = 0;
+    int32_t currentHeight = 0;
     std::string foldStatus = "unfold";
     bool foldable = false;
     static uint32_t validFrameCountPerMinute;

@@ -198,12 +198,12 @@ bool TouchPressCommand::IsActionArgValid() const
     }
     int32_t pointX = args["x"].asInt();
     int32_t pointY = args["y"].asInt();
-    if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetOrignalWidth()) {
-        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalWidth());
+    if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
+        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
     }
-    if (pointY < 0 || pointY > VirtualScreenImpl::GetInstance().GetOrignalHeight()) {
-        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalHeight());
+    if (pointY < 0 || pointY > VirtualScreenImpl::GetInstance().GetCurrentHeight()) {
+        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentHeight());
         return false;
     }
     return true;
@@ -282,12 +282,12 @@ bool TouchMoveCommand::IsActionArgValid() const
     }
     int32_t pX = args["x"].asInt();
     int32_t pY = args["y"].asInt();
-    if (pX < 0 || pX > VirtualScreenImpl::GetInstance().GetOrignalWidth()) {
-        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalWidth());
+    if (pX < 0 || pX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
+        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
     }
-    if (pY < 0 || pY > VirtualScreenImpl::GetInstance().GetOrignalHeight()) {
-        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalHeight());
+    if (pY < 0 || pY > VirtualScreenImpl::GetInstance().GetCurrentHeight()) {
+        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentHeight());
         return false;
     }
     return true;
@@ -1410,12 +1410,12 @@ bool PointEventCommand::IsArgsValid() const
     int32_t action = args["action"].asInt();
     int32_t sourceType = args["sourceType"].asInt();
     int32_t sourcceTool = args["sourcceTool"].asInt();
-    if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetOrignalWidth()) {
-        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalWidth());
+    if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
+        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
     }
-    if (pointY < 0 || pointY > VirtualScreenImpl::GetInstance().GetOrignalHeight()) {
-        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetOrignalHeight());
+    if (pointY < 0 || pointY > VirtualScreenImpl::GetInstance().GetCurrentHeight()) {
+        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentHeight());
         return false;
     }
     if (button < -1 || action < 0 || sourceType < 0 || sourcceTool < 0) {
