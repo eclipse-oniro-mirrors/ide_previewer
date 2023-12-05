@@ -49,8 +49,70 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
     classBody += `const ${className} = class ${className} `;
   }
 
-  let isExtend = false;
+  const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity);
+  const isExtend = heritageClausesData.isExtend;
+  classBody += heritageClausesData.classBody;
 
+  if (!isSystem) {
+    classBody += '{';
+    if (classEntity.classConstructor.length > 1) {
+      classBody += 'constructor(...arg) { ';
+    } else {
+      classBody += 'constructor() { ';
+    }
+    if (isExtend) {
+      classBody += 'super();\n';
+    }
+    classBody += sourceFile.fileName.endsWith('PermissionRequestResult.d.ts') ? '' : getWarnConsole(className, 'constructor');
+  }
+  if (classEntity.classProperty.length > 0) {
+    classEntity.classProperty.forEach(value => {
+      classBody += generatePropertyDeclaration(className, value, sourceFile) + '\n';
+    });
+  }
+
+  if (classEntity.classMethod.size > 0) {
+    classEntity.classMethod.forEach(value => {
+      classBody += generateCommonMethod(className, value, sourceFile, mockApi);
+    });
+  }
+
+  classBody += '}\n};';
+  if (
+    (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
+    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
+    !isInnerMockFunction
+  ) {
+    classBody += `
+      if (!global.${className}) {
+        global.${className} = ${className};\n
+      }
+    `;
+  }
+  if (!filename.startsWith('system_')) {
+    if (classEntity.staticMethods.length > 0) {
+      let staticMethodBody = '';
+      classEntity.staticMethods.forEach(value => {
+        staticMethodBody += generateStaticFunction(value, false, sourceFile, mockApi) + '\n';
+      });
+      classBody += staticMethodBody;
+    }
+  }
+  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
+    classBody += `\nexport default ${className};`;
+  }
+  return classBody;
+}
+
+/**
+ * generate class
+ * @param rootName
+ * @param classEntity
+ * @returns
+ */
+function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEntity): { isExtend: boolean, classBody: string } {
+  let isExtend = false;
+  let classBody = '';
   if (classEntity.heritageClauses.length > 0) {
     classEntity.heritageClauses.forEach(value => {
       if (value.clauseToken === 'extends') {
@@ -75,52 +137,8 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
       }
     });
   }
-
-  if (!isSystem) {
-    classBody += '{';
-    if (classEntity.classConstructor.length > 1) {
-      classBody += 'constructor(...arg) { ';
-    } else {
-      classBody += 'constructor() { ';
-    }
-    if (isExtend) {
-      classBody += 'super();\n';
-    }
-    classBody += getWarnConsole(className, 'constructor');
-  }
-  if (classEntity.classProperty.length > 0) {
-    classEntity.classProperty.forEach(value => {
-      classBody += generatePropertyDeclaration(className, value, sourceFile) + '\n';
-    });
-  }
-
-  if (classEntity.classMethod.size > 0) {
-    classEntity.classMethod.forEach(value => {
-      classBody += generateCommonMethod(className, value, sourceFile, mockApi);
-    });
-  }
-
-  classBody += '}\n};';
-  if ((classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
-    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
-    !isInnerMockFunction) {
-    classBody += `
-      if (!global.${className}) {
-        global.${className} = ${className};\n
-      }
-    `;
-  }
-  if (!filename.startsWith('system_')) {
-    if (classEntity.staticMethods.length > 0) {
-      let staticMethodBody = '';
-      classEntity.staticMethods.forEach(value => {
-        staticMethodBody += generateStaticFunction(value, false, sourceFile, mockApi) + '\n';
-      });
-      classBody += staticMethodBody;
-    }
-  }
-  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
-    classBody += `\nexport default ${className};`;
-  }
-  return classBody;
+  return {
+    isExtend,
+    classBody
+  };
 }

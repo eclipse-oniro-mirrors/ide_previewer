@@ -42,6 +42,9 @@ export function generateTypeAliasDeclaration(
   let typeAliasValue = '';
 
   const typeAliasTypeElements = typeAliasEntity.typeAliasTypeElements;
+  if (sourceFile.fileName.endsWith('@ohos.abilityAccessCtrl.d.ts') && typeAliasEntity.typeAliasName === 'PermissionRequestResult') {
+    return typeAliasName + 'new _PermissionRequestResult();';
+  }
 
   if (typeAliasTypeElements) {
     typeAliasValue += parseImportExpression(typeAliasTypeElements, sourceFile, extraImport, mockApi);
