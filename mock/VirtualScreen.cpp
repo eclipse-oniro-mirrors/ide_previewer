@@ -348,7 +348,24 @@ int32_t VirtualScreen::GetFoldWidth() const
 {
     return foldWidth;
 }
+
 int32_t VirtualScreen::GetFoldHeight() const
 {
     return foldHeight;
+}
+
+void VirtualScreen::SetCurrentResolution(int32_t width, int32_t height)
+{
+    currentWidth = width;
+    currentHeight = height;
+}
+
+int32_t VirtualScreen::GetCurrentWidth() const
+{
+    return currentWidth;
+}
+
+int32_t VirtualScreen::GetCurrentHeight() const
+{
+    return currentHeight;
 }

@@ -47,6 +47,7 @@ private:
     bool ContainsRelativePath(const std::string& path) const;
     std::map<std::string, std::string> GetModulePathMap() const;
     std::string GetCloudHspPath(const std::string& hspDir, const std::string& moduleName);
+    std::string ConvertToLowerCase(const std::string& str);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;

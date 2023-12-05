@@ -50,6 +50,8 @@ static void InitSettings()
     VirtualScreenImpl::GetInstance().SetOrignalHeight(parser.GetOrignalResolutionHeight());
     VirtualScreenImpl::GetInstance().SetCompressionWidth(parser.GetCompressionResolutionWidth());
     VirtualScreenImpl::GetInstance().SetCompressionHeight(parser.GetCompressionResolutionHeight());
+    VirtualScreenImpl::GetInstance().SetCurrentResolution(parser.GetOrignalResolutionWidth(),
+        parser.GetOrignalResolutionHeight());
     VirtualScreenImpl::GetInstance().InitFrameCountTimer();
 }
 
