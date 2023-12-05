@@ -53,6 +53,8 @@ static void InitResolution()
     VirtualScreenImpl::GetInstance().SetOrignalHeight(parser.GetOrignalResolutionHeight());
     VirtualScreenImpl::GetInstance().SetCompressionWidth(parser.GetCompressionResolutionWidth());
     VirtualScreenImpl::GetInstance().SetCompressionHeight(parser.GetCompressionResolutionHeight());
+    VirtualScreenImpl::GetInstance().SetCurrentResolution(parser.GetOrignalResolutionWidth(),
+        parser.GetOrignalResolutionHeight());
 }
 
 static void InitFoldParams()

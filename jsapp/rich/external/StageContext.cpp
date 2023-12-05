@@ -15,6 +15,7 @@
 #include "StageContext.h"
 #include <sstream>
 #include <fstream>
+#include <cctype>
 #include "json/json.h"
 #include "JsonReader.h"
 #include "FileSystem.h"
@@ -130,7 +131,12 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
         return nullptr;
     }
     if (bundleName == localBundleName) { // locla hsp
-        return GetLocalModuleBuffer(moduleName);
+        if (modulePathMap.count(moduleName) > 0) { // exist local hsp
+            return GetLocalModuleBuffer(moduleName);
+        } else { // local hsp not exist, load cloud hsp
+            ILOG("cloud hsp bundleName is same as the local project.");
+            return GetCloudModuleBuffer(ConvertToLowerCase(moduleName));
+        }
     } else { // cloud hsp
         return GetCloudModuleBuffer(moduleName);
     }
@@ -306,5 +312,14 @@ int StageContext::GetUpwardDirIndex(const std::string& path, const int upwardLev
     }
     ILOG("GetUpwardDir path:%s pos:%d", path.c_str(), pos);
     return pos;
+}
+
+std::string StageContext::ConvertToLowerCase(const std::string& str)
+{
+    std::string ret = str;
+    for (auto& c : ret) {
+        c = std::tolower(c);
+    }
+    return ret;
 }
 }
