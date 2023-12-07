@@ -31,7 +31,7 @@ import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateCommonFunction } from './generateCommonFunction';
-import { needToAddBrace } from './generateCommonUtil';
+import { needToAddBrace, hasExportDefaultKeyword } from './generateCommonUtil';
 
 interface ReturnDataParams {
   mockData: string,
@@ -350,7 +350,11 @@ function otherDeclarationsGenerate(
       data.mockData += `${val.elementName}: ${val.elementName},`;
     });
     data.mockData += '}\n';
-    data.mockData += `return mockModule${firstCharacterToUppercase(mockName)}.${firstCharacterToUppercase(mockName)}\n`;
+    const isHaveExportDefault = hasExportDefaultKeyword(mockName, sourceFile);
+    const mockNameUppercase = firstCharacterToUppercase(mockName);
+    data.mockData +=
+      isHaveExportDefault
+        ? `return mockModule${mockNameUppercase}\n` : `return mockModule${mockNameUppercase}.${mockNameUppercase}\n`;
     data.mockData += '}';
   } else {
     const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
