@@ -775,6 +775,26 @@ function getSeparatorParam(returnPromiseParams: string): string {
   return otherValue;
 }
 
+/**
+ *
+ * @param mockName string
+ * @param sourceFile SourceFile
+ * @returns boolean
+ */
+export function hasExportDefaultKeyword(mockName: string, sourceFile: SourceFile): boolean {
+  let fileContent = sourceFile.getText();
+  const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+  fileContent = fileContent.replace(removeNoteRegx, '');
+  if (
+    fileContent.includes(`export default class ${firstCharacterToUppercase(mockName)} `) ||
+    fileContent.includes(`export default interface ${firstCharacterToUppercase(mockName)} `) ||
+    fileContent.includes(`export default ${firstCharacterToUppercase(mockName)}`)
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export const overloadedFunctionArr = ['on', 'off'];
 
 export const needToAddBrace = ['ViewData', 'AutoFillType'];
