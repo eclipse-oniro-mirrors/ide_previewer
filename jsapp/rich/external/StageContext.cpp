@@ -91,10 +91,14 @@ void StageContext::GetModulePathMapFromLoaderJson()
         return;
     }
     std::unique_ptr<Json::Value> jsonObj = JsonReader::GetObject(rootJson, "modulePathMap");
-
     for (const auto& key : jsonObj->getMemberNames()) {
         string val = JsonReader::GetString(*jsonObj, key);
         modulePathMap[key] = val;
+    }
+    std::unique_ptr<Json::Value> jsonObjOhm = JsonReader::GetObject(rootJson, "harNameOhmMap");
+    for (const auto& key : jsonObjOhm->getMemberNames()) {
+        string val = JsonReader::GetString(*jsonObjOhm, key);
+        harNameOhmMap[key] = val;
     }
 }
 
@@ -158,7 +162,16 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
             return GetLocalModuleBuffer(moduleName);
         } else { // local hsp not exist, load cloud hsp
             ILOG("cloud hsp bundleName is same as the local project.");
-            return GetCloudModuleBuffer(ConvertToLowerCase(moduleName));
+            std::string actualName;
+            int ret = GetHspActualName(moduleName, actualName);
+            if (ret > 1) {
+                WLOG("have more same module name hsp in the project, load the first as default.");
+            }
+            if (actualName.empty()) {
+                ELOG("get hsp actual name failed.");
+                return nullptr;
+            }
+            return GetCloudModuleBuffer(actualName);
         }
     } else { // cloud hsp
         return GetCloudModuleBuffer(moduleName);
@@ -337,15 +350,6 @@ int StageContext::GetUpwardDirIndex(const std::string& path, const int upwardLev
     return pos;
 }
 
-std::string StageContext::ConvertToLowerCase(const std::string& str)
-{
-    std::string ret = str;
-    for (auto& c : ret) {
-        c = std::tolower(c);
-    }
-    return ret;
-}
-
 std::string StageContext::ReplaceLastStr(const std::string& str, const std::string& find, const std::string& replace)
 {
     std::string ret = str;
@@ -354,5 +358,21 @@ std::string StageContext::ReplaceLastStr(const std::string& str, const std::stri
         ret.replace(pos, find.size(), replace);
     }
     return ret;
+}
+
+int StageContext::GetHspActualName(const std::string& input, std::string& ret)
+{
+    int num = 0;
+    string flag = "/" + input + "/";
+    for (const auto& pair : harNameOhmMap) {
+        if (pair.second.find(flag) != std::string::npos) {
+            if (num == 0) {
+                ret = pair.first;
+            }
+            num++;
+            WLOG("find hsp actual name:%s", pair.first.c_str());
+        }
+    }
+    return num;
 }
 }

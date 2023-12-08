@@ -48,10 +48,11 @@ private:
     bool ContainsRelativePath(const std::string& path) const;
     std::map<std::string, std::string> GetModulePathMap() const;
     std::string GetCloudHspPath(const std::string& hspDir, const std::string& moduleName);
-    std::string ConvertToLowerCase(const std::string& str);
     std::string ReplaceLastStr(const std::string& str, const std::string& find, const std::string& replace);
+    int GetHspActualName(const std::string& input, std::string& ret);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
+    std::map<std::string, std::string> harNameOhmMap;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string localBundleName = "bundle";
