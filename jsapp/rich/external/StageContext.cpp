@@ -217,7 +217,7 @@ std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& modu
     if (ret > 1) {
         WLOG("have more same module name hsp in the project, load the first as default.");
     }
-    if (moduleName.empty()) {
+    if (actualName.empty()) {
         ELOG("get hsp actual name failed.");
         return nullptr;
     }
