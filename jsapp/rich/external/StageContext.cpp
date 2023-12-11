@@ -162,16 +162,7 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
             return GetLocalModuleBuffer(moduleName);
         } else { // local hsp not exist, load cloud hsp
             ILOG("cloud hsp bundleName is same as the local project.");
-            std::string actualName;
-            int ret = GetHspActualName(moduleName, actualName);
-            if (ret > 1) {
-                WLOG("have more same module name hsp in the project, load the first as default.");
-            }
-            if (actualName.empty()) {
-                ELOG("get hsp actual name failed.");
-                return nullptr;
-            }
-            return GetCloudModuleBuffer(actualName);
+            return GetCloudModuleBuffer(moduleName);
         }
     } else { // cloud hsp
         return GetCloudModuleBuffer(moduleName);
@@ -221,8 +212,17 @@ std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& modu
 
 std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& moduleName)
 {
-    // 1.以entry拆分，拼接oh_modules/.hsp,在这个拼接目录下查找以moduleName@开头的文件夹
-    // 2.获取拼接目录下的moduleName.hsp文件
+    std::string actualName;
+    int ret = GetHspActualName(moduleName, actualName);
+    if (ret > 1) {
+        WLOG("have more same module name hsp in the project, load the first as default.");
+    }
+    if (moduleName.empty()) {
+        ELOG("get hsp actual name failed.");
+        return nullptr;
+    }
+    // 1.以entry拆分，拼接oh_modules/.hsp,在这个拼接目录下查找以actualName@开头的文件夹
+    // 2.获取拼接目录下的actualName.hsp文件
     // 3.使用zlib获取hsp压缩包下的ets/modules.abc内容
     int upwardLevel = 5;
     int pos = GetUpwardDirIndex(loaderJsonPath, upwardLevel);
@@ -236,13 +236,13 @@ std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& modu
         ELOG("hspDir: %s is not exist.", hspDir.c_str());
         return nullptr;
     }
-    std::string hspPath = GetCloudHspPath(hspDir, moduleName);
-    ILOG("get hspPath:%s moduleName:%s", hspPath.c_str(), moduleName.c_str());
+    std::string hspPath = GetCloudHspPath(hspDir, actualName);
+    ILOG("get hspPath:%s actualName:%s", hspPath.c_str(), actualName.c_str());
     if (!FileSystem::IsDirectoryExists(hspPath)) {
         ELOG("hspPath: %s is not exist.", hspPath.c_str());
         return nullptr;
     }
-    std::string moduleHspFile = hspPath + "/" + moduleName + ".hsp";
+    std::string moduleHspFile = hspPath + "/" + actualName + ".hsp";
     ILOG("get moduleHspFile:%s.", moduleHspFile.c_str());
     if (!FileSystem::IsFileExists(moduleHspFile)) {
         ELOG("the moduleHspFile:%s is not exist.", moduleHspFile.c_str());
