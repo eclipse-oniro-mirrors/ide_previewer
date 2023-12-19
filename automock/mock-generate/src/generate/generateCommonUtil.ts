@@ -336,7 +336,7 @@ export function generateGenericTypeToMockValue(kindName: string): string | numbe
   }
 }
 
-const paramsTypeStart = {
+export const paramsTypeStart = {
   'void': '\'[PC Preview] unknown type\'',
   'Array': '[]',
   'Object': '{}',

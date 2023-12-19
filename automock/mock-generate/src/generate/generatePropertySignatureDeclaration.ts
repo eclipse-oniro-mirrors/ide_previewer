@@ -18,7 +18,7 @@ import type { SourceFile } from 'typescript';
 import type { PropertySignatureEntity } from '../declaration-node/propertySignatureDeclaration';
 import {
   checkIsGenericSymbol, getCallbackStatement, getTheRealReferenceFromImport,
-  getWarnConsole, propertyTypeWhiteList
+  getWarnConsole, propertyTypeWhiteList, paramsTypeStart
 } from './generateCommonUtil';
 
 /**
@@ -91,13 +91,7 @@ function generatePropertySignatureForTypeReference(propertySignature: PropertySi
     propertySignatureBody = `${propertySignature.propertyName}: '',`;
   } else {
     if (propertySignature.propertyTypeName.includes('<')) {
-      if (propertySignature.propertyTypeName.startsWith('AsyncCallback')) {
-        propertySignatureBody = `${propertySignature.propertyName}: ()=>{},`;
-      } else {
-        const preSplit = propertySignature.propertyTypeName.split('<');
-        const genericArg = preSplit[preSplit.length - 1].split('>')[0];
-        propertySignatureBody = `${propertySignature.propertyName}: ${genericArg},`;
-      }
+      propertySignatureBody = handlepropertyTypeNameBody(propertySignature, sourceFile);
     } else {
       if (propertyTypeWhiteList(propertySignature.propertyTypeName) === propertySignature.propertyTypeName) {
         propertySignatureBody = `${propertySignature.propertyName}: ${getTheRealReferenceFromImport(sourceFile, propertySignature.propertyTypeName)},`;
@@ -143,6 +137,42 @@ function generatePropertySignatureForUnionType(propertySignature: PropertySignat
       element = getTheRealReferenceFromImport(sourceFile, unionFirstElement);
     }
     propertySignatureBody = `${propertySignature.propertyName}: ${element},`;
+  }
+  return propertySignatureBody;
+}
+
+/**
+ * generate interface signature property for TypeReference
+ * @param propertySignature
+ * @param sourceFile
+ * @returns
+ */
+function handlepropertyTypeNameBody(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
+  let propertySignatureBody = '';
+  if (propertySignature.propertyTypeName.startsWith('AsyncCallback') || propertySignature.propertyTypeName.startsWith('Callback')) {
+    propertySignatureBody = `${propertySignature.propertyName}: ()=>{},`;
+  } else {
+    const preSplit = propertySignature.propertyTypeName.split('<');
+    const genericArg = preSplit[preSplit.length - 1].split('>')[0];
+    if (genericArg.includes(',')) {
+      return `${propertySignature.propertyName}: {},`;
+    }
+    let sourceFileContent = sourceFile.text;
+    const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+    sourceFileContent = sourceFileContent.replace(removeNoteRegx, '');
+    const regex = new RegExp(`\\s${genericArg}\\s({|=|extends)`);
+    const results = sourceFileContent.match(regex);
+    if (results) {
+      propertySignatureBody = `${propertySignature.propertyName}: ${genericArg},`;
+    } else {
+      let getPropertyTypeName = '';
+      Object.keys(paramsTypeStart).forEach(key => {
+        if (genericArg.startsWith(key)) {
+          getPropertyTypeName = paramsTypeStart[key] === '[PC Preview] unknown type' ? `'${paramsTypeStart[key]}'` : `${paramsTypeStart[key]}`;
+        }
+      });
+      propertySignatureBody = `${propertySignature.propertyName}: ${getPropertyTypeName ?? '\'[PC Preview] unknown type\''},`;
+    }
   }
   return propertySignatureBody;
 }
