@@ -308,54 +308,14 @@ function otherDeclarationsGenerate(
 ): ReturnDataParams {
   const data: ReturnDataParams = {
     mockData: '',
-    mockFunctionElements: mockFunctionElements
+    mockFunctionElements: []
   };
   if (sourceFileEntity.moduleDeclarations.length === 0 &&
     (fileName.startsWith('ohos_') || fileName.startsWith('system_') || fileName.startsWith('webgl'))
   ) {
-    const mockNameArr = fileName.split('_');
-    const mockName = mockNameArr[mockNameArr.length - 1];
-    const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
-    if (defaultExportClass.length > 0) {
-      defaultExportClass.forEach(value => {
-        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
-        data.mockFunctionElements.push({ elementName: value.className, type: 'class' });
-      });
-    }
-    data.mockData += `export function mock${firstCharacterToUppercase(mockName)}() {\n`;
-    if (fileName.startsWith('system_')) {
-      addToSystemIndexArray({
-        filename: fileName,
-        mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
-      });
-      data.mockData += `global.systemplugin.${mockName} = {`;
-      const defaultClass = getDefaultExportClassDeclaration(sourceFile);
-      let staticMethodBody = '';
-      if (defaultClass.length > 0) {
-        defaultClass.forEach(value => {
-          value.staticMethods.forEach(val => {
-            staticMethodBody += generateStaticFunction(val, true, sourceFile, mockApi);
-          });
-        });
-      }
-      data.mockData += staticMethodBody;
-      data.mockData += '}';
-    } else {
-      if (!fileName.startsWith('webgl')) {
-        addToIndexArray({ fileName: fileName, mockFunctionName: `mock${firstCharacterToUppercase(mockName)}` });
-      }
-    }
-    data.mockData += `\nconst mockModule${firstCharacterToUppercase(mockName)} = {`;
-    data.mockFunctionElements.forEach(val => {
-      data.mockData += `${val.elementName}: ${val.elementName},`;
-    });
-    data.mockData += '}\n';
-    const isHaveExportDefault = hasExportDefaultKeyword(mockName, sourceFile);
-    const mockNameUppercase = firstCharacterToUppercase(mockName);
-    data.mockData +=
-      isHaveExportDefault
-        ? `return mockModule${mockNameUppercase}\n` : `return mockModule${mockNameUppercase}.${mockNameUppercase}\n`;
-    data.mockData += '}';
+    const moduleDeclarationsData = handleModuleDeclarationsNotExist(rootName, fileName, sourceFile, mockApi, mockFunctionElements);
+    data.mockData = moduleDeclarationsData.mockData;
+    data.mockFunctionElements = moduleDeclarationsData.mockFunctionElements;
   } else {
     const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
     if (defaultExportClass.length > 0) {
@@ -421,6 +381,54 @@ export function generateImportDeclaration(
   }
   collectAllLegalImports(importElements);
   return `import ${importElements} from ${importPath}\n`;
+}
+
+function handleModuleDeclarationsNotExist(
+  rootName: string, fileName: string, sourceFile: SourceFile, mockApi: string, mockFunctionElements: Array<MockFunctionElementEntity>
+): ReturnDataParams {
+  const data: ReturnDataParams = {
+    mockData: '',
+    mockFunctionElements: mockFunctionElements
+  };
+  const mockNameArr = fileName.split('_');
+  const mockName = mockNameArr[mockNameArr.length - 1];
+  const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
+  defaultExportClass.forEach(value => {
+    data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
+    data.mockFunctionElements.push({ elementName: value.className, type: 'class' });
+  });
+  data.mockData += `export function mock${firstCharacterToUppercase(mockName)}() {\n`;
+  if (fileName.startsWith('system_')) {
+    addToSystemIndexArray({
+      filename: fileName,
+      mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
+    });
+    data.mockData += `global.systemplugin.${mockName} = {`;
+    const defaultClass = getDefaultExportClassDeclaration(sourceFile);
+    let staticMethodBody = '';
+    defaultClass.forEach(value => {
+      value.staticMethods.forEach(val => {
+        staticMethodBody += generateStaticFunction(val, true, sourceFile, mockApi);
+      });
+    });
+    data.mockData += staticMethodBody;
+    data.mockData += '}';
+  } else {
+    if (!fileName.startsWith('webgl')) {
+      addToIndexArray({ fileName: fileName, mockFunctionName: `mock${firstCharacterToUppercase(mockName)}` });
+    }
+  }
+  data.mockData += `\nconst mockModule${firstCharacterToUppercase(mockName)} = {`;
+  data.mockFunctionElements.forEach(val => {
+    data.mockData += `${val.elementName}: ${val.elementName},`;
+  });
+  data.mockData += '}\n';
+  const isHaveExportDefault = hasExportDefaultKeyword(mockName, sourceFile);
+  const mockNameUppercase = firstCharacterToUppercase(mockName);
+  data.mockData +=
+    isHaveExportDefault ? `return mockModule${mockNameUppercase}\n` : `return mockModule${mockNameUppercase}.${mockNameUppercase}\n`;
+  data.mockData += '}';
+  return data;
 }
 
 /**
