@@ -23,6 +23,54 @@ import type { MethodEntity } from '../declaration-node/methodDeclaration';
 import type { FunctionEntity } from '../declaration-node/functionDeclaration';
 import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
 
+const IteratorEntriesMock = `
+  let index = 0;
+  const IteratorEntriesMock = {
+    *[Symbol.iterator]() {
+      yield ['[PC Preview] unknown paramIterMock_K', '[PC Preview] unknown paramIterMock_V'];
+    },
+    next: () => {
+      if (index < 1) {
+        const returnValue = ['[PC Previwe] unknown paramIterMock_K', '[PC Previwe] unknown paramIterMock_V'];
+        index++;
+        return {
+          value: returnValue,
+          done: false
+        };
+      } else {
+        return {
+          done: true
+        };
+      }
+    }
+  };
+  return IteratorEntriesMock;
+`;
+
+const IteratorStringMock = `
+  let index = 0;
+  const IteratorStringMock = {
+    *[Symbol.iterator]() {
+      yield '[PC Preview] unknown string';
+    },
+    next: () => {
+      if (index < 1) {
+        const returnValue = '[PC Previwe] unknown string';
+        index++;
+        return {
+          value: returnValue,
+          done: false
+        };
+      } else {
+        return {
+          done: true
+        };
+      }
+    }
+  };
+  return IteratorStringMock;
+`;
+
 /**
  * get warn console template
  * @param interfaceNameOrClassName
@@ -57,139 +105,104 @@ function handlePromiseParams(returnType: ReturnTypeEntity): string {
  */
 export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
   if (returnType.returnKind === SyntaxKind.TypeReference) {
-    if (returnType.returnKindName.startsWith('Promise')) {
-      return handlePromiseParams(returnType);
-    } else if (returnType.returnKindName === 'T') {
-      return 'return \'[PC Preview] unknown type\'';
-    } else if (returnType.returnKindName === 'object' || returnType.returnKindName === 'Object') {
-      return 'return {}';
-    } else if (returnType.returnKindName === 'Function') {
-      return 'return \'[PC Preview] unknown type\'';
-    } else if (returnType.returnKindName === 'String' || returnType.returnKindName === 'string') {
-      return `return ${returnType.returnKindName}(...args)`;
-    } else if (returnType.returnKindName === 'number' || returnType.returnKindName === 'Number') {
-      return 'return 0';
-    } else if (returnType.returnKindName === 'boolean' || returnType.returnKindName === 'Boolean') {
-      return 'return false';
-    } else if (returnType.returnKindName === 'ArrayBuffer') {
-      return `return new ${returnType.returnKindName}(0)`;
-    } else if (returnType.returnKindName.startsWith('Array')) {
-      if (returnType.returnKindName.includes('<') && returnType.returnKindName.includes('>')) {
-        return `return [${generateGenericTypeToMockValue(returnType.returnKindName)}]`;
-      } else {
-        return `return new ${returnType.returnKindName}()`;
-      }
-    } else if (returnType.returnKindName.startsWith('Readonly')) {
-      return `return ${returnType.returnKindName.split('<')[1].split('>')[0]}`;
-    } else if (checkIsGenericSymbol(returnType.returnKindName)) {
-      return `return '[PC Preview] unknown iterableiterator_${returnType.returnKindName}'`;
-    } else if (returnType.returnKindName.startsWith('Uint8Array')) {
-      return `return new ${returnType.returnKindName}()`;
-    } else if (returnType.returnKindName.startsWith('IterableIterator')) {
-      if (returnType.returnKindName.includes(',')) {
-        return `let index = 0;
-        const IteratorEntriesMock = {
-          *[Symbol.iterator]() {
-            yield ['[PC Preview] unknown paramIterMock_K', '[PC Preview] unknown paramIterMock_V'];
-          },
-          next: () => {
-            if (index < 1) {
-              const returnValue = ['[PC Previwe] unknown paramIterMock_K', '[PC Previwe] unknown paramIterMock_V'];
-              index++;
-              return {
-                value: returnValue,
-                done: false
-              };
-            } else {
-              return {
-                done: true
-              };
-            }
-          }
-        };
-        return IteratorEntriesMock;`;
-      } else {
-        return `let index = 0;
-        const IteratorStringMock = {
-          *[Symbol.iterator]() {
-            yield '[PC Preview] unknown string';
-          },
-          next: () => {
-            if (index < 1) {
-              const returnValue = '[PC Previwe] unknown string';
-              index++;
-              return {
-                value: returnValue,
-                done: false
-              };
-            } else {
-              return {
-                done: true
-              };
-            }
-          }
-        };
-        return IteratorStringMock;`;
-      }
-    } else if (returnType.returnKindName.includes('<T>')) {
-      const tmpReturn = returnType.returnKindName.split('<')[0];
-      if (tmpReturn.startsWith('Array')) {
-        return 'return []';
-      } else {
-        `return new ${tmpReturn}()`;
-      }
-    } else if (returnType.returnKindName.includes('<')) {
-      return `return new ${returnType.returnKindName.split('<')[0]}()`;
-    } else {
-      if (getClassNameSet().has(returnType.returnKindName)) {
-        if (returnType.returnKindName === 'Want') {
-          return 'return mockWant().Want';
-        } else {
-          return `return new ${returnType.returnKindName}()`;
-        }
-      } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
-        return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
-      } else {
-        return `return ${propertyTypeWhiteList(returnType.returnKindName)}`;
-      }
-    }
+    return handleTypeReferenceReturnBody(returnType, sourceFile);
   } else if (returnType.returnKind === SyntaxKind.UnionType) {
-    const returnNames = returnType.returnKindName.split('|');
-    let returnName = returnNames[0];
-    for (let i = 0; i < returnNames.length; i++) {
-      if (!returnNames[i].includes('[]') && !returnNames[i].includes('<')) {
-        returnName = returnNames[i];
-        break;
-      }
-    }
-    if (returnName.trimStart().trimEnd() === 'void') {
-      return '';
-    }
-    if (getClassNameSet().has(returnName)) {
-      return `return new ${returnName}()`;
-    } else {
-      return `return ${getBaseReturnValue(returnName.trimStart().trimEnd())}`;
-    }
-  } else {
-    let returnName = returnType.returnKindName.trim();
-    let temp = true;
-    if (returnName.endsWith(']')) {
-      returnName = '[]';
-      temp = false;
-    } else {
-      Object.keys(paramsTypeStart).forEach(key => {
-        if (returnType.returnKindName.startsWith(key)) {
-          returnName = paramsTypeStart[key];
-          temp = false;
-        }
-      });
-    }
-    if (temp) {
-      return 'return \'[PC Preview] unknown type\'';
-    }
-    return `return ${returnName};`;
+    return handleUnionTypeReturnBody(returnType);
   }
-  return 'return \'[PC Preview] unknown type\'';
+  let returnName = returnType.returnKindName.trim();
+  let temp = true;
+  if (returnName.endsWith(']')) {
+    returnName = '[]';
+    temp = false;
+  } else {
+    Object.keys(paramsTypeStart).forEach(key => {
+      if (returnType.returnKindName.startsWith(key)) {
+        returnName = paramsTypeStart[key];
+        temp = false;
+      }
+    });
+  }
+  if (temp) {
+    return 'return \'[PC Preview] unknown type\'';
+  }
+  return `return ${returnName};`;
+}
+
+/**
+ * TypeReference return statement;
+ * @param returnType
+ * @param sourceFile
+ * @returns
+ */
+function handleTypeReferenceReturnBody(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
+  if (returnType.returnKindName.startsWith('Promise')) {
+    return handlePromiseParams(returnType);
+  } else if (returnType.returnKindName === 'T') {
+    return 'return \'[PC Preview] unknown type\'';
+  } else if (returnType.returnKindName === 'object' || returnType.returnKindName === 'Object') {
+    return 'return {}';
+  } else if (returnType.returnKindName === 'Function') {
+    return 'return \'[PC Preview] unknown type\'';
+  } else if (returnType.returnKindName === 'String' || returnType.returnKindName === 'string') {
+    return `return ${returnType.returnKindName}(...args)`;
+  } else if (returnType.returnKindName === 'number' || returnType.returnKindName === 'Number') {
+    return 'return 0';
+  } else if (returnType.returnKindName === 'boolean' || returnType.returnKindName === 'Boolean') {
+    return 'return false';
+  } else if (returnType.returnKindName === 'ArrayBuffer') {
+    return `return new ${returnType.returnKindName}(0)`;
+  } else if (returnType.returnKindName.startsWith('Array')) {
+    if (returnType.returnKindName.includes('<') && returnType.returnKindName.includes('>')) {
+      return `return [${generateGenericTypeToMockValue(returnType.returnKindName)}]`;
+    } else {
+      return `return new ${returnType.returnKindName}()`;
+    }
+  } else if (returnType.returnKindName.startsWith('Readonly')) {
+    return `return ${returnType.returnKindName.split('<')[1].split('>')[0]}`;
+  } else if (checkIsGenericSymbol(returnType.returnKindName)) {
+    return `return '[PC Preview] unknown iterableiterator_${returnType.returnKindName}'`;
+  } else if (returnType.returnKindName.startsWith('Uint8Array')) {
+    return `return new ${returnType.returnKindName}()`;
+  } else if (returnType.returnKindName.startsWith('IterableIterator')) {
+    return returnType.returnKindName.includes(',') ? IteratorEntriesMock : IteratorStringMock;
+  } else if (returnType.returnKindName.includes('<T>')) {
+    const tmpReturn = returnType.returnKindName.split('<')[0];
+    return tmpReturn.startsWith('Array') ? 'return []' : `return {}`;
+  } else if (returnType.returnKindName.includes('<')) {
+    return returnType.returnKindName.includes(',') ? 'return {};' : `return new ${returnType.returnKindName.split('<')[0]}()`;
+  } else {
+    if (getClassNameSet().has(returnType.returnKindName)) {
+      return returnType.returnKindName === 'Want' ? 'return mockWant().Want' : `return new ${returnType.returnKindName}()`;
+    } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
+      return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
+    } else {
+      return `return ${propertyTypeWhiteList(returnType.returnKindName)}`;
+    }
+  }
+}
+
+/**
+ * UnionType return statement;
+ * @param returnType
+ * @returns
+ */
+function handleUnionTypeReturnBody(returnType: ReturnTypeEntity): string {
+  const returnNames = returnType.returnKindName.split('|');
+  let returnName = returnNames[0];
+  for (let i = 0; i < returnNames.length; i++) {
+    if (!returnNames[i].includes('[]') && !returnNames[i].includes('<')) {
+      returnName = returnNames[i];
+      break;
+    }
+  }
+  if (returnName.trimStart().trimEnd() === 'void') {
+    return '';
+  }
+  if (getClassNameSet().has(returnName)) {
+    return `return new ${returnName}()`;
+  } else {
+    return `return ${getBaseReturnValue(returnName.trimStart().trimEnd())}`;
+  }
 }
 
 /**
@@ -302,6 +315,8 @@ function getImportTypeAliasNameFromImportElements(importElementEntity: ImportEle
     typeName = 'mockWant().Want';
   } else if (typeName === 'InputMethodExtensionContext') {
     typeName = 'mockInputMethodExtensionContext().InputMethodExtensionContext';
+  } else if (typeName.includes('<') && typeName.includes(',')) {
+    typeName = '{}';
   }
   return typeName;
 }
@@ -365,7 +380,11 @@ const removeCallback = (str: string) => {
     callbackParams.value = str.slice(0, str.length - 1).slice(14).trim();
     callbackParams.type = 'AsyncCallback';
   }
-  if (callbackParams.value.includes(',')) {
+  let isHaveAnglebrackets = false;
+  if (callbackParams.value.includes('<') && callbackParams.value.includes(',')) {
+    isHaveAnglebrackets = true;
+  }
+  if (callbackParams.value.includes(',') && !isHaveAnglebrackets) {
     callbackParams.value = callbackParams.value.split(',')[0].trim();
   }
   return callbackParams;
@@ -435,6 +454,9 @@ const setCallbackData = (mockApi: string, paramTypeString: string): {data: strin
         callbackData = callbackParams.value;
         if (callbackParams.value.includes('<')) {
           callbackData = `${callbackParams.value.split('<')[0]}`;
+        }
+        if (callbackParams.value.includes('<') && callbackParams.value.includes(',')) {
+          callbackData = `{}`;
         }
       }
       if (callbackParams.value === 'Date') {
@@ -602,51 +624,7 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
 export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, returnType: ReturnTypeEntity, sourceFile: SourceFile, mockApi: string): string {
   // If the return value is an iterator IterableIterator, then IteratorEntriesMock is directly returned
   if (returnType.returnKindName.startsWith('IterableIterator')) {
-    if (returnType.returnKindName.includes(',')) {
-      return `let index = 0;
-        const IteratorEntriesMock = {
-          *[Symbol.iterator]() {
-            yield ['[PC Preview] unknown paramIterMock_K', '[PC Preview] unknown paramIterMock_V'];
-          },
-          next: () => {
-            if (index < 1) {
-              const returnValue = ['[PC Previwe] unknown paramIterMock_K', '[PC Previwe] unknown paramIterMock_V'];
-              index++;
-              return {
-                value: returnValue,
-                done: false
-              };
-            } else {
-              return {
-                done: true
-              };
-            }
-          }
-        };
-        return IteratorEntriesMock;`;
-    } else {
-      return `let index = 0;
-        const IteratorStringMock = {
-          *[Symbol.iterator]() {
-            yield '[PC Preview] unknown string';
-          },
-          next: () => {
-            if (index < 1) {
-              const returnValue = '[PC Previwe] unknown string';
-              index++;
-              return {
-                value: returnValue,
-                done: false
-              };
-            } else {
-              return {
-                done: true
-              };
-            }
-          }
-        };
-        return IteratorStringMock;`;
-    }
+    return returnType.returnKindName.includes(',') ? IteratorEntriesMock : IteratorStringMock;
   }
   // If it is a promise, intercept the content of x in promise<x>, which may have the following formats:
   // fun(): y | Promise<y>、 fun(): Promise<x | y | z>、 fun(): Promise<x>、 fun(): Promise<x.y>
@@ -688,7 +666,7 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
   } else if (importType === 'isImport') {
     returnData = returnPromiseParams;
   } else if (importType === 'noImport') {
-    if (returnPromiseParams.endsWith(']')) {
+    if (returnPromiseParams.startsWith('[') || returnPromiseParams.endsWith(']')) {
       returnData = '[]';
     } else {
       let paramsTypeNoHas = true;
@@ -702,6 +680,9 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
         returnData = returnPromiseParams;
         if (returnPromiseParams.includes('<')) {
           returnData = `${returnPromiseParams.split('<')[0]}`;
+        }
+        if (returnPromiseParams.includes('<') && returnPromiseParams.includes(',')) {
+          returnData = `{}`;
         }
       }
       if (returnPromiseParams === 'Date') {
