@@ -360,5 +360,6 @@ export const specialFiles = [
   '@internal/component/ets/enums.d.ts',
   '@internal/component/ets/alert_dialog.d.ts',
   '@internal/component/ets/ability_component.d.ts',
-  '@internal/component/ets/rich_editor.d.ts'
+  '@internal/component/ets/rich_editor.d.ts',
+  '@internal/component/ets/symbolglyph.d.ts'
 ];

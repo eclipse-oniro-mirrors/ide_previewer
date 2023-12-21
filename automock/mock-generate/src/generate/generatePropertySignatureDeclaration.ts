@@ -112,7 +112,7 @@ function generatePropertySignatureForTypeReference(propertySignature: PropertySi
 function generatePropertySignatureForUnionType(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
   let propertySignatureBody = '';
   let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trimStart().trimEnd();
-  if (unionFirstElement.includes('[]')) {
+  if (unionFirstElement.includes('[]') || unionFirstElement.startsWith('[') || unionFirstElement.endsWith(']')) {
     unionFirstElement = '[]';
   }
   if (unionFirstElement.startsWith('"') || unionFirstElement.startsWith("'")) {
