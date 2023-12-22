@@ -586,10 +586,10 @@ void JsAppImpl::AssignValueForWidthAndHeight(const int32_t origWidth,
     ILOG("AssignValueForWidthAndHeight: %d %d %d %d", orignalWidth, orignalHeight, width, height);
 }
 
-void JsAppImpl::ResolutionChanged(int32_t changedOriginWidth, int32_t changedOriginHeight, int32_t changedWidth,
-                                  int32_t changedHeight, int32_t screenDensity)
+void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, string reason)
 {
-    SetResolutionParams(changedOriginWidth, changedOriginHeight, changedWidth, changedHeight, screenDensity);
+    SetResolutionParams(param.orignalWidth, param.orignalHeight, param.compressionWidth,
+        param.compressionHeight, screenDensity);
     if (isDebug && debugServerPort >= 0) {
 #if defined(__APPLE__) || defined(_WIN32)
         SetWindowParams();
@@ -616,8 +616,19 @@ void JsAppImpl::ResolutionChanged(int32_t changedOriginWidth, int32_t changedOri
                 glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
             });
             ability->SurfaceChanged(aceRunArgs.deviceConfig.orientation, aceRunArgs.deviceConfig.density,
-                                    aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
+                aceRunArgs.deviceWidth, aceRunArgs.deviceHeight, ConvertResizeReason(reason));
         }
+    }
+}
+
+WindowSizeChangeReason JsAppImpl::ConvertResizeReason(std::string reason)
+{
+    if (reason == "undefined") {
+        return WindowSizeChangeReason::UNDEFINED;
+    } else if (reason == "rotation") {
+        return WindowSizeChangeReason::ROTATION;
+    } else {
+        return WindowSizeChangeReason::RESIZE;
     }
 }
 
@@ -882,6 +893,7 @@ void JsAppImpl::SetMockJsonInfo()
 
 void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus)
 {
+    string reason = "resize";
     ILOG("FoldStatusChanged commandFoldStatus:%s", commandFoldStatus.c_str());
     VirtualScreenImpl::GetInstance().SetFoldStatus(commandFoldStatus);
     OHOS::Rosen::FoldStatus status = ConvertFoldStatus(commandFoldStatus);
@@ -890,26 +902,25 @@ void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus)
     OHOS::Previewer::PreviewerDisplay::GetInstance().ExecStatusChangedCallback();
     // change resolution
     if (status == OHOS::Rosen::FoldStatus::EXPAND) {
-        ResolutionChanged(
-            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetOrignalWidth() :
+        ResolutionParam param(orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetOrignalWidth() :
                 VirtualScreenImpl::GetInstance().GetOrignalHeight(),
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetOrignalHeight() :
                 VirtualScreenImpl::GetInstance().GetOrignalWidth(),
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetCompressionWidth() :
                 VirtualScreenImpl::GetInstance().GetCompressionHeight(),
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetCompressionHeight() :
-                VirtualScreenImpl::GetInstance().GetCompressionWidth(), atoi(screenDensity.c_str()));
+                VirtualScreenImpl::GetInstance().GetCompressionWidth());
+        ResolutionChanged(param, atoi(screenDensity.c_str()), reason);
     } else if (status == OHOS::Rosen::FoldStatus::FOLDED) {
-        ResolutionChanged(
-            orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
+        ResolutionParam param(orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
                 VirtualScreenImpl::GetInstance().GetFoldHeight(),
-
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
                 VirtualScreenImpl::GetInstance().GetFoldWidth(),
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
                 VirtualScreenImpl::GetInstance().GetFoldHeight(),
             orientation == "portrait" ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
-                VirtualScreenImpl::GetInstance().GetFoldWidth(), atoi(screenDensity.c_str()));
+                VirtualScreenImpl::GetInstance().GetFoldWidth());
+        ResolutionChanged(param, atoi(screenDensity.c_str()), reason);
     } else if (status == OHOS::Rosen::FoldStatus::HALF_FOLD) {
         return; // not support now
     } else {

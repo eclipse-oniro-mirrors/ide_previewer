@@ -172,7 +172,7 @@ void JsApp::OrientationChanged(std::string commandOrientation)
     orientation = commandOrientation;
 }
 
-void JsApp::ResolutionChanged(int32_t, int32_t, int32_t, int32_t, int32_t) {}
+void JsApp::ResolutionChanged(ResolutionParam&, int32_t, std::string) {}
 
 void JsApp::ReloadRuntimePage(const std::string) {}
 
