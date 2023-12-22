@@ -117,7 +117,6 @@ function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile:
 }
 
 /**
- *
  * @param extraImport
  * @param importDeclarations
  * @param sourceFile
@@ -125,10 +124,8 @@ function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile:
  * @returns
  */
 function addExtraImport(
-  extraImport: string[],
-  importDeclarations: ImportElementEntity[],
-  sourceFile: SourceFile,
-  value: PropertySignatureEntity): void {
+  extraImport: string[], importDeclarations: ImportElementEntity[], sourceFile: SourceFile, value: PropertySignatureEntity
+): void {
   if (extraImport && importDeclarations) {
     const propertyTypeName = value.propertyTypeName.split('.')[0].split('|')[0].split('&')[0].replace(/"'/g, '').trim();
     if (propertyTypeName.includes('/')) {
@@ -141,41 +138,55 @@ function addExtraImport(
     if (!specialFilesList.includes(sourceFile.fileName)) {
       specialFilesList.unshift(sourceFile.fileName);
     }
-    for (let i = 0; i < specialFilesList.length; i++) {
-      const specialFilePath = specialFilesList[i];
-      let specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
-      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
-      specialFileContent = specialFileContent.replace(removeNoteRegx, '');
-      const regex = new RegExp(`\\s${propertyTypeName}\\s({|=|extends)`);
-      const results = specialFileContent.match(regex);
-      if (!results) {
-        continue;
-      }
-      if (sourceFile.fileName === specialFilePath) {
-        return;
-      }
-      let specialFileRelatePath = path.relative(path.dirname(sourceFile.fileName), path.dirname(specialFilePath));
-      if (!specialFileRelatePath.startsWith('./') && !specialFileRelatePath.startsWith('../')) {
-        specialFileRelatePath = './' + specialFileRelatePath;
-      }
-      if (!dtsFileList.includes(specialFilePath)) {
-        dtsFileList.push(specialFilePath);
-      }
-      specialFileRelatePath = specialFileRelatePath.split(path.sep).join('/');
-      const importStr = `import {${propertyTypeName}} from '${
-        specialFileRelatePath}${
-        specialFileRelatePath.endsWith('/') ? '' : '/'}${
-        path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;
-      if (extraImport.includes(importStr)) {
-        return;
-      }
-      extraImport.push(importStr);
+    searchHasExtraImport(specialFilesList, propertyTypeName, sourceFile, extraImport);
+  }
+}
+
+/**
+ * @param specialFilesList
+ * @param propertyTypeName
+ * @param sourceFile
+ * @param extraImport
+ * @returns
+ */
+function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]) {
+  for (let i = 0; i < specialFilesList.length; i++) {
+    const specialFilePath = specialFilesList[i];
+    if (!fs.existsSync(specialFilePath)) {
+      continue;
+    }
+    let specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
+    const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+    specialFileContent = specialFileContent.replace(removeNoteRegx, '');
+    const regex = new RegExp(`\\s${propertyTypeName}\\s({|=|extends)`);
+    const results = specialFileContent.match(regex);
+    if (!results) {
+      continue;
+    }
+    if (sourceFile.fileName === specialFilePath) {
       return;
     }
-    if (propertyTypeName.includes('<') || propertyTypeName.includes('[')) {
+    let specialFileRelatePath = path.relative(path.dirname(sourceFile.fileName), path.dirname(specialFilePath));
+    if (!specialFileRelatePath.startsWith('./') && !specialFileRelatePath.startsWith('../')) {
+      specialFileRelatePath = './' + specialFileRelatePath;
+    }
+    if (!dtsFileList.includes(specialFilePath)) {
+      dtsFileList.push(specialFilePath);
+    }
+    specialFileRelatePath = specialFileRelatePath.split(path.sep).join('/');
+    const importStr = `import {${propertyTypeName}} from '${
+      specialFileRelatePath}${
+      specialFileRelatePath.endsWith('/') ? '' : '/'}${
+      path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;
+    if (extraImport.includes(importStr)) {
       return;
     }
-    console.log(sourceFile.fileName, 'propertyTypeName', propertyTypeName);
+    extraImport.push(importStr);
     return;
   }
+  if (propertyTypeName.includes('<') || propertyTypeName.includes('[')) {
+    return;
+  }
+  console.log(sourceFile.fileName, 'propertyTypeName', propertyTypeName);
+  return;
 }
