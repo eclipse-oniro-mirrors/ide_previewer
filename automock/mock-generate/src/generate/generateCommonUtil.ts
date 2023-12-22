@@ -23,7 +23,7 @@ import type { MethodEntity } from '../declaration-node/methodDeclaration';
 import type { FunctionEntity } from '../declaration-node/functionDeclaration';
 import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
 
-const IteratorEntriesMock = `
+const iteratorEntriesMock = `
   let index = 0;
   const IteratorEntriesMock = {
     *[Symbol.iterator]() {
@@ -47,7 +47,7 @@ const IteratorEntriesMock = `
   return IteratorEntriesMock;
 `;
 
-const IteratorStringMock = `
+const iteratorStringMock = `
   let index = 0;
   const IteratorStringMock = {
     *[Symbol.iterator]() {
@@ -164,10 +164,10 @@ function handleTypeReferenceReturnBody(returnType: ReturnTypeEntity, sourceFile:
   } else if (returnType.returnKindName.startsWith('Uint8Array')) {
     return `return new ${returnType.returnKindName}()`;
   } else if (returnType.returnKindName.startsWith('IterableIterator')) {
-    return returnType.returnKindName.includes(',') ? IteratorEntriesMock : IteratorStringMock;
+    return returnType.returnKindName.includes(',') ? iteratorEntriesMock : iteratorStringMock;
   } else if (returnType.returnKindName.includes('<T>')) {
     const tmpReturn = returnType.returnKindName.split('<')[0];
-    return tmpReturn.startsWith('Array') ? 'return []' : `return {}`;
+    return tmpReturn.startsWith('Array') ? 'return []' : 'return {}';
   } else if (returnType.returnKindName.includes('<')) {
     return returnType.returnKindName.includes(',') ? 'return {};' : `return new ${returnType.returnKindName.split('<')[0]}()`;
   } else {
@@ -418,11 +418,45 @@ const hasDotFirstWord = (str: string) => {
   return str.includes('.') ? str.split('.')[0] : str;
 };
 
+function callbackHasNoImportType(callbackParams: { type: string, value: string }): string {
+  let callbackData = '';
+  let paramsTypeNoHas = true;
+  if (callbackParams.value.endsWith(']')) {
+    callbackData = '[]';
+  } else {
+    Object.keys(paramsTypeStart).forEach(item => {
+      if (callbackParams.value.startsWith(item)) {
+        callbackData = paramsTypeStart[item];
+        paramsTypeNoHas = false;
+      }
+    });
+    if (paramsTypeNoHas) {
+      callbackData = callbackParams.value;
+      if (callbackParams.value.includes('<')) {
+        callbackData = `${callbackParams.value.split('<')[0]}`;
+      }
+      if (callbackParams.value.includes('<') && callbackParams.value.includes(',')) {
+        callbackData = '{}';
+      }
+    }
+    if (callbackParams.value === 'Date') {
+      callbackData = 'new Date()';
+    }
+    if (callbackParams.value === 'Uint8Array') {
+      callbackData = 'new Uint8Array()';
+    }
+    if (callbackParams.value === 'T') {
+      callbackData = '[PC Preview] unknown type';
+    }
+  }
+  return callbackData;
+}
+
 /**
  * get callback parameters data
  * @returns data: parameters data: type: AsyncCallback or Callback
  */
-const setCallbackData = (mockApi: string, paramTypeString: string): {data: string, type: string} => {
+const setCallbackData = (mockApi: string, paramTypeString: string): { data: string, type: string } => {
   const callbackParams = removeCallback(paramTypeString);
   let callbackData = '';
   let importType = '';
@@ -440,35 +474,7 @@ const setCallbackData = (mockApi: string, paramTypeString: string): {data: strin
   } else if (importType === 'isImport') {
     callbackData = callbackParams.value;
   } else if (importType === 'noImport') {
-    let paramsTypeNoHas = true;
-    if (callbackParams.value.endsWith(']')) {
-      callbackData = '[]';
-    } else {
-      Object.keys(paramsTypeStart).forEach(item => {
-        if (callbackParams.value.startsWith(item)) {
-          callbackData = paramsTypeStart[item];
-          paramsTypeNoHas = false;
-        }
-      });
-      if (paramsTypeNoHas) {
-        callbackData = callbackParams.value;
-        if (callbackParams.value.includes('<')) {
-          callbackData = `${callbackParams.value.split('<')[0]}`;
-        }
-        if (callbackParams.value.includes('<') && callbackParams.value.includes(',')) {
-          callbackData = `{}`;
-        }
-      }
-      if (callbackParams.value === 'Date') {
-        callbackData = 'new Date()';
-      }
-      if (callbackParams.value === 'Uint8Array') {
-        callbackData = 'new Uint8Array()';
-      }
-      if (callbackParams.value === 'T') {
-        callbackData = '[PC Preview] unknown type';
-      }
-    }
+    callbackData = callbackHasNoImportType(callbackParams);
   } else {
     callbackData = '[PC Preview] unknown type';
   }
@@ -613,6 +619,43 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
   return iteratorMethod;
 }
 
+function handleReturnDataNoImportType(returnPromiseParams: string, returnType: ReturnTypeEntity): string {
+  let returnData = '';
+  if (returnPromiseParams.startsWith('[') || returnPromiseParams.endsWith(']')) {
+    returnData = '[]';
+  } else {
+    let paramsTypeNoHas = true;
+    Object.keys(paramsTypeStart).forEach(item => {
+      if (returnPromiseParams.startsWith(item)) {
+        returnData = paramsTypeStart[item];
+        paramsTypeNoHas = false;
+      }
+    });
+    if (paramsTypeNoHas) {
+      returnData = returnPromiseParams;
+      if (returnPromiseParams.includes('<')) {
+        returnData = `${returnPromiseParams.split('<')[0]}`;
+      }
+      if (returnPromiseParams.includes('<') && returnPromiseParams.includes(',')) {
+        returnData = '{}';
+      }
+    }
+    if (returnPromiseParams === 'Date') {
+      returnData = 'new Date()';
+    }
+    if (returnPromiseParams === 'T') {
+      returnData = '"[PC Preview] unknown type"';
+    }
+    if (returnType.returnKindName.startsWith('Readonly')) {
+      returnData = `${returnType.returnKindName.split('<')[1].split('>')[0]}`;
+    }
+    if (checkIsGenericSymbol(returnType.returnKindName)) {
+      returnData = `'[PC Preview] unknown iterableiterator_${returnType.returnKindName}'`;
+    }
+  }
+  return returnData;
+}
+
 /**
  * generate more function name return statement;
  * @param isReturnPromise
@@ -622,9 +665,9 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
  * @returns
  */
 export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, returnType: ReturnTypeEntity, sourceFile: SourceFile, mockApi: string): string {
-  // If the return value is an iterator IterableIterator, then IteratorEntriesMock is directly returned
+  // If the return value is an iterator IterableIterator, then iteratorEntriesMock is directly returned
   if (returnType.returnKindName.startsWith('IterableIterator')) {
-    return returnType.returnKindName.includes(',') ? IteratorEntriesMock : IteratorStringMock;
+    return returnType.returnKindName.includes(',') ? iteratorEntriesMock : iteratorStringMock;
   }
   // If it is a promise, intercept the content of x in promise<x>, which may have the following formats:
   // fun(): y | Promise<y>、 fun(): Promise<x | y | z>、 fun(): Promise<x>、 fun(): Promise<x.y>
@@ -666,38 +709,7 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
   } else if (importType === 'isImport') {
     returnData = returnPromiseParams;
   } else if (importType === 'noImport') {
-    if (returnPromiseParams.startsWith('[') || returnPromiseParams.endsWith(']')) {
-      returnData = '[]';
-    } else {
-      let paramsTypeNoHas = true;
-      Object.keys(paramsTypeStart).forEach(item => {
-        if (returnPromiseParams.startsWith(item)) {
-          returnData = paramsTypeStart[item];
-          paramsTypeNoHas = false;
-        }
-      });
-      if (paramsTypeNoHas) {
-        returnData = returnPromiseParams;
-        if (returnPromiseParams.includes('<')) {
-          returnData = `${returnPromiseParams.split('<')[0]}`;
-        }
-        if (returnPromiseParams.includes('<') && returnPromiseParams.includes(',')) {
-          returnData = `{}`;
-        }
-      }
-      if (returnPromiseParams === 'Date') {
-        returnData = 'new Date()';
-      }
-      if (returnPromiseParams === 'T') {
-        returnData = '"[PC Preview] unknown type"';
-      }
-      if (returnType.returnKindName.startsWith('Readonly')) {
-        returnData = `${returnType.returnKindName.split('<')[1].split('>')[0]}`;
-      }
-      if (checkIsGenericSymbol(returnType.returnKindName)) {
-        returnData = `'[PC Preview] unknown iterableiterator_${returnType.returnKindName}'`;
-      }
-    }
+    returnData = handleReturnDataNoImportType(returnPromiseParams, returnType);
   } else {
     returnData = '"[PC Preview] unknown type"';
   }
