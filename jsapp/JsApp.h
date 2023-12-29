@@ -23,7 +23,7 @@
 #include "json/json.h"
 
 struct ResolutionParam {
-    ResolutionParam (int32_t orignalWidth, int32_t orignalHeight,
+    ResolutionParam(int32_t orignalWidth, int32_t orignalHeight,
         int32_t compressionWidth, int32_t compressionHeight)
     {
         this->orignalWidth = orignalWidth;
