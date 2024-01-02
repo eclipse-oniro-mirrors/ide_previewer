@@ -22,6 +22,21 @@
 #include <vector>
 #include "json/json.h"
 
+struct ResolutionParam {
+    ResolutionParam(int32_t orignalWidth, int32_t orignalHeight,
+        int32_t compressionWidth, int32_t compressionHeight)
+    {
+        this->orignalWidth = orignalWidth;
+        this->orignalHeight = orignalHeight;
+        this->compressionWidth = compressionWidth;
+        this->compressionHeight = compressionHeight;
+    }
+    int32_t orignalWidth;
+    int32_t orignalHeight;
+    int32_t compressionWidth;
+    int32_t compressionHeight;
+};
+
 class JsApp {
 public:
     JsApp& operator=(const JsApp&) = delete;
@@ -43,7 +58,7 @@ public:
     virtual std::string GetJSONTree();
     virtual std::string GetDefaultJSONTree();
     virtual void OrientationChanged(std::string commandOrientation);
-    virtual void ResolutionChanged(int32_t, int32_t, int32_t, int32_t, int32_t);
+    virtual void ResolutionChanged(ResolutionParam&, int32_t, std::string);
     virtual void SetArgsColorMode(const std::string& value);
     virtual void SetArgsAceVersion(const std::string& value);
     virtual std::string GetOrientation() const;

@@ -25,7 +25,7 @@
 #include "ace_run_args.h"
 #include "device_config.h"
 #include "device_type.h"
-
+#include "window_animation_config.h"
 
 namespace OHOS {
 namespace Previewer {
@@ -61,8 +61,8 @@ public:
     std::string GetJSONTree() override;
     std::string GetDefaultJSONTree() override;
     void OrientationChanged(std::string commandOrientation) override;
-    void ResolutionChanged(int32_t changedOriginWidth, int32_t changedOriginHeight,
-                           int32_t changedWidth, int32_t changedHeight, int32_t screenDensity) override;
+    void ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason) override;
+    OHOS::Ace::WindowSizeChangeReason ConvertResizeReason(std::string reason);
     void SetResolutionParams(int32_t changedOriginWidth, int32_t changedOriginHeight,
                            int32_t changedWidth, int32_t changedHeight, int32_t screenDensity);
     void SetArgsColorMode(const std::string& value) override;

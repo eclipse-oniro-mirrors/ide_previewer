@@ -438,6 +438,16 @@ bool ResolutionSwitchCommand::IsSetArgValid() const
     if (!IsIntValValid(args)) {
         return false;
     }
+    if (args.isMember("reason")) {
+        if (!args["reason"].isString()) {
+            return false;
+        }
+        string reason = args["reason"].asString();
+        if (reason != "rotation" && reason != "resize" && reason != "undefined") {
+            ELOG("Invalid value of reason!");
+            return false;
+        }
+    }
     return true;
 }
 
@@ -464,7 +474,12 @@ void ResolutionSwitchCommand::RunSet()
     int32_t width = args["width"].asInt();
     int32_t height = args["height"].asInt();
     int32_t screenDensity = args["screenDensity"].asInt();
-    JsAppImpl::GetInstance().ResolutionChanged(originWidth, originHeight, width, height, screenDensity);
+    string reason = "undefined";
+    if (args.isMember("reason")) {
+        reason = args["reason"].asString();
+    }
+    ResolutionParam param(originWidth, originHeight, width, height);
+    JsAppImpl::GetInstance().ResolutionChanged(param, screenDensity, reason);
     SetCommandResult("result", true);
     ILOG("ResolutionSwitch run finished.");
 }

@@ -34,6 +34,7 @@ os_include_dirs = [
   "$flutter_root/engine",
   "$flutter_root/engine/flutter/shell/platform/common/cpp/public",
   "$flutter_root/engine/ace_adapter/flutter/shell/platform/glfw/public",
+  "$ace_root/frameworks/core/common",
   "$ace_root/frameworks/core/common/clipboard",
   "$ace_root/adapter/preview/entrance/clipboard",
   "$ace_root/interfaces/inner_api/ace",
