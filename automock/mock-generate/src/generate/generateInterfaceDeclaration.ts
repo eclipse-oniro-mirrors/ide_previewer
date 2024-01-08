@@ -149,7 +149,7 @@ function addExtraImport(
  * @param extraImport
  * @returns
  */
-function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]) {
+function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]): void {
   for (let i = 0; i < specialFilesList.length; i++) {
     const specialFilePath = specialFilesList[i];
     if (!fs.existsSync(specialFilePath)) {
