@@ -281,6 +281,24 @@ void JsAppImpl::RunDebugAbility()
         ELOG("JsApp::Run simulator create failed.");
         return;
     }
+    simulator->SetHostResolveBufferTracker(
+        [](const std::string &inputPath, uint8_t **buff, size_t *buffSize) -> bool {
+            if (inputPath.empty() || buff == nullptr || buffSize == nullptr) {
+                ELOG("Param invalid.");
+                return false;
+            }
+
+            DLOG("Get module buffer, input path: %{public}s.", inputPath.c_str());
+            auto data = Ide::StageContext::GetInstance().GetModuleBuffer(inputPath);
+            if (data == nullptr) {
+                ELOG("Get module buffer failed, input path: %{public}s.", inputPath.c_str());
+                return false;
+            }
+
+            *buff = data->data();
+            *buffSize = data->size();
+            return true;
+        });
     SetMockJsonInfo();
     std::string abilitySrcPath = CommandParser::GetInstance().GetAbilityPath();
     debugAbilityId = simulator->StartAbility(abilitySrcPath, [](int64_t abilityId) {});
