@@ -126,6 +126,7 @@ ohos_source_set("mock_lite") {
       "//foundation/arkui/ui_ext_lite/tools/ide/brightness_lite/js/builtin:nativeapi_brightness_static",
     ]
     sources += [
+      "lite/BrightnessModuleImpl.cpp",
       "lite/GeoLocation.cpp",
       "lite/SensorModuleImpl.cpp",
       "lite/VibratorModuleImpl.cpp",
