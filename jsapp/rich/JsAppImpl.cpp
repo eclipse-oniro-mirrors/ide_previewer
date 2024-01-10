@@ -369,6 +369,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
         options.previewPath = fPath.substr(0, pos) + ".idea" + FileSystem::GetSeparator() + "previewer";
         ILOG("previewPath info:%s", options.previewPath.c_str());
     }
+    options.postTask = AppExecFwk::EventHandler::PostTask;
 }
 
 std::shared_ptr<AppExecFwk::Configuration> JsAppImpl::UpdateConfiguration(OHOS::Ace::Platform::AceRunArgs& args)
