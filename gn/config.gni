@@ -11,10 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-declare_args() {
-  build_lite_full = false
-}
-
 platform = "${current_os}_${current_cpu}"
 if (platform == "mac_arm64") {
   mac_buildtool = "//build/toolchain/mac:clang_arm64"

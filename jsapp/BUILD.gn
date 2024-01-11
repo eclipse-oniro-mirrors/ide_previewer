@@ -12,7 +12,9 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine_lite/simulator.gni")
 import("../gn/config.gni")
+
 config("jsapp_config") {
   cflags = [
     "-std=c++17",
