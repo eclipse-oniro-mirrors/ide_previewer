@@ -15,7 +15,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { collectAllFileName, getAllClassDeclaration, dtsFileList, getOhosInterfacesDir } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
@@ -57,7 +56,7 @@ function deleteOldMockJsFile(outDir: string): void {
     if (stas.isDirectory()) {
       deleteOldMockJsFile(currPath);
     } else {
-      fs.unlink(currPath, function(err) {
+      fs.unlink(currPath, function (err) {
         if (err) {
           console.log(err);
         }
@@ -83,31 +82,16 @@ function mkdirsSync(dirname): boolean {
   return false;
 }
 
-function main(apiInputPath): void {
-  let interfaceRootDir = '';
-  if (os.platform() === 'linux' || os.platform() === 'darwin') {
-    interfaceRootDir = __dirname.split('/out')[0];
-  } else {
-    interfaceRootDir = __dirname.split('\\out')[0];
-  }
-  const dtsDir = apiInputPath;
-  const outMockJsFileDir = path.join(__dirname, '../../runtime/main/extend/systemplugin');
-  // deleteOldMockJsFile(outMockJsFileDir);
-  getAllDtsFile(dtsDir);
-
-  dtsFileList.forEach(value => {
-    collectAllFileName(value);
-    if (value.endsWith('.d.ts') || value.endsWith('.d.ets')) {
-      const code = fs.readFileSync(value);
-      const sourceFile = createSourceFile(value, code.toString(), ScriptTarget.Latest);
-      getAllClassDeclaration(sourceFile);
-    }
-  });
-
+/**
+ * hgandle all ets file mock logic
+ * @param outMockJsFileDir automated mock file output path
+ * @returns
+ */
+function etsFileToMock(outMockJsFileDir: string): void {
   let index = 0;
   while (index < dtsFileList.length) {
     const value = dtsFileList[index];
-    index ++;
+    index++;
 
     if (!value.endsWith('.d.ts') && !value.endsWith('.d.ets')) {
       continue;
@@ -149,6 +133,29 @@ function main(apiInputPath): void {
     fs.writeFileSync(filePath, '');
     fs.appendFileSync(path.join(filePath), generateSourceFileElements('', sourceFileEntity, sourceFile, outputFileName));
   }
+}
+
+/**
+ * Project Entry Function
+ * @param apiInputPath interface_sdk-js\api absolute file path
+ * @returns
+ */
+function main(apiInputPath): void {
+  const dtsDir = apiInputPath;
+  const outMockJsFileDir = path.join(__dirname, '../../runtime/main/extend/systemplugin');
+  // deleteOldMockJsFile(outMockJsFileDir);
+  getAllDtsFile(dtsDir);
+
+  dtsFileList.forEach(value => {
+    collectAllFileName(value);
+    if (value.endsWith('.d.ts') || value.endsWith('.d.ets')) {
+      const code = fs.readFileSync(value);
+      const sourceFile = createSourceFile(value, code.toString(), ScriptTarget.Latest);
+      getAllClassDeclaration(sourceFile);
+    }
+  });
+
+  etsFileToMock(outMockJsFileDir);
 
   if (!fs.existsSync(path.join(outMockJsFileDir, 'napi'))) {
     mkdirsSync(path.join(outMockJsFileDir, 'napi'));

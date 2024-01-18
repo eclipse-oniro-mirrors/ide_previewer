@@ -36,14 +36,13 @@ import type { ImportElementEntity } from '../declaration-node/importAndExportDec
 
 /**
  * generate declare
- * @param rootName
  * @param moduleEntity
  * @param sourceFile
  * @param filename
  * @param extraImport
  * @returns
  */
-export function generateModuleDeclaration(rootName: string, moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
+export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
   filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
   let innerModuleBody = '';
   const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
@@ -110,9 +109,9 @@ export function generateModuleDeclaration(rootName: string, moduleEntity: Module
   if (moduleEntity.interfaceDeclarations.length > 0) {
     moduleEntity.interfaceDeclarations.forEach(value => {
       if (value.exportModifiers.length > 0) {
-        outBody += generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+        outBody += generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       } else {
-        moduleBody += '\t' + generateInterfaceDeclaration(moduleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+        moduleBody += '\t' + generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       }
     });
   }
@@ -229,9 +228,9 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
   if (moduleEntity.interfaceDeclarations.length) {
     moduleEntity.interfaceDeclarations.forEach(value => {
       if (value.exportModifiers.length) {
-        innerOutBody += generateInterfaceDeclaration(innerModuleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+        innerOutBody += generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       } else {
-        moduleBody += '\t' + generateInterfaceDeclaration(innerModuleName, value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
+        moduleBody += '\t' + generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
       }
     });
   }
@@ -340,7 +339,7 @@ function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: Source
 
   if (moduleEntity.interfaceDeclarations.length > 0) {
     moduleEntity.interfaceDeclarations.forEach(value => {
-      innerModuleBody += generateInterfaceDeclaration(moduleName, value, sourceFile, false, '', moduleEntity.interfaceDeclarations) + '\n';
+      innerModuleBody += generateInterfaceDeclaration(value, sourceFile, false, '', moduleEntity.interfaceDeclarations) + '\n';
     });
   }
 
