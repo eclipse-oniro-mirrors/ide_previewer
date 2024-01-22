@@ -41,7 +41,7 @@ export function getImportDeclarationArray(sourceFile: SourceFile): Array<ImportE
 export function getModuleImportEqual(importEqualNode: ImportEqualsDeclaration, sourceFile: SourceFile): ImportEuqalEntity {
   return {
     importEqualName: importEqualNode.name.escapedText.toString(),
-    importEqualTypeName: sourceFile.text.substring(importEqualNode.moduleReference.pos, importEqualNode.moduleReference.end).trim(),
+    importEqualTypeName: sourceFile.text.substring(importEqualNode.moduleReference.pos, importEqualNode.moduleReference.end).trimStart().trimEnd(),
     importEqualTypeKind: importEqualNode.moduleReference.kind
   };
 }
@@ -53,7 +53,7 @@ export function getModuleImportEqual(importEqualNode: ImportEqualsDeclaration, s
  * @returns
  */
 export function getExportDeclaration(exportNode: ExportDeclaration, sourceFile: SourceFile): string {
-  return sourceFile.text.substring(exportNode.pos, exportNode.end).trim();
+  return sourceFile.text.substring(exportNode.pos, exportNode.end).trimStart().trimEnd();
 }
 
 /**
@@ -65,10 +65,10 @@ export function getExportDeclaration(exportNode: ExportDeclaration, sourceFile: 
 export function getImportDeclaration(node: Node, sourceFile: SourceFile): ImportElementEntity {
   let importElements = '';
   const importNode = node as ImportDeclaration;
-  const importPath = sourceFile.text.substring(importNode.moduleSpecifier.pos, importNode.moduleSpecifier.end).trim();
+  const importPath = sourceFile.text.substring(importNode.moduleSpecifier.pos, importNode.moduleSpecifier.end).trimStart().trimEnd();
   const importClause = importNode.importClause;
   if (importClause !== undefined) {
-    importElements = sourceFile.text.substring(importClause.pos, importClause.end).trim();
+    importElements = sourceFile.text.substring(importClause.pos, importClause.end).trimStart().trimEnd();
     if (importElements.startsWith('type ')) {
       importElements = importElements.replace('type ', '');
     }
@@ -89,7 +89,7 @@ export function getImportDeclaration(node: Node, sourceFile: SourceFile): Import
 export function getExportAssignment(exportAssigment: ExportAssignment, sourceFile: SourceFile): Array<string> {
   const exportAssignments: Array<string> = [];
   if (exportAssigment.expression !== undefined) {
-    exportAssignments.push(sourceFile.text.substring(exportAssigment.expression.pos, exportAssigment.expression.end).trim());
+    exportAssignments.push(sourceFile.text.substring(exportAssigment.expression.pos, exportAssigment.expression.end).trimStart().trimEnd());
   }
   return exportAssignments;
 }
