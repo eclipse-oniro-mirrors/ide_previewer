@@ -81,6 +81,11 @@ export function getWarnConsole(interfaceNameOrClassName: string, functionNameOrP
   return `console.warn('The ${interfaceNameOrClassName}.${functionNameOrPropertyName} interface in the Previewer is a mocked implementation and may behave differently than on a real device.');\n`;
 }
 
+/**
+ * handle Promise params
+ * @param returnType
+ * @returns string
+ */
 function handlePromiseParams(returnType: ReturnTypeEntity): string {
   const returnKindName = returnType.returnKindName.slice(0, returnType.returnKindName.length - 1).slice(8).trim();
   let returnName = `return new Promise((resolve, reject) => {
@@ -195,13 +200,13 @@ function handleUnionTypeReturnBody(returnType: ReturnTypeEntity): string {
       break;
     }
   }
-  if (returnName.trimStart().trimEnd() === 'void') {
+  if (returnName.trim() === 'void') {
     return '';
   }
   if (getClassNameSet().has(returnName)) {
     return `return new ${returnName}()`;
   } else {
-    return `return ${getBaseReturnValue(returnName.trimStart().trimEnd())}`;
+    return `return ${getBaseReturnValue(returnName.trim())}`;
   }
 }
 
@@ -266,7 +271,7 @@ export function getTheRealReferenceFromImport(sourceFile: SourceFile, typeName: 
       if (value.importPath.includes('@ohos')) {
         isOhos = true;
       }
-      if (value.importElements.trimStart().trimEnd() === typeName.split('.')[0]) {
+      if (value.importElements.trim() === typeName.split('.')[0]) {
         const tmpArr = value.importPath.split('.');
         mockMockName = tmpArr[tmpArr.length - 1].replace(/'/g, '').replace(/"/g, '');
       }
@@ -298,7 +303,7 @@ function getImportTypeAliasNameFromImportElements(importElementEntity: ImportEle
     if (importElementEntity[i].importElements.includes('_')) {
       const importElements = importElementEntity[i].importElements.replace('{', '').replace('}', '').split(',');
       for (let j = 0; j < importElements.length; j++) {
-        const element = importElements[j].trimStart().trimEnd();
+        const element = importElements[j].trim();
         if (!element) {
           continue;
         }
@@ -368,6 +373,11 @@ export const paramsTypeStart = {
   'unknown': '\'[PC Preview] unknown type\''
 };
 
+/**
+ * get callback params
+ * @param str
+ * @returns
+ */
 const removeCallback = (str: string) => {
   const callbackParams = {
     type: 'Callback',
@@ -390,6 +400,12 @@ const removeCallback = (str: string) => {
   return callbackParams;
 };
 
+/**
+ * get import type
+ * @param mockApi
+ * @param value
+ * @returns
+ */
 const isInImportType = (mockApi: string, value: string) => {
   let hasDotFirstWorld = '';
   if (value.includes('.')) {
@@ -410,14 +426,29 @@ const isInImportType = (mockApi: string, value: string) => {
   return 'noImport';
 };
 
+/**
+ * first Letter Word  uppercase
+ * @param word
+ * @returns
+ */
 const firstLetterWord = (word: string) => {
   return word.slice(0, 1).toUpperCase() + word.slice(1);
 };
 
+/**
+ * Find if the string contains'. '
+ * @param str
+ * @returns
+ */
 const hasDotFirstWord = (str: string) => {
   return str.includes('.') ? str.split('.')[0] : str;
 };
 
+/**
+ * callback Has No Import Type
+ * @param callbackParams
+ * @returns string
+ */
 function callbackHasNoImportType(callbackParams: { type: string, value: string }): string {
   let callbackData = '';
   let paramsTypeNoHas = true;
@@ -619,6 +650,12 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
   return iteratorMethod;
 }
 
+/**
+ * handle Return Data No Import Type
+ * @param returnPromiseParams
+ * @param returnType
+ * @returns string
+ */
 function handleReturnDataNoImportType(returnPromiseParams: string, returnType: ReturnTypeEntity): string {
   let returnData = '';
   if (returnPromiseParams.startsWith('[') || returnPromiseParams.endsWith(']')) {
@@ -726,7 +763,7 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
 }
 
 /**
- *
+ * get Separator Param
  * @param returnPromiseParams
  * @returns
  */
@@ -769,7 +806,7 @@ function getSeparatorParam(returnPromiseParams: string): string {
 }
 
 /**
- *
+ * has Export Default Keyword
  * @param mockName string
  * @param sourceFile SourceFile
  * @returns boolean

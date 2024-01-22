@@ -33,12 +33,12 @@ export function getConstructorDeclaration(node: Node, sourceFile: SourceFile): A
     if (isIdentifier(paramElement)) {
       name = paramElement.escapedText.toString();
     } else {
-      name = sourceFile.text.substring(paramElement.pos, paramElement.end).trimStart().trimEnd();
+      name = sourceFile.text.substring(paramElement.pos, paramElement.end).trim();
     }
 
     const paramTypeElement = value.type;
     if (paramTypeElement !== undefined) {
-      typeName = sourceFile.text.substring(paramTypeElement.pos, paramTypeElement.end).trimStart().trimEnd();
+      typeName = sourceFile.text.substring(paramTypeElement.pos, paramTypeElement.end).trim();
       typeKind = paramTypeElement.kind;
     }
 

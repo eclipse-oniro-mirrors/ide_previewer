@@ -28,12 +28,12 @@ export function getTypeParameterDeclaration(node: Node, sourceFile: SourceFile):
   let constraintDefaultValue = '';
   const constraint = typeParameterNode.constraint;
   if (constraint !== undefined) {
-    constraitValue = sourceFile.text.substring(constraint.pos, constraint.end).trimStart().trimEnd();
+    constraitValue = sourceFile.text.substring(constraint.pos, constraint.end).trim();
   }
 
   const defaultValue = typeParameterNode.default;
   if (defaultValue !== undefined) {
-    constraintDefaultValue = sourceFile.text.substring(defaultValue.pos, defaultValue.end).trimStart().trimEnd();
+    constraintDefaultValue = sourceFile.text.substring(defaultValue.pos, defaultValue.end).trim();
   }
 
   return {

@@ -111,7 +111,7 @@ function generatePropertySignatureForTypeReference(propertySignature: PropertySi
  */
 function generatePropertySignatureForUnionType(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
   let propertySignatureBody = '';
-  let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trimStart().trimEnd();
+  let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trim();
   if (unionFirstElement.includes('[]') || unionFirstElement.startsWith('[') || unionFirstElement.endsWith(']')) {
     unionFirstElement = '[]';
   }

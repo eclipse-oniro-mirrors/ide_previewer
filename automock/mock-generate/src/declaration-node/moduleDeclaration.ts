@@ -48,7 +48,7 @@ export function getModuleDeclaration(node: Node, sourceFile: SourceFile, fileNam
   if (isIdentifier(moduleNode.name)) {
     moduleName = moduleNode.name.escapedText.toString();
   } else {
-    moduleName = sourceFile.text.substring(moduleNode.name.pos, moduleNode.name.end).trimStart().trimEnd();
+    moduleName = sourceFile.text.substring(moduleNode.name.pos, moduleNode.name.end).trim();
   }
 
   let exportModifiers: Array<number> = [];

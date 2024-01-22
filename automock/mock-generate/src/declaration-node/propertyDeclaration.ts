@@ -38,14 +38,14 @@ export function getPropertyDeclaration(node: PropertyDeclaration, sourceFile: So
 
   if (node.initializer !== undefined) {
     isInitializer = true;
-    initializer = sourceFile.text.substring(node.initializer.pos, node.initializer.end).trimStart().trimEnd();
+    initializer = sourceFile.text.substring(node.initializer.pos, node.initializer.end).trim();
   }
 
   propertyName = getPropertyName(node.name, sourceFile);
 
   const propertyType = node.type;
   if (propertyType !== undefined) {
-    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trimStart().trimEnd();
+    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
     kind = propertyType.kind;
   }
 
