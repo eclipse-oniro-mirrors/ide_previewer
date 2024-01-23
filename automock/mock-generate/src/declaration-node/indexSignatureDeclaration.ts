@@ -25,7 +25,7 @@ export function getIndexSignatureDeclaration(indexSignature: IndexSignatureDecla
   return {
     indexSignatureKey: 'key',
     indexSignatureKind: indexSignature.type.kind,
-    indexSignatureTypeName: sourceFile.text.substring(indexSignature.type.pos, indexSignature.type.end).trimStart().trimEnd()
+    indexSignatureTypeName: sourceFile.text.substring(indexSignature.type.pos, indexSignature.type.end).trim()
   };
 }
 

@@ -137,9 +137,9 @@ export function getPropertyName(node: PropertyName, sourceFile: SourceFile): str
     propertyName = newNameNode.escapedText.toString();
   } else if (isComputedPropertyName(node)) {
     const newNameNode = node as ComputedPropertyName;
-    propertyName = sourceFile.text.substring(newNameNode.expression.pos, newNameNode.expression.end).trimStart().trimEnd();
+    propertyName = sourceFile.text.substring(newNameNode.expression.pos, newNameNode.expression.end).trim();
   } else {
-    propertyName = sourceFile.text.substring(node.pos, node.end).trimStart().trimEnd();
+    propertyName = sourceFile.text.substring(node.pos, node.end).trim();
   }
   return propertyName;
 }
@@ -159,12 +159,12 @@ export function getParameter(parameter: ParameterDeclaration, sourceFile: Source
   } else {
     const start = parameter.name.pos === undefined ? 0 : parameter.name.pos;
     const end = parameter.name.end === undefined ? 0 : parameter.name.end;
-    paramName = sourceFile.text.substring(start, end).trimStart().trimEnd();
+    paramName = sourceFile.text.substring(start, end).trim();
   }
 
   const start = parameter.type?.pos === undefined ? 0 : parameter.type.pos;
   const end = parameter.type?.end === undefined ? 0 : parameter.type.end;
-  paramTypeString = sourceFile.text.substring(start, end).trimStart().trimEnd();
+  paramTypeString = sourceFile.text.substring(start, end).trim();
   return {
     paramName: paramName,
     paramTypeString: paramTypeString,
@@ -178,13 +178,15 @@ export function getParameter(parameter: ParameterDeclaration, sourceFile: Source
  * @param sourceFile
  * @returns
  */
-export function getFunctionAndMethodReturnInfo(node: FunctionDeclaration | MethodDeclaration |
-  MethodSignature | CallSignatureDeclaration, sourceFile: SourceFile): ReturnTypeEntity {
+export function getFunctionAndMethodReturnInfo(
+  node: FunctionDeclaration | MethodDeclaration | MethodSignature | CallSignatureDeclaration,
+  sourceFile: SourceFile
+): ReturnTypeEntity {
   const returnInfo = { returnKindName: '', returnKind: -1 };
   if (node.type !== undefined) {
     const start = node.type.pos === undefined ? 0 : node.type.pos;
     const end = node.type.end === undefined ? 0 : node.type.end;
-    returnInfo.returnKindName = sourceFile.text.substring(start, end).trimStart().trimEnd();
+    returnInfo.returnKindName = sourceFile.text.substring(start, end).trim();
     returnInfo.returnKind = node.type.kind;
   }
   return returnInfo;

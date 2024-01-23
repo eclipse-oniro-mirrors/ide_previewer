@@ -35,7 +35,7 @@ export function getEnumDeclaration(node: EnumDeclaration, sourceFile: SourceFile
     const enumValueName = getPropertyName(value.name, sourceFile);
     let enumValue = '';
     if (value.initializer !== undefined) {
-      enumValue = sourceFile.text.substring(value.initializer.pos, value.initializer.end).trimEnd().trimStart();
+      enumValue = sourceFile.text.substring(value.initializer.pos, value.initializer.end).trim();
     }
     const enumKind = value.initializer?.kind === undefined ? -1 : value.initializer?.kind;
     enumMembers.push({ enumValueName: enumValueName, enumValue: enumValue, enumKind: enumKind });
