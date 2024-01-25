@@ -570,7 +570,7 @@ bool CommandParser::IsProjectIDValid()
 {
     if (IsSet("projectID")) {
         projectID = Value("projectID");
-        if (CheckParamInvalidity(projectID, true)) {
+        if (CheckParamInvalidity(projectID, false)) {
             errorInfo = "Launch -projectID parameters is not match regex.";
             return false;
         }
