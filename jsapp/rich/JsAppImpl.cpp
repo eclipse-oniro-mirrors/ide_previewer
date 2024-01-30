@@ -220,7 +220,6 @@ void JsAppImpl::RunJsApp()
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(VirtualScreenImpl::GetInstance().GetFoldable());
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(
         VirtualScreenImpl::GetInstance().GetFoldStatus()));
-    InitGlfwEnv();
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
     Platform::AcePreviewHelper::GetInstance()->
         SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
@@ -889,12 +888,14 @@ string JsAppImpl::GetDeviceTypeName(const OHOS::Ace::DeviceType type) const
 
 void JsAppImpl::InitGlfwEnv()
 {
+    ILOG("InitGlfwEnv started");
     glfwRenderContext = OHOS::Rosen::GlfwRenderContext::GetGlobal();
     if (!glfwRenderContext->Init()) {
         ELOG("Could not create window: InitGlfwEnv failed.");
         return;
     }
     glfwRenderContext->CreateGlfwWindow(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight, false);
+    ILOG("InitGlfwEnv finished");
 }
 
 void JsAppImpl::SetMockJsonInfo()

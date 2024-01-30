@@ -83,6 +83,7 @@ public:
     void DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const;
     void DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const;
     void DispatchInputMethodEvent(const unsigned int codePoint) const;
+    void InitGlfwEnv();
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);
@@ -129,7 +130,6 @@ private:
     void SetDeviceScreenDensity(const int32_t screenDensity, const std::string type);
     std::string GetDeviceTypeName(const OHOS::Ace::DeviceType) const;
     OHOS::Rosen::FoldStatus ConvertFoldStatus(std::string value) const;
-    void InitGlfwEnv();
     const double BASE_SCREEN_DENSITY = 160; // Device Baseline Screen Density
     std::unique_ptr<OHOS::Ace::Platform::AceAbility> ability;
     std::atomic<bool> isStop;
