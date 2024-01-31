@@ -220,6 +220,9 @@ void JsAppImpl::RunJsApp()
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(VirtualScreenImpl::GetInstance().GetFoldable());
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(
         VirtualScreenImpl::GetInstance().GetFoldStatus()));
+#ifndef _WIN32
+    InitGlfwEnv();
+#endif
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
     Platform::AcePreviewHelper::GetInstance()->
         SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
