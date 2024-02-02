@@ -215,7 +215,7 @@ void JsAppImpl::RunJsApp()
                                  VirtualScreenImpl::GetInstance().GetCompressionWidth(),
                                  VirtualScreenImpl::GetInstance().GetCompressionHeight());
     SetJsAppArgs(aceRunArgs);
-    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(aceRunArgs.assetPath);
+    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(CommandParser::GetInstance().GetLoaderJsonPath());
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(VirtualScreenImpl::GetInstance().GetFoldable());
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(
