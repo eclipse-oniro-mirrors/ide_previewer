@@ -63,6 +63,7 @@ public:
     std::string GetFoldStatus() const;
     int32_t GetFoldResolutionWidth() const;
     int32_t GetFoldResolutionHeight() const;
+    std::string GetLoaderJsonPath() const;
 
 private:
     CommandParser();
@@ -122,6 +123,7 @@ private:
     std::string foldStatus;
     int32_t foldResolutionWidth;
     int32_t foldResolutionHeight;
+    std::string loaderJsonPath;
 
     bool IsDebugPortValid();
     bool IsAppPathValid();
@@ -158,6 +160,7 @@ private:
     bool IsFoldableValid();
     bool IsFoldStatusValid();
     bool IsFoldResolutionValid();
+    bool IsLoaderJsonPathValid();
     std::string HelpText();
     void ProcessingCommand(const std::vector<std::string>& strs);
 };
