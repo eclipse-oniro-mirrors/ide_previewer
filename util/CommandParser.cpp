@@ -86,6 +86,7 @@ CommandParser::CommandParser()
     Register("-foldable", 1, "Set foldable for Previewer.");
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
+    Register("-ljPath", 1, "Set loader.json path for Previewer");
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -121,7 +122,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsConfigPathValid() && IsJsHeapValid() && IsJsHeapFlagValid() && IsScreenShapeValid();
     partRet = partRet && IsDeviceValid() && IsUrlValid() && IsRefreshValid() && IsCardValid() && IsProjectIDValid();
     partRet = partRet && IsColorModeValid() && IsOrientationValid() && IsWebSocketPortValid() && IsAceVersionValid();
-    partRet = partRet && IsScreenModeValid() && IsAppResourcePathValid();
+    partRet = partRet && IsScreenModeValid() && IsAppResourcePathValid() && IsLoaderJsonPathValid();
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
@@ -936,4 +937,24 @@ int32_t CommandParser::GetFoldResolutionWidth() const
 int32_t CommandParser::GetFoldResolutionHeight() const
 {
     return foldResolutionHeight;
+}
+
+string CommandParser::GetLoaderJsonPath() const
+{
+    return loaderJsonPath;
+}
+
+bool CommandParser::IsLoaderJsonPathValid()
+{
+    if (!IsSet("ljPath")) {
+        return true;
+    }
+    string path = Value("ljPath");
+    if (!FileSystem::IsFileExists(path)) {
+        errorInfo = string("The configuration loader.json path does not exist.");
+        ELOG("Launch -ljPath parameters abnormal!");
+        return false;
+    }
+    loaderJsonPath = path;
+    return true;
 }
