@@ -43,7 +43,6 @@
 #include "TimerTaskHandler.h"
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
-#include "json/json.h"
 
 using namespace OHOS;
 using namespace ACELite;
@@ -244,9 +243,9 @@ void JsAppImpl::StartJsApp()
         ILOG("JsApp::StartJsApp launch finished.");
         return;
     }
-    Json::Value val;
-    val["uri"] = urlPath;
-    string routerInfo = val.toStyledString();
+    Json2::Value val = JsonReader::CreateObject();
+    val.Add("uri", urlPath.c_str());
+    string routerInfo = val.ToStyledString();
     jsAbility->Launch(jsAppPath.c_str(), bundleName.c_str(), 0, routerInfo.data());
     jsAbility->Show();
     ILOG("JsApp::StartJsApp launch with single page mode finished.");

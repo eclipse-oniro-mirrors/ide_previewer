@@ -21,7 +21,6 @@
 
 #include "CommandLine.h"
 #include "LocalSocket.h"
-#include "json/json.h"
 
 class CommandLineInterface {
 public:
@@ -29,24 +28,24 @@ public:
     CommandLineInterface& operator=(const CommandLineInterface&) = delete;
     void InitPipe(const std::string name);
     static CommandLineInterface& GetInstance();
-    static void SendJsonData(const Json::Value&);
+    static void SendJsonData(const Json2::Value&);
     void SendJSHeapMemory(size_t total, size_t alloc, size_t peak) const;
     void SendWebsocketStartupSignal() const;
     void ProcessCommand() const;
     void ProcessCommandMessage(std::string message) const;
-    void ApplyConfig(const Json::Value& val) const;
-    void ApplyConfigMembers(const Json::Value& commands, const Json::Value::Members& members) const;
+    void ApplyConfig(const Json2::Value& val) const;
+    void ApplyConfigMembers(const Json2::Value& commands, const Json2::Value::Members& members) const;
     void ApplyConfigCommands(const std::string& key, const std::unique_ptr<CommandLine>& command) const;
     void Init(std::string pipeBaseName);
     void ReadAndApplyConfig(std::string path) const;
-    void CreatCommandToSendData(const std::string, const Json::Value, const std::string) const;
+    void CreatCommandToSendData(const std::string, const Json2::Value&, const std::string) const;
 
     const static std::string COMMAND_VERSION;
 
 private:
     explicit CommandLineInterface();
     virtual ~CommandLineInterface();
-    bool ProcessCommandValidate(bool parsingSuccessful, const Json::Value& jsonData, const std::string& errors) const;
+    bool ProcessCommandValidate(bool parsingSuccessful, const Json2::Value& jsonData, const std::string& errors) const;
     CommandLine::CommandType GetCommandType(std::string) const;
     std::unique_ptr<LocalSocket> socket;
     const static uint32_t MAX_COMMAND_LENGTH = 128;
