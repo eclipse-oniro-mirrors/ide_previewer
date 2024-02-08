@@ -88,8 +88,7 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
   }
   const currentFileDifferPathSteps = currentFilePathSteps.slice(differStepIndex);
   const importFileDifferPathSteps = importFilePathSteps.slice(differStepIndex);
-  if (currentFileDifferPathSteps.length === importFileDifferPathSteps.length
-    && currentFileDifferPathSteps.length === 1) {
+  if (currentFileDifferPathSteps.length === importFileDifferPathSteps.length && currentFileDifferPathSteps.length === 1) {
     return `./${path.basename(importFilePath)}`;
   } else {
     const steps = [];
