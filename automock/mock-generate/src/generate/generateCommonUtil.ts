@@ -368,7 +368,7 @@ export const paramsTypeStart = {
   'unknown': '\'[PC Preview] unknown type\''
 };
 
-const removeCallback = (str: string) => {
+const removeCallback = (str: string): { type: string, value: string } => {
   const callbackParams = {
     type: 'Callback',
     value: ''
@@ -390,7 +390,7 @@ const removeCallback = (str: string) => {
   return callbackParams;
 };
 
-const isInImportType = (mockApi: string, value: string) => {
+const isInImportType = (mockApi: string, value: string): string => {
   let hasDotFirstWorld = '';
   if (value.includes('.')) {
     hasDotFirstWorld = value.split('.')[0].trim();
@@ -410,27 +410,27 @@ const isInImportType = (mockApi: string, value: string) => {
   return 'noImport';
 };
 
-const firstLetterWord = (word: string) => {
+const firstLetterWord = (word: string): string => {
   return word.slice(0, 1).toUpperCase() + word.slice(1);
 };
 
-const hasDotFirstWord = (str: string) => {
+const hasDotFirstWord = (str: string): string => {
   return str.includes('.') ? str.split('.')[0] : str;
 };
 
 function callbackHasNoImportType(callbackParams: { type: string, value: string }): string {
   let callbackData = '';
-  let paramsTypeNoHas = true;
+  let paramsTypeHasType = true;
   if (callbackParams.value.endsWith(']')) {
     callbackData = '[]';
   } else {
     Object.keys(paramsTypeStart).forEach(item => {
       if (callbackParams.value.startsWith(item)) {
         callbackData = paramsTypeStart[item];
-        paramsTypeNoHas = false;
+        paramsTypeHasType = false;
       }
     });
-    if (paramsTypeNoHas) {
+    if (paramsTypeHasType) {
       callbackData = callbackParams.value;
       if (callbackParams.value.includes('<')) {
         callbackData = `${callbackParams.value.split('<')[0]}`;
@@ -624,14 +624,14 @@ function handleReturnDataNoImportType(returnPromiseParams: string, returnType: R
   if (returnPromiseParams.startsWith('[') || returnPromiseParams.endsWith(']')) {
     returnData = '[]';
   } else {
-    let paramsTypeNoHas = true;
+    let paramsTypeHasType = true;
     Object.keys(paramsTypeStart).forEach(item => {
       if (returnPromiseParams.startsWith(item)) {
         returnData = paramsTypeStart[item];
-        paramsTypeNoHas = false;
+        paramsTypeHasType = false;
       }
     });
-    if (paramsTypeNoHas) {
+    if (paramsTypeHasType) {
       returnData = returnPromiseParams;
       if (returnPromiseParams.includes('<')) {
         returnData = `${returnPromiseParams.split('<')[0]}`;
