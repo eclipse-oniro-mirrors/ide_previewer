@@ -143,7 +143,6 @@ function etsFileToMock(outMockJsFileDir: string): void {
 function main(apiInputPath): void {
   const dtsDir = apiInputPath;
   const outMockJsFileDir = path.join(__dirname, '../../runtime/main/extend/systemplugin');
-  // deleteOldMockJsFile(outMockJsFileDir);
   getAllDtsFile(dtsDir);
 
   dtsFileList.forEach(value => {
