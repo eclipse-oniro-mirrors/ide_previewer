@@ -30,10 +30,10 @@
           ],
           "third_party": [
             "bounds_checking_function",
+            "jsoncpp",
             "libjpeg-turbo",
             "libwebsockets",
-            "zlib",
-            "cJSON"
+            "zlib"
           ]
       },
       "build": {

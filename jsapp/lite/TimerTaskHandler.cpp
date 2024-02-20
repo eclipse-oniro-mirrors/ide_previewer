@@ -21,7 +21,7 @@
 
 #include "font/ui_font.h"
 #include "global.h"
-#include "JsonReader.h"
+#include "json/json.h"
 #include "task_manager.h"
 
 #include "AsyncWorkManager.h"
@@ -97,12 +97,10 @@ void TimerTaskHandler::CheckLanguageChanged(std::string language)
 
 void TimerTaskHandler::CheckBrightnessValueChanged(uint8_t value)
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("version", CommandLineInterface::COMMAND_VERSION.c_str());
-    result.Add("property", "Brightness");
-    Json2::Value brightness = JsonReader::CreateObject();
-    brightness.Add("Brightness", static_cast<double>(value));
-    result.Add("result", brightness);
+    Json::Value result;
+    result["version"] = CommandLineInterface::COMMAND_VERSION;
+    result["property"] = "Brightness";
+    result["result"]["Brightness"] = value;
     ILOG("CheckBrightnessValueChanged send Brightness: %d", static_cast<uint32_t>(value));
     CommandLineInterface::SendJsonData(result);
 }

@@ -20,7 +20,7 @@
 #include "CommandParser.h"
 #include "FileSystem.h"
 #include "PreviewerEngineLog.h"
-#include "JsonReader.h"
+#include "json/json.h"
 
 using namespace std;
 SystemCapability& SystemCapability::GetInstance()
@@ -55,24 +55,33 @@ void SystemCapability::ReadCapability()
     string jsonStr((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
     inFile.close();
 
-    Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
-    if (val.IsNull()) {
-        string message = JsonReader::GetErrorPtr();
+    Json::Value val;
+    Json::CharReaderBuilder builder;
+    Json::CharReader* charReader = builder.newCharReader();
+    if (charReader == nullptr) {
+        ELOG("main: CharReader memory allocation failed.");
+    }
+    std::unique_ptr<Json::CharReader> reader(charReader);
+    if (reader.get() == nullptr) {
+        ELOG("main: CharReader memory allocation failed.");
+    }
+    string message;
+    if (!reader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &val, &message)) {
         ELOG("Failed to parse the capability, errors: %s", message.c_str());
     }
-    if (val["systemCapability"].IsNull() || !val["systemCapability"].IsArray()) {
-        ELOG("Empty systemCapability json object: %s", val["systemCapability"].ToStyledString().c_str());
+    if (val["systemCapability"].empty() || !val["systemCapability"].isArray()) {
+        ELOG("Empty systemCapability json object: %s", val["systemCapability"].toStyledString().c_str());
         return;
     }
-    Json2::Value val2 = val["systemCapability"];
-    for (int i = 0; i < val2.GetArraySize(); i++) {
-        Json2::Value cap = val2.GetArrayItem(i);
-        if (!cap.IsMember("name") || !cap.IsMember("register-on-startup")) {
+    val = val["systemCapability"];
+    for (Json::ValueIterator iter = val.begin(); iter != val.end(); iter++) {
+        Json::Value cap = *iter;
+        if (!cap.isMember("name") || !cap.isMember("register-on-startup")) {
             ELOG("Invalid systemCapability json object");
         }
-        if (!cap["register-on-startup"].IsBool()) {
+        if (!cap["register-on-startup"].isBool()) {
             ELOG("Invalid systemCapability json object");
         }
-        capabilities[cap["name"].AsString()] = cap["register"].AsBool();
+        capabilities[cap["name"].asString()] = cap["register"].asBool();
     }
 }

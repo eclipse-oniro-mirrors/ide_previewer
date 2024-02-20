@@ -75,7 +75,7 @@ public:
     void SetScreenDensity(const std::string value) override;
     void SetConfigChanges(const std::string value) override;
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
-    void LoadDocument(const std::string, const std::string, const Json2::Value&) override;
+    void LoadDocument(const std::string, const std::string, const Json::Value) override;
     void FoldStatusChanged(const std::string commandFoldStatus) override;
 
     void DispatchBackPressedEvent() const;
@@ -125,8 +125,8 @@ private:
                                       const int32_t compWidth, const int32_t compHeight);
     void AdaptDeviceType(OHOS::Ace::Platform::AceRunArgs& args, const std::string,
                          const int32_t, double screenDendity = 0) const;
-    void ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const Json2::Value& paramObj);
-    void SetSystemParams(OHOS::Ace::Platform::SystemParams& args, const Json2::Value& paramObj);
+    void ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, Json::Value paramObj);
+    void SetSystemParams(OHOS::Ace::Platform::SystemParams& args, Json::Value paramObj);
     void SetDeviceScreenDensity(const int32_t screenDensity, const std::string type);
     std::string GetDeviceTypeName(const OHOS::Ace::DeviceType) const;
     OHOS::Rosen::FoldStatus ConvertFoldStatus(std::string value) const;

@@ -17,7 +17,7 @@
 #define COMMANDLINEFACTORY_H
 
 #include <memory>
-#include <map>
+
 #include "CommandLine.h"
 
 class CommandLineFactory {
@@ -27,16 +27,16 @@ public:
     static void InitCommandMap();
     static std::unique_ptr<CommandLine> CreateCommandLine(std::string command,
                                                           CommandLine::CommandType type,
-                                                          const Json2::Value& args,
+                                                          Json::Value args,
                                                           const LocalSocket& socket);
 
 private:
     template <typename T>
     static std::unique_ptr<CommandLine>
-        CreateObject(CommandLine::CommandType, const Json2::Value&, const LocalSocket& socket);
+        CreateObject(CommandLine::CommandType, const Json::Value&, const LocalSocket& socket);
     using CommandTypeMap = std::map<
         std::string,
-        std::unique_ptr<CommandLine> (*)(CommandLine::CommandType, const Json2::Value&, const LocalSocket& socket)>;
+        std::unique_ptr<CommandLine> (*)(CommandLine::CommandType, const Json::Value&, const LocalSocket& socket)>;
     static CommandTypeMap typeMap;
 };
 

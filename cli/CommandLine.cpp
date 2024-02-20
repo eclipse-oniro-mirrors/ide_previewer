@@ -38,20 +38,22 @@
 
 using namespace std;
 
-CommandLine::CommandLine(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+CommandLine::CommandLine(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : args(arg), cliSocket(socket), type(commandType), commandName("")
 {
+    SetCommandResult("result", true);
 }
 
 CommandLine::~CommandLine()
 {
+    args.clear();
 }
 
 void CommandLine::CheckAndRun()
 {
     if (!IsArgValid()) {
         ELOG("CheckAndRun: invalid command params");
-        SetCommandResult("result", JsonReader::CreateBool(false));
+        SetCommandResult("result", false);
         SendResult();
         return;
     }
@@ -61,12 +63,11 @@ void CommandLine::CheckAndRun()
 
 void CommandLine::SendResult()
 {
-    if (commandResult.IsNull() || !commandResult.IsValid()) {
+    if (commandResult.empty()) {
         return;
     }
-    cliSocket << commandResult.ToStyledString();
-    ELOG("SendResult commandResult: %s", commandResult.ToStyledString().c_str());
-    commandResult.Clear();
+    cliSocket << commandResult.toStyledString();
+    commandResult.clear();
 }
 
 void CommandLine::RunAndSendResultToManager()
@@ -77,11 +78,11 @@ void CommandLine::RunAndSendResultToManager()
 
 void CommandLine::SendResultToManager()
 {
-    if (commandResultToManager.IsNull() || !commandResultToManager.IsValid()) {
+    if (commandResultToManager.empty()) {
         return;
     }
-    cliSocket << commandResultToManager.ToStyledString();
-    commandResultToManager.Clear();
+    cliSocket << commandResultToManager.toStyledString();
+    commandResultToManager.clear();
 }
 
 bool CommandLine::IsArgValid() const
@@ -112,19 +113,19 @@ void CommandLine::SetCommandName(std::string command)
     this->commandName = command;
 }
 
-void CommandLine::SetCommandResult(const std::string& resultType, const Json2::Value& resultContent)
+void CommandLine::SetCommandResult(const std::string& resultType, const Json::Value& resultContent)
 {
-    this->commandResult.Add("version", CommandLineInterface::COMMAND_VERSION.c_str());
-    this->commandResult.Add("command", this->commandName.c_str());
-    this->commandResult.Add(resultType.c_str(), resultContent);
+    this->commandResult["version"] = CommandLineInterface::COMMAND_VERSION;
+    this->commandResult["command"] = this->commandName;
+    this->commandResult[resultType] = resultContent;
 }
 
 void CommandLine::SetResultToManager(const std::string& resultType,
-                                     const Json2::Value& resultContent,
+                                     const Json::Value& resultContent,
                                      const std::string& messageType)
 {
-    this->commandResultToManager.Add("MessageType", messageType.c_str());
-    this->commandResultToManager.Add(resultType.c_str(), resultContent);
+    this->commandResultToManager["MessageType"] = messageType;
+    this->commandResultToManager[resultType] = resultContent;
 }
 
 void CommandLine::Run()
@@ -191,12 +192,12 @@ void TouchAndMouseCommand::SetEventParams(EventParams& params)
 
 bool TouchPressCommand::IsActionArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
-        !args["x"].IsInt() || !args["y"].IsInt()) {
+    if (args.isNull() || !args.isMember("x") || !args.isMember("y") ||
+        !args["x"].isInt() || !args["y"].isInt()) {
         return false;
     }
-    int32_t pointX = args["x"].AsInt();
-    int32_t pointY = args["y"].AsInt();
+    int32_t pointX = args["x"].asInt();
+    int32_t pointY = args["y"].asInt();
     if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
         ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
@@ -208,7 +209,7 @@ bool TouchPressCommand::IsActionArgValid() const
     return true;
 }
 
-TouchPressCommand::TouchPressCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+TouchPressCommand::TouchPressCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -217,8 +218,8 @@ void TouchPressCommand::RunAction()
 {
     int type = 0;
     EventParams param;
-    param.x = args["x"].AsDouble();
-    param.y = args["y"].AsDouble();
+    param.x = atof(args["x"].asString().data());
+    param.y = atof(args["y"].asString().data());
     param.type = type;
     param.name = "TouchPress";
     param.button = MouseInputImpl::GetInstance().defaultButton;
@@ -226,18 +227,18 @@ void TouchPressCommand::RunAction()
     param.sourceType = MouseInputImpl::GetInstance().defaultSourceType;
     param.sourceTool = MouseInputImpl::GetInstance().defaultSourceTool;
     SetEventParams(param);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
 }
 
 bool MouseWheelCommand::IsActionArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("rotate") || !args["rotate"].IsDouble()) {
+    if (args.isNull() || !args.isMember("rotate") || !IsOneDigitFloatType(args["rotate"].asString(), true)) {
         return false;
     }
     return true;
 }
 
-MouseWheelCommand::MouseWheelCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+MouseWheelCommand::MouseWheelCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -247,12 +248,12 @@ void MouseWheelCommand::RunAction()
     if (CommandParser::GetInstance().GetScreenMode() == CommandParser::ScreenMode::STATIC) {
         return;
     }
-    MouseWheelImpl::GetInstance().SetRotate(args["rotate"].AsDouble());
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("CrownRotate (%f)", args["rotate"].AsDouble());
+    MouseWheelImpl::GetInstance().SetRotate(atof(args["rotate"].asString().data()));
+    SetCommandResult("result", true);
+    ILOG("CrownRotate (%s)", args["rotate"].asString().c_str());
 }
 
-TouchReleaseCommand::TouchReleaseCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+TouchReleaseCommand::TouchReleaseCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -261,8 +262,8 @@ void TouchReleaseCommand::RunAction()
 {
     int type = 1;
     EventParams param;
-    param.x = args["x"].AsDouble();
-    param.y = args["y"].AsDouble();
+    param.x = atof(args["x"].asString().data());
+    param.y = atof(args["y"].asString().data());
     param.type = type;
     param.name = "TouchRelease";
     param.button = MouseInputImpl::GetInstance().defaultButton;
@@ -270,17 +271,17 @@ void TouchReleaseCommand::RunAction()
     param.sourceType = MouseInputImpl::GetInstance().defaultSourceType;
     param.sourceTool = MouseInputImpl::GetInstance().defaultSourceTool;
     SetEventParams(param);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
 }
 
 bool TouchMoveCommand::IsActionArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
-        !args["x"].IsInt() || !args["y"].IsInt()) {
+    if (args.isNull() || !args.isMember("x") || !args.isMember("y") ||
+        !args["x"].isInt() || !args["y"].isInt()) {
         return false;
     }
-    int32_t pX = args["x"].AsInt();
-    int32_t pY = args["y"].AsInt();
+    int32_t pX = args["x"].asInt();
+    int32_t pY = args["y"].asInt();
     if (pX < 0 || pX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
         ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
@@ -292,7 +293,7 @@ bool TouchMoveCommand::IsActionArgValid() const
     return true;
 }
 
-TouchMoveCommand::TouchMoveCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+TouchMoveCommand::TouchMoveCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -301,8 +302,8 @@ void TouchMoveCommand::RunAction()
 {
     int type = 2;
     EventParams param;
-    param.x = args["x"].AsDouble();
-    param.y = args["y"].AsDouble();
+    param.x = atof(args["x"].asString().data());
+    param.y = atof(args["y"].asString().data());
     param.type = type;
     param.name = "TouchMove";
     param.button = MouseInputImpl::GetInstance().defaultButton;
@@ -310,21 +311,21 @@ void TouchMoveCommand::RunAction()
     param.sourceType = MouseInputImpl::GetInstance().defaultSourceType;
     param.sourceTool = MouseInputImpl::GetInstance().defaultSourceTool;
     SetEventParams(param);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
 }
 
-PowerCommand::PowerCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+PowerCommand::PowerCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool PowerCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("Power") || !args["Power"].IsDouble()) {
+    if (args.isNull() || !args.isMember("Power") || !IsOneDigitFloatType(args["Power"].asString(), false)) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    double val = args["Power"].AsDouble();
+    float val = args["Power"].asFloat();
     if (!SharedData<double>::IsValid(SharedDataType::BATTERY_LEVEL, val)) {
         ELOG("PowerCommand invalid value: %f", val);
         return false;
@@ -335,21 +336,22 @@ bool PowerCommand::IsSetArgValid() const
 void PowerCommand::RunGet()
 {
     double power = SharedData<double>::GetData(SharedDataType::BATTERY_LEVEL);
-    Json2::Value resultContent = JsonReader::CreateObject();
-    resultContent.Add("Power", power);
+    Json::Value resultContent;
+    resultContent["Power"] = power;
     SetCommandResult("result", resultContent);
     ILOG("Get power run finished");
 }
 
 void PowerCommand::RunSet()
 {
-    double val = args["Power"].AsDouble();
-    SharedData<double>::SetData(SharedDataType::BATTERY_LEVEL, val);
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set power run finished, the value is: %f", val);
+    string power(args["Power"].asString());
+    SharedData<double>::SetData(SharedDataType::BATTERY_LEVEL, atof(power.data()));
+    Json::Value resultContent = true;
+    SetCommandResult("result", resultContent);
+    ILOG("Set power run finished, the value is: %s", args["Power"].asString().c_str());
 }
 
-VolumeCommand::VolumeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+VolumeCommand::VolumeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -361,30 +363,37 @@ bool VolumeCommand::IsSetArgValid() const
 
 void VolumeCommand::RunGet()
 {
-    SetCommandResult("result", JsonReader::CreateString("Command offline"));
+    Json::Value resultContent = "Command offline";
+    SetCommandResult("result", resultContent);
     ILOG("Command offline");
 }
 
 void VolumeCommand::RunSet()
 {
-    SetCommandResult("result", JsonReader::CreateString("Command offline"));
+    Json::Value resultContent = "Command offline";
+    SetCommandResult("result", resultContent);
     ILOG("Command offline");
 }
 
-BarometerCommand::BarometerCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+BarometerCommand::BarometerCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool BarometerCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("Barometer") || !args["Barometer"].IsUInt()) {
+    if (args.isNull() || !args.isMember("Barometer") || !args["Barometer"].isString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    uint32_t val = args["Barometer"].AsUInt();
-    if (!SharedData<uint32_t>::IsValid(SharedDataType::PRESSURE_VALUE, val)) {
-        ELOG("Barometer invalid value: %d", val);
+    string barometer(args["Barometer"].asString());
+    if (!IsIntType(barometer)) {
+        ELOG("Invalid arguments!");
+        return false;
+    }
+
+    if (!SharedData<uint32_t>::IsValid(SharedDataType::PRESSURE_VALUE, static_cast<uint32_t>(atoi(barometer.data())))) {
+        ELOG("Barometer invalid value: %d", atoi(barometer.data()));
         return false;
     }
     return true;
@@ -393,22 +402,22 @@ bool BarometerCommand::IsSetArgValid() const
 void BarometerCommand::RunGet()
 {
     int barometer = static_cast<int>(SharedData<uint32_t>::GetData(SharedDataType::PRESSURE_VALUE));
-    Json2::Value resultContent = JsonReader::CreateObject();
-    resultContent.Add("Barometer", barometer);
+    Json::Value resultContent;
+    resultContent["Barometer"] = barometer;
     SetCommandResult("result", resultContent);
     ILOG("Get barometer run finished");
 }
 
 void BarometerCommand::RunSet()
 {
-    uint32_t val = args["Barometer"].AsUInt();
-    SharedData<uint32_t>::SetData(SharedDataType::PRESSURE_VALUE, val);
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set barometer run finished, the value is: %d", val);
+    string barometer(args["Barometer"].asString());
+    SharedData<uint32_t>::SetData(SharedDataType::PRESSURE_VALUE, static_cast<uint32_t>(atoi(barometer.data())));
+    SetCommandResult("result", true);
+    ILOG("Set barometer run finished, the value is: %s", args["Barometer"].asString().c_str());
 }
 
 ResolutionSwitchCommand::ResolutionSwitchCommand(CommandType commandType,
-                                                 const Json2::Value& arg,
+                                                 const Json::Value& arg,
                                                  const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -416,24 +425,24 @@ ResolutionSwitchCommand::ResolutionSwitchCommand(CommandType commandType,
 
 bool ResolutionSwitchCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("originWidth") || !args.IsMember("originHeight") || !args.IsMember("width") ||
-        !args.IsMember("height") || !args.IsMember("screenDensity")) {
+    if (args.isNull() || !args.isMember("originWidth") || !args.isMember("originHeight") || !args.isMember("width") ||
+        !args.isMember("height") || !args.isMember("screenDensity")) {
         ELOG("Invalid param of arguments!");
         return false;
     }
-    if (!args["originWidth"].IsInt() || !args["originHeight"].IsInt() ||
-        !args["screenDensity"].IsInt() || !args["width"].IsInt() || !args["height"].IsInt()) {
+    if (!args["originWidth"].isInt() || !args["originHeight"].isInt() ||
+        !args["screenDensity"].isInt() || !args["width"].isInt() || !args["height"].isInt()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!IsIntValValid()) {
+    if (!IsIntValValid(args)) {
         return false;
     }
-    if (args.IsMember("reason")) {
-        if (!args["reason"].IsString()) {
+    if (args.isMember("reason")) {
+        if (!args["reason"].isString()) {
             return false;
         }
-        string reason = args["reason"].AsString();
+        string reason = args["reason"].asString();
         if (reason != "rotation" && reason != "resize" && reason != "undefined") {
             ELOG("Invalid value of reason!");
             return false;
@@ -442,16 +451,16 @@ bool ResolutionSwitchCommand::IsSetArgValid() const
     return true;
 }
 
-bool ResolutionSwitchCommand::IsIntValValid() const
+bool ResolutionSwitchCommand::IsIntValValid(const Json::Value& args) const
 {
-    if (args["originWidth"].AsInt() < minWidth || args["originWidth"].AsInt() > maxWidth ||
-        args["originHeight"].AsInt() < minWidth || args["originHeight"].AsInt() > maxWidth ||
-        args["width"].AsInt() < minWidth || args["width"].AsInt() > maxWidth ||
-        args["height"].AsInt() < minWidth || args["height"].AsInt() > maxWidth) {
+    if (args["originWidth"].asInt() < minWidth || args["originWidth"].asInt() > maxWidth ||
+        args["originHeight"].asInt() < minWidth || args["originHeight"].asInt() > maxWidth ||
+        args["width"].asInt() < minWidth || args["width"].asInt() > maxWidth ||
+        args["height"].asInt() < minWidth || args["height"].asInt() > maxWidth) {
         ELOG("width or height is out of range %d-%d", minWidth, maxWidth);
         return false;
     }
-    if (args["screenDensity"].AsInt() < minDpi || args["screenDensity"].AsInt() > maxDpi) {
+    if (args["screenDensity"].asInt() < minDpi || args["screenDensity"].asInt() > maxDpi) {
         ELOG("screenDensity is out of range %d-%d", minDpi, maxDpi);
         return false;
     }
@@ -460,33 +469,33 @@ bool ResolutionSwitchCommand::IsIntValValid() const
 
 void ResolutionSwitchCommand::RunSet()
 {
-    int32_t originWidth = args["originWidth"].AsInt();
-    int32_t originHeight = args["originHeight"].AsInt();
-    int32_t width = args["width"].AsInt();
-    int32_t height = args["height"].AsInt();
-    int32_t screenDensity = args["screenDensity"].AsInt();
+    int32_t originWidth = args["originWidth"].asInt();
+    int32_t originHeight = args["originHeight"].asInt();
+    int32_t width = args["width"].asInt();
+    int32_t height = args["height"].asInt();
+    int32_t screenDensity = args["screenDensity"].asInt();
     string reason = "undefined";
-    if (args.IsMember("reason")) {
-        reason = args["reason"].AsString();
+    if (args.isMember("reason")) {
+        reason = args["reason"].asString();
     }
     ResolutionParam param(originWidth, originHeight, width, height);
     JsAppImpl::GetInstance().ResolutionChanged(param, screenDensity, reason);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
     ILOG("ResolutionSwitch run finished.");
 }
 
-OrientationCommand::OrientationCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+OrientationCommand::OrientationCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool OrientationCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("Orientation") || !args["Orientation"].IsString()) {
+    if (args.isNull() || !args.isMember("Orientation") || !args["Orientation"].isString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (args["Orientation"].AsString() != "portrait" && args["Orientation"].AsString() != "landscape") {
+    if (args["Orientation"].asString() != "portrait" && args["Orientation"].asString() != "landscape") {
         ELOG("Orientation just support [portrait,landscape].");
         return false;
     }
@@ -495,28 +504,28 @@ bool OrientationCommand::IsSetArgValid() const
 
 void OrientationCommand::RunSet()
 {
-    std::string commandOrientation = args["Orientation"].AsString();
+    std::string commandOrientation = args["Orientation"].asString();
     std::string currentOrientation = JsAppImpl::GetInstance().GetOrientation();
     if (commandOrientation != currentOrientation) {
         JsAppImpl::GetInstance().OrientationChanged(commandOrientation);
     }
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set Orientation run finished, Orientation is: %s", args["Orientation"].AsString().c_str());
+    SetCommandResult("result", true);
+    ILOG("Set Orientation run finished, Orientation is: %s", args["Orientation"].asString().c_str());
 }
 
-ColorModeCommand::ColorModeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+ColorModeCommand::ColorModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool ColorModeCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("ColorMode") || !args["ColorMode"].IsString()) {
+    if (args.isNull() || !args.isMember("ColorMode") || !args["ColorMode"].isString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
 
-    if (args["ColorMode"].AsString() != "light" && args["ColorMode"].AsString() != "dark") {
+    if (args["ColorMode"].asString() != "light" && args["ColorMode"].asString() != "dark") {
         ELOG("ColorMode just support [light,dark]");
         return false;
     }
@@ -525,24 +534,24 @@ bool ColorModeCommand::IsSetArgValid() const
 
 void ColorModeCommand::RunSet()
 {
-    std::string commandColorMode = args["ColorMode"].AsString();
+    std::string commandColorMode = args["ColorMode"].asString();
     std::string currentColorMode = JsAppImpl::GetInstance().GetColorMode();
     if (commandColorMode != currentColorMode) {
-        JsAppImpl::GetInstance().SetArgsColorMode(args["ColorMode"].AsString());
+        JsAppImpl::GetInstance().SetArgsColorMode(args["ColorMode"].asString());
         JsAppImpl::GetInstance().ColorModeChanged(commandColorMode);
     }
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set ColorMode run finished, ColorMode is: %s", args["ColorMode"].AsString().c_str());
+    SetCommandResult("result", true);
+    ILOG("Set ColorMode run finished, ColorMode is: %s", args["ColorMode"].asString().c_str());
 }
 
-FontSelectCommand::FontSelectCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+FontSelectCommand::FontSelectCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool FontSelectCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("FontSelect") || !args["FontSelect"].IsBool()) {
+    if (args.isNull() || !args.isMember("FontSelect") || !args["FontSelect"].isBool()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
@@ -551,18 +560,18 @@ bool FontSelectCommand::IsSetArgValid() const
 
 void FontSelectCommand::RunSet()
 {
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("FontSelect finished, currentSelect is: %d", args["FontSelect"].AsBool());
+    SetCommandResult("result", true);
+    ILOG("FontSelect finished, currentSelect is: %d", args["FontSelect"].asBool());
 }
 
-MemoryRefreshCommand::MemoryRefreshCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+MemoryRefreshCommand::MemoryRefreshCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool MemoryRefreshCommand::IsSetArgValid() const
 {
-    if (args.IsNull()) {
+    if (args.isNull()) {
         ELOG("Invalid MemoryRefresh of arguments!");
         return false;
     }
@@ -572,26 +581,26 @@ bool MemoryRefreshCommand::IsSetArgValid() const
 void MemoryRefreshCommand::RunSet()
 {
     ILOG("MemoryRefreshCommand begin.");
-    bool ret = JsAppImpl::GetInstance().MemoryRefresh(args.ToStyledString());
-    SetCommandResult("result", JsonReader::CreateBool(ret));
+    bool ret = JsAppImpl::GetInstance().MemoryRefresh(args.toStyledString());
+    SetCommandResult("result", ret);
     ILOG("MemoryRefresh finished.");
 }
 
-LoadDocumentCommand::LoadDocumentCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+LoadDocumentCommand::LoadDocumentCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool LoadDocumentCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("url") || !args.IsMember("className") || !args.IsMember("previewParam") ||
-        !args["url"].IsString() || !args["className"].IsString() || !args["previewParam"].IsObject()) {
+    if (args.isNull() || !args.isMember("url") || !args.isMember("className") || !args.isMember("previewParam") ||
+        !args["url"].isString() || !args["className"].isString() || !args["previewParam"].isObject()) {
         return false;
     }
-    Json2::Value previewParam = args["previewParam"];
-    if (!previewParam["width"].IsInt() || !previewParam["height"].IsInt() || !previewParam["dpi"].IsInt() ||
-        !previewParam["locale"].IsString() || !previewParam["colorMode"].IsString() ||
-        !previewParam["orientation"].IsString() || !previewParam["deviceType"].IsString()) {
+    Json::Value previewParam = args["previewParam"];
+    if (!previewParam["width"].isInt() || !previewParam["height"].isInt() || !previewParam["dpi"].isInt() ||
+        !previewParam["locale"].isString() || !previewParam["colorMode"].isString() ||
+        !previewParam["orientation"].isString() || !previewParam["deviceType"].isString()) {
         return false;
     }
     if (!IsIntValValid(previewParam) || !IsStrValVailid(previewParam)) {
@@ -600,11 +609,11 @@ bool LoadDocumentCommand::IsSetArgValid() const
     return true;
 }
 
-bool LoadDocumentCommand::IsIntValValid(const Json2::Value& previewParam) const
+bool LoadDocumentCommand::IsIntValValid(const Json::Value& previewParam) const
 {
-    int width = previewParam["width"].AsInt();
-    int height = previewParam["height"].AsInt();
-    int dpi = previewParam["dpi"].AsInt();
+    int width = previewParam["width"].asInt();
+    int height = previewParam["height"].asInt();
+    int dpi = previewParam["dpi"].asInt();
     if (width < minLoadDocWidth || width > maxLoadDocWidth || height < minLoadDocWidth ||
         height > maxLoadDocWidth || dpi < minDpi || dpi > maxDpi) {
         return false;
@@ -612,9 +621,9 @@ bool LoadDocumentCommand::IsIntValValid(const Json2::Value& previewParam) const
     return true;
 }
 
-bool LoadDocumentCommand::IsStrValVailid(const Json2::Value& previewParam) const
+bool LoadDocumentCommand::IsStrValVailid(const Json::Value& previewParam) const
 {
-    string locale = previewParam["locale"].AsString();
+    string locale = previewParam["locale"].asString();
     bool isLiteDevice = JsApp::IsLiteDevice(CommandParser::GetInstance().GetDeviceType());
     if (isLiteDevice) {
         if (std::find(liteSupportedLanguages.begin(), liteSupportedLanguages.end(), locale) ==
@@ -627,14 +636,14 @@ bool LoadDocumentCommand::IsStrValVailid(const Json2::Value& previewParam) const
             return false;
         }
     }
-    if (previewParam["colorMode"].AsString() != "light" && previewParam["colorMode"].AsString() != "dark") {
+    if (previewParam["colorMode"].asString() != "light" && previewParam["colorMode"].asString() != "dark") {
         return false;
     }
-    if (previewParam["orientation"].AsString() != "portrait" &&
-        previewParam["orientation"].AsString() != "landscape") {
+    if (previewParam["orientation"].asString() != "portrait" &&
+        previewParam["orientation"].asString() != "landscape") {
         return false;
     }
-    if (std::find(LoadDocDevs.begin(), LoadDocDevs.end(), previewParam["deviceType"].AsString()) ==
+    if (std::find(LoadDocDevs.begin(), LoadDocDevs.end(), previewParam["deviceType"].asString()) ==
         LoadDocDevs.end()) {
         return false;
     }
@@ -645,20 +654,20 @@ void LoadDocumentCommand::RunSet()
 {
     VirtualScreenImpl::GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::START);
     ILOG("LoadDocumentCommand begin.");
-    std::string pageUrl = args["url"].AsString();
-    std::string className = args["className"].AsString();
-    Json2::Value previewParam;
-    if (args.IsMember("previewParam")) {
-        previewParam = JsonReader::DepthCopy(args["previewParam"]);
+    std::string pageUrl = args["url"].asString();
+    std::string className = args["className"].asString();
+    Json::Value previewParam = Json::nullValue;
+    if (args.isMember("previewParam")) {
+        previewParam = args["previewParam"];
     }
     JsAppImpl::GetInstance().LoadDocument(pageUrl, className, previewParam);
     VirtualScreenImpl::GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::FINISHED);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
     ILOG("LoadDocumentCommand finished.");
 }
 
 ReloadRuntimePageCommand::ReloadRuntimePageCommand(CommandType commandType,
-                                                   const Json2::Value& arg,
+                                                   const Json::Value& arg,
                                                    const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -666,7 +675,7 @@ ReloadRuntimePageCommand::ReloadRuntimePageCommand(CommandType commandType,
 
 bool ReloadRuntimePageCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("ReloadRuntimePage") || !args["ReloadRuntimePage"].IsString()) {
+    if (args.isNull() || !args.isMember("ReloadRuntimePage") || !args["ReloadRuntimePage"].isString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
@@ -675,48 +684,48 @@ bool ReloadRuntimePageCommand::IsSetArgValid() const
 
 void ReloadRuntimePageCommand::RunSet()
 {
-    std::string currentPage = args["ReloadRuntimePage"].AsString();
+    std::string currentPage = args["ReloadRuntimePage"].asString();
     JsAppImpl::GetInstance().ReloadRuntimePage(currentPage);
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("ReloadRuntimePage finished, currentPage is: %s", args["ReloadRuntimePage"].AsString().c_str());
+    SetCommandResult("result", true);
+    ILOG("ReloadRuntimePage finished, currentPage is: %s", args["ReloadRuntimePage"].asString().c_str());
 }
 
-CurrentRouterCommand::CurrentRouterCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+CurrentRouterCommand::CurrentRouterCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void CurrentRouterCommand::RunGet()
 {
-    Json2::Value resultContent = JsonReader::CreateObject();
+    Json::Value resultContent;
     std::string currentRouter = VirtualScreenImpl::GetInstance().GetCurrentRouter();
-    resultContent.Add("CurrentRouter", currentRouter.c_str());
+    resultContent["CurrentRouter"] = currentRouter;
     SetResultToManager("args", resultContent, "CurrentJsRouter");
     ILOG("Get CurrentRouter run finished.");
 }
 
-LoadContentCommand::LoadContentCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+LoadContentCommand::LoadContentCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void LoadContentCommand::RunGet()
 {
-    Json2::Value resultContent = JsonReader::CreateObject();
+    Json::Value resultContent;
     std::string currentRouter = VirtualScreenImpl::GetInstance().GetAbilityCurrentRouter();
-    resultContent.Add("AbilityCurrentRouter", currentRouter.c_str());
+    resultContent["AbilityCurrentRouter"] = currentRouter;
     SetResultToManager("args", resultContent, "AbilityCurrentJsRouter");
     ILOG("Get AbilityCurrentRouter run finished.");
 }
 
-LanguageCommand::LanguageCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+LanguageCommand::LanguageCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool LanguageCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("Language") || !args["Language"].IsString()) {
+    if (args.isNull() || !args.isMember("Language") || !args["Language"].isString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
@@ -725,15 +734,15 @@ bool LanguageCommand::IsSetArgValid() const
     string deviceType = cmdParser.GetDeviceType();
     bool isLiteDevice = JsApp::IsLiteDevice(deviceType);
     if (isLiteDevice) {
-        if (std::find(liteSupportedLanguages.begin(), liteSupportedLanguages.end(), args["Language"].AsString()) ==
+        if (std::find(liteSupportedLanguages.begin(), liteSupportedLanguages.end(), args["Language"].asString()) ==
             liteSupportedLanguages.end()) {
-            ELOG("Language not support liteDevice : %s", args["Language"].AsString().c_str());
+            ELOG("Language not support liteDevice : %s", args["Language"].asString().c_str());
             return false;
         }
     } else {
-        if (std::find(richSupportedLanguages.begin(), richSupportedLanguages.end(), args["Language"].AsString()) ==
+        if (std::find(richSupportedLanguages.begin(), richSupportedLanguages.end(), args["Language"].asString()) ==
             richSupportedLanguages.end()) {
-            ELOG("Language not support richDevice : %s", args["Language"].AsString().c_str());
+            ELOG("Language not support richDevice : %s", args["Language"].asString().c_str());
             return false;
         }
     }
@@ -743,22 +752,22 @@ bool LanguageCommand::IsSetArgValid() const
 void LanguageCommand::RunGet()
 {
     std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
-    Json2::Value resultContent = JsonReader::CreateObject();
-    resultContent.Add("Language", language.c_str());
+    Json::Value resultContent;
+    resultContent["Language"] = language;
     SetCommandResult("result", resultContent);
     ILOG("Get language run finished.");
 }
 
 void LanguageCommand::RunSet()
 {
-    string language(args["Language"].AsString());
+    string language(args["Language"].asString());
     SharedData<string>::SetData(SharedDataType::LANGUAGE, language);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
     ILOG("Set language run finished, language is: %s", language.c_str());
 }
 
 SupportedLanguagesCommand::SupportedLanguagesCommand(CommandType commandType,
-                                                     const Json2::Value& arg,
+                                                     const Json::Value& arg,
                                                      const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -766,37 +775,37 @@ SupportedLanguagesCommand::SupportedLanguagesCommand(CommandType commandType,
 
 void SupportedLanguagesCommand::RunGet()
 {
-    Json2::Value resultContent = JsonReader::CreateObject();
-    Json2::Value languageList = JsonReader::CreateArray();
+    Json::Value resultContent;
+    Json::Value languageList;
     string deviceType = CommandParser::GetInstance().GetDeviceType();
     bool isLiteDevice = JsApp::IsLiteDevice(deviceType);
     if (!deviceType.empty() && !isLiteDevice) {
         for (auto iter = richSupportedLanguages.begin(); iter != richSupportedLanguages.end(); iter++) {
-            languageList.Add((*iter).c_str());
+            languageList.append(*iter);
         }
     } else {
         for (auto iter = liteSupportedLanguages.begin(); iter != liteSupportedLanguages.end(); iter++) {
-            languageList.Add((*iter).c_str());
+            languageList.append(*iter);
         }
     }
-    resultContent.Add("SupportedLanguages", languageList);
+    resultContent["SupportedLanguages"] = languageList;
     SetCommandResult("result", resultContent);
     ILOG("Get supportedLanguages run finished.");
 }
 
-LocationCommand::LocationCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+LocationCommand::LocationCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool LocationCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("latitude") || !args.IsMember("longitude")) {
+    if (args.isNull() || !args.isMember("latitude") || !args.isMember("longitude")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    string latitude(args["latitude"].AsString());
-    string longitude(args["longitude"].AsString());
+    string latitude(args["latitude"].asString());
+    string longitude(args["longitude"].asString());
     regex isDob("^([\\-]*[0-9]{1,}[\\.][0-9]*)$");
     if (!regex_match(latitude, isDob) || !regex_match(longitude, isDob)) {
         ELOG("Invalid arguments!");
@@ -819,26 +828,26 @@ void LocationCommand::RunGet()
 {
     double longitude = SharedData<double>::GetData(SharedDataType::LONGITUDE);
     double latitude = SharedData<double>::GetData(SharedDataType::LATITUDE);
-    Json2::Value resultContent = JsonReader::CreateObject();
-    resultContent.Add("latitude", latitude);
-    resultContent.Add("longitude", longitude);
+    Json::Value resultContent;
+    resultContent["latitude"] = latitude;
+    resultContent["longitude"] = longitude;
     SetCommandResult("result", resultContent);
     ILOG("Get location run finished");
 }
 
 void LocationCommand::RunSet()
 {
-    string latitude(args["latitude"].AsString());
-    string longitude(args["longitude"].AsString());
+    string latitude(args["latitude"].asString());
+    string longitude(args["longitude"].asString());
     SharedData<double>::SetData(SharedDataType::LONGITUDE, atof(longitude.data()));
     SharedData<double>::SetData(SharedDataType::LATITUDE, atof(latitude.data()));
-    Json2::Value resultContent = JsonReader::CreateBool(true);
+    Json::Value resultContent = true;
     SetCommandResult("result", resultContent);
     ILOG("Set location run finished, latitude: %s,longitude: %s", latitude.c_str(), longitude.c_str());
 }
 
 DistributedCommunicationsCommand::DistributedCommunicationsCommand(CommandType commandType,
-                                                                   const Json2::Value& arg,
+                                                                   const Json::Value& arg,
                                                                    const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -847,25 +856,25 @@ DistributedCommunicationsCommand::DistributedCommunicationsCommand(CommandType c
 void DistributedCommunicationsCommand::RunAction()
 {
     MessageInfo info;
-    info.deviceID = args["DeviceId"].AsString();
-    info.bundleName = args["bundleName"].AsString();
-    info.abilityName = args["abilityName"].AsString();
-    info.message = args["message"].AsString();
+    info.deviceID = args["DeviceId"].asString();
+    info.bundleName = args["bundleName"].asString();
+    info.abilityName = args["abilityName"].asString();
+    info.message = args["message"].asString();
     VirtualMessageImpl::GetInstance().SendVirtualMessage(info);
-    Json2::Value resultContent = JsonReader::CreateBool(true);
+    Json::Value resultContent = true;
     SetCommandResult("result", resultContent);
     ILOG("Send distributedCommunications run finished");
 }
 
 bool DistributedCommunicationsCommand::IsActionArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("DeviceId") || !args.IsMember("bundleName") || !args.IsMember("abilityName") ||
-        !args.IsMember("message")) {
+    if (args.isNull() || !args.isMember("DeviceId") || !args.isMember("bundleName") || !args.isMember("abilityName") ||
+        !args.isMember("message")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (args["DeviceId"].AsString().empty() || args["bundleName"].AsString().empty() ||
-        args["abilityName"].AsString().empty() || args["message"].AsString().empty()) {
+    if (args["DeviceId"].asString().empty() || args["bundleName"].asString().empty() ||
+        args["abilityName"].asString().empty() || args["message"].asString().empty()) {
         ELOG("Invalid arguments!");
         return false;
     }
@@ -880,7 +889,7 @@ std::vector<char> DistributedCommunicationsCommand::StringToCharVector(string st
 }
 
 KeepScreenOnStateCommand::KeepScreenOnStateCommand(CommandType commandType,
-                                                   const Json2::Value& arg,
+                                                   const Json::Value& arg,
                                                    const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -888,76 +897,76 @@ KeepScreenOnStateCommand::KeepScreenOnStateCommand(CommandType commandType,
 
 void KeepScreenOnStateCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("KeepScreenOnState", SharedData<bool>::GetData(SharedDataType::KEEP_SCREEN_ON));
+    Json::Value result;
+    result["KeepScreenOnState"] = SharedData<bool>::GetData(SharedDataType::KEEP_SCREEN_ON);
     SetCommandResult("result", result);
     ILOG("Get keepScreenOnState run finished");
 }
 
 void KeepScreenOnStateCommand::RunSet()
 {
-    SharedData<bool>::SetData(SharedDataType::KEEP_SCREEN_ON, args["KeepScreenOnState"].AsBool());
-    Json2::Value result = JsonReader::CreateBool(true);
+    SharedData<bool>::SetData(SharedDataType::KEEP_SCREEN_ON, args["KeepScreenOnState"].asString() == "true");
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set keepScreenOnState run finished, the value is: %s",
-        args["KeepScreenOnState"].AsBool() ? "true" : "false");
+    ILOG("Set keepScreenOnState run finished, the value is: %s", args["KeepScreenOnState"].asString().c_str());
 }
 
 bool KeepScreenOnStateCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("KeepScreenOnState")) {
+    if (args.isNull() || !args.isMember("KeepScreenOnState")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["KeepScreenOnState"].IsBool()) {
-        ELOG("arg KeepScreenOnState id not bool");
+    if (!IsBoolType(args["KeepScreenOnState"].asString())) {
+        ELOG("arg 0: %s", args["KeepScreenOnState"].asString().c_str());
         return false;
     }
     return true;
 }
 
-WearingStateCommand::WearingStateCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+WearingStateCommand::WearingStateCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void WearingStateCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("WearingState", SharedData<bool>::GetData(SharedDataType::WEARING_STATE));
+    Json::Value result;
+    result["WearingState"] = SharedData<bool>::GetData(SharedDataType::WEARING_STATE);
     SetCommandResult("result", result);
     ILOG("Get wearingState run finished");
 }
 
 void WearingStateCommand::RunSet()
 {
-    SharedData<bool>::SetData(SharedDataType::WEARING_STATE, args["WearingState"].AsBool());
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set wearingState run finished, the value is: %s", args["WearingState"].AsString().c_str());
+    SharedData<bool>::SetData(SharedDataType::WEARING_STATE, args["WearingState"].asString() == "true");
+    Json::Value result = true;
+    SetCommandResult("result", result);
+    ILOG("Set wearingState run finished, the value is: %s", args["WearingState"].asString().c_str());
 }
 
 bool WearingStateCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("WearingState")) {
+    if (args.isNull() || !args.isMember("WearingState")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["WearingState"].IsBool()) {
-        ILOG("arg WearingState is not bool");
+    if (!IsBoolType(args["WearingState"].asString())) {
+        ILOG("arg 0: %s", args["WearingState"].asString().c_str());
         return false;
     }
     return true;
 }
 
-BrightnessModeCommand::BrightnessModeCommand(CommandType commandType, const Json2::Value& arg,
-    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+BrightnessModeCommand::BrightnessModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
+    : CommandLine(commandType, arg, socket)
 {
 }
 
 void BrightnessModeCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("BrightnessMode", SharedData<uint8_t>::GetData(SharedDataType::BRIGHTNESS_MODE));
+    Json::Value result;
+    result["BrightnessMode"] = SharedData<uint8_t>::GetData(SharedDataType::BRIGHTNESS_MODE);
     SetCommandResult("result", result);
     ILOG("Get brightnessMode run finished");
 }
@@ -965,23 +974,23 @@ void BrightnessModeCommand::RunGet()
 void BrightnessModeCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::BRIGHTNESS_MODE,
-                                 static_cast<uint8_t>(args["BrightnessMode"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
+                                 static_cast<uint8_t>(atoi(args["BrightnessMode"].asString().data())));
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set brightnessMode run finished, the value is: %d", args["BrightnessMode"].AsInt());
+    ILOG("Set brightnessMode run finished, the value is: %s", args["BrightnessMode"].asString().c_str());
 }
 
 bool BrightnessModeCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("BrightnessMode")) {
+    if (args.isNull() || !args.isMember("BrightnessMode")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["BrightnessMode"].IsInt()) {
-        ELOG("BrightnessMode is not int");
+    if (!std::regex_match(args["BrightnessMode"].asString(), std::regex("^\\d$"))) {
+        ELOG("regex match error");
         return false;
     }
-    uint8_t temp = static_cast<uint8_t>(args["BrightnessMode"].AsInt());
+    uint8_t temp = ToUint8(args["BrightnessMode"].asString());
     if (!SharedData<uint8_t>::IsValid(SharedDataType::BRIGHTNESS_MODE, temp)) {
         ELOG("BrightnessModeCommand invalid value: %d", temp);
         return false;
@@ -989,15 +998,15 @@ bool BrightnessModeCommand::IsSetArgValid() const
     return true;
 }
 
-ChargeModeCommand::ChargeModeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+ChargeModeCommand::ChargeModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void ChargeModeCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("ChargeMode", SharedData<uint8_t>::GetData(SharedDataType::BATTERY_STATUS));
+    Json::Value result;
+    result["ChargeMode"] = SharedData<uint8_t>::GetData(SharedDataType::BATTERY_STATUS);
     SetCommandResult("result", result);
     ILOG("Get chargeMode run finished");
 }
@@ -1005,23 +1014,23 @@ void ChargeModeCommand::RunGet()
 void ChargeModeCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::BATTERY_STATUS,
-                                 static_cast<uint8_t>(args["ChargeMode"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
+                                 static_cast<uint8_t>(atoi(args["ChargeMode"].asString().data())));
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set chargeMode run finished, the value is: %d", args["ChargeMode"].AsInt());
+    ILOG("Set chargeMode run finished, the value is: %s", args["ChargeMode"].asString().c_str());
 }
 
 bool ChargeModeCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("ChargeMode")) {
+    if (args.isNull() || !args.isMember("ChargeMode")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["ChargeMode"].IsInt()) {
-        ELOG("ChargeMode is not int");
+    if (!std::regex_match(args["ChargeMode"].asString().data(), std::regex("\\d"))) {
+        ELOG("Invalid arguments!");
         return false;
     }
-    uint8_t temp = static_cast<uint8_t>(args["ChargeMode"].AsInt());
+    uint8_t temp = ToUint8(args["ChargeMode"].asString());
     if (!SharedData<uint8_t>::IsValid(SharedDataType::BATTERY_STATUS, temp)) {
         ELOG("ChargeModeCommand invalid value: %d", temp);
         return false;
@@ -1029,15 +1038,15 @@ bool ChargeModeCommand::IsSetArgValid() const
     return true;
 }
 
-BrightnessCommand::BrightnessCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+BrightnessCommand::BrightnessCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void BrightnessCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("Brightness", SharedData<uint8_t>::GetData(SharedDataType::BRIGHTNESS_VALUE));
+    Json::Value result;
+    result["Brightness"] = SharedData<uint8_t>::GetData(SharedDataType::BRIGHTNESS_VALUE);
     SetCommandResult("result", result);
     ILOG("Get brightness run finished");
 }
@@ -1045,23 +1054,23 @@ void BrightnessCommand::RunGet()
 void BrightnessCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::BRIGHTNESS_VALUE,
-                                 static_cast<uint8_t>(args["Brightness"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
+                                 static_cast<uint8_t>(atoi(args["Brightness"].asString().data())));
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set brightness run finished, the value is: %s", args["Brightness"].AsInt());
+    ILOG("Set brightness run finished, the value is: %s", args["Brightness"].asString().c_str());
 }
 
 bool BrightnessCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("Brightness")) {
+    if (args.isNull() || !args.isMember("Brightness")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["Brightness"].IsInt()) {
-        ELOG("Brightness is not int");
+    if (!std::regex_match(args["Brightness"].asString().data(), std::regex("\\d+"))) {
+        ELOG("Invalid arguments!");
         return false;
     }
-    uint8_t temp = static_cast<uint8_t>(args["Brightness"].AsInt());
+    uint8_t temp = ToUint8(args["Brightness"].asString());
     if (!SharedData<uint8_t>::IsValid(SharedDataType::BRIGHTNESS_VALUE, temp)) {
         ELOG("BrightnessCommand invalid value: ", temp);
         return false;
@@ -1069,15 +1078,15 @@ bool BrightnessCommand::IsSetArgValid() const
     return true;
 }
 
-HeartRateCommand::HeartRateCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+HeartRateCommand::HeartRateCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void HeartRateCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("HeartRate", SharedData<uint8_t>::GetData(SharedDataType::HEARTBEAT_VALUE));
+    Json::Value result;
+    result["HeartRate"] = SharedData<uint8_t>::GetData(SharedDataType::HEARTBEAT_VALUE);
     SetCommandResult("result", result);
     ILOG("Get heartRate run finished");
 }
@@ -1085,27 +1094,27 @@ void HeartRateCommand::RunGet()
 void HeartRateCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::HEARTBEAT_VALUE,
-                                 static_cast<uint8_t>(args["HeartRate"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
+                                 static_cast<uint8_t>(atoi(args["HeartRate"].asString().data())));
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set heartRate run finished, the value is: %d", args["HeartRate"].AsInt());
+    ILOG("Set heartRate run finished, the value is: %s", args["HeartRate"].asString().c_str());
 }
 
 bool HeartRateCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("HeartRate")) {
+    if (args.isNull() || !args.isMember("HeartRate")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["HeartRate"].IsInt()) {
-        ELOG("HeartRate is not int");
-        return false;
-    }
-    if (args["HeartRate"].AsInt() > UINT8_MAX) {
+    if (!std::regex_match(args["HeartRate"].asString().data(), std::regex("\\d+"))) {
         ELOG("Invalid arguments!");
         return false;
     }
-    uint8_t temp = static_cast<uint8_t>(args["HeartRate"].AsInt());
+    if (atoi(args["HeartRate"].asString().data()) > UINT8_MAX) {
+        ELOG("Invalid arguments!");
+        return false;
+    }
+    uint8_t temp = ToUint8(args["HeartRate"].asString());
     if (!SharedData<uint8_t>::IsValid(SharedDataType::HEARTBEAT_VALUE, temp)) {
         ELOG("HeartRateCommand invalid value: %d", temp);
         return false;
@@ -1113,15 +1122,15 @@ bool HeartRateCommand::IsSetArgValid() const
     return true;
 }
 
-StepCountCommand::StepCountCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+StepCountCommand::StepCountCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 void StepCountCommand::RunGet()
 {
-    Json2::Value result = JsonReader::CreateObject();
-    result.Add("StepCount", SharedData<uint32_t>::GetData(SharedDataType::SUMSTEP_VALUE));
+    Json::Value result;
+    result["StepCount"] = SharedData<uint32_t>::GetData(SharedDataType::SUMSTEP_VALUE);
     SetCommandResult("result", result);
     ILOG("Get stepCount run finished");
 }
@@ -1129,24 +1138,24 @@ void StepCountCommand::RunGet()
 void StepCountCommand::RunSet()
 {
     SharedData<uint32_t>::SetData(SharedDataType::SUMSTEP_VALUE,
-                                  static_cast<uint32_t>(args["StepCount"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
+                                  static_cast<uint32_t>(atoi(args["StepCount"].asString().data())));
+    Json::Value result = true;
     SetCommandResult("result", result);
-    ILOG("Set stepCount run finished, the value is: %d", args["StepCount"].AsInt());
+    ILOG("Set stepCount run finished, the value is: %s", args["StepCount"].asString().c_str());
 }
 
 bool StepCountCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("StepCount")) {
+    if (args.isNull() || !args.isMember("StepCount")) {
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["StepCount"].IsInt()) {
-        ELOG("StepCount is not int");
+    if (!std::regex_match(args["StepCount"].asString().data(), std::regex("\\d+"))) {
+        ELOG("Invalid arguments!");
         return false;
     }
 
-    uint32_t temp = args["StepCount"].AsUInt();
+    uint32_t temp = ToUint8(args["StepCount"].asString());
     if (!SharedData<uint32_t>::IsValid(SharedDataType::SUMSTEP_VALUE, temp)) {
         ELOG("StepCountCommand invalid value: %d", temp);
         return false;
@@ -1154,7 +1163,7 @@ bool StepCountCommand::IsSetArgValid() const
     return true;
 }
 
-InspectorJSONTree::InspectorJSONTree(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+InspectorJSONTree::InspectorJSONTree(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -1166,11 +1175,11 @@ void InspectorJSONTree::RunAction()
     if (str == "null") {
         str = "{\"children\":\"empty json tree\"}";
     }
-    SetCommandResult("result", JsonReader::CreateString(str));
+    SetCommandResult("result", str);
     ILOG("SendJsonTree end!");
 }
 
-InspectorDefault::InspectorDefault(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+InspectorDefault::InspectorDefault(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -1179,11 +1188,11 @@ void InspectorDefault::RunAction()
 {
     ILOG("GetDefaultJsonTree run!");
     std::string str = JsAppImpl::GetInstance().GetDefaultJSONTree();
-    SetCommandResult("result", JsonReader::CreateString(str));
+    SetCommandResult("result", str);
     ILOG("SendDefaultJsonTree end!");
 }
 
-ExitCommand::ExitCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+ExitCommand::ExitCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -1191,14 +1200,15 @@ ExitCommand::ExitCommand(CommandType commandType, const Json2::Value& arg, const
 void ExitCommand::RunAction()
 {
     ILOG("ExitCommand run.");
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    Json::Value res = true;
+    SetCommandResult("result", res);
     SendResult();
     Interrupter::Interrupt();
     ILOG("Ready to exit");
 }
 
 DeviceTypeCommand::DeviceTypeCommand(CommandLine::CommandType commandType,
-                                     const Json2::Value& arg,
+                                     const Json::Value& arg,
                                      const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -1207,7 +1217,7 @@ DeviceTypeCommand::DeviceTypeCommand(CommandLine::CommandType commandType,
 void DeviceTypeCommand::RunSet() {}
 
 ResolutionCommand::ResolutionCommand(CommandLine::CommandType commandType,
-                                     const Json2::Value& arg,
+                                     const Json::Value& arg,
                                      const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -1216,7 +1226,7 @@ ResolutionCommand::ResolutionCommand(CommandLine::CommandType commandType,
 void ResolutionCommand::RunSet() {}
 
 BackClickedCommand::BackClickedCommand(CommandLine::CommandType commandType,
-                                       const Json2::Value& arg,
+                                       const Json::Value& arg,
                                        const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -1226,11 +1236,12 @@ void BackClickedCommand::RunAction()
 {
     MouseInputImpl::GetInstance().DispatchOsBackEvent();
     ILOG("BackClickCommand run");
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    Json::Value res = true;
+    SetCommandResult("result", res);
     ILOG("BackClickCommand end");
 }
 
-RestartCommand::RestartCommand(CommandLine::CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+RestartCommand::RestartCommand(CommandLine::CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -1239,36 +1250,37 @@ void RestartCommand::RunAction()
 {
     ILOG("RestartCommand start");
     JsAppImpl::GetInstance().Restart();
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    Json::Value res = true;
+    SetCommandResult("result", res);
     ILOG("RestartCommand end");
 }
 
-FastPreviewMsgCommand::FastPreviewMsgCommand(CommandType commandType, const Json2::Value& arg,
-    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+FastPreviewMsgCommand::FastPreviewMsgCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
+    : CommandLine(commandType, arg, socket)
 {
 }
 
 void FastPreviewMsgCommand::RunGet()
 {
-    Json2::Value resultContent = JsonReader::CreateObject();
+    Json::Value resultContent;
     std::string fastPreviewMsg = VirtualScreenImpl::GetInstance().GetFastPreviewMsg();
-    resultContent.Add("FastPreviewMsg", fastPreviewMsg.c_str());
+    resultContent["FastPreviewMsg"] = fastPreviewMsg;
     SetResultToManager("args", resultContent, "MemoryRefresh");
     ILOG("Get FastPreviewMsgCommand run finished.");
 }
 
-DropFrameCommand::DropFrameCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+DropFrameCommand::DropFrameCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool DropFrameCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("frequency") || !args["frequency"].IsInt()) {
+    if (args.isNull() || !args.isMember("frequency") || !args["frequency"].isInt()) {
         ELOG("Invalid DropFrame of arguments!");
         return false;
     }
-    if (args["frequency"].AsInt() < 0) {
+    if (args["frequency"].asInt() < 0) {
         ELOG("DropFrame param frequency must greater than or equal to 0");
         return false;
     }
@@ -1278,19 +1290,19 @@ bool DropFrameCommand::IsSetArgValid() const
 void DropFrameCommand::RunSet()
 {
     ILOG("Set DropFrame frequency start.");
-    int frequency = args["frequency"].AsInt();
+    int frequency = args["frequency"].asInt();
     VirtualScreenImpl::GetInstance().SetDropFrameFrequency(frequency);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
     ILOG("Set DropFrame frequency: %sms.", frequency);
 }
 
 bool KeyPressCommand::IsActionArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("isInputMethod") || !args["isInputMethod"].IsBool()) {
+    if (args.isNull() || !args.isMember("isInputMethod") || !args["isInputMethod"].isBool()) {
         ELOG("Param isInputMethod's value is invalid.");
         return false;
     }
-    bool isInputMethod = args["isInputMethod"].AsBool();
+    bool isInputMethod = args["isInputMethod"].asBool();
     if (isInputMethod) {
         return IsImeArgsValid();
     } else {
@@ -1300,7 +1312,7 @@ bool KeyPressCommand::IsActionArgValid() const
 
 bool KeyPressCommand::IsImeArgsValid() const
 {
-    if (!args.IsMember("codePoint") || !args["codePoint"].IsInt()) {
+    if (!args.isMember("codePoint") || !args["codePoint"].isInt()) {
         ELOG("Param codePoint's value is invalid.");
         return false;
     }
@@ -1309,32 +1321,32 @@ bool KeyPressCommand::IsImeArgsValid() const
 
 bool KeyPressCommand::IsKeyArgsValid() const
 {
-    if (!args.IsMember("keyCode") || !args["keyCode"].IsInt() || !args["keyAction"].IsInt() ||
-        !args.IsMember("keyAction") || !args["keyAction"].IsInt() ||
-        !args.IsMember("pressedCodes") || !args["pressedCodes"].IsArray() ||
-        args["pressedCodes"].GetArraySize() < 1 || (args.IsMember("keyString") && !args["keyString"].IsString())) {
+    if (!args.isMember("keyCode") || !args["keyCode"].isInt() || !args["keyAction"].isInt() ||
+        !args.isMember("keyAction") || !args["keyAction"].isInt() ||
+        !args.isMember("pressedCodes") || !args["pressedCodes"].isArray() ||
+        args["pressedCodes"].size() < 1 || (args.isMember("keyString") && !args["keyString"].isString())) {
         ELOG("Param keyEvent's value is invalid.");
         return false;
     }
-    if (!args.IsMember("keyString")) {
+    if (!args.isMember("keyString")) {
         ILOG("Param keyString is lost, it will be empty string.");
     }
-    if (args["keyAction"].AsInt() < minActionVal || args["keyAction"].AsInt() > maxActionVal) {
+    if (args["keyAction"].asInt() < minActionVal || args["keyAction"].asInt() > maxActionVal) {
         ELOG("Param keyAction's value is invalid,value range %d-%d.", minActionVal, maxActionVal);
         return false;
     }
-    int keyCode = args["keyCode"].AsInt();
+    int keyCode = args["keyCode"].asInt();
     if (keyCode > maxKeyVal || keyCode < minKeyVal) {
         ELOG("Param pressedCode value is invalid,value range %d-%d.", minKeyVal, maxKeyVal);
         return false;
     }
-    Json2::Value arrayNum = args["pressedCodes"];
-    for (unsigned int i = 0; i < arrayNum.GetArraySize(); i++) {
-        if (!arrayNum.GetArrayItem(i).IsInt()) {
+    Json::Value arrayNum = args["pressedCodes"];
+    for (unsigned int i = 0; i < arrayNum.size(); i++) {
+        if (!arrayNum[i].isInt()) {
             ELOG("Param pressedCodes's value is invalid.");
             return false;
         }
-        int pressedCode = arrayNum.GetArrayItem(i).AsInt();
+        int pressedCode = arrayNum[i].asInt();
         if (pressedCode > maxKeyVal || pressedCode < minKeyVal) {
             ELOG("Param pressedCode value is invalid,value range %d-%d.", minKeyVal, maxKeyVal);
             return false;
@@ -1343,7 +1355,7 @@ bool KeyPressCommand::IsKeyArgsValid() const
     return true;
 }
 
-KeyPressCommand::KeyPressCommand(CommandType commandType, const Json2::Value& arg,
+KeyPressCommand::KeyPressCommand(CommandType commandType, const Json::Value& arg,
                                  const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -1354,29 +1366,29 @@ void KeyPressCommand::RunAction()
     if (CommandParser::GetInstance().GetScreenMode() == CommandParser::ScreenMode::STATIC) {
         return;
     }
-    bool isInputMethod = args["isInputMethod"].AsBool();
+    bool isInputMethod = args["isInputMethod"].asBool();
     if (isInputMethod) {
         VirtualScreen::inputMethodCountPerMinute++;
-        unsigned int codePoint = args["codePoint"].AsInt();
+        unsigned int codePoint = args["codePoint"].asInt();
         KeyInputImpl::GetInstance().SetCodePoint(codePoint);
         KeyInputImpl::GetInstance().DispatchOsInputMethodEvent();
     } else {
         VirtualScreen::inputKeyCountPerMinute++;
-        int32_t keyCode = args["keyCode"].AsInt();
-        int32_t keyAction = args["keyAction"].AsInt();
-        Json2::Value pressedCodes = args["pressedCodes"];
+        int32_t keyCode = args["keyCode"].asInt();
+        int32_t keyAction = args["keyAction"].asInt();
+        Json::Value pressedCodes = args["pressedCodes"];
         vector<int32_t> pressedCodesVec;
-        for (unsigned int i = 0; i < pressedCodes.GetArraySize(); i++) {
-            pressedCodesVec.push_back(pressedCodes.GetArrayItem(i).AsInt());
+        for (unsigned int i = 0; i < pressedCodes.size(); i++) {
+            pressedCodesVec.push_back(pressedCodes[i].asInt());
         }
         string keyString = "";
-        if (args.IsMember("keyString") && args["keyString"].IsString()) {
-            keyString = args["keyString"].AsString();
+        if (args.isMember("keyString") && args["keyString"].isString()) {
+            keyString = args["keyString"].asString();
         }
         KeyInputImpl::GetInstance().SetKeyEvent(keyCode, keyAction, pressedCodesVec, keyString);
         KeyInputImpl::GetInstance().DispatchOsKeyEvent();
     }
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
     ILOG("KeyPressCommand run finished.");
 }
 
@@ -1387,19 +1399,19 @@ bool PointEventCommand::IsActionArgValid() const
 
 bool PointEventCommand::IsArgsExist() const
 {
-    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
-        !args["x"].IsInt() || !args["y"].IsInt()) {
+    if (args.isNull() || !args.isMember("x") || !args.isMember("y") ||
+        !args["x"].isInt() || !args["y"].isInt()) {
         return false;
     }
-    if (!args.IsMember("button") || !args.IsMember("action") ||
-        !args["button"].IsInt() || !args["action"].IsInt()) {
+    if (!args.isMember("button") || !args.isMember("action") ||
+        !args["button"].isInt() || !args["action"].isInt()) {
         return false;
     }
-    if (!args.IsMember("sourceType") || !args.IsMember("sourceTool") ||
-        !args["sourceType"].IsInt() || !args["sourceTool"].IsInt()) {
+    if (!args.isMember("sourceType") || !args.isMember("sourceTool") ||
+        !args["sourceType"].isInt() || !args["sourceTool"].isInt()) {
         return false;
     }
-    if (!args.IsMember("axisValues") || !args["axisValues"].IsArray()) {
+    if (!args.isMember("axisValues") || !args["axisValues"].isArray()) {
         return false;
     }
     return true;
@@ -1407,12 +1419,12 @@ bool PointEventCommand::IsArgsExist() const
 
 bool PointEventCommand::IsArgsValid() const
 {
-    int32_t pointX = args["x"].AsInt();
-    int32_t pointY = args["y"].AsInt();
-    int32_t button = args["button"].AsInt();
-    int32_t action = args["action"].AsInt();
-    int32_t sourceType = args["sourceType"].AsInt();
-    int32_t sourcceTool = args["sourcceTool"].AsInt();
+    int32_t pointX = args["x"].asInt();
+    int32_t pointY = args["y"].asInt();
+    int32_t button = args["button"].asInt();
+    int32_t action = args["action"].asInt();
+    int32_t sourceType = args["sourceType"].asInt();
+    int32_t sourcceTool = args["sourcceTool"].asInt();
     if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
         ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
@@ -1425,9 +1437,9 @@ bool PointEventCommand::IsArgsValid() const
         ELOG("action,sourceType,sourcceTool must >= 0, button must >= -1");
         return false;
     }
-    Json2::Value axisArrayNum = args["axisValues"];
-    for (unsigned int i = 0; i < axisArrayNum.GetArraySize(); i++) {
-        if (!axisArrayNum.GetArrayItem(i).IsDouble()) {
+    Json::Value axisArrayNum = args["axisValues"];
+    for (unsigned int i = 0; i < axisArrayNum.size(); i++) {
+        if (!axisArrayNum[i].isDouble()) {
             ELOG("Param axisValues's value is invalid.");
             return false;
         }
@@ -1435,7 +1447,7 @@ bool PointEventCommand::IsArgsValid() const
     return true;
 }
 
-PointEventCommand::PointEventCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+PointEventCommand::PointEventCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
@@ -1444,46 +1456,45 @@ void PointEventCommand::RunAction()
 {
     int type = 9;
     EventParams param;
-    if (args.IsMember("pressedButtons") && args["pressedButtons"].IsArray()) {
-        Json2::Value pressedCodes = args["pressedCodes"];
-        for (unsigned int i = 0; i < pressedCodes.GetArraySize(); i++) {
-            Json2::Value val = pressedCodes.GetArrayItem(i);
-            if (!val.IsInt() || val.AsInt() < -1) {
+    if (args.isMember("pressedButtons") && args["pressedButtons"].isArray()) {
+        Json::Value pressedCodes = args["pressedCodes"];
+        for (unsigned int i = 0; i < pressedCodes.size(); i++) {
+            if (!pressedCodes[i].isInt() || pressedCodes[i].asInt() < -1) {
                 continue;
             }
-            param.pressedBtnsVec.insert(val.AsInt());
+            param.pressedBtnsVec.insert(pressedCodes[i].asInt());
         }
     }
     vector<double> axisVec; // 13 is array size
-    Json2::Value axisCodes = args["axisValues"];
-    for (unsigned int i = 0; i < axisCodes.GetArraySize(); i++) {
-        param.axisVec.push_back(axisCodes.GetArrayItem(i).AsDouble());
+    Json::Value axisCodes = args["axisValues"];
+    for (unsigned int i = 0; i < axisCodes.size(); i++) {
+        param.axisVec.push_back(axisCodes[i].asDouble());
     }
-    param.x = args["x"].AsDouble();
-    param.y = args["y"].AsDouble();
+    param.x = atof(args["x"].asString().data());
+    param.y = atof(args["y"].asString().data());
     param.type = type;
-    param.button = args["button"].AsInt();
-    param.action = args["action"].AsInt();
-    param.sourceType = args["sourceType"].AsInt();
-    param.sourceTool = args["sourceTool"].AsInt();
+    param.button = args["button"].asInt();
+    param.action = args["action"].asInt();
+    param.sourceType = args["sourceType"].asInt();
+    param.sourceTool = args["sourceTool"].asInt();
     param.name = "PointEvent";
     SetEventParams(param);
-    SetCommandResult("result", JsonReader::CreateBool(true));
+    SetCommandResult("result", true);
 }
 
-FoldStatusCommand::FoldStatusCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+FoldStatusCommand::FoldStatusCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
 }
 
 bool FoldStatusCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("FoldStatus") || !args["FoldStatus"].IsString()) {
+    if (args.isNull() || !args.isMember("FoldStatus") || !args["FoldStatus"].isString()) {
         ELOG("Invalid FoldStatus of arguments!");
         return false;
     }
-    if (args["FoldStatus"].AsString() == "fold" || args["FoldStatus"].AsString() == "unfold" ||
-        args["FoldStatus"].AsString() == "unknown" || args["FoldStatus"].AsString() == "half_fold") {
+    if (args["FoldStatus"].asString() == "fold" || args["FoldStatus"].asString() == "unfold" ||
+        args["FoldStatus"].asString() == "unknown" || args["FoldStatus"].asString() == "half_fold") {
         return true;
     }
     ELOG("FoldStatus param must be \"fold\" or \"unfold\" or \"unknown\" or \"half_fold\"");
@@ -1492,11 +1503,11 @@ bool FoldStatusCommand::IsSetArgValid() const
 
 void FoldStatusCommand::RunSet()
 {
-    std::string commandStatus = args["FoldStatus"].AsString();
+    std::string commandStatus = args["FoldStatus"].asString();
     std::string currentStatus = VirtualScreenImpl::GetInstance().GetFoldStatus();
     if (commandStatus != currentStatus) {
         JsAppImpl::GetInstance().FoldStatusChanged(commandStatus);
     }
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].AsString().c_str());
+    SetCommandResult("result", true);
+    ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].asString().c_str());
 }
