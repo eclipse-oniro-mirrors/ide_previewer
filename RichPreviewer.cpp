@@ -28,7 +28,6 @@
 #include "SharedData.h"
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
-#include "json/json.h"
 
 using namespace std;
 static const int START_PARAM_INVALID_CODE = 11;
@@ -134,10 +133,10 @@ static void NotifyInspectorChanged()
     }
 
     jsonTreeLast = jsonTree;
-    Json::Value commandResult;
-    commandResult["version"] = CommandLineInterface::COMMAND_VERSION;
-    commandResult["command"] = "inspector";
-    commandResult["result"] = jsonTree;
+    Json2::Value commandResult = JsonReader::CreateObject();
+    commandResult.Add("version", CommandLineInterface::COMMAND_VERSION.c_str());
+    commandResult.Add("command", "inspector");
+    commandResult.Add("result", jsonTree.c_str());
     CommandLineInterface::GetInstance().SendJsonData(commandResult);
     ILOG("Send inspector json tree.");
 }

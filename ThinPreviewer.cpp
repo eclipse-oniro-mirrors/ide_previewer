@@ -33,7 +33,6 @@
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
 #include "jsi.h"
-#include "json/json.h"
 
 using namespace std;
 static const int START_PARAM_INVALID_CODE = 11;

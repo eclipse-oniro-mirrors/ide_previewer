@@ -14,8 +14,7 @@
  */
 
 #include "TraceTool.h"
-
-#include "json/json.h"
+#include "JsonReader.h"
 #include "CommandParser.h"
 #include "PreviewerEngineLog.h"
 #include "TimeTool.h"
@@ -49,14 +48,9 @@ TraceTool& TraceTool::GetInstance()
     return instance;
 }
 
-void TraceTool::SendTraceData(const Json::Value& value)
+void TraceTool::SendTraceData(const Json2::Value& value)
 {
-    Json::StreamWriterBuilder builder;
-    builder.settings_["indentation"] = "";
-    ostringstream osStream;
-    std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-    writer->write(value, &osStream);
-    *(GetInstance().socket) << osStream.str();
+    *(GetInstance().socket) << value.ToString();
 }
 
 void TraceTool::HandleTrace(const string msg) const
@@ -65,8 +59,14 @@ void TraceTool::HandleTrace(const string msg) const
         ILOG("Trace pipe is not prepared");
         return;
     }
-    Json::Value val = GetBaseInfo();
-    val["action"] = msg;
+    Json2::Value val = JsonReader::CreateObject();
+    val.Add("sid", "10007");
+    Json2::Value detail = JsonReader::CreateObject();
+    detail.Add("ProjectId", CommandParser::GetInstance().GetProjectID().c_str());
+    detail.Add("device", CommandParser::GetInstance().GetDeviceType().c_str());
+    detail.Add("time", TimeTool::GetTraceFormatTime().c_str());
+    val.Add("detail", detail);
+    val.Add("action", msg.c_str());
     SendTraceData(val);
 }
 
@@ -81,16 +81,6 @@ TraceTool::~TraceTool()
         socket->DisconnectFromServer();
         socket = nullptr;
     }
-}
-
-Json::Value TraceTool::GetBaseInfo() const
-{
-    Json::Value val;
-    val["sid"] = "10007";
-    val["detail"]["ProjectId"] = CommandParser::GetInstance().GetProjectID();
-    val["detail"]["device"] = CommandParser::GetInstance().GetDeviceType();
-    val["detail"]["time"] = TimeTool::GetTraceFormatTime();
-    return val;
 }
 
 string TraceTool::GetTracePipeName() const

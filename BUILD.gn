@@ -29,10 +29,7 @@ template("previewer_executable") {
     ]
 
     include_dirs += invoker.includes
-    deps = [
-      "//third_party/bounds_checking_function:libsec_static",
-      "//third_party/jsoncpp:jsoncpp_static",
-    ]
+    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     deps += invoker.deps
     libs = invoker.libs
 

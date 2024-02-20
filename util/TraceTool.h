@@ -18,7 +18,7 @@
 
 #include <memory>
 
-namespace Json {
+namespace Json2 {
     class Value;
 }
 
@@ -27,7 +27,7 @@ class LocalSocket;
 class TraceTool {
 public:
     static TraceTool& GetInstance();
-    static void SendTraceData(const Json::Value& value);
+    static void SendTraceData(const Json2::Value& value);
     void InitPipe();
     void HandleTrace(const std::string msg) const;
 
@@ -35,7 +35,6 @@ private:
     TraceTool();
     ~TraceTool();
     std::unique_ptr<LocalSocket> socket;
-    Json::Value GetBaseInfo() const;
     std::string GetTracePipeName() const;
     bool isReady;
 };
