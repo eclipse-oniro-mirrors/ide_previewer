@@ -134,7 +134,7 @@ bool VirtualScreenImpl::PageCallBack(const std::string currentRouterPath)
     std::string currentRouter = currentRouterPath.substr(0, currentRouterPath.size() - 3);
     ILOG("PageCallback currentPage is : %s", currentRouter.c_str());
     GetInstance().SetCurrentRouter(currentRouter);
-    Json2::Value val;
+    Json::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("CurrentRouter", val, "get");
     return true;
 }
@@ -143,7 +143,7 @@ bool VirtualScreenImpl::LoadContentCallBack(const std::string currentRouterPath)
 {
     ILOG("LoadContentCallback currentPage is : %s", currentRouterPath.c_str());
     GetInstance().SetAbilityCurrentRouter(currentRouterPath);
-    Json2::Value val;
+    Json::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("LoadContent", val, "get");
     return true;
 }
@@ -151,7 +151,7 @@ bool VirtualScreenImpl::LoadContentCallBack(const std::string currentRouterPath)
 void VirtualScreenImpl::FastPreviewCallBack(const std::string& jsonStr)
 {
     GetInstance().SetFastPreviewMsg(jsonStr);
-    Json2::Value val;
+    Json::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("FastPreviewMsg", val, "get");
 }
 

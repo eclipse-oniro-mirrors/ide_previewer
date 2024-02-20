@@ -867,6 +867,7 @@ bool CommandParser::IsMainArgLengthInvalid(const char* str) const
 
 bool CommandParser::IsFoldableValid()
 {
+    ELOG("param size is more than %d", maxMainArgLength);
     if (!IsSet("foldable")) {
         return true;
     }

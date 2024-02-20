@@ -55,12 +55,17 @@ ohos_source_set("mock_rich") {
 
   include_dirs += [ "./rich/" ]
 
+  configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
+
   part_name = "previewer"
   subsystem_name = "ide"
 }
 
 ohos_source_set("mock_lite") {
-  configs = [ ":myconfig" ]
+  configs = [
+    ":myconfig",
+    "//third_party/jsoncpp:jsoncpp_public_config",
+  ]
   include_dirs = [
     ".",
     "../util/",

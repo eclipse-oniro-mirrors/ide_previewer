@@ -16,6 +16,7 @@
 #include <sstream>
 #include <fstream>
 #include <cctype>
+#include "json/json.h"
 #include "JsonReader.h"
 #include "FileSystem.h"
 #include "TraceTool.h"
@@ -70,24 +71,26 @@ void StageContext::GetModulePathMapFromLoaderJson()
         return;
     }
     string jsonStr = JsonReader::ReadFile(loaderJsonPath);
-    Json2::Value rootJson = JsonReader::ParseJsonData2(jsonStr);
-    if (rootJson.IsNull() || !rootJson.IsValid()) {
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
         ELOG("Get loader.json content failed.");
         return;
     }
-    if (!rootJson.IsMember("modulePathMap")) {
+    if (!rootJson.isMember("modulePathMap")) {
         ELOG("Don't find modulePathMap node in loader.json.");
         return;
     }
-    Json2::Value jsonObj = rootJson["modulePathMap"];
-    for (const auto& key : jsonObj.GetMemberNames()) {
-        modulePathMap[key] = jsonObj[key].AsString();
+    std::unique_ptr<Json::Value> jsonObj = JsonReader::GetObject(rootJson, "modulePathMap");
+    for (const auto& key : jsonObj->getMemberNames()) {
+        string val = JsonReader::GetString(*jsonObj, key);
+        modulePathMap[key] = val;
     }
-    Json2::Value jsonObjOhm = rootJson["harNameOhmMap"];
-    for (const auto& key : jsonObjOhm.GetMemberNames()) {
-        harNameOhmMap[key] = jsonObjOhm[key].AsString();
+    std::unique_ptr<Json::Value> jsonObjOhm = JsonReader::GetObject(rootJson, "harNameOhmMap");
+    for (const auto& key : jsonObjOhm->getMemberNames()) {
+        string val = JsonReader::GetString(*jsonObjOhm, key);
+        harNameOhmMap[key] = val;
     }
-    projectRootPath = rootJson["projectRootPath"].AsString();
+    projectRootPath = JsonReader::GetString(rootJson, "projectRootPath");
 }
 
 std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
@@ -97,16 +100,16 @@ std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
         return "";
     }
     string jsonStr = JsonReader::ReadFile(hspConfigPath);
-    Json2::Value rootJson = JsonReader::ParseJsonData2(jsonStr);
-    if (rootJson.IsNull() || !rootJson.IsValid()) {
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
         ELOG("Get hsp buildConfig.json content failed.");
         return "";
     }
-    if (!rootJson.IsMember("aceModuleBuild")) {
+    if (!rootJson.isMember("aceModuleBuild")) {
         ELOG("Don't find aceModuleBuild node in hsp buildConfig.json.");
         return "";
     }
-    return rootJson["aceModuleBuild"].AsString();
+    return JsonReader::GetString(rootJson, "aceModuleBuild");
 }
 
 void StageContext::ReleaseHspBuffers()
@@ -398,14 +401,14 @@ std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mock
         return mapInfo;
     }
     std::string jsonStr = JsonReader::ReadFile(mockJsonFilePath);
-    Json2::Value rootJson = JsonReader::ParseJsonData2(jsonStr);
-    if (rootJson.IsNull() || !rootJson.IsValid()) {
+    Json::Value rootJson = JsonReader::ParseJsonData(jsonStr);
+    if (!rootJson) {
         ELOG("get mock-config.json content failed.");
         return mapInfo;
     }
-    for (const auto& key : rootJson.GetMemberNames()) {
-        if (!rootJson[key].IsNull() && rootJson[key].IsMember("source") && rootJson[key]["source"].IsString()) {
-            mapInfo[key] = rootJson[key]["source"].AsString();
+    for (const auto& key : rootJson.getMemberNames()) {
+        if (!rootJson[key].isNull() && rootJson[key].isMember("source") && rootJson[key]["source"].isString()) {
+            mapInfo[key] = rootJson[key]["source"].asString();
         }
     }
     return mapInfo;

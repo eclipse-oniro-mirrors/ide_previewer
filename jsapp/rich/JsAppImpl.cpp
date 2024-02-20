@@ -95,16 +95,24 @@ void JsAppImpl::Restart()
 
 std::string JsAppImpl::GetJSONTree()
 {
-    std::string jsonTree = ability->GetJSONTree();
-    return jsonTree;
+    std::string jsongTree = ability->GetJSONTree();
+    Json::Value jsonData = JsonReader::ParseJsonData(jsongTree);
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    builder["emitUTF8"] = true;
+    return Json::writeString(builder, jsonData);
 }
 
 std::string JsAppImpl::GetDefaultJSONTree()
 {
     ILOG("Start getDefaultJsontree.");
-    std::string jsonTree = ability->GetDefaultJSONTree();
+    std::string jsongTree = ability->GetDefaultJSONTree();
+    Json::Value jsonData = JsonReader::ParseJsonData(jsongTree);
     ILOG("GetDefaultJsontree finished.");
-    return jsonTree;
+    Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    builder["emitUTF8"] = true;
+    return Json::writeString(builder, jsonData);
 }
 
 void JsAppImpl::OrientationChanged(std::string commandOrientation)
@@ -748,9 +756,9 @@ bool JsAppImpl::MemoryRefresh(const std::string memoryRefreshArgs) const
     return false;
 }
 
-void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const Json2::Value& paramObj)
+void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, Json::Value paramObj)
 {
-    if (paramObj.IsNull()) {
+    if (paramObj == Json::nullValue) {
         SetDeviceWidth(args, VirtualScreenImpl::GetInstance().GetCompressionWidth());
         SetDeviceHeight(args, VirtualScreenImpl::GetInstance().GetCompressionHeight());
         AssignValueForWidthAndHeight(args.deviceWidth, args.deviceHeight,
@@ -763,22 +771,22 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
         SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
         SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
     } else {
-        SetDeviceWidth(args, paramObj["width"].AsInt());
-        SetDeviceHeight(args, paramObj["height"].AsInt());
+        SetDeviceWidth(args, paramObj["width"].asInt());
+        SetDeviceHeight(args, paramObj["height"].asInt());
         AssignValueForWidthAndHeight(args.deviceWidth, args.deviceHeight,
                                      args.deviceWidth, args.deviceHeight);
-        SetColorMode(args, paramObj["colorMode"].AsString());
-        SetOrientation(args, paramObj["orientation"].AsString());
-        string deviceType = paramObj["deviceType"].AsString();
+        SetColorMode(args, paramObj["colorMode"].asString());
+        SetOrientation(args, paramObj["orientation"].asString());
+        string deviceType = paramObj["deviceType"].asString();
         SetDeviceScreenDensity(atoi(screenDensity.c_str()), deviceType);
-        AdaptDeviceType(args, deviceType, args.deviceWidth, paramObj["dpi"].AsDouble());
-        string lanInfo = paramObj["locale"].AsString();
+        AdaptDeviceType(args, deviceType, args.deviceWidth, paramObj["dpi"].asDouble());
+        string lanInfo = paramObj["locale"].asString();
         SetLanguage(args, lanInfo.substr(0, lanInfo.find("_")));
         SetRegion(args, lanInfo.substr(lanInfo.find("_") + 1, lanInfo.length() - 1));
     }
 }
 
-void JsAppImpl::SetSystemParams(OHOS::Ace::Platform::SystemParams& params, const Json2::Value& paramObj)
+void JsAppImpl::SetSystemParams(OHOS::Ace::Platform::SystemParams& params, Json::Value paramObj)
 {
     ParseSystemParams(aceRunArgs, paramObj);
     params.deviceWidth = aceRunArgs.deviceWidth;
@@ -789,14 +797,14 @@ void JsAppImpl::SetSystemParams(OHOS::Ace::Platform::SystemParams& params, const
     params.orientation = aceRunArgs.deviceConfig.orientation;
     params.deviceType = aceRunArgs.deviceConfig.deviceType;
     params.density = aceRunArgs.deviceConfig.density;
-    params.isRound = (paramObj.IsNull()) ?
+    params.isRound = (paramObj == Json::nullValue) ?
                      (CommandParser::GetInstance().GetScreenShape() == "circle") :
-                     paramObj["roundScreen"].AsBool();
+                     paramObj["roundScreen"].asBool();
 }
 
 void JsAppImpl::LoadDocument(const std::string filePath,
                              const std::string componentName,
-                             const Json2::Value& previewContext)
+                             Json::Value previewContext)
 {
     ILOG("LoadDocument.");
     if (ability != nullptr) {

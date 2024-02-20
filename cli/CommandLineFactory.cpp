@@ -76,15 +76,15 @@ void CommandLineFactory::InitCommandMap()
 
 unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
                                                               CommandLine::CommandType type,
-                                                              const Json2::Value& val,
+                                                              Json::Value val,
                                                               const LocalSocket& socket)
 {
     if (typeMap.find(command) == typeMap.end()) {
-        Json2::Value commandResult = JsonReader::CreateObject();
-        commandResult.Add("version", CommandLineInterface::COMMAND_VERSION.c_str());
-        commandResult.Add("command", command.c_str());
-        commandResult.Add("result", "Unsupported command");
-        socket << commandResult.ToStyledString();
+        Json::Value commandResult;
+        commandResult["version"] = CommandLineInterface::COMMAND_VERSION;
+        commandResult["command"] = command;
+        commandResult["result"] = "Unsupported command";
+        socket << commandResult.toStyledString();
         ELOG("Unsupported command");
         TraceTool::GetInstance().HandleTrace("Mismatched SDK version");
         return nullptr;
@@ -103,7 +103,7 @@ unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
 
 template <typename T>
 unique_ptr<CommandLine> CommandLineFactory::CreateObject(CommandLine::CommandType type,
-                                                         const Json2::Value& args, const LocalSocket& socket)
+                                                         const Json::Value& args, const LocalSocket& socket)
 {
     return make_unique<T>(type, args, socket);
 }
