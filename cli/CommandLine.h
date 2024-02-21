@@ -16,21 +16,20 @@
 #ifndef COMMANDLINE_H
 #define COMMANDLINE_H
 
-#include <json/json.h>
 #include <set>
 #include <vector>
-
+#include "JsonReader.h"
 #include "LocalSocket.h"
 
 class CommandLine {
 public:
     enum class CommandType { SET = 0, GET, ACTION, INVALID };
 
-    CommandLine(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    CommandLine(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     virtual ~CommandLine();
     void CheckAndRun();
-    void SetCommandResult(const std::string& type, const Json::Value& resultContent);
-    void SetResultToManager(const std::string& type, const Json::Value& resultContent, const std::string& messageType);
+    void SetCommandResult(const std::string& type, const Json2::Value& resultContent);
+    void SetResultToManager(const std::string& type, const Json2::Value& resultContent, const std::string& messageType);
     void RunAndSendResultToManager();
     void SendResultToManager();
     void SendResult();
@@ -40,10 +39,10 @@ public:
     void SetCommandName(std::string command);
 
 protected:
-    Json::Value args;
+    Json2::Value args;
     const LocalSocket& cliSocket;
-    Json::Value commandResult;
-    Json::Value commandResultToManager;
+    Json2::Value commandResult = JsonReader::CreateObject();
+    Json2::Value commandResultToManager = JsonReader::CreateObject();
     CommandType type;
     std::string commandName;
     const std::vector<std::string> liteSupportedLanguages = {"zh-CN", "en-US"};
@@ -107,7 +106,7 @@ protected:
 
 class TouchPressCommand : public CommandLine, public TouchAndMouseCommand {
 public:
-    TouchPressCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    TouchPressCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~TouchPressCommand() override {}
 
 protected:
@@ -117,7 +116,7 @@ protected:
 
 class TouchMoveCommand : public CommandLine, public TouchAndMouseCommand {
 public:
-    TouchMoveCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    TouchMoveCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~TouchMoveCommand() override {}
 
 protected:
@@ -127,7 +126,7 @@ protected:
 
 class TouchReleaseCommand : public CommandLine, public TouchAndMouseCommand {
 public:
-    TouchReleaseCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    TouchReleaseCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~TouchReleaseCommand() override {}
 
 protected:
@@ -136,7 +135,7 @@ protected:
 
 class MouseWheelCommand : public CommandLine {
 public:
-    MouseWheelCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    MouseWheelCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~MouseWheelCommand() override {}
 
 protected:
@@ -146,7 +145,7 @@ protected:
 
 class BackClickedCommand : public CommandLine {
 public:
-    BackClickedCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    BackClickedCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~BackClickedCommand() override {}
 
 protected:
@@ -155,7 +154,7 @@ protected:
 
 class RestartCommand : public CommandLine {
 public:
-    RestartCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    RestartCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~RestartCommand() override {}
 
 protected:
@@ -164,7 +163,7 @@ protected:
 
 class PowerCommand : public CommandLine {
 public:
-    PowerCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    PowerCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~PowerCommand() override {}
     void RunSet() override;
 
@@ -175,7 +174,7 @@ protected:
 
 class VolumeCommand : public CommandLine {
 public:
-    VolumeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    VolumeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~VolumeCommand() override {}
     void RunSet() override;
 
@@ -186,7 +185,7 @@ protected:
 
 class BarometerCommand : public CommandLine {
 public:
-    BarometerCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    BarometerCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~BarometerCommand() override {}
     void RunSet() override;
 
@@ -197,18 +196,18 @@ protected:
 
 class ResolutionSwitchCommand : public CommandLine {
 public:
-    ResolutionSwitchCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ResolutionSwitchCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ResolutionSwitchCommand() override {}
     void RunSet() override;
 
 protected:
     bool IsSetArgValid() const override;
-    bool IsIntValValid(const Json::Value& args) const;
+    bool IsIntValValid() const;
 };
 
 class OrientationCommand : public CommandLine {
 public:
-    OrientationCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    OrientationCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~OrientationCommand() override {}
     void RunSet() override;
 
@@ -218,7 +217,7 @@ protected:
 
 class ColorModeCommand : public CommandLine {
 public:
-    ColorModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ColorModeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ColorModeCommand() override {}
     void RunSet() override;
 
@@ -228,7 +227,7 @@ protected:
 
 class LanguageCommand : public CommandLine {
 public:
-    LanguageCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    LanguageCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~LanguageCommand() override {}
     void RunSet() override;
 
@@ -239,7 +238,7 @@ protected:
 
 class FontSelectCommand : public CommandLine {
 public:
-    FontSelectCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    FontSelectCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~FontSelectCommand() override {}
     void RunSet() override;
 
@@ -249,7 +248,7 @@ protected:
 
 class MemoryRefreshCommand : public CommandLine {
 public:
-    MemoryRefreshCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    MemoryRefreshCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~MemoryRefreshCommand() override {}
     void RunSet() override;
 
@@ -259,19 +258,19 @@ protected:
 
 class LoadDocumentCommand : public CommandLine {
 public:
-    LoadDocumentCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    LoadDocumentCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~LoadDocumentCommand() override {}
     void RunSet() override;
 
 protected:
     bool IsSetArgValid() const override;
-    bool IsIntValValid(const Json::Value& previewParam) const;
-    bool IsStrValVailid(const Json::Value& previewParam) const;
+    bool IsIntValValid(const Json2::Value& previewParam) const;
+    bool IsStrValVailid(const Json2::Value& previewParam) const;
 };
 
 class ReloadRuntimePageCommand : public CommandLine {
 public:
-    ReloadRuntimePageCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ReloadRuntimePageCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ReloadRuntimePageCommand() override {}
     void RunSet() override;
 
@@ -281,7 +280,7 @@ protected:
 
 class CurrentRouterCommand : public CommandLine {
 public:
-    CurrentRouterCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    CurrentRouterCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~CurrentRouterCommand() override {}
 
 protected:
@@ -290,7 +289,7 @@ protected:
 
 class LoadContentCommand : public CommandLine {
 public:
-    LoadContentCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    LoadContentCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~LoadContentCommand() override {}
 
 protected:
@@ -299,7 +298,7 @@ protected:
 
 class SupportedLanguagesCommand : public CommandLine {
 public:
-    SupportedLanguagesCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    SupportedLanguagesCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~SupportedLanguagesCommand() override {}
 
 protected:
@@ -308,7 +307,7 @@ protected:
 
 class LocationCommand : public CommandLine {
 public:
-    LocationCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    LocationCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~LocationCommand() override {}
     void RunSet() override;
 
@@ -319,7 +318,7 @@ protected:
 
 class DistributedCommunicationsCommand : public CommandLine {
 public:
-    DistributedCommunicationsCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    DistributedCommunicationsCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~DistributedCommunicationsCommand() override {}
 
 protected:
@@ -330,7 +329,7 @@ protected:
 
 class KeepScreenOnStateCommand : public CommandLine {
 public:
-    KeepScreenOnStateCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    KeepScreenOnStateCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~KeepScreenOnStateCommand() override {}
     void RunSet() override;
 
@@ -341,7 +340,7 @@ protected:
 
 class WearingStateCommand : public CommandLine {
 public:
-    WearingStateCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    WearingStateCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~WearingStateCommand() override {}
     void RunSet() override;
 
@@ -352,7 +351,7 @@ protected:
 
 class BrightnessModeCommand : public CommandLine {
 public:
-    BrightnessModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    BrightnessModeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~BrightnessModeCommand() override {}
     void RunSet() override;
 
@@ -363,7 +362,7 @@ protected:
 
 class ChargeModeCommand : public CommandLine {
 public:
-    ChargeModeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ChargeModeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ChargeModeCommand() override {}
     void RunSet() override;
 
@@ -374,7 +373,7 @@ protected:
 
 class BrightnessCommand : public CommandLine {
 public:
-    BrightnessCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    BrightnessCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~BrightnessCommand() override {}
     void RunSet() override;
 
@@ -385,7 +384,7 @@ protected:
 
 class HeartRateCommand : public CommandLine {
 public:
-    HeartRateCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    HeartRateCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~HeartRateCommand() override {}
     void RunSet() override;
 
@@ -396,7 +395,7 @@ protected:
 
 class StepCountCommand : public CommandLine {
 public:
-    StepCountCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    StepCountCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~StepCountCommand() override {}
     void RunSet() override;
 
@@ -407,7 +406,7 @@ protected:
 
 class ExitCommand : public CommandLine {
 public:
-    ExitCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ExitCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ExitCommand() override {}
 
 protected:
@@ -416,7 +415,7 @@ protected:
 
 class InspectorJSONTree : public CommandLine {
 public:
-    InspectorJSONTree(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    InspectorJSONTree(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~InspectorJSONTree() override {}
 
 protected:
@@ -425,7 +424,7 @@ protected:
 
 class InspectorDefault : public CommandLine {
 public:
-    InspectorDefault(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    InspectorDefault(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~InspectorDefault() override {}
 
 protected:
@@ -434,7 +433,7 @@ protected:
 
 class DeviceTypeCommand : public CommandLine {
 public:
-    DeviceTypeCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    DeviceTypeCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~DeviceTypeCommand() override {}
 
 protected:
@@ -443,7 +442,7 @@ protected:
 
 class ResolutionCommand : public CommandLine {
 public:
-    ResolutionCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    ResolutionCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~ResolutionCommand() override {}
 
 protected:
@@ -452,7 +451,7 @@ protected:
 
 class FastPreviewMsgCommand : public CommandLine {
 public:
-    FastPreviewMsgCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    FastPreviewMsgCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~FastPreviewMsgCommand() override {}
 
 protected:
@@ -461,7 +460,7 @@ protected:
 
 class DropFrameCommand : public CommandLine {
 public:
-    DropFrameCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    DropFrameCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~DropFrameCommand() override {}
     void RunSet() override;
 
@@ -471,7 +470,7 @@ protected:
 
 class KeyPressCommand : public CommandLine {
 public:
-    KeyPressCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    KeyPressCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~KeyPressCommand() override {}
 
 protected:
@@ -483,7 +482,7 @@ protected:
 
 class PointEventCommand : public CommandLine, public TouchAndMouseCommand {
 public:
-    PointEventCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    PointEventCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~PointEventCommand() override {}
 
 protected:
@@ -495,7 +494,7 @@ protected:
 
 class FoldStatusCommand : public CommandLine {
 public:
-    FoldStatusCommand(CommandType commandType, const Json::Value& arg, const LocalSocket& socket);
+    FoldStatusCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
     ~FoldStatusCommand() override {}
 
 protected:

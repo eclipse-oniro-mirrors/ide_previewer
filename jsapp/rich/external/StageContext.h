@@ -21,7 +21,7 @@
 #include <optional>
 #include <map>
 
-namespace Json {
+namespace Json2 {
     class Value;
 }
 

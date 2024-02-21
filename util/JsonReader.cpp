@@ -16,11 +16,525 @@
 #include "JsonReader.h"
 
 #include <fstream>
-
+#include <sstream>
 #include "PreviewerEngineLog.h"
-#include "json/json.h"
+#include "cJSON.h"
 
 using namespace std;
+
+namespace Json2 {
+    Value::Value(cJSON* object) : jsonPtr(object), rootNode(true) {}
+
+    Value::Value(cJSON* object, bool isRoot) : jsonPtr(object), rootNode(isRoot) {}
+
+    Value::~Value()
+    {
+        if (!jsonPtr) {
+            return;
+        }
+        if (rootNode) {
+            cJSON_Delete(jsonPtr);
+        }
+        jsonPtr = nullptr;
+    }
+
+    Value Value::operator[](const char* key)
+    {
+        if (!cJSON_HasObjectItem(jsonPtr, key)) {
+            return Value();
+        }
+        return Value(cJSON_GetObjectItemCaseSensitive(jsonPtr, key), false);
+    }
+
+    const Value Value::operator[](const char* key) const
+    {
+        if (!cJSON_HasObjectItem(jsonPtr, key)) {
+            return Value();
+        }
+        return Value(cJSON_GetObjectItemCaseSensitive(jsonPtr, key), false);
+    }
+
+    Value Value::operator[](const std::string& key)
+    {
+        if (!cJSON_HasObjectItem(jsonPtr, key.c_str())) {
+            return Value();
+        }
+        return Value(cJSON_GetObjectItemCaseSensitive(jsonPtr, key.c_str()), false);
+    }
+
+    const Value Value::operator[](const std::string& key) const
+    {
+        if (!cJSON_HasObjectItem(jsonPtr, key.c_str())) {
+            return Value();
+        }
+        return Value(cJSON_GetObjectItemCaseSensitive(jsonPtr, key.c_str()), false);
+    }
+
+    Value::Members Value::GetMemberNames() const
+    {
+        Members names;
+        if (jsonPtr) {
+            cJSON* item = jsonPtr->child;
+            while (item != nullptr) {
+                names.push_back(item->string);
+                item = item->next;
+            }
+        }
+        return names;
+    }
+
+    std::string Value::ToString() const
+    {
+        std::string ret;
+        if (!jsonPtr) {
+            return ret;
+        }
+        char* jsonData = cJSON_PrintUnformatted(jsonPtr);
+        if (jsonData) {
+            ret = jsonData;
+            cJSON_free(jsonData);
+        }
+        return ret;
+    }
+
+    std::string Value::ToStyledString() const
+    {
+        std::string ret;
+        if (!jsonPtr) {
+            return ret;
+        }
+        char* jsonData = cJSON_Print(jsonPtr);
+        if (jsonData) {
+            ret = jsonData;
+            cJSON_free(jsonData);
+        }
+        return ret;
+    }
+
+    const cJSON* Value::GetJsonPtr() const
+    {
+        return jsonPtr;
+    }
+
+    bool Value::IsNull() const
+    {
+        return !jsonPtr || cJSON_IsNull(jsonPtr);
+    }
+
+    bool Value::IsValid() const
+    {
+        return jsonPtr && !cJSON_IsInvalid(jsonPtr);
+    }
+
+    bool Value::IsNumber() const
+    {
+        return cJSON_IsNumber(jsonPtr);
+    }
+
+    bool Value::IsInt() const
+    {
+        if (!IsNumber()) {
+            return false;
+        }
+        double num = cJSON_GetNumberValue(jsonPtr);
+        return (num >= static_cast<double>(std::numeric_limits<int32_t>::min())) &&
+            (num <= static_cast<double>(std::numeric_limits<int32_t>::max()));
+    }
+
+    bool Value::IsUInt() const
+    {
+        if (!IsNumber()) {
+            return false;
+        }
+        double num = cJSON_GetNumberValue(jsonPtr);
+        return (num >= static_cast<double>(std::numeric_limits<uint32_t>::min())) &&
+            (num <= static_cast<double>(std::numeric_limits<uint32_t>::max()));
+    }
+
+    bool Value::IsInt64() const
+    {
+        if (!IsNumber()) {
+            return false;
+        }
+        double num = cJSON_GetNumberValue(jsonPtr);
+        return (num >= static_cast<double>(std::numeric_limits<int64_t>::min())) &&
+            (num <= static_cast<double>(std::numeric_limits<int64_t>::max()));
+    }
+
+    bool Value::IsUInt64() const
+    {
+        if (!IsNumber()) {
+            return false;
+        }
+        double num = cJSON_GetNumberValue(jsonPtr);
+        return (num >= static_cast<double>(std::numeric_limits<uint64_t>::min())) &&
+            (num <= static_cast<double>(std::numeric_limits<uint64_t>::max()));
+    }
+
+    bool Value::IsDouble() const
+    {
+        if (!IsNumber()) {
+            return false;
+        }
+        double num = cJSON_GetNumberValue(jsonPtr);
+        return (num >= std::numeric_limits<double>::lowest()) && (num <= std::numeric_limits<double>::max());
+    }
+
+    bool Value::IsBool() const
+    {
+        return cJSON_IsBool(jsonPtr);
+    }
+
+    bool Value::IsString() const
+    {
+        return cJSON_IsString(jsonPtr);
+    }
+
+    bool Value::IsObject() const
+    {
+        return cJSON_IsObject(jsonPtr);
+    }
+
+    bool Value::IsArray() const
+    {
+        return cJSON_IsArray(jsonPtr);
+    }
+
+    bool Value::IsMember(const char* key) const
+    {
+        return cJSON_HasObjectItem(jsonPtr, key);
+    }
+
+    int32_t Value::GetInt(const char* key, int32_t defaultVal) const
+    {
+        return static_cast<int32_t>(GetDouble(key, defaultVal));
+    }
+
+    uint32_t Value::GetUInt(const char* key, int32_t defaultVal) const
+    {
+        return static_cast<uint32_t>(GetDouble(key, defaultVal));
+    }
+    
+    int64_t Value::GetInt64(const char* key, int32_t defaultVal) const
+    {
+        return static_cast<int64_t>(GetDouble(key, defaultVal));
+    }
+    
+    float Value::GetFloat(const char* key, float defaultVal) const
+    {
+        return static_cast<float>(GetDouble(key, defaultVal));
+    }
+    
+    double Value::GetDouble(const char* key, double defaultVal) const
+    {
+        Value val = GetValue(key);
+        if (val.IsMember(key) && val.IsNumber()) {
+            return val.AsDouble();
+        }
+        return defaultVal;
+    }
+    
+    bool Value::GetBool(const char* key, bool defaultVal) const
+    {
+        Value val = GetValue(key);
+        if (val.IsMember(key) && val.IsBool()) {
+            return val.AsBool();
+        }
+        return defaultVal;
+    }
+    
+    std::string Value::GetString(const char* key, const std::string defaultVal) const
+    {
+        Value val = GetValue(key);
+        if (val.IsMember(key) && val.IsString()) {
+            return val.AsString();
+        }
+        return defaultVal;
+    }
+
+    Value Value::GetValue(const char* key) const
+    {
+        return Value(cJSON_GetObjectItemCaseSensitive(jsonPtr, key), false);
+    }
+
+    int32_t Value::AsInt() const
+    {
+        return static_cast<int32_t>(AsDouble());
+    }
+
+    uint32_t Value::AsUInt() const
+    {
+        return static_cast<uint32_t>(AsDouble());
+    }
+    
+    int64_t Value::AsInt64() const
+    {
+        return static_cast<int64_t>(AsDouble());
+    }
+    
+    float Value::AsFloat() const
+    {
+        return static_cast<float>(AsDouble());
+    }
+    
+    double Value::AsDouble() const
+    {
+        if (jsonPtr && cJSON_IsNumber(jsonPtr)) {
+            return cJSON_GetNumberValue(jsonPtr);
+        }
+        return 0.0;
+    }
+    
+    bool Value::AsBool() const
+    {
+        if (jsonPtr && cJSON_IsBool(jsonPtr)) {
+            return cJSON_IsTrue(jsonPtr);
+        }
+        return false;
+    }
+    
+    std::string Value::AsString() const
+    {
+        if (jsonPtr && cJSON_IsString(jsonPtr)) {
+            return std::string(cJSON_GetStringValue(jsonPtr));
+        }
+        return "";
+    }
+    
+    
+    bool Value::Add(const char* key, const char* value)
+    {
+        if (!key || !cJSON_IsObject(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateString(value);
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToObject(jsonPtr, key, child);
+        return true;
+    }
+
+    bool Value::Add(const char* key, bool value)
+    {
+        if (!key || !cJSON_IsObject(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateBool(static_cast<int>(value));
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToObject(jsonPtr, key, child);
+        return true;
+    }
+    
+    bool Value::Add(const char* key, int32_t value)
+    {
+        return Add(key, static_cast<double>(value));
+    }
+    
+    bool Value::Add(const char* key, uint32_t value)
+    {
+        return Add(key, static_cast<double>(value));
+    }
+    
+    bool Value::Add(const char* key, int64_t value)
+    {
+        return Add(key, static_cast<double>(value));
+    }
+    
+    bool Value::Add(const char* key, double value)
+    {
+        if (!key || !cJSON_IsObject(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateNumber(value);
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToObject(jsonPtr, key, child);
+        return true;
+    }
+    
+    bool Value::Add(const char* key, const Value& value)
+    {
+        if (!key || value.IsNull() || !value.IsValid()) {
+            return false;
+        }
+        cJSON* jsonObject = cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true);
+        if (jsonObject == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToObject(jsonPtr, key, jsonObject);
+        return true;
+    }
+
+    bool Value::Add(const char* value)
+    {
+        if (!cJSON_IsArray(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateString(value);
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToArray(jsonPtr, child);
+        return true;
+    }
+
+    bool Value::Add(bool value)
+    {
+        if (!cJSON_IsArray(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateBool(static_cast<int>(value));
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToArray(jsonPtr, child);
+        return true;
+    }
+    
+    bool Value::Add(int32_t value)
+    {
+        return Add(static_cast<double>(value));
+    }
+    
+    bool Value::Add(uint32_t value)
+    {
+        return Add(static_cast<double>(value));
+    }
+    
+    bool Value::Add(int64_t value)
+    {
+        return Add(static_cast<double>(value));
+    }
+    
+    bool Value::Add(double value)
+    {
+        if (!cJSON_IsArray(jsonPtr)) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateNumber(value);
+        if (child == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToArray(jsonPtr, child);
+        return true;
+    }
+    
+    
+    bool Value::Add(const Value& value)
+    {
+        if (value.IsNull() || !value.IsValid()) {
+            return false;
+        }
+        cJSON* jsonObject = cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true);
+        if (jsonObject == nullptr) {
+            return false;
+        }
+        cJSON_AddItemToArray(jsonPtr, jsonObject);
+        return true;
+    }
+
+    bool Value::Replace(const char* key, bool value)
+    {
+        if (!key) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateBool(static_cast<int>(value));
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInObjectCaseSensitive(jsonPtr, key, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+
+    bool Value::Replace(const char* key, int32_t value)
+    {
+        return Replace(key, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(const char* key, uint32_t value)
+    {
+        return Replace(key, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(const char* key, int64_t value)
+    {
+        return Replace(key, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(const char* key, double value)
+    {
+        if (!key) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateNumber(value);
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInObjectCaseSensitive(jsonPtr, key, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+    
+    bool Value::Replace(const char* key, const char* value)
+    {
+        if (!key) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateString(value);
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInObjectCaseSensitive(jsonPtr, key, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+    
+    bool Value::Replace(const char* key, const Value& value)
+    {
+        if (!key) {
+            return false;
+        }
+        cJSON* jsonObject = cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true);
+        if (jsonObject == nullptr) {
+            return false;
+        }
+
+        if (!cJSON_ReplaceItemInObjectCaseSensitive(jsonPtr, key, jsonObject)) {
+            cJSON_Delete(jsonObject);
+            return false;
+        }
+        return true;
+    }
+
+    uint32_t Value::GetArraySize() const
+    {
+        return cJSON_GetArraySize(jsonPtr);
+    }
+
+    Value Value::GetArrayItem(int32_t index) const
+    {
+        return Value(cJSON_GetArrayItem(jsonPtr, index), false);
+    }
+
+    void Value::Clear()
+    {
+        cJSON_Delete(jsonPtr);
+        jsonPtr = cJSON_CreateObject();
+    }
+}
+
+
 string JsonReader::ReadFile(const string path)
 {
     ifstream inFile(path);
@@ -33,104 +547,37 @@ string JsonReader::ReadFile(const string path)
     return jsonStr;
 }
 
-Json::Value JsonReader::ParseJsonData(const string jsonStr)
+Json2::Value JsonReader::ParseJsonData2(const std::string jsonStr)
 {
-    Json::Value val;
-    Json::CharReaderBuilder builder;
-    Json::CharReader* charReader = builder.newCharReader();
-    if (charReader == nullptr) {
-        ELOG("JsonReader: CharReader memory allocation failed.");
-        return val;
-    }
-    unique_ptr<Json::CharReader> reader(charReader);
-    if (reader.get() == nullptr) {
-        ELOG("JsonReader: CharReader get null.");
-        return val;
-    }
-    string message; // NOLINT
-    if (!reader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &val, &message)) {
-        ELOG("JsonReader: Failed to parse the json data, errors: %s", message.c_str());
-    }
-    return val;
+    return Json2::Value(cJSON_Parse(jsonStr.c_str()));
 }
 
-string JsonReader::GetString(const Json::Value& val, const string& key, const string& defaultVal)
+std::string JsonReader::GetErrorPtr()
 {
-    if (val && val.isMember(key) && val[key].isString()) {
-        return val[key].asString();
-    }
-    ELOG("JsonReader: GetString failed, key is: %s.", key.c_str());
-    return defaultVal;
+    return string(cJSON_GetErrorPtr());
 }
 
-bool JsonReader::GetBool(const Json::Value& val, const string& key, const bool defaultVal)
+Json2::Value JsonReader::CreateObject()
 {
-    if (val && val.isMember(key) && val[key].isBool()) {
-        return val[key].asBool();
-    }
-    ELOG("JsonReader: GetBool failed, key is: %s.", key.c_str());
-    return defaultVal;
+    return Json2::Value(cJSON_CreateObject());
 }
 
-int32_t JsonReader::GetInt(const Json::Value& val, const string& key, const int32_t defaultVal)
+Json2::Value JsonReader::CreateArray()
 {
-    if (val && val.isMember(key) && val[key].isInt()) {
-        return val[key].asInt();
-    }
-    ELOG("JsonReader: GetInt failed, key is: %s.", key.c_str());
-    return defaultVal;
+    return Json2::Value(cJSON_CreateArray());
 }
 
-uint32_t JsonReader::GetUInt(const Json::Value& val, const string& key, const uint32_t defaultVal)
+Json2::Value JsonReader::CreateBool(const bool value)
 {
-    if (val && val.isMember(key) && val[key].isUInt()) {
-        return val[key].asUInt();
-    }
-    ELOG("JsonReader: GetUInt failed, key is: %s.", key.c_str());
-    return defaultVal;
+    return Json2::Value(cJSON_CreateBool(value));
 }
 
-int64_t JsonReader::GetInt64(const Json::Value& val, const string& key, const int64_t defaultVal)
+Json2::Value JsonReader::CreateString(const std::string value)
 {
-    if (val && val.isMember(key) && val[key].isInt64()) {
-        return val[key].asInt64();
-    }
-    ELOG("JsonReader: GetInt64 failed, key is: %s.", key.c_str());
-    return defaultVal;
+    return Json2::Value(cJSON_CreateString(value.c_str()));
 }
 
-double JsonReader::GetDouble(const Json::Value& val, const string& key, const double defaultVal)
+Json2::Value JsonReader::DepthCopy(const Json2::Value& value)
 {
-    if (val && val.isMember(key) && val[key].isDouble()) {
-        return val[key].asDouble();
-    }
-    ELOG("JsonReader: GetDouble failed, key is: %s.", key.c_str());
-    return defaultVal;
-}
-
-unique_ptr<Json::Value> JsonReader::GetObject(const Json::Value& val, const string& key)
-{
-    if (val && val.isMember(key) && val[key].isObject()) {
-        return make_unique<Json::Value>(val[key]);
-    }
-    ELOG("JsonReader: GetObject failed, key is: %s.", key.c_str());
-    return make_unique<Json::Value>();
-}
-
-int32_t JsonReader::GetArraySize(const Json::Value& val)
-{
-    if (val && val.isArray()) {
-        return val.size();
-    }
-    ELOG("JsonReader: GetArraySize failed.");
-    return 0;
-}
-
-unique_ptr<Json::Value> JsonReader::GetArray(const Json::Value& val, const string& key)
-{
-    if (val && val.isMember(key) && val[key].isArray()) {
-        return make_unique<Json::Value>(val[key]);
-    }
-    ELOG("JsonReader: GetArraySize failed, key is: %s.", key.c_str());
-    return make_unique<Json::Value>();
+    return Json2::Value(cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true));
 }
