@@ -21,7 +21,6 @@
 
 #include "CommandLine.h"
 #include "CommandLineFactory.h"
-#include "JsonReader.h"
 #include "ModelManager.h"
 #include "PreviewerEngineLog.h"
 #include "VirtualScreen.h"
@@ -60,36 +59,36 @@ CommandLineInterface& CommandLineInterface::GetInstance()
     return instance;
 }
 
-void CommandLineInterface::SendJsonData(const Json::Value& value)
+void CommandLineInterface::SendJsonData(const Json2::Value& value)
 {
-    *(GetInstance().socket) << value.toStyledString();
+    *(GetInstance().socket) << value.ToStyledString();
 }
 
 void CommandLineInterface::SendJSHeapMemory(size_t total, size_t alloc, size_t peak) const
 {
-    Json::Value result;
-    result["version"] = COMMAND_VERSION;
-    result["property"] = "memoryUsage";
-    Json::Value memory;
-    memory["totalBytes"] = static_cast<Json::UInt64>(total);
-    memory["allocBytes"] = static_cast<Json::UInt64>(alloc);
-    memory["peakAllocBytes"] = static_cast<Json::UInt64>(peak);
-    result["result"] = memory;
+    Json2::Value result = JsonReader::CreateObject();
+    result.Add("version", COMMAND_VERSION.c_str());
+    result.Add("property", "memoryUsage");
+    Json2::Value memory = JsonReader::CreateObject();
+    memory.Add("totalBytes", static_cast<double>(total));
+    memory.Add("allocBytes", static_cast<double>(alloc));
+    memory.Add("peakAllocBytes", static_cast<double>(peak));
+    result.Add("result", memory);
     if (socket == nullptr) {
         ELOG("CommandLineInterface::SendJSHeapMemory socket is null");
         return;
     }
-    *socket << result.toStyledString();
+    *socket << result.ToStyledString();
 }
 
 void CommandLineInterface::SendWebsocketStartupSignal() const
 {
-    Json::Value result;
-    Json::Value args;
-    result["MessageType"] = "imageWebsocket";
-    args["port"] = VirtualScreen::webSocketPort;
-    result["args"] = args;
-    *socket << result.toStyledString();
+    Json2::Value result = JsonReader::CreateObject();
+    Json2::Value args = JsonReader::CreateObject();
+    result.Add("MessageType", "imageWebsocket");
+    args.Add("port", VirtualScreen::webSocketPort.c_str());
+    result.Add("args", args);
+    *socket << result.ToStyledString();
 }
 
 void CommandLineInterface::ProcessCommand() const
@@ -114,34 +113,29 @@ void CommandLineInterface::ProcessCommand() const
 void CommandLineInterface::ProcessCommandMessage(std::string message) const
 {
     ILOG("***cmd*** message:%s", message.c_str());
-    Json::CharReaderBuilder builder;
-    Json::CharReader* reader = builder.newCharReader();
-    if (reader == nullptr) {
-        FLOG("CommandLineInterface: CharReader memory allocation failed.");
-    }
-
-    Json::Value jsonData;
+    Json2::Value jsonData = JsonReader::ParseJsonData2(message);
     std::string errors; /* NOLINT */
-
-    bool parsingSuccessful = reader->parse(message.c_str(), message.c_str() + message.size(), &jsonData, &errors);
-    delete reader;
-    reader = nullptr;
+    bool parsingSuccessful = jsonData.IsNull() ? false : true;
+    if (!parsingSuccessful) {
+        errors = JsonReader::GetErrorPtr();
+    }
 
     if (!ProcessCommandValidate(parsingSuccessful, jsonData, errors)) {
         return;
     }
 
-    CommandLine::CommandType type = GetCommandType(jsonData["type"].asString());
+    CommandLine::CommandType type = GetCommandType(jsonData["type"].AsString());
     if (type == CommandLine::CommandType::INVALID) {
         return;
     }
 
-    string command = jsonData["command"].asString();
+    string command = jsonData["command"].AsString();
     if (CommandParser::GetInstance().IsStaticCard() && IsStaticIgnoreCmd(command)) {
         return;
     }
+    Json2::Value val = jsonData["args"];
     std::unique_ptr<CommandLine> commandLine =
-        CommandLineFactory::CreateCommandLine(command, type, jsonData["args"], *socket);
+        CommandLineFactory::CreateCommandLine(command, type, val, *socket);
     if (commandLine == nullptr) {
         ELOG("Unsupported command");
         return;
@@ -150,7 +144,7 @@ void CommandLineInterface::ProcessCommandMessage(std::string message) const
 }
 
 bool CommandLineInterface::ProcessCommandValidate(bool parsingSuccessful,
-                                                  const Json::Value& jsonData,
+                                                  const Json2::Value& jsonData,
                                                   const std::string& errors) const
 {
     if (!parsingSuccessful) {
@@ -158,17 +152,17 @@ bool CommandLineInterface::ProcessCommandValidate(bool parsingSuccessful,
         return false;
     }
 
-    if (!jsonData.isObject()) {
+    if (!jsonData.IsObject()) {
         ELOG("Command is not a object!");
         return false;
     }
 
-    if (!jsonData.isMember("type") || !jsonData.isMember("command") || !jsonData.isMember("version")) {
+    if (!jsonData.IsMember("type") || !jsonData.IsMember("command") || !jsonData.IsMember("version")) {
         ELOG("Command error!");
         return false;
     }
 
-    if (!regex_match(jsonData["version"].asString(), regex("(([0-9]|([1-9]([0-9]*))).){2}([0-9]|([1-9]([0-9]*)))"))) {
+    if (!regex_match(jsonData["version"].AsString(), regex("(([0-9]|([1-9]([0-9]*))).){2}([0-9]|([1-9]([0-9]*)))"))) {
         ELOG("Invalid command version!");
         return false;
     }
@@ -190,41 +184,42 @@ CommandLine::CommandType CommandLineInterface::GetCommandType(string name) const
     return type;
 }
 
-void CommandLineInterface::ApplyConfig(const Json::Value& val) const
+void CommandLineInterface::ApplyConfig(const Json2::Value& val) const
 {
     const string set("setting");
-    if (val.isMember(set)) {
-        Json::Value versionMembers = val[set];
-        if (!versionMembers.isObject()) {
+    if (val.IsMember(set.c_str())) {
+        Json2::Value versionMembers = val[set];
+        if (!versionMembers.IsObject()) {
             return;
         }
 
-        Json::Value::Members versions = versionMembers.getMemberNames();
+        Json2::Value::Members versions = versionMembers.GetMemberNames();
 
-        for (Json::Value::Members::iterator viter = versions.begin(); viter != versions.end(); viter++) {
+        for (Json2::Value::Members::iterator viter = versions.begin(); viter != versions.end(); viter++) {
             string version = *viter;
-            Json::Value commands = versionMembers[version];
-            if (!commands.isObject()) {
+            Json2::Value commands = versionMembers[version];
+            if (!commands.IsObject()) {
                 continue;
             }
-            Json::Value::Members members = commands.getMemberNames();
+            Json2::Value::Members members = commands.GetMemberNames();
 
             ApplyConfigMembers(commands, members);
         }
     }
 }
 
-void CommandLineInterface::ApplyConfigMembers(const Json::Value& commands,
-                                              const Json::Value::Members& members) const
+void CommandLineInterface::ApplyConfigMembers(const Json2::Value& commands,
+                                              const Json2::Value::Members& members) const
 {
-    for (Json::Value::Members::const_iterator iter = members.begin(); iter != members.end(); iter++)  {
+    for (Json2::Value::Members::const_iterator iter = members.begin(); iter != members.end(); iter++)  {
         string key = *iter;
-        if (!commands[key].isObject() || !commands[key].isMember("args") || !commands[key]["args"].isObject()) {
-            ELOG("Invalid JSON: %s", commands[key].asString().c_str());
+        if (!commands[key].IsObject() || !commands[key].IsMember("args") || !commands[key]["args"].IsObject()) {
+            ELOG("Invalid JSON: %s", commands[key].AsString().c_str());
             continue;
         }
+        Json2::Value val = commands[key]["args"];
         std::unique_ptr<CommandLine> command =
-            CommandLineFactory::CreateCommandLine(key, CommandLine::CommandType::SET, commands[key]["args"], *socket);
+            CommandLineFactory::CreateCommandLine(key, CommandLine::CommandType::SET, val, *socket);
         ApplyConfigCommands(key, command);
     }
 }
@@ -254,12 +249,12 @@ void CommandLineInterface::ReadAndApplyConfig(string path) const
         return;
     }
     string jsonStr = JsonReader::ReadFile(path);
-    Json::Value val = JsonReader::ParseJsonData(jsonStr);
+    Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
     ApplyConfig(val);
 }
 
 void CommandLineInterface::CreatCommandToSendData(const string commandName,
-                                                  const Json::Value jsonData,
+                                                  const Json2::Value& jsonData,
                                                   const string type) const
 {
     CommandLine::CommandType commandType = GetCommandType(type);

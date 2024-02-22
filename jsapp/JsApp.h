@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "json/json.h"
+#include "JsonReader.h"
 
 struct ResolutionParam {
     ResolutionParam(int32_t orignalWidth, int32_t orignalHeight,
@@ -69,7 +69,7 @@ public:
     virtual void SetScreenDensity(const std::string value);
     virtual void SetConfigChanges(const std::string value);
     virtual bool MemoryRefresh(const std::string) const;
-    virtual void LoadDocument(const std::string, const std::string, const Json::Value);
+    virtual void LoadDocument(const std::string, const std::string, const Json2::Value&);
     virtual void FoldStatusChanged(const std::string commandFoldStatus);
 
 protected:
