@@ -133,6 +133,26 @@ static void SendJsHeapData()
     CommandLineInterface::GetInstance().SendJSHeapMemory(status.totalBytes, status.allocBytes, status.peakAllocBytes);
 }
 
+int ParseArgs(CommandParser& parser, int argc, char* argv[])
+{
+    int defaultReturnVal = -1;
+    vector<string> strs;
+    for (int i = 1; i < argc; ++i) {
+        if (parser.IsMainArgLengthInvalid(argv[i])) {
+            return START_PARAM_INVALID_CODE;
+        }
+        strs.push_back(argv[i]);
+    }
+    if (!parser.ProcessCommand(strs)) {
+        return 0;
+    }
+    if (!parser.IsCommandValid()) {
+        FLOG("Start args is invalid.");
+        return START_PARAM_INVALID_CODE;
+    }
+    return defaultReturnVal;
+}
+
 int main(int argc, char* argv[])
 {
     ILOG("ThinPreviewer enter the main function.");
@@ -145,49 +165,31 @@ int main(int argc, char* argv[])
     thinCrashHandler->InitExceptionHandler();
     // Creating a Main Thread Timer Manager
     CppTimerManager& manager = CppTimerManager::GetTimerManager();
-
     // Parsing User Commands
     CommandParser& parser = CommandParser::GetInstance();
-    vector<string> strs;
-    for (int i = 1; i < argc; ++i) {
-        if (parser.IsMainArgLengthInvalid(argv[i])) {
-            return START_PARAM_INVALID_CODE;
-        }
-        strs.push_back(argv[i]);
+    int ret = ParseArgs(parser, argc, argv);
+    if (ret >= 0) {
+        return ret;
     }
-
-    if (!parser.ProcessCommand(strs)) {
-        return 0;
-    }
-
-    if (!parser.IsCommandValid()) {
-        FLOG("Start args is invalid.");
-        return START_PARAM_INVALID_CODE;
-    }
-
     InitSharedData();
     InitSettings();
     if (parser.IsSet("s")) {
         CommandLineInterface::GetInstance().Init(parser.Value("s"));
     }
-
     InitJsApp();
     TraceTool::GetInstance().HandleTrace("Enter the main function");
     CppTimer dataCheckTimer(DataChangeCheck);
     manager.AddCppTimer(dataCheckTimer);
     dataCheckTimer.Start(100); // 100ms Timer polling period
-
     CppTimer jsHeapSendTimer(SendJsHeapData);
     if (parser.IsSendJSHeap()) {
         manager.AddCppTimer(jsHeapSendTimer);
         jsHeapSendTimer.Start(NOTIFY_INTERVAL_TIME); // 1000ms Timer polling period
     }
-
     // Registering and monitoring the changes of the brightness and volume
     thread::id curThreadId = this_thread::get_id();
     SharedData<uint8_t>::AppendNotify(SharedDataType::BRIGHTNESS_VALUE,
                                       TimerTaskHandler::CheckBrightnessValueChanged, curThreadId);
-
     while (!Interrupter::IsInterrupt()) {
         CommandLineInterface::GetInstance().ProcessCommand();
         manager.RunTimerTick();
