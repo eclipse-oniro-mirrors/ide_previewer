@@ -17,6 +17,8 @@
 
 #include <fstream>
 #include <sstream>
+#include <limits>
+#include <cstdint>
 #include "PreviewerEngineLog.h"
 #include "cJSON.h"
 
