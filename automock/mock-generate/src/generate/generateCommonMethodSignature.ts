@@ -24,6 +24,22 @@ import {
   getOverloadedFunctionCallbackStatement,
   overloadedFunctionArr
 } from './generateCommonUtil';
+import { methodArrayItemForEach } from './generateCommonMethod';
+
+interface MethodSignatureArrayProps {
+  methodSignatureArray: Array<MethodSignatureEntity>,
+  methodEntity: MethodSignatureEntity,
+  methodSignatureBody: string,
+  sourceFile: SourceFile,
+  mockApi: string
+}
+
+interface MethodSignatureArrayBack {
+  methodSignatureArray: Array<MethodSignatureEntity>,
+  returnSet: Set<string>,
+  isCallBack: boolean,
+  methodSignatureBody: string
+}
 
 /**
  * generate interface signature method
@@ -35,7 +51,7 @@ import {
 export function generateCommonMethodSignature(
   rootName: string,
   methodSignatureArray:
-  Array<MethodSignatureEntity>,
+    Array<MethodSignatureEntity>,
   sourceFile: SourceFile,
   mockApi: string
 ): string {
@@ -57,75 +73,97 @@ export function generateCommonMethodSignature(
       }
     }
   } else {
-    const argSet: Set<string> = new Set<string>();
-    let argParamsSet: string = '';
-    const returnSet: Set<string> = new Set<string>();
-    let isCallBack = false;
-    let needOverloaded = false;
-    methodSignatureArray.forEach(value => {
-      returnSet.add(value.returnType.returnKindName);
-      value.args.forEach(arg => {
-        argSet.add(arg.paramName);
-        if (arg.paramName.toLowerCase().includes('callback')) {
-          isCallBack = true;
-          if (arg.paramTypeString) {
-            argParamsSet = arg.paramTypeString;
-          }
-        }
-        if (
-          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
-          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
-        ) {
-          needOverloaded = true;
-        }
-      });
+    const methodSignatureArrayBack = methodSignatureArrayForEach({
+      methodSignatureArray,
+      methodEntity,
+      methodSignatureBody,
+      sourceFile,
+      mockApi
     });
-    if (isCallBack) {
-      if (overloadedFunctionArr.includes(methodEntity.functionName) && needOverloaded) {
-        methodSignatureBody += getOverloadedFunctionCallbackStatement(methodSignatureArray, sourceFile, mockApi);
-      } else {
-        methodSignatureBody += getCallbackStatement(mockApi, argParamsSet);
-      }
-    }
-    let isReturnPromise = false;
-    let promiseReturnValue = '';
-    let otherReturnValue = '';
-    returnSet.forEach(value => {
-      if (value.includes('Promise<')) {
-        isReturnPromise = true;
-        promiseReturnValue = value;
-      } else {
-        if (!otherReturnValue) {
-          otherReturnValue = value;
-        }
-      }
-    });
-    if (isReturnPromise) {
-      if (promiseReturnValue) {
-        let returnType = null;
-        methodSignatureArray.forEach(value => {
-          if (value.returnType.returnKindName === promiseReturnValue) {
-            returnType = value.returnType;
-          }
-        });
-        methodSignatureBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
-      } else {
-        methodSignatureBody += `
-            return new Promise((resolve, reject) => {
-              resolve('[PC Preview] unknow boolean');
-            })
-          `;
-      }
-    } else if (otherReturnValue) {
-      let returnType = null;
-      methodSignatureArray.forEach(value => {
-        if (value.returnType.returnKindName === otherReturnValue) {
-          returnType = value.returnType;
-        }
-      });
-      methodSignatureBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
-    }
+    methodSignatureBody = returnSetForEach(methodSignatureArrayBack, sourceFile, mockApi);
   }
   methodSignatureBody += '},\n';
   return methodSignatureBody;
+}
+
+/**
+ * returnSet ForEach
+ * @param porps
+ * @param sourceFile
+ * @param mockApi
+ * @returns
+ */
+function returnSetForEach(porps: MethodSignatureArrayBack, sourceFile: SourceFile, mockApi: string): string {
+  let isReturnPromise = false;
+  let promiseReturnValue = '';
+  let methodSignatureOtherReturnValue = '';
+  porps.returnSet.forEach(value => {
+    if (value.includes('Promise<')) {
+      isReturnPromise = true;
+      promiseReturnValue = value;
+    } else {
+      if (!methodSignatureOtherReturnValue) {
+        methodSignatureOtherReturnValue = value;
+      }
+    }
+  });
+  if (isReturnPromise) {
+    if (promiseReturnValue) {
+      let returnType = null;
+      porps.methodSignatureArray.forEach(value => {
+        if (value.returnType.returnKindName === promiseReturnValue) {
+          returnType = value.returnType;
+        }
+      });
+      porps.methodSignatureBody += getReturnData(porps.isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
+    } else {
+      porps.methodSignatureBody += `
+          return new Promise((resolve, reject) => {
+            resolve('[PC Preview] unknow boolean');
+          })
+        `;
+    }
+  } else if (methodSignatureOtherReturnValue) {
+    let returnType = null;
+    porps.methodSignatureArray.forEach(value => {
+      if (value.returnType.returnKindName === methodSignatureOtherReturnValue) {
+        returnType = value.returnType;
+      }
+    });
+    porps.methodSignatureBody += getReturnData(porps.isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
+  }
+  return porps.methodSignatureBody;
+}
+
+/**
+ * methodSignatureArray ForEach
+ * @param porps
+ * @returns
+ */
+function methodSignatureArrayForEach(porps: MethodSignatureArrayProps): MethodSignatureArrayBack {
+  let argSet: Set<string> = new Set<string>();
+  let argParamsSet: string = '';
+  let returnSet: Set<string> = new Set<string>();
+  let isCallBack = false;
+  let needOverloaded = false;
+  const methodSignatureArray = porps.methodSignatureArray;
+  const sourceFile = porps.sourceFile;
+  const mockApi = porps.mockApi;
+  porps.methodSignatureArray.forEach(value => {
+    ({ returnSet, argSet, isCallBack, argParamsSet, needOverloaded} =
+      methodArrayItemForEach({returnSet, value, argSet, isCallBack, argParamsSet, needOverloaded}));
+  });
+  if (isCallBack) {
+    if (overloadedFunctionArr.includes(porps.methodEntity.functionName) && needOverloaded) {
+      porps.methodSignatureBody += getOverloadedFunctionCallbackStatement(methodSignatureArray, sourceFile, mockApi);
+    } else {
+      porps.methodSignatureBody += getCallbackStatement(porps.mockApi, argParamsSet);
+    }
+  }
+  return {
+    returnSet,
+    isCallBack,
+    methodSignatureBody: porps.methodSignatureBody,
+    methodSignatureArray: porps.methodSignatureArray
+  };
 }

@@ -29,6 +29,26 @@ import type { PropertyEntity } from './propertyDeclaration';
 import { getTypeParameterDeclaration } from './typeParameterDeclaration';
 import type { TypeParameterEntity } from './typeParameterDeclaration';
 
+interface SubstepClassEntity {
+  className: string,
+  typeParameters: Array<TypeParameterEntity>,
+  classConstructor: Array<Array<ConstructorEntity>>,
+  classMethod: Map<string, Array<MethodEntity>>,
+  classProperty: Array<PropertyEntity>,
+  staticMethods: Array<StaticMethodEntity>
+}
+
+export interface ClassEntity {
+  className: string,
+  typeParameters: Array<TypeParameterEntity>,
+  heritageClauses: Array<HeritageClauseEntity>,
+  classConstructor: Array<Array<ConstructorEntity>>,
+  classMethod: Map<string, Array<MethodEntity>>,
+  classProperty: Array<PropertyEntity>,
+  exportModifiers: Array<number>,
+  staticMethods: Array<StaticMethodEntity>
+}
+
 /**
  * get class info
  * @param classNode
@@ -41,13 +61,7 @@ export function getClassDeclaration(classNode: ClassDeclaration, sourceFile: Sou
     exportModifiers = getExportKeyword(classNode.modifiers);
   }
 
-  const className = classNode.name === undefined ? '' : classNode.name.escapedText.toString();
   const heritageClauses: Array<HeritageClauseEntity> = [];
-  const classConstructor: Array<Array<ConstructorEntity>> = [];
-  const classMethod: Map<string, Array<MethodEntity>> = new Map<string, Array<MethodEntity>>();
-  const classProperty: Array<PropertyEntity> = [];
-  const typeParameters: Array<TypeParameterEntity> = [];
-  const staticMethods: Array<StaticMethodEntity> = [];
 
   if (classNode.heritageClauses !== undefined) {
     classNode.heritageClauses.forEach(value => {
@@ -55,6 +69,27 @@ export function getClassDeclaration(classNode: ClassDeclaration, sourceFile: Sou
     });
   }
 
+  const substepClassEntitys: SubstepClassEntity = substepGetClass(classNode, sourceFile);
+  return {
+    ...substepClassEntitys,
+    exportModifiers,
+    heritageClauses
+  };
+}
+
+/**
+ *get some class info
+ * @param classNode
+ * @param sourceFile
+ * @returns
+ */
+function substepGetClass(classNode: ClassDeclaration, sourceFile: SourceFile): SubstepClassEntity {
+  const className = classNode.name === undefined ? '' : classNode.name.escapedText.toString();
+  const classConstructor: Array<Array<ConstructorEntity>> = [];
+  const classMethod: Map<string, Array<MethodEntity>> = new Map<string, Array<MethodEntity>>();
+  const classProperty: Array<PropertyEntity> = [];
+  const typeParameters: Array<TypeParameterEntity> = [];
+  const staticMethods: Array<StaticMethodEntity> = [];
   classNode.members.forEach(value => {
     if (isMethodDeclaration(value)) {
       const methodEntity = getMethodDeclaration(value, sourceFile);
@@ -82,26 +117,12 @@ export function getClassDeclaration(classNode: ClassDeclaration, sourceFile: Sou
       console.log('--------------------------- uncaught class type end -----------------------');
     }
   });
-
   return {
-    className: className,
-    typeParameters: typeParameters,
-    heritageClauses: heritageClauses,
-    classConstructor: classConstructor,
-    classMethod: classMethod,
-    classProperty: classProperty,
-    exportModifiers: exportModifiers,
-    staticMethods: staticMethods
+    className,
+    typeParameters,
+    classConstructor,
+    classMethod,
+    classProperty,
+    staticMethods
   };
-}
-
-export interface ClassEntity {
-  className: string,
-  typeParameters: Array<TypeParameterEntity>,
-  heritageClauses: Array<HeritageClauseEntity>,
-  classConstructor: Array<Array<ConstructorEntity>>,
-  classMethod: Map<string, Array<MethodEntity>>,
-  classProperty: Array<PropertyEntity>,
-  exportModifiers: Array<number>,
-  staticMethods: Array<StaticMethodEntity>
 }

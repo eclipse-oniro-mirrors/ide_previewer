@@ -22,6 +22,18 @@ import { getWarnConsole } from './generateCommonUtil';
 import { generatePropertyDeclaration } from './generatePropertyDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
 
+interface AssemblyClassParams {
+  isSystem: boolean,
+  classEntity: ClassEntity,
+  classBody: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  isInnerMockFunction: boolean,
+  filename: string,
+  isExtend: boolean,
+  className: string
+}
+
 /**
  * generate class
  * @param rootName
@@ -52,56 +64,87 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
   const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity);
   const isExtend = heritageClausesData.isExtend;
   classBody += heritageClausesData.classBody;
+  classBody = assemblyClassBody({
+    isSystem,
+    classEntity,
+    classBody,
+    className,
+    isExtend,
+    sourceFile,
+    mockApi,
+    isInnerMockFunction,
+    filename
+  });
+  return classBody;
+}
 
-  if (!isSystem) {
-    classBody += '{';
-    if (classEntity.classConstructor.length > 1) {
-      classBody += 'constructor(...arg) { ';
+/**
+ * generate some class
+ * @param porps
+ * @returns
+ */
+function assemblyClassBody(porps: AssemblyClassParams): string {
+  if (!porps.isSystem) {
+    porps.classBody += '{';
+    if (porps.classEntity.classConstructor.length > 1) {
+      porps.classBody += 'constructor(...arg) { ';
     } else {
-      classBody += 'constructor() { ';
+      porps.classBody += 'constructor() { ';
     }
-    if (isExtend) {
-      classBody += 'super();\n';
+    if (porps.isExtend) {
+      porps.classBody += 'super();\n';
     }
-    classBody += sourceFile.fileName.endsWith('PermissionRequestResult.d.ts') ? '' : getWarnConsole(className, 'constructor');
+    const warnCon = getWarnConsole(porps.className, 'constructor');
+    porps.classBody += porps.sourceFile.fileName.endsWith('PermissionRequestResult.d.ts') ? '' : warnCon;
   }
-  if (classEntity.classProperty.length > 0) {
-    classEntity.classProperty.forEach(value => {
-      classBody += generatePropertyDeclaration(className, value, sourceFile) + '\n';
+  if (porps.classEntity.classProperty.length > 0) {
+    porps.classEntity.classProperty.forEach(value => {
+      porps.classBody += generatePropertyDeclaration(porps.className, value, porps.sourceFile) + '\n';
     });
   }
 
-  if (classEntity.classMethod.size > 0) {
-    classEntity.classMethod.forEach(value => {
-      classBody += generateCommonMethod(className, value, sourceFile, mockApi);
+  if (porps.classEntity.classMethod.size > 0) {
+    porps.classEntity.classMethod.forEach(value => {
+      porps.classBody += generateCommonMethod(porps.className, value, porps.sourceFile, porps.mockApi);
     });
   }
 
-  classBody += '}\n};';
+  porps.classBody += '}\n};';
+  porps.classBody = assemblyGlobal(porps);
+
+  if (!porps.filename.startsWith('system_')) {
+    if (porps.classEntity.staticMethods.length > 0) {
+      let staticMethodBody = '';
+      porps.classEntity.staticMethods.forEach(value => {
+        staticMethodBody += generateStaticFunction(value, false, porps.sourceFile, porps.mockApi) + '\n';
+      });
+      porps.classBody += staticMethodBody;
+    }
+  }
+  if (porps.classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
+    porps.classBody += `\nexport default ${porps.className};`;
+  }
+  return porps.classBody;
+}
+
+/**
+ * generate some class
+ * @param porps
+ * @returns
+ */
+function assemblyGlobal(porps: AssemblyClassParams): string {
   if (
-    (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
-    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
-    !isInnerMockFunction
+    (porps.classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
+      porps.classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
+    !porps.isInnerMockFunction
   ) {
-    classBody += `
-      if (!global.${className}) {
-        global.${className} = ${className};\n
+    porps.classBody += `
+      if (!global.${porps.className}) {
+        global.${porps.className} = ${porps.className};\n
       }
     `;
   }
-  if (!filename.startsWith('system_')) {
-    if (classEntity.staticMethods.length > 0) {
-      let staticMethodBody = '';
-      classEntity.staticMethods.forEach(value => {
-        staticMethodBody += generateStaticFunction(value, false, sourceFile, mockApi) + '\n';
-      });
-      classBody += staticMethodBody;
-    }
-  }
-  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
-    classBody += `\nexport default ${className};`;
-  }
-  return classBody;
+  return porps.classBody;
 }
 
 /**

@@ -16,7 +16,7 @@
 import {
   isClassDeclaration, isEnumDeclaration, isExportDeclaration, isFunctionDeclaration, isIdentifier,
   isImportEqualsDeclaration, isInterfaceDeclaration, isModuleBlock, isModuleDeclaration, isTypeAliasDeclaration,
-  isVariableStatement
+  isVariableStatement, ModuleBody
 } from 'typescript';
 import type { ModuleDeclaration, Node, SourceFile } from 'typescript';
 import { getExportKeyword } from '../common/commonUtils';
@@ -35,6 +35,35 @@ import type { TypeAliasEntity } from './typeAliasDeclaration';
 import { getVariableStatementDeclaration } from './variableStatementResolve';
 import type { StatementEntity } from './variableStatementResolve';
 
+interface SubstepGetModuleparam {
+  typeAliasDeclarations: Array<TypeAliasEntity>,
+  classDeclarations: Array<ClassEntity>,
+  interfaceDeclarations: Array<InterfaceEntity>,
+  functionDeclarations: Map<string, Array<FunctionEntity>>,
+  enumDeclarations: Array<EnumEntity>,
+  moduleDeclarations: Array<ModuleBlockEntity>,
+  variableStatements: Array<Array<StatementEntity>>,
+  moduleImportEquaqls: Array<ImportEuqalEntity>,
+  exportDeclarations: Array<string>,
+  sourceFile: SourceFile,
+  fileName: string,
+  moduleBody: ModuleBody
+}
+
+export interface ModuleBlockEntity {
+  moduleName: string,
+  exportModifiers: Array<number>,
+  typeAliasDeclarations: Array<TypeAliasEntity>,
+  classDeclarations: Array<ClassEntity>,
+  interfaceDeclarations: Array<InterfaceEntity>,
+  functionDeclarations: Map<string, Array<FunctionEntity>>,
+  enumDeclarations: Array<EnumEntity>,
+  moduleDeclarations: Array<ModuleBlockEntity>,
+  variableStatements: Array<Array<StatementEntity>>,
+  moduleImportEquaqls: Array<ImportEuqalEntity>,
+  exportDeclarations: Array<string>
+}
+
 /**
  * get module info
  * @param node
@@ -44,6 +73,16 @@ import type { StatementEntity } from './variableStatementResolve';
  */
 export function getModuleDeclaration(node: Node, sourceFile: SourceFile, fileName: string): ModuleBlockEntity {
   const moduleNode = node as ModuleDeclaration;
+  const typeAliasDeclarations: Array<TypeAliasEntity> = [];
+  const classDeclarations: Array<ClassEntity> = [];
+  const interfaceDeclarations: Array<InterfaceEntity> = [];
+  const functionDeclarations: Map<string, Array<FunctionEntity>> = new Map<string, Array<FunctionEntity>>();
+  const enumDeclarations: Array<EnumEntity> = [];
+  const moduleDeclarations: Array<ModuleBlockEntity> = [];
+  const variableStatements: Array<Array<StatementEntity>> = [];
+  const moduleImportEquaqls: Array<ImportEuqalEntity> = [];
+  const exportDeclarations: Array<string> = [];
+  const moduleBody = moduleNode.body;
   let moduleName = '';
   if (isIdentifier(moduleNode.name)) {
     moduleName = moduleNode.name.escapedText.toString();
@@ -56,67 +95,87 @@ export function getModuleDeclaration(node: Node, sourceFile: SourceFile, fileNam
   if (modifiers !== undefined) {
     exportModifiers = getExportKeyword(modifiers);
   }
+  const SubstepModuleBlockEntitys: SubstepGetModuleparam = substepModule({
+    typeAliasDeclarations,
+    classDeclarations,
+    interfaceDeclarations,
+    functionDeclarations,
+    enumDeclarations,
+    moduleDeclarations,
+    variableStatements,
+    moduleImportEquaqls,
+    exportDeclarations,
+    moduleBody,
+    sourceFile,
+    fileName
+  });
+  delete SubstepModuleBlockEntitys.moduleBody;
+  delete SubstepModuleBlockEntitys.sourceFile;
+  delete SubstepModuleBlockEntitys.fileName;
+  return {
+    ...SubstepModuleBlockEntitys,
+    exportModifiers,
+    moduleName
+  };
+}
 
-  const typeAliasDeclarations: Array<TypeAliasEntity> = [];
-  const classDeclarations: Array<ClassEntity> = [];
-  const interfaceDeclarations: Array<InterfaceEntity> = [];
-  const functionDeclarations: Map<string, Array<FunctionEntity>> = new Map<string, Array<FunctionEntity>>();
-  const enumDeclarations: Array<EnumEntity> = [];
-  const moduleDeclarations: Array<ModuleBlockEntity> = [];
-  const variableStatements: Array<Array<StatementEntity>> = [];
-  const moduleImportEquaqls: Array<ImportEuqalEntity> = [];
-  const exportDeclarations: Array<string> = [];
-  const moduleBody = moduleNode.body;
-
-  if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
-    moduleBody.statements.forEach(value => {
+/**
+ * get some module info
+ * @param SubstepGetModuleparam
+ * @returns
+ */
+function substepModule(props: SubstepGetModuleparam): SubstepGetModuleparam {
+  if (props.moduleBody !== undefined && isModuleBlock(props.moduleBody)) {
+    props.moduleBody.statements.forEach(value => {
       if (isFunctionDeclaration(value)) {
-        const functionEntity = getFunctionDeclaration(value, sourceFile);
-        if (functionDeclarations.get(functionEntity.functionName) !== undefined) {
-          functionDeclarations.get(functionEntity.functionName)?.push(functionEntity);
+        const functionEntity = getFunctionDeclaration(value, props.sourceFile);
+        if (props.functionDeclarations.get(functionEntity.functionName) !== undefined) {
+          props.functionDeclarations.get(functionEntity.functionName)?.push(functionEntity);
         } else {
           const functionArray: Array<FunctionEntity> = [];
           functionArray.push(functionEntity);
-          functionDeclarations.set(functionEntity.functionName, functionArray);
+          props.functionDeclarations.set(functionEntity.functionName, functionArray);
         }
       } else if (isTypeAliasDeclaration(value)) {
-        typeAliasDeclarations.push(getTypeAliasDeclaration(value, sourceFile));
+        props.typeAliasDeclarations.push(getTypeAliasDeclaration(value, props.sourceFile));
       } else if (isEnumDeclaration(value)) {
-        enumDeclarations.push(getEnumDeclaration(value, sourceFile));
+        props.enumDeclarations.push(getEnumDeclaration(value, props.sourceFile));
       } else if (isClassDeclaration(value)) {
-        classDeclarations.push(getClassDeclaration(value, sourceFile));
+        props.classDeclarations.push(getClassDeclaration(value, props.sourceFile));
       } else if (isInterfaceDeclaration(value)) {
-        interfaceDeclarations.push(getInterfaceDeclaration(value, sourceFile));
+        props.interfaceDeclarations.push(getInterfaceDeclaration(value, props.sourceFile));
       } else if (isModuleDeclaration(value)) {
-        moduleDeclarations.push(getModuleDeclaration(value, sourceFile, fileName));
+        props.moduleDeclarations.push(getModuleDeclaration(value, props.sourceFile, props.fileName));
       } else if (isVariableStatement(value)) {
-        variableStatements.push(getVariableStatementDeclaration(value, sourceFile));
+        props.variableStatements.push(getVariableStatementDeclaration(value, props.sourceFile));
       } else if (isImportEqualsDeclaration(value)) {
-        moduleImportEquaqls.push(getModuleImportEqual(value, sourceFile));
+        props.moduleImportEquaqls.push(getModuleImportEqual(value, props.sourceFile));
       } else if (isExportDeclaration(value)) {
-        exportDeclarations.push(getExportDeclaration(value, sourceFile));
+        props.exportDeclarations.push(getExportDeclaration(value, props.sourceFile));
       } else {
         console.log('--------------------------- uncaught module type start -----------------------');
-        console.log('fileName: ' + fileName);
+        console.log('fileName: ' + props.fileName);
         console.log(value);
         console.log('--------------------------- uncaught module type end -----------------------');
       }
     });
   }
+  return props;
+}
 
-  return {
-    moduleName: moduleName,
-    exportModifiers: exportModifiers,
-    typeAliasDeclarations: typeAliasDeclarations,
-    classDeclarations: classDeclarations,
-    interfaceDeclarations: interfaceDeclarations,
-    functionDeclarations: functionDeclarations,
-    enumDeclarations: enumDeclarations,
-    moduleDeclarations: moduleDeclarations,
-    variableStatements: variableStatements,
-    moduleImportEquaqls: moduleImportEquaqls,
-    exportDeclarations: exportDeclarations
-  };
+interface SubstepGetModuleparam {
+  typeAliasDeclarations: Array<TypeAliasEntity>,
+  classDeclarations: Array<ClassEntity>,
+  interfaceDeclarations: Array<InterfaceEntity>,
+  functionDeclarations: Map<string, Array<FunctionEntity>>,
+  enumDeclarations: Array<EnumEntity>,
+  moduleDeclarations: Array<ModuleBlockEntity>,
+  variableStatements: Array<Array<StatementEntity>>,
+  moduleImportEquaqls: Array<ImportEuqalEntity>,
+  exportDeclarations: Array<string>,
+  sourceFile: SourceFile,
+  fileName: string,
+  moduleBody: ModuleBody
 }
 
 export interface ModuleBlockEntity {
