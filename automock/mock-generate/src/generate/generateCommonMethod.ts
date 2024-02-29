@@ -16,6 +16,8 @@
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import type { MethodEntity } from '../declaration-node/methodDeclaration';
+import type { FunctionEntity } from '../declaration-node/functionDeclaration';
+import type { MethodSignatureEntity } from '../declaration-node/methodSignatureDeclaration';
 import {
   generateSymbolIterator,
   getCallbackStatement,
@@ -25,6 +27,29 @@ import {
   getOverloadedFunctionCallbackStatement,
   overloadedFunctionArr
 } from './generateCommonUtil';
+
+interface MethodArrayProps {
+  methodArray: Array<MethodEntity>,
+  methodEntity: MethodEntity,
+  sourceFile: SourceFile,
+  mockApi: string,
+  methodBody: string
+}
+
+interface MethodArrayItemForEachProps {
+  returnSet: Set<string>,
+  value: MethodEntity | FunctionEntity | MethodSignatureEntity,
+  argSet: Set<string>,
+  isCallBack: boolean,
+  argParamsSet: string,
+  needOverloaded: boolean
+}
+
+interface MethodArrayBack {
+  returnSet: Set<string>,
+  methodBody: string,
+  isCallBack: boolean
+}
 
 /**
  * generate class method
@@ -66,75 +91,120 @@ export function generateCommonMethod(
       }
     }
   } else {
-    const argSet: Set<string> = new Set<string>();
-    let argParamsSet: string = '';
-    const returnSet: Set<string> = new Set<string>();
-    let isCallBack = false;
-    let needOverloaded = false;
-    methodArray.forEach(value => {
-      returnSet.add(value.returnType.returnKindName);
-      value.args.forEach(arg => {
-        argSet.add(arg.paramName);
-        if (arg.paramName.toLowerCase().includes('callback')) {
-          isCallBack = true;
-          if (arg.paramTypeString) {
-            argParamsSet = arg.paramTypeString;
-          }
-        }
-        if (
-          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
-          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
-        ) {
-          needOverloaded = true;
-        }
-      });
-    });
-    if (isCallBack) {
-      if (overloadedFunctionArr.includes(methodEntity.functionName.name) && needOverloaded) {
-        methodBody += getOverloadedFunctionCallbackStatement(methodArray, sourceFile, mockApi);
-      } else {
-        methodBody += getCallbackStatement(mockApi, argParamsSet);
+    const methodArrayBack = methodArrayForEach({ methodArray, methodEntity, sourceFile, mockApi, methodBody });
+    methodBody = returnSetForEach(methodArrayBack, methodArray, sourceFile, mockApi);
+  }
+  methodBody += '};\n';
+  return methodBody;
+}
+
+/**
+ * method Array ForEach
+ * @param props
+ * @returns
+ */
+function methodArrayForEach(props: MethodArrayProps): MethodArrayBack {
+  let argSet: Set<string> = new Set<string>();
+  let argParamsSet: string = '';
+  let returnSet: Set<string> = new Set<string>();
+  let isCallBack = false;
+  let needOverloaded = false;
+  props.methodArray.forEach(value => {
+    ({ returnSet, argSet, isCallBack, argParamsSet, needOverloaded} =
+      methodArrayItemForEach({returnSet, value, argSet, isCallBack, argParamsSet, needOverloaded}));
+  });
+  if (isCallBack) {
+    if (overloadedFunctionArr.includes(props.methodEntity.functionName.name) && needOverloaded) {
+      props.methodBody += getOverloadedFunctionCallbackStatement(props.methodArray, props.sourceFile, props.mockApi);
+    } else {
+      props.methodBody += getCallbackStatement(props.mockApi, argParamsSet);
+    }
+  }
+  return {
+    returnSet,
+    methodBody: props.methodBody,
+    isCallBack
+  };
+}
+
+/**
+ * method ArrayItem ForEach
+ * @param props
+ * @returns
+ */
+export function methodArrayItemForEach(
+  props: MethodArrayItemForEachProps
+): MethodArrayItemForEachProps {
+  props.returnSet.add(props.value.returnType.returnKindName);
+  props.value.args.forEach(arg => {
+    props.argSet.add(arg.paramName);
+    if (arg.paramName.toLowerCase().includes('callback')) {
+      props.isCallBack = true;
+      if (arg.paramTypeString) {
+        props.argParamsSet = arg.paramTypeString;
       }
     }
-    let isReturnPromise = false;
-    let promiseReturnValue = '';
-    let otherReturnValue = '';
-    returnSet.forEach(value => {
-      if (value.includes('Promise<')) {
-        isReturnPromise = true;
-        promiseReturnValue = value;
-      } else {
-        if (!otherReturnValue) {
-          otherReturnValue = value;
-        }
+    if (
+      arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
+      arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
+    ) {
+      props.needOverloaded = true;
+    }
+  });
+  return props;
+}
+
+/**
+ * returnSet ForEach
+ * @param props
+ * @param methodArray
+ * @param sourceFile
+ * @param mockApi
+ * @returns
+ */
+function returnSetForEach(
+  props: MethodArrayBack,
+  methodArray: Array<MethodEntity>,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
+  let isReturnPromise = false;
+  let promiseReturnValue = '';
+  let methodOtherReturnValue = '';
+  props.returnSet.forEach(value => {
+    if (value.includes('Promise<')) {
+      isReturnPromise = true;
+      promiseReturnValue = value;
+    } else {
+      if (!methodOtherReturnValue) {
+        methodOtherReturnValue = value;
       }
-    });
-    if (isReturnPromise) {
-      if (promiseReturnValue) {
-        let returnType = null;
-        methodArray.forEach(value => {
-          if (value.returnType.returnKindName === promiseReturnValue) {
-            returnType = value.returnType;
-          }
-        });
-        methodBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
-      } else {
-        methodBody += `
+    }
+  });
+  if (isReturnPromise) {
+    if (promiseReturnValue) {
+      let returnType = null;
+      methodArray.forEach(value => {
+        if (value.returnType.returnKindName === promiseReturnValue) {
+          returnType = value.returnType;
+        }
+      });
+      props.methodBody += getReturnData(props.isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
+    } else {
+      props.methodBody += `
             return new Promise((resolve, reject) => {
               resolve('[PC Preview] unknow boolean');
             })
           `;
-      }
-    } else if (otherReturnValue) {
-      let returnType = null;
-      methodArray.forEach(value => {
-        if (value.returnType.returnKindName === otherReturnValue) {
-          returnType = value.returnType;
-        }
-      });
-      methodBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
     }
+  } else if (methodOtherReturnValue) {
+    let returnType = null;
+    methodArray.forEach(value => {
+      if (value.returnType.returnKindName === methodOtherReturnValue) {
+        returnType = value.returnType;
+      }
+    });
+    props.methodBody += getReturnData(props.isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
   }
-  methodBody += '};\n';
-  return methodBody;
+  return props.methodBody;
 }

@@ -34,6 +34,76 @@ import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateVariableStatementDelcatation } from './generateVariableStatementDeclaration';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 
+interface ModuleExportEntity {
+  type: string,
+  name: string
+}
+
+interface DefaultExportClassProps {
+  moduleBody: string,
+  outBody: string,
+  filename: string,
+  sourceFile: SourceFile,
+  mockApi: string
+}
+
+interface DefaultExportClassBack {
+  moduleBody: string,
+  outBody: string,
+}
+
+interface JudgmentModuleEntityProps {
+  moduleEntity: ModuleBlockEntity,
+  moduleBody: string,
+  outBody: string,
+  enumBody: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  extraImport: string[],
+  moduleName: string,
+  importDeclarations: ImportElementEntity[]
+}
+
+interface JudgmentModuleEntityBack {
+  moduleBody: string,
+  outBody: string,
+  enumBody: string
+}
+
+interface ModuleEntityLoopProps {
+  moduleEntity: ModuleBlockEntity,
+  innerOutBody: string,
+  moduleBody: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  extraImport: string[],
+  innerModuleName: string,
+  importDeclarations: ImportElementEntity[]
+}
+
+interface ModuleEntityLoopBack {
+  innerOutBody: string,
+  moduleBody: string,
+}
+
+interface ModuleEntityNextProps {
+  moduleEntity: ModuleBlockEntity,
+  innerFunctionBody: string,
+  innerModuleBody: string,
+  filename: string,
+  moduleBody: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  extraImport: string[],
+  innerModuleName: string,
+  importDeclarations: ImportElementEntity[]
+}
+
+interface ModuleEntityNextBack {
+  innerModuleName: string,
+  moduleBody: string
+}
+
 /**
  * generate declare
  * @param moduleEntity
@@ -44,7 +114,7 @@ import type { ImportElementEntity } from '../declaration-node/importAndExportDec
  */
 export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
   filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
-  let innerModuleBody = '';
+  const innerModuleBody = '';
   const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `export function mock${firstCharacterToUppercase(moduleName)}() {\n`;
   let enumBody = '';
@@ -55,126 +125,25 @@ export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourc
     addToIndexArray({ fileName: filename, mockFunctionName: `mock${firstCharacterToUppercase(moduleName)}` });
   }
   let outBody = '';
-  const defaultExportClass = getDefaultExportClassDeclaration(sourceFile);
-
-  if (defaultExportClass.length > 0) {
-    defaultExportClass.forEach(value => {
-      if (value.exportModifiers.includes(SyntaxKind.DefaultKeyword) && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-        if (filename.startsWith('system_')) {
-          const mockNameArr = filename.split('_');
-          const mockName = mockNameArr[mockNameArr.length - 1];
-          addToSystemIndexArray({
-            filename: filename,
-            mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
-          });
-
-          moduleBody += `global.systemplugin.${mockName} = {`;
-          if (value.staticMethods.length > 0) {
-            let staticMethodBody = '';
-            value.staticMethods.forEach(val => {
-              staticMethodBody += generateStaticFunction(val, true, sourceFile, mockApi) + '\n';
-            });
-            moduleBody += staticMethodBody;
-          }
-          moduleBody += '}';
-        } else {
-          outBody += generateClassDeclaration('', value, false, '', filename, sourceFile, false, mockApi);
-        }
-      }
-    });
-  }
-
-  if (moduleEntity.typeAliasDeclarations.length > 0) {
-    moduleEntity.typeAliasDeclarations.forEach(value => {
-      outBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport, mockApi) + '\n';
-    });
-  }
-
-  if (moduleEntity.moduleImportEquaqls.length > 0) {
-    moduleEntity.moduleImportEquaqls.forEach(value => {
-      outBody += generateImportEqual(value) + '\n';
-    });
-  }
-
-  if (moduleEntity.classDeclarations.length > 0) {
-    moduleEntity.classDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0 && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-        outBody += generateClassDeclaration(moduleName, value, false, '', '', sourceFile, false, mockApi) + '\n';
-      } else {
-        moduleBody += '\t' + generateClassDeclaration(moduleName, value, false, '', '', sourceFile, true, mockApi) + '\n';
-      }
-    });
-  }
-
-  if (moduleEntity.interfaceDeclarations.length > 0) {
-    moduleEntity.interfaceDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0) {
-        outBody += generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
-      } else {
-        moduleBody += '\t' + generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
-      }
-    });
-  }
-
-  if (moduleEntity.enumDeclarations.length > 0) {
-    moduleEntity.enumDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0) {
-        outBody += generateEnumDeclaration(moduleName, value) + '\n';
-      } else {
-        enumBody += generateEnumDeclaration(moduleName, value);
-      }
-    });
-  }
-
-  let functionBody = '';
-  if (moduleEntity.functionDeclarations.size > 0) {
-    moduleEntity.functionDeclarations.forEach(value => {
-      functionBody += '\t' + generateCommonFunction(moduleName, value, sourceFile, mockApi, false) + '\n';
-    });
-  }
-
-  if (moduleEntity.moduleDeclarations.length > 0) {
-    moduleEntity.moduleDeclarations.forEach(value => {
-      if (!value.moduleName.startsWith("'") && !value.moduleName.startsWith('"')) {
-        innerModuleBody += generateInnerModuleDeclaration(value, sourceFile, filename, mockApi, extraImport, importDeclarations);
-      }
-    });
-  }
-  if (innerModuleBody) {
-    moduleBody += innerModuleBody + '\n';
-  }
-
-  moduleBody += '\t' + `const ${moduleName} = {`;
-  if (moduleEntity.variableStatements.length > 0) {
-    moduleEntity.variableStatements.forEach(value => {
-      value.forEach(val => {
-        moduleBody += generateVariableStatementDelcatation(val, false) + '\n';
-      });
-    });
-  }
-
-  const sourceFileFunctions = getSourceFileFunctions(sourceFile);
-  let sourceFileFunctionBody = '';
-  if (sourceFileFunctions.size > 0) {
-    sourceFileFunctions.forEach(value => {
-      sourceFileFunctionBody += '\n' + generateCommonFunction(moduleName, value, sourceFile, mockApi, false);
-    });
-  }
-
-  const sourceFileVariableStatements = getSourceFileVariableStatements(sourceFile);
-  let sourceFileStatementBody = '';
-  if (sourceFileVariableStatements.length > 0) {
-    sourceFileVariableStatements.forEach(value => {
-      value.forEach(val => {
-        sourceFileStatementBody += '\n' + generateVariableStatementDelcatation(val, false);
-      });
-    });
-  }
-
-  moduleBody += sourceFileFunctionBody + '\n';
-  moduleBody += sourceFileStatementBody + '\n';
-  moduleBody += functionBody + '\n';
-
+  const defaultExportClassBack = defaultExportClassForEach({ moduleBody, outBody, filename, sourceFile, mockApi });
+  moduleBody = defaultExportClassBack.moduleBody;
+  outBody = defaultExportClassBack.outBody;
+  const judgmentModuleEntityProps = {
+    moduleEntity,
+    moduleBody: defaultExportClassBack.moduleBody,
+    outBody: defaultExportClassBack.outBody,
+    sourceFile,
+    mockApi,
+    enumBody,
+    extraImport,
+    moduleName,
+    importDeclarations
+  };
+  const judgmentModuleEntityBack = judgmentModuleEntity(judgmentModuleEntityProps);
+  moduleBody = judgmentModuleEntityBack.moduleBody;
+  outBody = judgmentModuleEntityBack.outBody;
+  enumBody = judgmentModuleEntityBack.enumBody;
+  moduleBody = moduleEntityForEach(judgmentModuleEntityProps, innerModuleBody, filename);
   const exports = getModuleExportElements(moduleEntity);
   let exportString = '';
   exports.forEach(value => {
@@ -187,7 +156,6 @@ export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourc
   if (exportString !== '') {
     moduleBody += '\t' + exportString;
   }
-
   moduleBody += '\t};';
   moduleBody += `\n\treturn ${moduleName};}\n`;
   moduleBody += outBody;
@@ -195,85 +163,280 @@ export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourc
   return moduleBody;
 }
 
-function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
-  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
-  let innerModuleBody = '';
-  const innerModuleName = moduleEntity.moduleName.replace(/["']/g, '');
-  let moduleBody = `function mock${innerModuleName}() {\n`;
-  let innerOutBody = '';
-  let innerFunctionBody = '';
-
-  if (moduleEntity.typeAliasDeclarations.length) {
-    moduleEntity.typeAliasDeclarations.forEach(value => {
-      innerOutBody += generateTypeAliasDeclaration(value, true, sourceFile, extraImport, mockApi) + '\n';
+/**
+ * judgment ModuleEntityLength
+ * @param props
+ * @param innerModuleBody
+ * @param filename
+ * @returns
+ */
+function moduleEntityForEach(props: JudgmentModuleEntityProps, innerModuleBody: string, filename: string): string {
+  let functionBody = '';
+  if (props.moduleEntity.functionDeclarations.size > 0) {
+    props.moduleEntity.functionDeclarations.forEach(value => {
+      functionBody += '\t' + generateCommonFunction(props.moduleName, value, props.sourceFile,
+        props.mockApi, false) + '\n';
     });
   }
-
-  if (moduleEntity.moduleImportEquaqls.length) {
-    moduleEntity.moduleImportEquaqls.forEach(value => {
-      innerOutBody += generateImportEqual(value) + '\n';
-    });
-  }
-
-  if (moduleEntity.classDeclarations.length) {
-    moduleEntity.classDeclarations.forEach(value => {
-      if (value.exportModifiers.length && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-        innerOutBody += generateClassDeclaration(innerModuleName, value, false, '', '', sourceFile, false, mockApi) + '\n';
-      } else {
-        moduleBody += '\t' + generateClassDeclaration(innerModuleName, value, false, '', '', sourceFile, true, mockApi) + '\n';
-      }
-    });
-  }
-
-  if (moduleEntity.interfaceDeclarations.length) {
-    moduleEntity.interfaceDeclarations.forEach(value => {
-      if (value.exportModifiers.length) {
-        innerOutBody += generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
-      } else {
-        moduleBody += '\t' + generateInterfaceDeclaration(value, sourceFile, false, mockApi, moduleEntity.interfaceDeclarations, importDeclarations, extraImport) + ';\n';
-      }
-    });
-  }
-
-  if (moduleEntity.enumDeclarations.length) {
-    moduleEntity.enumDeclarations.forEach(value => {
-      if (value.exportModifiers.length) {
-        innerOutBody += generateEnumDeclaration(innerModuleName, value) + '\n';
-      } else {
-        moduleBody += generateEnumDeclaration(innerModuleName, value);
-      }
-    });
-  }
-
-  if (moduleEntity.functionDeclarations.size) {
-    moduleEntity.functionDeclarations.forEach(value => {
-      innerFunctionBody += '\n' + generateCommonFunction(innerModuleName, value, sourceFile, mockApi, false) + '\n';
-    });
-  }
-
-  if (moduleEntity.moduleDeclarations.length) {
-    moduleEntity.moduleDeclarations.forEach(value => {
+  if (props.moduleEntity.moduleDeclarations.length > 0) {
+    props.moduleEntity.moduleDeclarations.forEach(value => {
       if (!value.moduleName.startsWith("'") && !value.moduleName.startsWith('"')) {
-        innerModuleBody += generateInnerModuleDeclaration(value, sourceFile, filename, mockApi, extraImport, importDeclarations);
+        innerModuleBody += generateInnerModuleDeclaration(value, props.sourceFile, filename, props.mockApi,
+          props.extraImport, props.importDeclarations);
       }
     });
   }
   if (innerModuleBody) {
-    moduleBody += innerModuleBody + '\n';
+    props.moduleBody += innerModuleBody + '\n';
+  }
+  props.moduleBody += '\t' + `const ${props.moduleName} = {`;
+  if (props.moduleEntity.variableStatements.length > 0) {
+    props.moduleEntity.variableStatements.forEach(value => {
+      value.forEach(val => {
+        props.moduleBody += generateVariableStatementDelcatation(val, false) + '\n';
+      });
+    });
+  }
+  const sourceFileFunctions = getSourceFileFunctions(props.sourceFile);
+  let sourceFileFunctionBody = '';
+  if (sourceFileFunctions.size > 0) {
+    sourceFileFunctions.forEach(value => {
+      sourceFileFunctionBody += '\n' + generateCommonFunction(props.moduleName, value,
+        props.sourceFile, props.mockApi, false);
+    });
+  }
+  const sourceFileVariableStatements = getSourceFileVariableStatements(props.sourceFile);
+  let sourceFileStatementBody = '';
+  if (sourceFileVariableStatements.length > 0) {
+    sourceFileVariableStatements.forEach(value => {
+      value.forEach(val => {
+        sourceFileStatementBody += '\n' + generateVariableStatementDelcatation(val, false);
+      });
+    });
+  }
+  props.moduleBody += sourceFileFunctionBody + '\n';
+  props.moduleBody += sourceFileStatementBody + '\n';
+  props.moduleBody += functionBody + '\n';
+  return props.moduleBody;
+}
+
+/**
+ * judgment ModuleEntity
+ * @param props
+ * @returns
+ */
+function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleEntityBack {
+  if (props.moduleEntity.typeAliasDeclarations.length > 0) {
+    props.moduleEntity.typeAliasDeclarations.forEach(value => {
+      props.outBody += generateTypeAliasDeclaration(value, true, props.sourceFile,
+        props.extraImport, props.mockApi) + '\n';
+    });
+  }
+  if (props.moduleEntity.moduleImportEquaqls.length > 0) {
+    props.moduleEntity.moduleImportEquaqls.forEach(value => {
+      props.outBody += generateImportEqual(value) + '\n';
+    });
+  }
+  if (props.moduleEntity.classDeclarations.length > 0) {
+    props.moduleEntity.classDeclarations.forEach(value => {
+      if (value.exportModifiers.length > 0 && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+        props.outBody += generateClassDeclaration(props.moduleName, value, false, '', '',
+          props.sourceFile, false, props.mockApi) + '\n';
+      } else {
+        props.moduleBody += '\t' + generateClassDeclaration(props.moduleName, value, false,
+          '', '', props.sourceFile, true, props.mockApi) + '\n';
+      }
+    });
+  }
+  if (props.moduleEntity.interfaceDeclarations.length > 0) {
+    props.moduleEntity.interfaceDeclarations.forEach(value => {
+      if (value.exportModifiers.length > 0) {
+        props.outBody += generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
+          props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
+      } else {
+        props.moduleBody += '\t' +
+          generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
+            props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
+      }
+    });
+  }
+  if (props.moduleEntity.enumDeclarations.length > 0) {
+    props.moduleEntity.enumDeclarations.forEach(value => {
+      if (value.exportModifiers.length > 0) {
+        props.outBody += generateEnumDeclaration(props.moduleName, value) + '\n';
+      } else {
+        props.enumBody += generateEnumDeclaration(props.moduleName, value);
+      }
+    });
+  }
+  return {
+    outBody: props.outBody,
+    moduleBody: props.moduleBody,
+    enumBody: props.enumBody
+  };
+}
+
+/**
+ * defaultExportClass ForEach
+ * @param props
+ * @returns
+ */
+function defaultExportClassForEach(props: DefaultExportClassProps): DefaultExportClassBack {
+  const defaultExportClass = getDefaultExportClassDeclaration(props.sourceFile);
+
+  if (defaultExportClass.length > 0) {
+    defaultExportClass.forEach(value => {
+      if (value.exportModifiers.includes(SyntaxKind.DefaultKeyword) &&
+        value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+        if (props.filename.startsWith('system_')) {
+          const mockNameArr = props.filename.split('_');
+          const mockName = mockNameArr[mockNameArr.length - 1];
+          addToSystemIndexArray({
+            filename: props.filename,
+            mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
+          });
+
+          props.moduleBody += `global.systemplugin.${mockName} = {`;
+          if (value.staticMethods.length > 0) {
+            let staticMethodBody = '';
+            value.staticMethods.forEach(val => {
+              staticMethodBody += generateStaticFunction(val, true, props.sourceFile, props.mockApi) + '\n';
+            });
+            props.moduleBody += staticMethodBody;
+          }
+          props.moduleBody += '}';
+        } else {
+          props.outBody += generateClassDeclaration('', value, false, '', props.filename,
+            props.sourceFile, false, props.mockApi);
+        }
+      }
+    });
+  }
+  return {
+    outBody: props.outBody,
+    moduleBody: props.moduleBody
+  };
+}
+
+function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
+  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
+  const innerModuleBody = '';
+  let innerModuleName = moduleEntity.moduleName.replace(/["']/g, '');
+  let moduleBody = `function mock${innerModuleName}() {\n`;
+  let innerOutBody = '';
+  const innerFunctionBody = '';
+  const moduleEntityLoopBack = moduleEntityLoop({
+    moduleEntity,
+    innerOutBody,
+    moduleBody,
+    sourceFile,
+    mockApi,
+    extraImport,
+    innerModuleName,
+    importDeclarations
+  });
+  innerOutBody = moduleEntityLoopBack.innerOutBody;
+  moduleBody = moduleEntityLoopBack.moduleBody;
+  const moduleEntityNextBack = moduleEntityNext({moduleEntity, innerFunctionBody, innerModuleBody, filename,
+    moduleBody, sourceFile, mockApi, extraImport, innerModuleName, importDeclarations});
+  innerModuleName = moduleEntityNextBack.innerModuleName;
+  moduleBody = moduleEntityNextBack.moduleBody;
+  moduleBody += '\t};';
+  moduleBody += `\n\treturn ${innerModuleName};}\n`;
+  moduleBody += innerOutBody;
+  return moduleBody;
+}
+
+/**
+ * moduleEntity judgment
+ * @param props
+ * @returns
+ */
+function moduleEntityLoop(props: ModuleEntityLoopProps): ModuleEntityLoopBack {
+  if (props.moduleEntity.typeAliasDeclarations.length) {
+    props.moduleEntity.typeAliasDeclarations.forEach(value => {
+      props.innerOutBody += generateTypeAliasDeclaration(value, true, props.sourceFile,
+        props.extraImport, props.mockApi) + '\n';
+    });
+  }
+  if (props.moduleEntity.moduleImportEquaqls.length) {
+    props.moduleEntity.moduleImportEquaqls.forEach(value => {
+      props.innerOutBody += generateImportEqual(value) + '\n';
+    });
   }
 
-  moduleBody += `const ${innerModuleName} = {\n`;
-  if (moduleEntity.variableStatements.length) {
-    moduleEntity.variableStatements.forEach(value => {
+  if (props.moduleEntity.classDeclarations.length) {
+    props.moduleEntity.classDeclarations.forEach(value => {
+      if (value.exportModifiers.length && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+        props.innerOutBody += generateClassDeclaration(props.innerModuleName, value, false, '', '', props.sourceFile, false, props.mockApi) + '\n';
+      } else {
+        props.moduleBody += '\t' + generateClassDeclaration(props.innerModuleName, value, false, '', '', props.sourceFile, true, props.mockApi) + '\n';
+      }
+    });
+  }
+  if (props.moduleEntity.interfaceDeclarations.length) {
+    props.moduleEntity.interfaceDeclarations.forEach(value => {
+      if (value.exportModifiers.length) {
+        props.innerOutBody += generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
+          props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
+      } else {
+        props.moduleBody += '\t' + generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
+          props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
+      }
+    });
+  }
+  if (props.moduleEntity.enumDeclarations.length) {
+    props.moduleEntity.enumDeclarations.forEach(value => {
+      if (value.exportModifiers.length) {
+        props.innerOutBody += generateEnumDeclaration(props.innerModuleName, value) + '\n';
+      } else {
+        props.moduleBody += generateEnumDeclaration(props.innerModuleName, value);
+      }
+    });
+  }
+  return {
+    moduleBody: props.moduleBody,
+    innerOutBody: props.innerOutBody
+  };
+}
+
+/**
+ * Next moduleEntity judgment
+ * @param props
+ * @returns
+ */
+function moduleEntityNext(props: ModuleEntityNextProps): ModuleEntityNextBack {
+  if (props.moduleEntity.functionDeclarations.size) {
+    props.moduleEntity.functionDeclarations.forEach(value => {
+      props.innerFunctionBody += '\n' + generateCommonFunction(props.innerModuleName, value,
+        props.sourceFile, props.mockApi, false) + '\n';
+    });
+  }
+
+  if (props.moduleEntity.moduleDeclarations.length) {
+    props.moduleEntity.moduleDeclarations.forEach(value => {
+      if (!value.moduleName.startsWith("'") && !value.moduleName.startsWith('"')) {
+        props.innerModuleBody += generateInnerModuleDeclaration(value, props.sourceFile, props.filename,
+          props.mockApi, props.extraImport, props.importDeclarations);
+      }
+    });
+  }
+  if (props.innerModuleBody) {
+    props.moduleBody += props.innerModuleBody + '\n';
+  }
+
+  props.moduleBody += `const ${props.innerModuleName} = {\n`;
+  if (props.moduleEntity.variableStatements.length) {
+    props.moduleEntity.variableStatements.forEach(value => {
       value.forEach(val => {
-        moduleBody += generateVariableStatementDelcatation(val, false) + '\n';
+        props.moduleBody += generateVariableStatementDelcatation(val, false) + '\n';
       });
     });
   }
 
-  moduleBody += innerFunctionBody + '\n';
+  props.moduleBody += props.innerFunctionBody + '\n';
 
-  const exportArr = getModuleExportElements(moduleEntity);
+  const exportArr = getModuleExportElements(props.moduleEntity);
   let innerExportString = '';
   exportArr.forEach(value => {
     if (value.type === 'module' && !value.name.startsWith("'") && !value.name.startsWith('"')) {
@@ -283,13 +446,12 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
     }
   });
   if (innerExportString !== '') {
-    moduleBody += '\t' + innerExportString;
+    props.moduleBody += '\t' + innerExportString;
   }
-
-  moduleBody += '\t};';
-  moduleBody += `\n\treturn ${innerModuleName};}\n`;
-  moduleBody += innerOutBody;
-  return moduleBody;
+  return {
+    innerModuleName: props.innerModuleName,
+    moduleBody: props.moduleBody
+  };
 }
 
 /**
@@ -298,7 +460,7 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
  * @returns
  */
 function generateInnerDeclareModule(moduleEntity: ModuleBlockEntity): string {
-  let moduleName = '$' + moduleEntity.moduleName.replace(/["']/g, '');
+  const moduleName = '$' + moduleEntity.moduleName.replace(/["']/g, '');
   let module = `\n\texport const ${moduleName} = `;
   if (moduleEntity.exportDeclarations.length > 0) {
     moduleEntity.exportDeclarations.forEach(value => {
@@ -411,9 +573,4 @@ function getModuleExportElements(moduleEntity: ModuleBlockEntity): Array<ModuleE
     });
   }
   return exportElements;
-}
-
-interface ModuleExportEntity {
-  type: string,
-  name: string
 }

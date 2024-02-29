@@ -55,7 +55,7 @@ import {
  * @param sourceFileEntity all node information in the file
  * @param sourceFile file Text Information
  * @param fileName file name
- * @returns file mock text 
+ * @returns file mock text
  */
 export function generateSourceFileElements(
   rootName: string,
@@ -193,12 +193,12 @@ function typeAliasDeclarationsGenerate(
  * @param sourceFileEntity all node information in the file
  * @param mockFunctionElements all function element entity
  * @param sourceFile file Text Information
- * @param extraImport extra import data
- * @param mockApi file mock text
+ * @param extraImport Additional exported data
+ * @param mockApi  file mock into text
  * @returns ReturnDataParams
  */
 function interfaceDeclarationsGenerate(
-  sourceFileEntity: SourceFileEntity,
+  entity: SourceFileEntity,
   mockFunctionElements: Array<MockFunctionElementEntity>,
   sourceFile: SourceFile,
   extraImport: string[],
@@ -208,11 +208,11 @@ function interfaceDeclarationsGenerate(
     mockData: '',
     mockFunctionElements: mockFunctionElements
   };
-  if (sourceFileEntity.interfaceDeclarations.length > 0) {
-    sourceFileEntity.interfaceDeclarations.forEach(value => {
+  if (entity.interfaceDeclarations.length > 0) {
+    entity.interfaceDeclarations.forEach(value => {
       data.mockData += generateInterfaceDeclaration(
-        value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
-        sourceFileEntity.importDeclarations, extraImport
+        value, sourceFile, true, mockApi, entity.interfaceDeclarations,
+        entity.importDeclarations, extraImport
       ) + '\n';
       data.mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
     });
@@ -415,7 +415,7 @@ export function generateImportDeclaration(
     return '';
   }
 
-  let tmpImportPath = importPath.replace(/'/g, '').replace(/"/g, '');
+  const tmpImportPath = importPath.replace(/'/g, '').replace(/"/g, '');
   if (!tmpImportPath.startsWith('./') && !tmpImportPath.startsWith('../')) {
     importPath = `'./${tmpImportPath}'`;
   }

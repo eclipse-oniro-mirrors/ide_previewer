@@ -16,9 +16,9 @@
 import {
   isClassDeclaration, isEnumDeclaration, isExportAssignment, isExportDeclaration, isFunctionDeclaration,
   isImportDeclaration, isInterfaceDeclaration, isModuleDeclaration, isTypeAliasDeclaration, isVariableStatement,
-  SyntaxKind
+  SyntaxKind, ClassDeclaration, FunctionDeclaration
 } from 'typescript';
-import type { SourceFile } from 'typescript';
+import type { Node, SourceFile } from 'typescript';
 import { getClassDeclaration } from './classDeclaration';
 import type { ClassEntity } from './classDeclaration';
 import { getEnumDeclaration } from './enumDeclaration';
@@ -37,6 +37,32 @@ import type { TypeAliasEntity } from './typeAliasDeclaration';
 import { getVariableStatementDeclaration } from './variableStatementResolve';
 import type { StatementEntity } from './variableStatementResolve';
 
+interface SubstepClassParams {
+  node: ClassDeclaration,
+  sourceFile: SourceFile,
+  classDeclarations: Array<ClassEntity>,
+  staticMethods: Array<Array<StaticMethodEntity>>,
+}
+
+interface SubstepFuntionParams {
+  node: FunctionDeclaration,
+  sourceFile: SourceFile,
+  functionDeclarations: Map<string, Array<FunctionEntity>>
+}
+
+export interface SourceFileEntity {
+  importDeclarations: Array<ImportElementEntity>,
+  moduleDeclarations: Array<ModuleBlockEntity>,
+  typeAliasDeclarations: Array<TypeAliasEntity>,
+  classDeclarations: Array<ClassEntity>,
+  interfaceDeclarations: Array<InterfaceEntity>,
+  enumDeclarations: Array<EnumEntity>,
+  exportAssignment: Array<string>,
+  staticMethods: Array<Array<StaticMethodEntity>>,
+  exportDeclarations: Array<string>,
+  functionDeclarations: Map<string, Array<FunctionEntity>>
+}
+
 /**
  * assembly all sourceFile node info
  * @param sourceFile
@@ -47,14 +73,13 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
   const importDeclarations: Array<ImportElementEntity> = [];
   const moduleDeclarations: Array<ModuleBlockEntity> = [];
   const typeAliasDeclarations: Array<TypeAliasEntity> = [];
-  const classDeclarations: Array<ClassEntity> = [];
+  let classDeclarations: Array<ClassEntity> = [];
   const interfaceDeclarations: Array<InterfaceEntity> = [];
   const enumDeclarations: Array<EnumEntity> = [];
   let exportAssignment: Array<string> = [];
-  const staticMethods: Array<Array<StaticMethodEntity>> = [];
+  let staticMethods: Array<Array<StaticMethodEntity>> = [];
   const exportDeclarations: Array<string> = [];
-  const functionDeclarations: Map<string, Array<FunctionEntity>> = new Map<string, Array<FunctionEntity>>();
-
+  let functionDeclarations: Map<string, Array<FunctionEntity>> = new Map<string, Array<FunctionEntity>>();
   sourceFile.forEachChild(node => {
     if (isImportDeclaration(node)) {
       importDeclarations.push(getImportDeclaration(node, sourceFile));
@@ -63,21 +88,9 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
     } else if (isTypeAliasDeclaration(node)) {
       typeAliasDeclarations.push(getTypeAliasDeclaration(node, sourceFile));
     } else if (isClassDeclaration(node)) {
-      let isDefaultExportClass = false;
-      if (node.modifiers !== undefined) {
-        node.modifiers.forEach(value => {
-          if (value.kind === SyntaxKind.DefaultKeyword) {
-            isDefaultExportClass = true;
-          }
-        });
-      }
-      if (isDefaultExportClass) {
-        const classDeclarationEntity = getClassDeclaration(node, sourceFile);
-        classDeclarations.push(classDeclarationEntity);
-        if (classDeclarationEntity.staticMethods.length > 0) {
-          staticMethods.push(classDeclarationEntity.staticMethods);
-        }
-      }
+      const substepClassBack = substepClass({ node, sourceFile, classDeclarations, staticMethods });
+      classDeclarations = substepClassBack.classDeclarations;
+      staticMethods = substepClassBack.staticMethods;
     } else if (isInterfaceDeclaration(node)) {
       interfaceDeclarations.push(getInterfaceDeclaration(node, sourceFile));
     } else if (isExportAssignment(node)) {
@@ -87,35 +100,23 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
     } else if (isExportDeclaration(node)) {
       exportDeclarations.push(sourceFile.text.substring(node.pos, node.end).trimStart().trimEnd());
     } else if (isFunctionDeclaration(node)) {
-      const functionEntity = getFunctionDeclaration(node, sourceFile);
-      if (functionDeclarations.get(functionEntity.functionName) !== undefined) {
-        functionDeclarations.get(functionEntity.functionName)?.push(functionEntity);
-      } else {
-        const functionArray: Array<FunctionEntity> = [];
-        functionArray.push(functionEntity);
-        functionDeclarations.set(functionEntity.functionName, functionArray);
-      }
+      const classParams = substepFunction({ node, sourceFile, functionDeclarations });
+      functionDeclarations = classParams.functionDeclarations;
     } else {
-      if (node.kind !== SyntaxKind.EndOfFileToken && !isFunctionDeclaration(node) && !isVariableStatement(node)) {
-        console.log('--------------------------- uncaught sourceFile type start -----------------------');
-        console.log('fileName: ' + fileName);
-        console.log(node);
-        console.log('--------------------------- uncaught sourceFile type end -----------------------');
-      }
+      substepConsole(node, fileName);
     }
   });
-
   return {
-    importDeclarations: importDeclarations,
-    moduleDeclarations: moduleDeclarations,
-    typeAliasDeclarations: typeAliasDeclarations,
-    classDeclarations: classDeclarations,
-    interfaceDeclarations: interfaceDeclarations,
-    enumDeclarations: enumDeclarations,
-    exportAssignment: exportAssignment,
-    staticMethods: staticMethods,
-    exportDeclarations: exportDeclarations,
-    functionDeclarations: functionDeclarations,
+    importDeclarations,
+    moduleDeclarations,
+    typeAliasDeclarations,
+    classDeclarations,
+    interfaceDeclarations,
+    enumDeclarations,
+    exportAssignment,
+    staticMethods,
+    exportDeclarations,
+    functionDeclarations
   };
 }
 
@@ -169,6 +170,74 @@ export function getSourceFileFunctions(sourceFile: SourceFile): Map<string, Arra
     }
   });
   return functionDeclarations;
+}
+
+/**
+ * assembly some sourceFile node info
+ * @param substepClassParams
+ * @returns
+ */
+function substepClass(substepClassParams: SubstepClassParams): SubstepClassParams {
+  let isDefaultExportClass = false;
+  if (substepClassParams.node.modifiers !== undefined) {
+    substepClassParams.node.modifiers.forEach(value => {
+      if (value.kind === SyntaxKind.DefaultKeyword) {
+        isDefaultExportClass = true;
+      }
+    });
+  }
+  if (isDefaultExportClass) {
+    const classDeclarationEntity = getClassDeclaration(substepClassParams.node, substepClassParams.sourceFile);
+    substepClassParams.classDeclarations.push(classDeclarationEntity);
+    if (classDeclarationEntity.staticMethods.length > 0) {
+      substepClassParams.staticMethods.push(classDeclarationEntity.staticMethods);
+    }
+  }
+  return substepClassParams;
+}
+
+/**
+ * assembly some sourceFile node info
+ * @param substepClassParams
+ * @returns
+ */
+function substepFunction(substepClassParams: SubstepFuntionParams): SubstepFuntionParams {
+  const functionEntity = getFunctionDeclaration(substepClassParams.node, substepClassParams.sourceFile);
+  if (substepClassParams.functionDeclarations.get(functionEntity.functionName) !== undefined) {
+    substepClassParams.functionDeclarations.get(functionEntity.functionName)?.push(functionEntity);
+  } else {
+    const functionArray: Array<FunctionEntity> = [];
+    functionArray.push(functionEntity);
+    substepClassParams.functionDeclarations.set(functionEntity.functionName, functionArray);
+  }
+  return substepClassParams;
+}
+
+/**
+ * assembly some sourceFile node info
+ * @param substepClassParams
+ * @returns
+ */
+function substepConsole(node: Node, fileName: string) {
+  if (node.kind !== SyntaxKind.EndOfFileToken && !isFunctionDeclaration(node) && !isVariableStatement(node)) {
+    console.log('--------------------------- uncaught sourceFile type start -----------------------');
+    console.log('fileName: ' + fileName);
+    console.log(node);
+    console.log('--------------------------- uncaught sourceFile type end -----------------------');
+  }
+}
+
+interface SubstepClassParams {
+  node: ClassDeclaration,
+  sourceFile: SourceFile,
+  classDeclarations: Array<ClassEntity>,
+  staticMethods: Array<Array<StaticMethodEntity>>,
+}
+
+interface SubstepFuntionParams {
+  node: FunctionDeclaration,
+  sourceFile: SourceFile,
+  functionDeclarations: Map<string, Array<FunctionEntity>>
 }
 
 export interface SourceFileEntity {
