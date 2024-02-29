@@ -388,8 +388,13 @@ const removeCallback = (str: string): { type: string, value: string } => {
     value: ''
   };
   if (str.startsWith('Callback')) {
-    callbackParams.value = str.slice(0, str.length - 1).slice(9).trim();
-    callbackParams.type = 'Callback';
+    if (str.lastIndexOf('>') < str.lastIndexOf(' | ')) {
+      callbackParams.value = str.slice(0, str.lastIndexOf('>')).slice(9).trim();
+      callbackParams.type = 'Callback';
+    } else {
+      callbackParams.value = str.slice(0, str.length - 1).slice(9).trim();
+      callbackParams.type = 'Callback';
+    }
   } else if (str.startsWith('AsyncCallback')) {
     callbackParams.value = str.slice(0, str.length - 1).slice(14).trim();
     callbackParams.type = 'AsyncCallback';
