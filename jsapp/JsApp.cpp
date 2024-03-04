@@ -183,4 +183,4 @@ bool JsApp::MemoryRefresh(const std::string) const
 
 void JsApp::LoadDocument(const std::string, const std::string, const Json::Value) {}
 
-void JsApp::FoldStatusChanged(const std::string commandFoldStatus) {}
+void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) {}
