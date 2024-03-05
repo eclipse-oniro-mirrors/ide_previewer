@@ -1478,6 +1478,16 @@ bool FoldStatusCommand::IsSetArgValid() const
         ELOG("Invalid FoldStatus of arguments!");
         return false;
     }
+    if (!args.IsMember("width") || !args["width"].IsInt() ||
+        !args.IsMember("height") || !args["height"].IsInt()) {
+        ELOG("Invalid width and height of arguments!");
+        return false;
+    }
+    if (args["width"].AsInt() < minWidth || args["width"].AsInt() > maxWidth ||
+        args["height"].AsInt() < minWidth || args["height"].AsInt() > maxWidth) {
+        ELOG("width or height is out of range %d-%d", minWidth, maxWidth);
+        return false;
+    }
     if (args["FoldStatus"].AsString() == "fold" || args["FoldStatus"].AsString() == "unfold" ||
         args["FoldStatus"].AsString() == "unknown" || args["FoldStatus"].AsString() == "half_fold") {
         return true;
@@ -1489,9 +1499,11 @@ bool FoldStatusCommand::IsSetArgValid() const
 void FoldStatusCommand::RunSet()
 {
     std::string commandStatus = args["FoldStatus"].AsString();
+    int32_t width = args["width"].AsInt();
+    int32_t height = args["height"].AsInt();
     std::string currentStatus = VirtualScreenImpl::GetInstance().GetFoldStatus();
     if (commandStatus != currentStatus) {
-        JsAppImpl::GetInstance().FoldStatusChanged(commandStatus);
+        JsAppImpl::GetInstance().FoldStatusChanged(commandStatus, width, height);
     }
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].AsString().c_str());
