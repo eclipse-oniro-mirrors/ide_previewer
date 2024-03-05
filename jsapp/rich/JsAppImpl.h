@@ -76,7 +76,7 @@ public:
     void SetConfigChanges(const std::string value) override;
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
     void LoadDocument(const std::string, const std::string, const Json::Value) override;
-    void FoldStatusChanged(const std::string commandFoldStatus) override;
+    void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) override;
 
     void DispatchBackPressedEvent() const;
     void DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const;
