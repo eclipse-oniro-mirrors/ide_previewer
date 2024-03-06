@@ -14,7 +14,7 @@
  */
 
 #include "CommandParser.h"
-
+#include <cstring>
 #include <algorithm>
 #include <cstdlib>
 #include <regex>
