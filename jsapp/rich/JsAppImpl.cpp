@@ -303,9 +303,11 @@ void JsAppImpl::RunDebugAbility()
         });
     SetMockJsonInfo();
     std::string abilitySrcPath = CommandParser::GetInstance().GetAbilityPath();
-    debugAbilityId = simulator->StartAbility(abilitySrcPath, [](int64_t abilityId) {});
+    std::string abilityName = CommandParser::GetInstance().GetAbilityName();
+    debugAbilityId = simulator->StartAbility(abilitySrcPath, [](int64_t abilityId) {}, abilityName);
     if (debugAbilityId < 0) {
-        ELOG("JsApp::Run ability start failed. abilitySrcPath:%s", abilitySrcPath.c_str());
+        ELOG("JsApp::Run ability start failed. abilitySrcPath:%s abilityName:%s", abilitySrcPath.c_str(),
+            abilityName.c_str());
         return;
     }
     // set onRender callback
