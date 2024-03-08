@@ -158,13 +158,6 @@ static void ProcessCommand()
     JsAppImpl::GetInstance().Stop();
 }
 
-#ifdef _WIN32
-static void InitGlfw()
-{
-    JsAppImpl::GetInstance().InitGlfwEnv();
-}
-#endif
-
 static void InitSharedData()
 {
     CommandParser& parser = CommandParser::GetInstance();
@@ -189,10 +182,6 @@ int main(int argc, char* argv[])
     }
     // init exception handler
     richCrashHandler->InitExceptionHandler();
-#ifdef _WIN32
-    std::thread glfwThread(InitGlfw);
-    glfwThread.detach();
-#endif
     // Parsing User Commands
     CommandParser& parser = CommandParser::GetInstance();
     vector<string> strs;
