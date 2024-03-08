@@ -57,6 +57,7 @@ public:
     bool CheckParamInvalidity(std::string param, bool isNum);
     bool IsComponentMode() const;
     std::string GetAbilityPath() const;
+    std::string GetAbilityName() const;
     bool IsStaticCard() const;
     bool IsMainArgLengthInvalid(const char* str) const;
     bool IsFoldable() const;
@@ -117,6 +118,7 @@ private:
     std::string regex4Str = "^(?:[a-zA-Z0-9-_./\\s]+)$";
     bool isComponentMode;
     std::string abilityPath;
+    std::string abilityName;
     bool staticCard;
     const size_t maxMainArgLength = 1024;
     bool foldable;
@@ -156,6 +158,7 @@ private:
     bool IsContainerSdkPathValid();
     bool IsComponentModeValid();
     bool IsAbilityPathValid();
+    bool IsAbilityNameValid();
     bool IsStaticCardValid();
     bool IsFoldableValid();
     bool IsFoldStatusValid();
