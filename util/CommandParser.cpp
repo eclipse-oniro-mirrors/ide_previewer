@@ -82,6 +82,7 @@ CommandParser::CommandParser()
     Register("-hsp", 1, "Set container sdk path.");
     Register("-cpm", 1, "Set previewer start mode.");
     Register("-abp", 1, "Set abilityPath for debug.");
+    Register("-abn", 1, "Set abilityName for debug.");
     Register("-staticCard", 1, "Set card mode.");
     Register("-foldable", 1, "Set foldable for Previewer.");
     Register("-foldStatus", 1, "Set fold status for Previewer.");
@@ -126,6 +127,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
+    partRet = partRet && IsAbilityNameValid();
     if (partRet) {
         return true;
     }
@@ -278,6 +280,11 @@ bool CommandParser::IsComponentMode() const
 string CommandParser::GetAbilityPath() const
 {
     return abilityPath;
+}
+
+string CommandParser::GetAbilityName() const
+{
+    return abilityName;
 }
 
 bool CommandParser::IsStaticCard() const
@@ -835,6 +842,28 @@ bool CommandParser::IsAbilityPathValid()
         return false;
     }
     abilityPath = path;
+    return true;
+}
+
+bool CommandParser::IsAbilityNameValid()
+{
+    if (!IsSet("d")) {
+        return true;
+    }
+    if (deviceType == "liteWearable" || deviceType == "smartVision") {
+        return true;
+    }
+    if (!IsSet("abn")) {
+        ELOG("Launch -d parameters without -abn parameters.");
+        return true; // 兼容老版本IDE（沒有abn参数）
+    }
+    string name = Value("abn");
+    if (name.empty()) {
+        errorInfo = string("The ability name is empty.");
+        ELOG("Launch -abn parameters abnormal!");
+        return false;
+    }
+    abilityName = name;
     return true;
 }
 
