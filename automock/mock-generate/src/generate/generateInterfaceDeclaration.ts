@@ -159,7 +159,7 @@ function searchHasExtraImport(specialFilesList: string[], propertyTypeName: stri
     let specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
     const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
     specialFileContent = specialFileContent.replace(removeNoteRegx, '');
-    const regex = new RegExp(`\\s${propertyTypeName}\\s({|=|extends)`);
+    const regex = new RegExp(`\\s${propertyTypeName}\\s?(<|{|=|extends)`);
     const results = specialFileContent.match(regex);
     if (!results) {
       continue;
