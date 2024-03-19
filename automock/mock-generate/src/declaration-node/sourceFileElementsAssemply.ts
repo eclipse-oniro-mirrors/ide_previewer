@@ -16,9 +16,9 @@
 import {
   isClassDeclaration, isEnumDeclaration, isExportAssignment, isExportDeclaration, isFunctionDeclaration,
   isImportDeclaration, isInterfaceDeclaration, isModuleDeclaration, isTypeAliasDeclaration, isVariableStatement,
-  SyntaxKind, ClassDeclaration, FunctionDeclaration
+  SyntaxKind
 } from 'typescript';
-import type { Node, SourceFile } from 'typescript';
+import type { Node, SourceFile, ClassDeclaration, FunctionDeclaration } from 'typescript';
 import { getClassDeclaration } from './classDeclaration';
 import type { ClassEntity } from './classDeclaration';
 import { getEnumDeclaration } from './enumDeclaration';

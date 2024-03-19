@@ -138,7 +138,9 @@ function parseImportExpression(
     const importFileContent = fs.readFileSync(importPath, 'utf-8');
     if (properties.startsWith('.default')) {
       const result = substepParseImportExpression({importFileContent, realImportPath, extraImport, properties});
-      return result;
+      if (result !== '') {
+        return result;
+      }
     } else {
       const moduleName = properties.replace('.', '').split('.')[0];
       const importStr = `import {${moduleName} as _${moduleName}} from '${realImportPath}';\n`;
@@ -170,5 +172,6 @@ function substepParseImportExpression(props:SubstepParseProps): string {
     !props.extraImport.includes(importStr) && props.extraImport.push(importStr);
     return `${mockFunctionName}()${props.properties.replace('.default', '')}`;
   }
+  return '';
 }
 
