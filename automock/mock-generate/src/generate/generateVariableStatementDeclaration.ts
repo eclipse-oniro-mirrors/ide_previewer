@@ -57,7 +57,7 @@ export function generateVariableStatementDelcatation(statementEntity: StatementE
   return statementBody;
 }
 
-function judgmentStatementEntity(statementEntity: StatementEntity, statementValue: string): any {
+function judgmentStatementEntity(statementEntity: StatementEntity, statementValue: string): string {
   if (statementEntity.initializer === '') {
     if (statementEntity.typeName.endsWith('n')) {
       statementValue = statementEntity.typeName.replace('n', '');
@@ -69,7 +69,7 @@ function judgmentStatementEntity(statementEntity: StatementEntity, statementValu
   }
   return statementValue;
 }
-function judgmentStatementEntityTypeName(statementEntity: StatementEntity, statementValue: string): any {
+function judgmentStatementEntityTypeName(statementEntity: StatementEntity, statementValue: string): string {
   if (statementEntity.typeName.includes('<')) {
     const tmpTypeName = statementEntity.typeName.split('<')[0];
     if (getClassNameSet().has(tmpTypeName)) {
