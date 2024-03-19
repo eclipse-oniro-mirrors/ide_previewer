@@ -16,9 +16,9 @@
 import {
   isClassDeclaration, isEnumDeclaration, isExportDeclaration, isFunctionDeclaration, isIdentifier,
   isImportEqualsDeclaration, isInterfaceDeclaration, isModuleBlock, isModuleDeclaration, isTypeAliasDeclaration,
-  isVariableStatement, ModuleBody
+  isVariableStatement
 } from 'typescript';
-import type { ModuleDeclaration, Node, SourceFile } from 'typescript';
+import type { ModuleDeclaration, Node, SourceFile, ModuleBody} from 'typescript';
 import { getExportKeyword } from '../common/commonUtils';
 import { getClassDeclaration } from './classDeclaration';
 import type { ClassEntity } from './classDeclaration';
