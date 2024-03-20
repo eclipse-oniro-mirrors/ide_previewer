@@ -5,6 +5,7 @@
   "license": "Apache 2.0",
   "main": "index.js",
   "scripts": {
+    "test": "mocha --require ts-node/register src/test/*.ts",
     "test:lint": "eslint -c .eslintrc --fix test/**/*.ts",
     "test:unit": "mocha --timeout 5000 -r ts-node/register test/lib.ts test/ut/**/*.ts test/ut/*.ts",
     "build:mock": "cd ./mock-generate && npm run build",
@@ -38,7 +39,9 @@
     "ts-node": "^9.0.0",
     "tslib": "^2.0.3",
     "@types/jest": "^27.4.1",
+    "@types/chai": "^4.3.12",
     "@types/node": "^17.0.23",
+    "@types/mocha": "^10.0.6",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^4.8.2",
     "eslint": "^7.14.0",
