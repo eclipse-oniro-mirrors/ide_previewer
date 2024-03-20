@@ -18,7 +18,7 @@ import {
   isImportEqualsDeclaration, isInterfaceDeclaration, isModuleBlock, isModuleDeclaration, isTypeAliasDeclaration,
   isVariableStatement
 } from 'typescript';
-import type { ModuleDeclaration, Node, SourceFile, ModuleBody} from 'typescript';
+import type { ModuleDeclaration, Node, SourceFile, ModuleBody } from 'typescript';
 import { getExportKeyword } from '../common/commonUtils';
 import { getClassDeclaration } from './classDeclaration';
 import type { ClassEntity } from './classDeclaration';
