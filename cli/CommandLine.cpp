@@ -552,7 +552,7 @@ bool FontSelectCommand::IsSetArgValid() const
 void FontSelectCommand::RunSet()
 {
     SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("FontSelect finished, currentSelect is: %d", args["FontSelect"].AsBool());
+    ILOG("FontSelect finished, currentSelect is: %s", args["FontSelect"].AsBool() ? "true" : "false");
 }
 
 MemoryRefreshCommand::MemoryRefreshCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
@@ -929,7 +929,7 @@ void WearingStateCommand::RunSet()
 {
     SharedData<bool>::SetData(SharedDataType::WEARING_STATE, args["WearingState"].AsBool());
     SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set wearingState run finished, the value is: %s", args["WearingState"].AsString().c_str());
+    ILOG("Set wearingState run finished, the value is: %s", args["WearingState"].AsBool() ? "true" : "false");
 }
 
 bool WearingStateCommand::IsSetArgValid() const
@@ -1044,7 +1044,7 @@ void BrightnessCommand::RunSet()
                                  static_cast<uint8_t>(args["Brightness"].AsInt()));
     Json2::Value result = JsonReader::CreateBool(true);
     SetCommandResult("result", result);
-    ILOG("Set brightness run finished, the value is: %s", args["Brightness"].AsInt());
+    ILOG("Set brightness run finished, the value is: %d", args["Brightness"].AsInt());
 }
 
 bool BrightnessCommand::IsSetArgValid() const
@@ -1277,7 +1277,7 @@ void DropFrameCommand::RunSet()
     int frequency = args["frequency"].AsInt();
     VirtualScreenImpl::GetInstance().SetDropFrameFrequency(frequency);
     SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set DropFrame frequency: %sms.", frequency);
+    ILOG("Set DropFrame frequency: %dms.", frequency);
 }
 
 bool KeyPressCommand::IsActionArgValid() const
