@@ -24,14 +24,21 @@ public:
     VirtualScreenImpl& operator=(const VirtualScreenImpl&) = delete;
     static VirtualScreenImpl& GetInstance();
     static void StartTimer();
+    static bool FlushEmptyFunc(std::chrono::system_clock::time_point endTime, int64_t timePassed);
+    static bool NoFlushEmptyFunc(int64_t timePassed);
+    static void PrintLoadDocFinishedLog(const std::string& logStr);
+    static void SendBufferOnTimer();
     static bool LoadDocCallback(const void* data, const size_t length,
-                                const int32_t width, const int32_t height);
-    static bool CallBack(const void* data, const size_t length, const int32_t width, const int32_t height);
-    static bool PageCallBack(const std::string currentRouterPath);
-    static bool LoadContentCallBack(const std::string currentRouterPath);
-    static void FastPreviewCallBack(const std::string& jsonStr);
+                                const int32_t width, const int32_t height, const uint64_t timeStamp);
+    static bool Callback(const void* data, const size_t length, const int32_t width, const int32_t height,
+        const uint64_t timeStamp);
+    static bool FlushEmptyCallback(const uint64_t timeStamp);
+    void InitFlushEmptyTime() override;
+    static bool PageCallback(const std::string currentRouterPath);
+    static bool LoadContentCallback(const std::string currentRouterPath);
+    static void FastPreviewCallback(const std::string& jsonStr);
     void InitAll(std::string pipeName, std::string pipePort);
-
+    void SetJudgeAsyncLoadFunc(const std::function<bool(void)> func);
 private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();
@@ -62,6 +69,17 @@ private:
     size_t lengthTemp;
     int32_t widthTemp;
     int32_t heightTemp;
+    uint64_t timeStampTemp;
+
+    static constexpr int TIMEOUT_ONRENDER_DURATION_MS = 100;
+    static constexpr int TIMEOUT_NINE_S = 9000;
+    static constexpr int64_t SEC_TO_NANOSEC = 1000000000;
+    bool isFlushEmpty = false;
+    uint64_t loadDocTimeStamp = 0;
+    uint64_t flushEmptyTimeStamp = 0;
+    std::chrono::system_clock::time_point flushEmptyTime = std::chrono::system_clock::time_point::min();
+    std::chrono::system_clock::time_point onRenderTime = std::chrono::system_clock::time_point::min();
+    std::function<bool(void)> judgeAsyncLoadFunc = nullptr;
 };
 
 #endif // VIRTUALSREENIMPL_H

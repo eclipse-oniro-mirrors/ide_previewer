@@ -101,6 +101,7 @@ public:
     void SetCurrentResolution(int32_t width, int32_t height);
     int32_t GetCurrentWidth() const;
     int32_t GetCurrentHeight() const;
+    virtual void InitFlushEmptyTime();
 
 protected:
     // start width and height

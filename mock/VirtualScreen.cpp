@@ -369,3 +369,5 @@ int32_t VirtualScreen::GetCurrentHeight() const
 {
     return currentHeight;
 }
+
+void VirtualScreen::InitFlushEmptyTime() {}
