@@ -44,7 +44,7 @@ export function generateVariableStatementDelcatation(statementEntity: StatementE
   } else if (statementEntity.typeKind === SyntaxKind.BooleanKeyword) {
     statementValue = 'true';
   } else if (statementEntity.initializer !== '') {
-    statementValue = statementEntity.initializer.endsWith('n').toString();;
+    statementValue = statementEntity.initializer.endsWith('n').toString();
   } else {
     statementValue = `'[PC Preivew] unknown ${statementEntity.statementName}'`;
   }

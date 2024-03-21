@@ -133,6 +133,9 @@ function importDeclarationsGenerate(
       }
     });
   }
+  if (fileName === 'ohos_arkui_observer') {
+    mockData += 'const NavigationOperation = { PUSH: 1, POP: 2, REPLACE: 3 }\n';
+  }
   return mockData;
 }
 
