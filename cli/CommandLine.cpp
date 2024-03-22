@@ -647,6 +647,7 @@ void LoadDocumentCommand::RunSet()
     ILOG("LoadDocumentCommand begin.");
     std::string pageUrl = args["url"].AsString();
     std::string className = args["className"].AsString();
+    VirtualScreenImpl::GetInstance().InitFlushEmptyTime();
     JsAppImpl::GetInstance().LoadDocument(pageUrl, className, args["previewParam"]);
     VirtualScreenImpl::GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::FINISHED);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -893,8 +894,7 @@ void KeepScreenOnStateCommand::RunGet()
 void KeepScreenOnStateCommand::RunSet()
 {
     SharedData<bool>::SetData(SharedDataType::KEEP_SCREEN_ON, args["KeepScreenOnState"].AsBool());
-    Json2::Value result = JsonReader::CreateBool(true);
-    SetCommandResult("result", result);
+    SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set keepScreenOnState run finished, the value is: %s",
         args["KeepScreenOnState"].AsBool() ? "true" : "false");
 }
@@ -962,8 +962,7 @@ void BrightnessModeCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::BRIGHTNESS_MODE,
                                  static_cast<uint8_t>(args["BrightnessMode"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
-    SetCommandResult("result", result);
+    SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set brightnessMode run finished, the value is: %d", args["BrightnessMode"].AsInt());
 }
 
@@ -1002,8 +1001,7 @@ void ChargeModeCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::BATTERY_STATUS,
                                  static_cast<uint8_t>(args["ChargeMode"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
-    SetCommandResult("result", result);
+    SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set chargeMode run finished, the value is: %d", args["ChargeMode"].AsInt());
 }
 
@@ -1082,8 +1080,7 @@ void HeartRateCommand::RunSet()
 {
     SharedData<uint8_t>::SetData(SharedDataType::HEARTBEAT_VALUE,
                                  static_cast<uint8_t>(args["HeartRate"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
-    SetCommandResult("result", result);
+    SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set heartRate run finished, the value is: %d", args["HeartRate"].AsInt());
 }
 
@@ -1126,8 +1123,7 @@ void StepCountCommand::RunSet()
 {
     SharedData<uint32_t>::SetData(SharedDataType::SUMSTEP_VALUE,
                                   static_cast<uint32_t>(args["StepCount"].AsInt()));
-    Json2::Value result = JsonReader::CreateBool(true);
-    SetCommandResult("result", result);
+    SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set stepCount run finished, the value is: %d", args["StepCount"].AsInt());
 }
 
@@ -1507,4 +1503,26 @@ void FoldStatusCommand::RunSet()
     }
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].AsString().c_str());
+}
+
+SetAsyncCheckListCommand::SetAsyncCheckListCommand(CommandType commandType, const Json2::Value& arg,
+    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+{
+}
+
+bool SetAsyncCheckListCommand::IsSetArgValid() const
+{
+    if (args.IsNull() || !args.IsMember("components") || !args["components"].IsObject() ||
+        !args.IsMember("attributes") || !args["attributes"].IsObject()) {
+        ELOG("Invalid SetAsyncCheckList of arguments!");
+        return false;
+    }
+    return true;
+}
+
+void SetAsyncCheckListCommand::RunSet()
+{
+    JsAppImpl::GetInstance().SetAsyncCheckList(args);
+    SetCommandResult("result", JsonReader::CreateBool(true));
+    ILOG("Set SetAsyncCheckList run finished");
 }
