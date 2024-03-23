@@ -298,11 +298,11 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
     unsigned char* dataTemp = new unsigned char[retWidth * retHeight * jpgPix];
     for (int i = 0; i < retHeight; i++) {
         for (int j = 0; j < retWidth; j++) {
-            int input_base_pos = i * retWidth * pixelSize + j * pixelSize;
-            int now_base_pos = i * retWidth * jpgPix + j * jpgPix;
-            dataTemp[now_base_pos + redPos] = *((char*)data + input_base_pos + redPos);
-            dataTemp[now_base_pos + greenPos] = *((char*)data + input_base_pos + greenPos);
-            dataTemp[now_base_pos + bluePos] = *((char*)data + input_base_pos + bluePos);
+            int inputBasePos = i * retWidth * pixelSize + j * pixelSize;
+            int nowBasePos = i * retWidth * jpgPix + j * jpgPix;
+            dataTemp[nowBasePos + redPos] = *((char*)data + inputBasePos + redPos);
+            dataTemp[nowBasePos + greenPos] = *((char*)data + inputBasePos + greenPos);
+            dataTemp[nowBasePos + bluePos] = *((char*)data + inputBasePos + bluePos);
         }
     }
     VirtualScreen::RgbToJpg(dataTemp, retWidth, retHeight);
