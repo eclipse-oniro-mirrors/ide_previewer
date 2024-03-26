@@ -49,20 +49,6 @@ namespace AppExecFwk {
 
 class JsAppImpl : public JsApp {
 public:
-    class Attribute {
-    public:
-        std::string name;
-        std::vector<std::string> values;
-        bool isSync;
-        bool skip;
-    };
-
-    class Component {
-    public:
-        std::string name;
-        std::vector<Attribute> attrs;
-    };
-
     JsAppImpl() noexcept;
     ~JsAppImpl();
     JsAppImpl& operator=(const JsAppImpl&) = delete;
@@ -98,8 +84,6 @@ public:
     void DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const;
     void DispatchInputMethodEvent(const unsigned int codePoint) const;
     void InitGlfwEnv();
-    bool IsAsyncLoad();
-    void SetAsyncCheckList(const Json2::Value& json) override;
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);
@@ -145,12 +129,6 @@ private:
     void SetDeviceScreenDensity(const int32_t screenDensity, const std::string type);
     std::string GetDeviceTypeName(const OHOS::Ace::DeviceType) const;
     OHOS::Rosen::FoldStatus ConvertFoldStatus(std::string value) const;
-    bool HaveAsyncLoad(const Json2::Value& node);
-    bool HaveAsyncComponent(const std::string& compName, const Json2::Value& attrJson, bool& skip);
-    bool HaveAsyncAttribute(std::vector<Attribute>& attrs, const Json2::Value& attrJson, bool& skip);
-    void GetComponents(std::vector<Component>& vec, Json2::Value& components) const;
-    void GetAttributes(std::vector<Attribute>& attrVec, Json2::Value& attribute) const;
-    void GetAttributeValues(std::vector<std::string>& values, Json2::Value& attrChild) const;
     const double BASE_SCREEN_DENSITY = 160; // Device Baseline Screen Density
     std::unique_ptr<OHOS::Ace::Platform::AceAbility> ability;
     std::atomic<bool> isStop;
@@ -160,9 +138,6 @@ private:
     int32_t orignalHeight = 0;
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
-    bool isAsyncLoad = false;
-    std::vector<Component> checkComps;
-    std::vector<Attribute> checkAttrs;
 #if defined(__APPLE__) || defined(_WIN32)
     std::unique_ptr<OHOS::AbilityRuntime::Simulator> simulator;
     int64_t debugAbilityId = -1;

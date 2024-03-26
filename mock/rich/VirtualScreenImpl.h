@@ -38,7 +38,6 @@ public:
     static bool LoadContentCallback(const std::string currentRouterPath);
     static void FastPreviewCallback(const std::string& jsonStr);
     void InitAll(std::string pipeName, std::string pipePort);
-    void SetJudgeAsyncLoadFunc(const std::function<bool(void)> func);
 private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();
@@ -79,7 +78,6 @@ private:
     uint64_t flushEmptyTimeStamp = 0;
     std::chrono::system_clock::time_point flushEmptyTime = std::chrono::system_clock::time_point::min();
     std::chrono::system_clock::time_point onRenderTime = std::chrono::system_clock::time_point::min();
-    std::function<bool(void)> judgeAsyncLoadFunc = nullptr;
 };
 
 #endif // VIRTUALSREENIMPL_H
