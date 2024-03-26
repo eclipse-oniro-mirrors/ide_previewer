@@ -501,14 +501,4 @@ protected:
     void RunSet() override;
     bool IsSetArgValid() const override;
 };
-
-class SetAsyncCheckListCommand : public CommandLine {
-public:
-    SetAsyncCheckListCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
-    ~SetAsyncCheckListCommand() override {}
-
-protected:
-    void RunSet() override;
-    bool IsSetArgValid() const override;
-};
 #endif // COMMANDLINE_H

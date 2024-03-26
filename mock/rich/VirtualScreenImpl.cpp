@@ -101,14 +101,9 @@ bool VirtualScreenImpl::NoFlushEmptyFunc(int64_t timePassed)
 {
     if (timePassed >= SEND_IMG_DURATION_MS &&
         GetInstance().onRenderTime != std::chrono::system_clock::time_point::min()) {
-        if (GetInstance().judgeAsyncLoadFunc) {
-            bool asyncLoad = GetInstance().judgeAsyncLoadFunc();
-            if (asyncLoad) {
-                SendBufferOnTimer(); // 没有收到结束标记，300ms内有出图选取最后一张图
-                PrintLoadDocFinishedLog("async load, flushEmpty timeout, onRender normal");
-                return true;
-            }
-        }
+        SendBufferOnTimer(); // 没有收到结束标记，300ms内有出图选取最后一张图
+        PrintLoadDocFinishedLog("async load, flushEmpty timeout, onRender normal");
+        return true;
     }
     if (timePassed >= TIMEOUT_NINE_S) {
         SendBufferOnTimer();
@@ -404,9 +399,4 @@ void VirtualScreenImpl::FreeJpgMemory()
         delete [] loadDocTempBuffer;
         loadDocTempBuffer = nullptr;
     }
-}
-
-void VirtualScreenImpl::SetJudgeAsyncLoadFunc(const std::function<bool(void)> func)
-{
-    judgeAsyncLoadFunc = std::move(func);
 }

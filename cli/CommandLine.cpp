@@ -1504,25 +1504,3 @@ void FoldStatusCommand::RunSet()
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].AsString().c_str());
 }
-
-SetAsyncCheckListCommand::SetAsyncCheckListCommand(CommandType commandType, const Json2::Value& arg,
-    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
-{
-}
-
-bool SetAsyncCheckListCommand::IsSetArgValid() const
-{
-    if (args.IsNull() || !args.IsMember("components") || !args["components"].IsObject() ||
-        !args.IsMember("attributes") || !args["attributes"].IsObject()) {
-        ELOG("Invalid SetAsyncCheckList of arguments!");
-        return false;
-    }
-    return true;
-}
-
-void SetAsyncCheckListCommand::RunSet()
-{
-    JsAppImpl::GetInstance().SetAsyncCheckList(args);
-    SetCommandResult("result", JsonReader::CreateBool(true));
-    ILOG("Set SetAsyncCheckList run finished");
-}

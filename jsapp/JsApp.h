@@ -71,7 +71,6 @@ public:
     virtual bool MemoryRefresh(const std::string) const;
     virtual void LoadDocument(const std::string, const std::string, const Json2::Value&);
     virtual void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height);
-    virtual void SetAsyncCheckList(const Json2::Value& json);
 protected:
     JsApp();
     virtual ~JsApp() {};

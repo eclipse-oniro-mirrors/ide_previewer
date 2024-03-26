@@ -96,12 +96,6 @@ void JsAppImpl::Restart()
 std::string JsAppImpl::GetJSONTree()
 {
     std::string jsonTree = ability->GetJSONTree();
-    if (VirtualScreenImpl::GetInstance().GetLoadDocFlag() == VirtualScreen::LoadDocType::NORMAL) {
-        if (isAsyncLoad) {
-            jsonTree.insert(1, "\"isAsyncLoad\":\"true\",");
-            ILOG("loadDoc: add isAsyncLoad=true to jsonTree successed");
-        }
-    }
     return jsonTree;
 }
 
@@ -245,12 +239,6 @@ void JsAppImpl::RunNormalAbility()
             *buffSize = data->size();
             return true;
         });
-    Platform::AcePreviewHelper::GetInstance()->SetCallbackFlushEmpty(VirtualScreenImpl::FlushEmptyCallback);
-    VirtualScreenImpl::GetInstance().SetJudgeAsyncLoadFunc(
-        []() -> bool {
-            return JsAppImpl::GetInstance().IsAsyncLoad();
-        }
-    );
     if (ability != nullptr) {
         ability.reset();
     }
@@ -805,7 +793,6 @@ void JsAppImpl::LoadDocument(const std::string filePath,
                              const Json2::Value& previewContext)
 {
     ILOG("LoadDocument.");
-    isAsyncLoad = false;
     if (ability != nullptr) {
         OHOS::Ace::Platform::SystemParams params;
         SetSystemParams(params, previewContext);
@@ -943,172 +930,4 @@ OHOS::Rosen::FoldStatus JsAppImpl::ConvertFoldStatus(std::string value) const
         foldStatus = OHOS::Rosen::FoldStatus::UNKNOWN;
     }
     return foldStatus;
-}
-
-bool JsAppImpl::IsAsyncLoad()
-{
-    std::string jsonStr = ability->GetJSONTree();
-    if (jsonStr.empty()) {
-        ELOG("jsonStr is empty");
-        return false;
-    }
-    Json2::Value json = JsonReader::ParseJsonData2(jsonStr);
-    if (json.IsMember("$type") && json["$type"].AsString() == "root" &&
-        json.IsMember("$children") && json["$children"].IsArray()) {
-        isAsyncLoad = HaveAsyncLoad(json["$children"]);
-        ILOG("loadDoc: isAsyncLoad = %s", isAsyncLoad ? "true" : "false");
-        return isAsyncLoad;
-    }
-    return false;
-}
-
-bool JsAppImpl::HaveAsyncLoad(const Json2::Value& children)
-{
-    bool isAsync = false;
-    for (unsigned int i = 0; i < children.GetArraySize(); i++) {
-        if (!children.IsArray()) {
-            ELOG("json is not array");
-            return false;
-        }
-        Json2::Value node = children.GetArrayItem(i);
-        std::string type = node["$type"].AsString();
-        Json2::Value attrJson = node["$attrs"];
-        bool skip = false;
-        isAsync = HaveAsyncComponent(type, attrJson, skip); // 扫描组件
-        if (skip && isAsync) {
-            return isAsync;
-        }
-        isAsync = HaveAsyncAttribute(checkAttrs, attrJson, skip); // 扫描属性
-        if (skip && isAsync) {
-            return isAsync;
-        }
-        if (node.IsMember("$children")) { // 继续遍历
-            Json2::Value children = node["$children"];
-            return HaveAsyncLoad(children);
-        }
-    }
-    return isAsync;
-}
-
-bool JsAppImpl::HaveAsyncComponent(const std::string& compName, const Json2::Value& attrJson, bool& skip)
-{
-    auto it = std::find_if(checkComps.begin(), checkComps.end(), [compName](const Component &comp) {
-        return comp.name == compName;
-    });
-    if (it != checkComps.end()) { // 先遍历组件
-        if (it->attrs.size() == 0) { // 没有属性列表直接判定异步
-            skip = true;
-            return true;
-        } else { // 有属性列表，根据属性列表判断
-            std::vector<Attribute> checkAttrs = it->attrs;
-            bool isAsync = HaveAsyncAttribute(checkAttrs, attrJson, skip);
-            if (isAsync) {
-                return isAsync;
-            }
-        }
-    }
-    return false;
-}
-
-bool JsAppImpl::HaveAsyncAttribute(std::vector<Attribute>& attrs, const Json2::Value& attrJson, bool& skip)
-{
-    int flag = 0;
-    for (unsigned int i = 0; i < attrs.size(); i++) {
-        Attribute attr = attrs[i];
-        if (!attrJson.IsMember(attr.name.c_str())) {
-            continue;
-        }
-        string actualValue = attrJson[attr.name.c_str()].AsString();
-        auto it = std::find(attr.values.begin(), attr.values.end(), actualValue);
-        skip = attr.skip;
-        if (it != attr.values.end()) { // 命中
-            bool ret = attr.isSync ? false : true;
-            if (attr.skip) { // 直接结束判断，不再遍历其它属性，否则继续遍历
-                return ret;
-            }
-            if (ret) {
-                flag++;
-            }
-        } else { // 未命中
-            bool ret = attr.isSync ? true : false;
-            if (attr.skip) { // 直接结束判断，不再遍历其它属性，否则继续遍历
-                return ret;
-            }
-            if (ret) {
-                flag++;
-            }
-        }
-    }
-    return flag > 0;
-}
-
-void JsAppImpl::GetComponents(std::vector<Component>& vec, Json2::Value& components) const
-{
-    Json2::Value::Members compNames = components.GetMemberNames();
-    for (unsigned int i = 0; i < compNames.size(); i++) {
-        string key = compNames[i];
-        Json2::Value compNode = components[key.c_str()];
-        if (compNode.IsNull() || !compNode.IsObject()) {
-            ELOG("compNode is not object");
-            continue;
-        }
-        Json2::Value::Members attrNames = compNode.GetMemberNames();
-        Component comp;
-        if (attrNames.size() < 0) {
-            comp.name = key;
-        } else {
-            comp.name = key;
-            std::vector<Attribute> attrVec;
-            GetAttributes(attrVec, compNode);
-            comp.attrs = attrVec;
-        }
-        vec.push_back(comp);
-    }
-}
-
-void JsAppImpl::GetAttributes(std::vector<Attribute>& attrVec, Json2::Value& attribute) const
-{
-    Json2::Value::Members attrNames = attribute.GetMemberNames();
-    for (unsigned int i = 0; i < attrNames.size(); i++) {
-        string attrKey = attrNames[i];
-        Json2::Value attrNode = attribute[attrKey.c_str()];
-        Attribute attr;
-        attr.name = attrKey;
-        if (attrNode.IsMember("values") && attrNode["values"].IsArray()) {
-            Json2::Value attrChild = attrNode["values"];
-            std::vector<std::string> values;
-            GetAttributeValues(values, attrChild);
-            attr.values = values;
-        }
-        if (attrNode.IsMember("isSync") && attrNode["isSync"].IsBool()) {
-            attr.isSync = attrNode["isSync"].AsBool();
-        }
-        if (attrNode.IsMember("skip") && attrNode["skip"].IsBool()) {
-            attr.skip = attrNode["skip"].AsBool();
-        }
-        attrVec.push_back(attr);
-    }
-}
-
-void JsAppImpl::GetAttributeValues(std::vector<std::string>& values, Json2::Value& attrChild) const
-{
-    for (unsigned int i = 0; i < attrChild.GetArraySize(); i++) {
-        Json2::Value val = attrChild.GetArrayItem(i);
-        if (!val.IsString() || val.AsString().empty()) {
-            continue;
-        }
-        values.push_back(val.AsString());
-    }
-}
-
-void JsAppImpl::SetAsyncCheckList(const Json2::Value& json)
-{
-    if (json.IsMember("components") && json["components"].IsObject()) {
-        Json2::Value components = json["components"];
-        GetComponents(checkComps, components);
-    }
-    if (json.IsMember("attributes") && json["attributes"].IsObject()) {
-        Json2::Value attributes = json["attributes"];
-        GetAttributes(checkAttrs, attributes);
-    }
 }
