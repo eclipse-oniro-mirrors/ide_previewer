@@ -125,7 +125,8 @@ function importDeclarationsGenerate(
     sourceFileEntity.importDeclarations.forEach(value => {
       if (
         sourceFile.fileName.endsWith('@ohos.arkui.UIContext.d.ts') &&
-        ['\'DatePickerDialogParam\'', '\'TimePickerDialogParam\'', '\'textPickerDialogParam\''].includes(value.importPath)
+        ['\'DatePickerDialogParam\'', '\'TimePickerDialogParam\'',
+          '\'textPickerDialogParam\'', '\'./@ohos.app.ability.common\''].includes(value.importPath)
       ) {
         mockData += '';
       } else {
