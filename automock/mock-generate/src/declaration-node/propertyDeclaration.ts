@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import type { PropertyDeclaration, SourceFile } from 'typescript';
+import type { GetAccessorDeclaration, PropertyDeclaration, SourceFile } from 'typescript';
 import { getPropertyName } from '../common/commonUtils';
 
 /**
@@ -29,13 +29,11 @@ export function getPropertyDeclaration(node: PropertyDeclaration, sourceFile: So
   let isInitializer = false;
   let initializer = '';
   const modifiers: Array<string> = [];
-
   if (node.modifiers !== undefined) {
     node.modifiers.forEach(value => {
       modifiers.push(sourceFile.text.substring(value.pos, value.end));
     });
   }
-
   if (node.initializer !== undefined) {
     isInitializer = true;
     initializer = sourceFile.text.substring(node.initializer.pos, node.initializer.end).trim();
@@ -54,8 +52,41 @@ export function getPropertyDeclaration(node: PropertyDeclaration, sourceFile: So
     propertyName: propertyName,
     propertyTypeName: propertyTypeName,
     kind: kind,
+    kinds: -1,
     isInitializer: isInitializer,
     initializer: initializer
+  };
+}
+
+export function getGetDeclaration(node: GetAccessorDeclaration, sourceFile: SourceFile): PropertyEntity {
+  let kind = -1;
+  let kinds = -1;
+  let propertyName = '';
+  let propertyTypeName = '';
+  const modifiers: Array<string> = [];
+
+  if (node.modifiers !== undefined) {
+    node.modifiers.forEach(value => {
+      modifiers.push(sourceFile.text.substring(value.pos, value.end));
+    });
+  }
+
+  propertyName = getPropertyName(node.name, sourceFile);
+  const propertyType = node.type;
+  if (propertyType !== undefined) {
+    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
+    kind = propertyType.kind;
+    kinds = node.kind;
+  }
+
+  return {
+    modifiers: modifiers,
+    propertyName: propertyName,
+    propertyTypeName: propertyTypeName,
+    kind: kind,
+    kinds: kinds,
+    isInitializer: false,
+    initializer: ''
   };
 }
 
@@ -64,6 +95,7 @@ export interface PropertyEntity {
   propertyName: string,
   propertyTypeName: string,
   kind: number,
+  kinds: number,
   isInitializer: boolean,
   initializer: string
 }

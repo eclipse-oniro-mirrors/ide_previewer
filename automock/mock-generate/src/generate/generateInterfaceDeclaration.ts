@@ -62,12 +62,33 @@ export function generateInterfaceDeclaration(
       interfaceElementSet.add(value[0].functionName);
     });
   }
+  if (extraImport.length > 0) {
+    for (let i = 0; i < extraImport.length; i++) {
+      if (mockApi.includes(extraImport[i])) {
+        extraImport.splice(i, 1);
+      }
+    }
+  }
   if (interfaceEntity.indexSignature.length > 0) {
     interfaceEntity.indexSignature.forEach(value => {
       interfaceBody += generateIndexSignature(value) + '\n';
       interfaceElementSet.add(value.indexSignatureKey);
     });
   }
+  interfaceBody = assemblyInterface(interfaceEntity, currentSourceInterfaceArray, interfaceBody,
+    sourceFile, interfaceElementSet, mockApi, interfaceName);
+  return interfaceBody;
+}
+
+function assemblyInterface(
+  interfaceEntity: InterfaceEntity,
+  currentSourceInterfaceArray: InterfaceEntity[],
+  interfaceBody: string,
+  sourceFile: SourceFile,
+  interfaceElementSet: Set<string>,
+  mockApi: string,
+  interfaceName: string
+) :string {
   if (interfaceEntity.heritageClauses.length > 0) {
     interfaceEntity.heritageClauses.forEach(value => {
       currentSourceInterfaceArray.forEach(currentInterface => {
@@ -124,7 +145,7 @@ function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile:
  * @param value
  * @returns
  */
-function addExtraImport(
+export function addExtraImport(
   extraImport: string[], importDeclarations: ImportElementEntity[], sourceFile: SourceFile, value: PropertySignatureEntity
 ): void {
   if (extraImport && importDeclarations) {
@@ -175,7 +196,7 @@ function searchHasExtraImport(specialFilesList: string[], propertyTypeName: stri
       dtsFileList.push(specialFilePath);
     }
     specialFileRelatePath = specialFileRelatePath.split(path.sep).join('/');
-    const importStr = `import {${propertyTypeName}} from '${
+    const importStr = `import { ${propertyTypeName} } from '${
       specialFileRelatePath}${
       specialFileRelatePath.endsWith('/') ? '' : '/'}${
       path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;

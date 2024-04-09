@@ -90,7 +90,7 @@ export function generateSourceFileElements(
 
   mockApi += functionDeclarationsGenerate(sourceFileEntity, sourceFile, mockApi);
 
-  mockApi += otherDeclarationsGenerate(rootName, sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName).mockData;
+  mockApi += otherDeclarationsGenerate(rootName, sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName, extraImport).mockData;
 
   mockApi += handleExportDeclarations(sourceFileEntity);
 
@@ -320,7 +320,8 @@ function otherDeclarationsGenerate(
   mockFunctionElements: Array<MockFunctionElementEntity>,
   sourceFile: SourceFile,
   mockApi: string,
-  fileName: string
+  fileName: string,
+  extraImport: string[]
 ): ReturnDataParams {
   const data: ReturnDataParams = {
     mockData: '',
@@ -339,7 +340,7 @@ function otherDeclarationsGenerate(
       const mockNameArr = fileName.split('_');
       const mockName = mockNameArr[mockNameArr.length - 1];
       defaultExportClass.forEach(value => {
-        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
+        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
       });
     }
   }
@@ -611,7 +612,7 @@ export function referenctImport2ModuleImport(
           .replace(/.d.ts/g, '')
           .replace(/.d.es/g, '');
         relatePath = (relatePath.startsWith('@internal/component') ? './' : '') + relatePath;
-        return `import ${importEntity.importElements} from "${relatePath}"\n`;
+        return `import ${importEntity.importElements} from '${relatePath}'\n`;
       }
     }
   }
