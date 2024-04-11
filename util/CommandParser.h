@@ -114,7 +114,7 @@ private:
     std::string projectModel;
     std::string pages;
     std::string containerSdkPath;
-    std::string regex4Num = "^(?:0|[1-9])+(?:.[0-9]*)$";
+    std::string regex4Num = "^(0|[1-9][0-9]*)(\\.[0-9]+)?$";
     std::string regex4Str = "^(?:[a-zA-Z0-9-_./\\s]+)$";
     bool isComponentMode;
     std::string abilityPath;

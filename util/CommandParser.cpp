@@ -672,7 +672,7 @@ bool CommandParser::IsLanguageValid()
     if (!IsSet("l")) {
         return true;
     }
-    string lan = Value("pages");
+    string lan = Value("l");
     if (CheckParamInvalidity(lan, false)) {
         errorInfo = "Launch -l parameters is not match regex.";
         return false;

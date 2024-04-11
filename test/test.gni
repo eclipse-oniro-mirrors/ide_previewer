@@ -1,0 +1,117 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ide_previewer_path = "//ide_previewer"
+googletest_path = "//third_party/googletest"
+secodefuzz_path = "//Secodefuzz"
+secodepits_path = "//Secodepits"
+
+secodefuzz_deps = "$secodefuzz_path:secodefuzz"
+secodepits_deps = "$secodepits_path:secodepits"
+googletest_deps = "$googletest_path:gmock_main"
+googletest_include_path = "$googletest_path/include"
+
+template("ide_test") {
+  executable(target_name) {
+    testonly = invoker.testonly
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+    module_out_path = invoker.module_out_path
+    output_name = invoker.output_name
+    print("$subsystem_name-$part_name-$module_out_path-$output_name")
+    sources = invoker.sources
+    include_dirs = invoker.include_dirs
+    include_dirs += [ googletest_include_path ]
+    deps = invoker.deps
+    deps += [
+      googletest_deps,
+      secodefuzz_deps,
+      secodepits_deps,
+    ]
+    libs = invoker.libs
+    libs += [ "pthread" ]
+    cflags = invoker.cflags
+    cflags += [
+      "-std=c++17",
+      "-Wno-deprecated-declarations",
+      "-Wno-reorder",
+      "-Wno-sign-compare",
+      "-Wno-error",
+      "-Wno-warnings",
+      "-Wno-unused-variable",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-coverage=trace-pc",
+      "-fprofile-arcs",
+      "-ftest-coverage",
+      "-fdump-rtl-expand",
+      "-g",
+      "-O0",
+      "-fno-omit-frame-pointer",
+    ]
+    cflags_cc = invoker.cflags_cc
+    cflags_cc += [
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-coverage=trace-pc",
+      "-fprofile-arcs",
+      "-ftest-coverage",
+      "-fdump-rtl-expand",
+      "-g",
+      "-O0",
+      "-fno-omit-frame-pointer",
+    ]
+    ldflags = invoker.ldflags
+    ldflags += [
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-fsanitize-coverage=trace-pc",
+      "-fprofile-arcs",
+      "-lgcov",
+    ]
+  }
+}
+
+template("ide_fuzztest") {
+  ide_test(target_name) {
+    testonly = invoker.testonly
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+    module_out_path = invoker.module_out_path
+    output_name = invoker.output_name
+    sources = invoker.sources
+    include_dirs = invoker.include_dirs
+    deps = invoker.deps
+    libs = invoker.libs
+    cflags = invoker.cflags
+    cflags_cc = invoker.cflags_cc
+    ldflags = invoker.ldflags
+  }
+}
+
+template("ide_unittest") {
+  ide_test(target_name) {
+    testonly = invoker.testonly
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+    module_out_path = invoker.module_out_path
+    output_name = invoker.output_name
+    sources = invoker.sources
+    include_dirs = invoker.include_dirs
+    deps = invoker.deps
+    libs = invoker.libs
+    cflags = invoker.cflags
+    cflags_cc = invoker.cflags_cc
+    ldflags = invoker.ldflags
+  }
+}

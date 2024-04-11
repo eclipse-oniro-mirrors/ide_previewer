@@ -98,11 +98,20 @@ namespace Json2 {
         bool Replace(const char* key, double value);
         bool Replace(const char* key, const char* value);
         bool Replace(const char* key, const Value& value);
+        // replace functions for array
+        bool Replace(int index, bool value);
+        bool Replace(int index, int32_t value);
+        bool Replace(int index, uint32_t value);
+        bool Replace(int index, int64_t value);
+        bool Replace(int index, double value);
+        bool Replace(int index, const char* value);
+        bool Replace(int index, const Value& value);
         // array functions
         uint32_t GetArraySize() const;
         Value GetArrayItem(int32_t index) const;
         // empty object
         void Clear();
+        std::string GetKey();
 
     private:
         cJSON* jsonPtr = nullptr;
