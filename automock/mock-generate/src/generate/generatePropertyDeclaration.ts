@@ -28,7 +28,8 @@ import { addExtraImport } from './generateInterfaceDeclaration';
  * @param sourceFile
  * @returns
  */
-export function generatePropertyDeclaration(rootName: string, propertyDeclaration: PropertyEntity, sourceFile: SourceFile, extraImport: string[], importDeclarations?: ImportElementEntity[]): string {
+export function generatePropertyDeclaration(rootName: string, propertyDeclaration: PropertyEntity,
+  sourceFile: SourceFile, extraImport: string[], importDeclarations?: ImportElementEntity[]): string {
   let propertyBody = '';
   if (propertyDeclaration.isInitializer) {
     propertyBody = `this.${propertyDeclaration.propertyName} = ${propertyDeclaration.initializer};`;
