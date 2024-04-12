@@ -189,8 +189,12 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
           }
           if (index !== value.types.length - 1) {
             classBody += `${extendClassName},`;
+          } else if (val === 'uri.URI') {
+            classBody += 'mockUri().URI';
+          } else if (val === 'photoAccessHelper.BaseSelectOptions') {
+            classBody += 'mockPhotoAccessHelper().BaseSelectOptions';
           } else {
-            classBody += val === 'uri.URI' ? 'mockUri().URI' : `${extendClassName}`;
+            classBody += `${extendClassName}`;
           }
         });
       }
