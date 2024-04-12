@@ -342,7 +342,12 @@ export function hasBeenImported(importDeclarations: ImportElementEntity[], typeN
   if (isFirstCharLowerCase(typeName)) {
     return true;
   }
-  return importDeclarations.some(importDeclaration => importDeclaration.importElements.includes(typeName));
+  return importDeclarations.some(importDeclaration => {
+    if (importDeclaration.importElements.includes(typeName) && importDeclaration.importPath.includes('./')) {
+      return true;
+    }
+    return false;
+  });
 }
 
 /**

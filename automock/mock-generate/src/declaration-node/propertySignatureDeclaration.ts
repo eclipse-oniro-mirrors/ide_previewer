@@ -53,5 +53,6 @@ export interface PropertySignatureEntity {
   modifiers: Array<string>,
   propertyName: string,
   propertyTypeName: string,
-  kind: number
+  kind: number,
+  kinds?: number
 }

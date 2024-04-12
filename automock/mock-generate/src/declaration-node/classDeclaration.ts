@@ -15,7 +15,12 @@
 
 import type { ClassDeclaration, SourceFile } from 'typescript';
 import {
-  isConstructorDeclaration, isMethodDeclaration, isPropertyDeclaration, isTypeParameterDeclaration, SyntaxKind
+  isConstructorDeclaration,
+  isGetAccessor,
+  isMethodDeclaration,
+  isPropertyDeclaration,
+  isTypeParameterDeclaration,
+  SyntaxKind
 } from 'typescript';
 import { getExportKeyword } from '../common/commonUtils';
 import { getConstructorDeclaration } from './constructorDeclaration';
@@ -24,7 +29,7 @@ import { getHeritageClauseDeclaration } from './heritageClauseDeclaration';
 import type { HeritageClauseEntity } from './heritageClauseDeclaration';
 import { getMethodDeclaration } from './methodDeclaration';
 import type { MethodEntity, StaticMethodEntity } from './methodDeclaration';
-import { getPropertyDeclaration } from './propertyDeclaration';
+import { getGetDeclaration, getPropertyDeclaration } from './propertyDeclaration';
 import type { PropertyEntity } from './propertyDeclaration';
 import { getTypeParameterDeclaration } from './typeParameterDeclaration';
 import type { TypeParameterEntity } from './typeParameterDeclaration';
@@ -110,6 +115,8 @@ function substepGetClass(classNode: ClassDeclaration, sourceFile: SourceFile): S
       classConstructor.push(getConstructorDeclaration(value, sourceFile));
     } else if (isTypeParameterDeclaration(value)) {
       typeParameters.push(getTypeParameterDeclaration(value, sourceFile));
+    } else if (isGetAccessor(value)) {
+      classProperty.push(getGetDeclaration(value, sourceFile));
     } else {
       console.log('--------------------------- uncaught class type start -----------------------');
       console.log('className: ' + className);

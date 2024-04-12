@@ -21,6 +21,7 @@ import { generateCommonMethod } from './generateCommonMethod';
 import { getWarnConsole } from './generateCommonUtil';
 import { generatePropertyDeclaration } from './generatePropertyDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
+import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 
 interface AssemblyClassParams {
   isSystem: boolean,
@@ -31,7 +32,9 @@ interface AssemblyClassParams {
   isInnerMockFunction: boolean,
   filename: string,
   isExtend: boolean,
-  className: string
+  className: string,
+  extraImport?: string[],
+  importDeclarations?: ImportElementEntity[]
 }
 
 /**
@@ -45,8 +48,18 @@ interface AssemblyClassParams {
  * @param isInnerMockFunction
  * @returns
  */
-export function generateClassDeclaration(rootName: string, classEntity: ClassEntity, isSystem: boolean, globalName: string,
-  filename: string, sourceFile: SourceFile, isInnerMockFunction: boolean, mockApi: string): string {
+export function generateClassDeclaration(
+  rootName: string,
+  classEntity: ClassEntity,
+  isSystem: boolean,
+  globalName: string,
+  filename: string,
+  sourceFile: SourceFile,
+  isInnerMockFunction: boolean,
+  mockApi: string,
+  extraImport?: string[],
+  importDeclarations?: ImportElementEntity[]
+): string {
   if (isSystem) {
     return '';
   }
@@ -73,7 +86,9 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
     sourceFile,
     mockApi,
     isInnerMockFunction,
-    filename
+    filename,
+    extraImport,
+    importDeclarations
   });
   return classBody;
 }
@@ -99,7 +114,8 @@ function assemblyClassBody(porps: AssemblyClassParams): string {
   }
   if (porps.classEntity.classProperty.length > 0) {
     porps.classEntity.classProperty.forEach(value => {
-      porps.classBody += generatePropertyDeclaration(porps.className, value, porps.sourceFile) + '\n';
+      porps.classBody += generatePropertyDeclaration(porps.className, value,
+        porps.sourceFile, porps.extraImport, porps.importDeclarations) + '\n';
     });
   }
 
