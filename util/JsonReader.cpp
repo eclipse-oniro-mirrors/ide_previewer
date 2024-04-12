@@ -230,7 +230,7 @@ namespace Json2 {
     double Value::GetDouble(const char* key, double defaultVal) const
     {
         Value val = GetValue(key);
-        if (val.IsMember(key) && val.IsNumber()) {
+        if (!val.IsNull() && val.IsNumber()) {
             return val.AsDouble();
         }
         return defaultVal;
@@ -239,7 +239,7 @@ namespace Json2 {
     bool Value::GetBool(const char* key, bool defaultVal) const
     {
         Value val = GetValue(key);
-        if (val.IsMember(key) && val.IsBool()) {
+        if (!val.IsNull() && val.IsBool()) {
             return val.AsBool();
         }
         return defaultVal;
@@ -248,7 +248,7 @@ namespace Json2 {
     std::string Value::GetString(const char* key, const std::string defaultVal) const
     {
         Value val = GetValue(key);
-        if (val.IsMember(key) && val.IsString()) {
+        if (!val.IsNull() && val.IsString()) {
             return val.AsString();
         }
         return defaultVal;
@@ -519,6 +519,86 @@ namespace Json2 {
         return true;
     }
 
+    bool Value::Replace(int index, bool value)
+    {
+        if (index < 0 || index >= GetArraySize()) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateBool(static_cast<int>(value));
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInArray(jsonPtr, index, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+
+    bool Value::Replace(int index, int32_t value)
+    {
+        return Replace(index, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(int index, uint32_t value)
+    {
+        return Replace(index, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(int index, int64_t value)
+    {
+        return Replace(index, static_cast<double>(value));
+    }
+    
+    bool Value::Replace(int index, double value)
+    {
+        if (index < 0 || index >= GetArraySize()) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateNumber(value);
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInArray(jsonPtr, index, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+    
+    bool Value::Replace(int index, const char* value)
+    {
+        if (index < 0 || index >= GetArraySize()) {
+            return false;
+        }
+        cJSON* child = cJSON_CreateString(value);
+        if (child == nullptr) {
+            return false;
+        }
+        if (!cJSON_ReplaceItemInArray(jsonPtr, index, child)) {
+            cJSON_Delete(child);
+            return false;
+        }
+        return true;
+    }
+    
+    bool Value::Replace(int index, const Value& value)
+    {
+        if (index < 0 || index >= GetArraySize()) {
+            return false;
+        }
+        cJSON* jsonObject = cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true);
+        if (jsonObject == nullptr) {
+            return false;
+        }
+
+        if (!cJSON_ReplaceItemInArray(jsonPtr, index, jsonObject)) {
+            cJSON_Delete(jsonObject);
+            return false;
+        }
+        return true;
+    }
+
     uint32_t Value::GetArraySize() const
     {
         return cJSON_GetArraySize(jsonPtr);
@@ -533,6 +613,15 @@ namespace Json2 {
     {
         cJSON_Delete(jsonPtr);
         jsonPtr = cJSON_CreateObject();
+    }
+
+    std::string Value::GetKey()
+    {
+        const char* key = jsonPtr->string;
+        if (key) {
+            return std::string(key);
+        }
+        return string();
     }
 }
 
@@ -556,7 +645,11 @@ Json2::Value JsonReader::ParseJsonData2(const std::string jsonStr)
 
 std::string JsonReader::GetErrorPtr()
 {
-    return string(cJSON_GetErrorPtr());
+    const char* err = cJSON_GetErrorPtr();
+    if (err) {
+        return std::string(err);
+    }
+    return string();
 }
 
 Json2::Value JsonReader::CreateObject()
