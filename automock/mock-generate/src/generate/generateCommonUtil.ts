@@ -811,8 +811,6 @@ export const overloadedFunctionArr = ['on', 'off'];
 
 export const needToAddBrace = ['ViewData', 'AutoFillType'];
 
-export const needAddExtraClass = ['date_picker.d.ts', 'rich_editor.d.ts', 'text_picker.d.ts', 'text_timer.d.ts'];
-
 export interface MockFunctionElementEntity {
   elementName: string;
   type: string
