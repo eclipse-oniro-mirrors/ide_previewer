@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import path from 'path';
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { firstCharacterToUppercase } from '../common/commonUtils';
@@ -76,6 +77,7 @@ export function generateClassDeclaration(
 
   const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity);
   const isExtend = heritageClausesData.isExtend;
+  classBody = addCustomeClass(heritageClausesData, sourceFile) + classBody;
   classBody += heritageClausesData.classBody;
   classBody = assemblyClassBody({
     isSystem,
@@ -204,4 +206,34 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
     isExtend,
     classBody
   };
+}
+
+/**
+ * add custome class
+ * @param heritageClausesData
+ * @param sourceFile
+ * @returns
+ */
+function addCustomeClass(heritageClausesData: {isExtend: boolean, classBody:string}, sourceFile: SourceFile) :string {
+  if (!heritageClausesData.isExtend) {
+    return '';
+  }
+  if (!path.resolve(sourceFile.fileName).includes(path.join('@internal', 'component', 'ets'))) {
+    return '';
+  }
+  let mockClassBody = '';
+  if (heritageClausesData.classBody.startsWith('extends ')) {
+    const classArr = heritageClausesData.classBody.split('extends');
+    const className = classArr[classArr.length - 1].trim();
+    if (className !== 'extends') {
+      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+      const fileContent = sourceFile.getText().replace(removeNoteRegx, '');
+      const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends)`);
+      const results = fileContent.match(regex);
+      if (!results) {
+        mockClassBody = `class ${className} {};\n`;
+      }
+    }
+  }
+  return mockClassBody;
 }
