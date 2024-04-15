@@ -45,8 +45,7 @@ import {
   needToAddBrace,
   hasExportDefaultKeyword,
   MockFunctionElementEntity,
-  ReturnDataParams,
-  needAddExtraClass
+  ReturnDataParams
 } from './generateCommonUtil';
 
 /**
@@ -118,9 +117,6 @@ function importDeclarationsGenerate(
   dependsSourceFileList: SourceFile[]
 ): string {
   let mockData = '';
-  if (needAddExtraClass.includes(`${fileName}.d.ts`)) {
-    mockData += 'import { CommonMethod } from \'./common\';\n';
-  }
   if (sourceFileEntity.importDeclarations.length > 0) {
     sourceFileEntity.importDeclarations.forEach(value => {
       if (
