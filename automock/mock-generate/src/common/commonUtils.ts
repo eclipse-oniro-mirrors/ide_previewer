@@ -370,4 +370,6 @@ export const specialFiles = [
   '@internal/component/ets/rich_editor.d.ts',
   '@internal/component/ets/symbolglyph.d.ts',
   '@internal/component/ets/button.d.ts',
+  '@internal/component/ets/nav_destination.d.ts',
+  '@internal/component/ets/navigation.d.ts'
 ];
