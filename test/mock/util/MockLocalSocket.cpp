@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-#include "../../util/LocalSocket.h"
+#include "LocalSocket.h"
+#include "MockGlobalResult.h"
 
 LocalSocket::LocalSocket() {}
 
@@ -24,7 +25,10 @@ bool LocalSocket::ConnectToServer(std::string name, OpenMode openMode, TransMode
     return true;
 }
 
-void LocalSocket::DisconnectFromServer() {}
+void LocalSocket::DisconnectFromServer()
+{
+    g_disconnectFromServer = false;
+}
 
 std::string LocalSocket::GetCommandPipeName(std::string baseName) const
 {
@@ -38,10 +42,22 @@ std::string LocalSocket::GetTracePipeName(std::string baseName) const
 
 const LocalSocket& LocalSocket::operator>>(std::string& data) const
 {
+    g_input = true;
     return *this;
 }
 
 const LocalSocket& LocalSocket::operator<<(const std::string data) const
 {
+    g_output = true;
     return *this;
+}
+
+int64_t LocalSocket::ReadData(char* data, size_t length) const
+{
+    return length;
+}
+
+size_t LocalSocket::WriteData(const void* data, size_t length) const
+{
+    return length;
 }

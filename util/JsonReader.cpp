@@ -676,3 +676,8 @@ Json2::Value JsonReader::DepthCopy(const Json2::Value& value)
 {
     return Json2::Value(cJSON_Duplicate(const_cast<cJSON*>(value.GetJsonPtr()), true));
 }
+
+Json2::Value JsonReader::CreateNull()
+{
+    return Json2::Value(cJSON_CreateNull());
+}

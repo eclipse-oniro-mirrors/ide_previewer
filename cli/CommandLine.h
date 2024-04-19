@@ -39,7 +39,7 @@ public:
     void SetCommandName(std::string command);
 
 protected:
-    Json2::Value args;
+    const Json2::Value& args;
     const LocalSocket& cliSocket;
     Json2::Value commandResult = JsonReader::CreateObject();
     Json2::Value commandResultToManager = JsonReader::CreateObject();
@@ -131,6 +131,7 @@ public:
 
 protected:
     void RunAction() override;
+    bool IsActionArgValid() const override;
 };
 
 class MouseWheelCommand : public CommandLine {

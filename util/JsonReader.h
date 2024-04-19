@@ -129,6 +129,7 @@ public:
     static Json2::Value CreateBool(const bool value);
     static Json2::Value CreateString(const std::string value);
     static Json2::Value DepthCopy(const Json2::Value& value);
+    static Json2::Value CreateNull();
 };
 
 #endif // JSONREADER_H

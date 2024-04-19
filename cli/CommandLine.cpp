@@ -252,6 +252,25 @@ void MouseWheelCommand::RunAction()
     ILOG("CrownRotate (%f)", args["rotate"].AsDouble());
 }
 
+bool TouchReleaseCommand::IsActionArgValid() const
+{
+    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
+        !args["x"].IsInt() || !args["y"].IsInt()) {
+        return false;
+    }
+    int32_t pX = args["x"].AsInt();
+    int32_t pY = args["y"].AsInt();
+    if (pY < 0 || pY > VirtualScreenImpl::GetInstance().GetCurrentHeight()) {
+        ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentHeight());
+        return false;
+    }
+    if (pX < 0 || pX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
+        ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
+        return false;
+    }
+    return true;
+}
+
 TouchReleaseCommand::TouchReleaseCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
     : CommandLine(commandType, arg, socket)
 {
@@ -1404,7 +1423,7 @@ bool PointEventCommand::IsArgsValid() const
     int32_t button = args["button"].AsInt();
     int32_t action = args["action"].AsInt();
     int32_t sourceType = args["sourceType"].AsInt();
-    int32_t sourcceTool = args["sourcceTool"].AsInt();
+    int32_t sourceTool = args["sourceTool"].AsInt();
     if (pointX < 0 || pointX > VirtualScreenImpl::GetInstance().GetCurrentWidth()) {
         ELOG("X coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentWidth());
         return false;
@@ -1413,8 +1432,8 @@ bool PointEventCommand::IsArgsValid() const
         ELOG("Y coordinate range %d ~ %d", 0, VirtualScreenImpl::GetInstance().GetCurrentHeight());
         return false;
     }
-    if (button < -1 || action < 0 || sourceType < 0 || sourcceTool < 0) {
-        ELOG("action,sourceType,sourcceTool must >= 0, button must >= -1");
+    if (button < -1 || action < 0 || sourceType < 0 || sourceTool < 0) {
+        ELOG("action,sourceType,sourceTool must >= 0, button must >= -1");
         return false;
     }
     Json2::Value axisArrayNum = args["axisValues"];
