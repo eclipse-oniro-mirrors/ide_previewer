@@ -18,5 +18,8 @@ group("unittest") {
   print("in ide unittest")
   print(
       "======================================================================")
-  deps = [ "./util:util_unittest" ]
+  deps = [
+    "./cli:cli_unittest",
+    "./util:util_unittest",
+  ]
 }

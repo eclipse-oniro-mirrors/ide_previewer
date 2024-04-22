@@ -21,6 +21,40 @@ secodepits_deps = "$secodepits_path:secodepits"
 googletest_deps = "$googletest_path:gmock_main"
 googletest_include_path = "$googletest_path/include"
 
+ace_engine_path = "//foundation/arkui/ace_engine"
+ace_engine_include_path = [
+  "$ace_engine_path",
+  "$ace_engine_path/adapter/preview/entrance",
+  "$ace_engine_path/frameworks",
+  "$ace_engine_path/frameworks/base/utils",
+  "$ace_engine_path/frameworks/core/event",
+  "$ace_engine_path/engine",
+  "$ace_engine_path/engine/flutter/shell/platform/common/cpp/public",
+  "$ace_engine_path/engine/ace_adapter/flutter/shell/platform/glfw/public",
+  "$ace_engine_path/frameworks/core/common",
+  "$ace_engine_path/frameworks/core/common/clipboard",
+  "$ace_engine_path/adapter/preview/entrance/clipboard",
+  "$ace_engine_path/interfaces/inner_api/ace",
+]
+ability_runtime_path = "//foundation/ability/ability_runtime"
+ability_runtime_include_path = [
+  "$ability_runtime_path/frameworks/simulator/common/include",
+  "$ability_runtime_path/frameworks/simulator/ability_simulator/include",
+]
+window_manager_path = "//foundation/window/window_manager"
+window_manager_include_path = [
+  "$window_manager_path/previewer/include",
+  "$window_manager_path/previewer/mock",
+  "$window_manager_path/utils/include",
+]
+graphic_2d_path = "//foundation/graphic/graphic_2d"
+graphic_2d_include_path = [
+  "$graphic_2d_path/rosen/modules/glfw_render_context/export",
+  "$graphic_2d_path/rosen/modules/platform/ipc_core",
+  "$graphic_2d_path/rosen/modules/platform/image_native",
+  "$graphic_2d_path/rosen/modules/platform/utils",
+]
+
 template("ide_test") {
   executable(target_name) {
     testonly = invoker.testonly
