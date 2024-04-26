@@ -62,5 +62,6 @@ void WebSocketServer::Run()
 
 size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
 {
+    g_writeData = true;
     return length;
 }

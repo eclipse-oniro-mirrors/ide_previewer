@@ -124,3 +124,28 @@ void JsAppImpl::SetConfigChanges(const std::string value)
 {
     configChanges = value;
 }
+
+void JsAppImpl::DispatchBackPressedEvent() const
+{
+    g_dispatchBackPressedEvent = true;
+}
+
+void JsAppImpl::DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const
+{
+    g_dispatchPointerEvent = true;
+}
+
+void JsAppImpl::DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const
+{
+    g_dispatchAxisEvent = true;
+}
+
+void JsAppImpl::DispatchInputMethodEvent(const unsigned int codePoint) const
+{
+    g_dispatchInputMethodEvent = true;
+}
+
+void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const
+{
+    g_dispatchKeyEvent = true;
+}

@@ -14,6 +14,7 @@
  */
 
 #include "glfw_render_context.h"
+#include "MockGlobalResult.h"
 
 namespace OHOS::Rosen {
 std::shared_ptr<GlfwRenderContext> GlfwRenderContext::GetGlobal()
@@ -26,19 +27,30 @@ std::shared_ptr<GlfwRenderContext> GlfwRenderContext::GetGlobal()
 
 int GlfwRenderContext::Init()
 {
+    g_glfwInit = true;
     return 1;
 }
 
 int GlfwRenderContext::CreateGlfwWindow(int32_t width, int32_t height, bool visible)
 {
+    g_createGlfwWindow = true;
     return 1;
 }
 
-void GlfwRenderContext::DestroyWindow() {}
+void GlfwRenderContext::DestroyWindow()
+{
+    g_destroyWindow = true;
+}
 
-void GlfwRenderContext::Terminate() {}
+void GlfwRenderContext::Terminate()
+{
+    g_terminate = true;
+}
 
-void GlfwRenderContext::PollEvents() {}
+void GlfwRenderContext::PollEvents()
+{
+    g_pollEvents = true;
+}
 
 void GlfwRenderContext::SetWindowSize(int32_t width, int32_t height)
 {

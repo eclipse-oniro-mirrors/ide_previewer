@@ -24,6 +24,11 @@ bool g_getDefaultJSONTree = false;
 bool g_loadDocument = false;
 bool g_reloadRuntimePage = false;
 bool g_restart = false;
+bool g_dispatchBackPressedEvent = false;
+bool g_dispatchPointerEvent = false;
+bool g_dispatchAxisEvent = false;
+bool g_dispatchInputMethodEvent = false;
+bool g_dispatchKeyEvent = false;
 
 // MockKeyInputImpl
 bool g_dispatchOsInputMethodEvent = false;
@@ -43,6 +48,7 @@ bool g_disconnectFromServer = false;
 
 // MockWebSocketServer
 bool g_run = false;
+bool g_writeData = false;
 
 // MockVirtualScreen
 bool g_getCurrentWidth = false;
@@ -51,3 +57,37 @@ bool g_getCurrentRouter = false;
 bool g_getAbilityCurrentRouter = false;
 bool g_getFastPreviewMsg = false;
 bool g_getFoldStatus = false;
+
+// MockAceAbility
+bool g_setMockModuleList = false;
+bool g_initEnv = false;
+bool g_onBackPressed = false;
+bool g_onInputEvent = false;
+bool g_onInputMethodEvent = false;
+bool g_onConfigurationChanged = false;
+bool g_surfaceChanged = false;
+bool g_replacePage = false;
+bool g_loadAceDocument = false;
+bool g_getAceJSONTree = false;
+bool g_operateComponent = false;
+bool g_setWindow = false;
+
+// MockWindowDisplay
+bool g_execStatusChangedCallback = false;
+
+// MockGlfwRenderContext
+bool g_glfwInit = false;
+bool g_createGlfwWindow = false;
+bool g_destroyWindow = false;
+bool g_terminate = false;
+bool g_pollEvents = false;
+
+// MockWindow
+bool g_setContentInfoCallback = false;
+bool g_createSurfaceNode = false;
+
+// MockSimulator
+bool g_terminateAbility = false;
+bool g_updateConfiguration = false;
+bool g_setAbilityMockList = false;
+bool g_setHostResolveBufferTracker = false;

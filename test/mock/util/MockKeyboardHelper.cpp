@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,9 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
-#include "LocalDate.h"
-using namespace std;
+#include "KeyboardHelper.h"
 
-namespace {
-    TEST(LocalDateTest, IsBigEndianTest)
-    {
-        LocalDate date;
-        time_t inputTime = time(nullptr); // 获取当前时间
-        struct tm utcTime;
-        date.GmTimeSafe(utcTime, inputTime);
-        LocalDate::GmTimeSafe(utcTime, inputTime);
-        EXPECT_GT(utcTime.tm_year + 1900, 1970);
-    }
+short KeyboardHelper::GetKeyStateByKeyName(const std::string keyName)
+{
+    return 0;
 }

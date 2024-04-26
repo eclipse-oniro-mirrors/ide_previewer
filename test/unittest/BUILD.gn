@@ -20,6 +20,8 @@ group("unittest") {
       "======================================================================")
   deps = [
     "./cli:cli_unittest",
+    "./jsapp:jsapp_unittest",
+    "./mock:mock_unittest",
     "./util:util_unittest",
   ]
 }

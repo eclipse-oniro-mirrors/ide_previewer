@@ -15,52 +15,90 @@
 
 #include "ace_ability.h"
 #include "window.h"
+#include "MockGlobalResult.h"
 
 namespace OHOS::Ace::Platform {
 AceAbility::AceAbility(const AceRunArgs& runArgs) : runArgs_(runArgs) {}
 
 AceAbility::~AceAbility() {}
 
-void AceAbility::SetMockModuleList(const std::map<std::string, std::string>& mockJsonInfo) {}
-void AceAbility::InitEnv() {}
-void AceAbility::OnBackPressed() const {}
+void AceAbility::SetMockModuleList(const std::map<std::string, std::string>& mockJsonInfo)
+{
+    g_setMockModuleList = true;
+}
+
+void AceAbility::InitEnv()
+{
+    g_initEnv = true;
+}
+
+void AceAbility::OnBackPressed() const
+{
+    g_onBackPressed = true;
+}
+
 bool AceAbility::OnInputEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
 {
+    g_onInputEvent = true;
     return true;
 }
 bool AceAbility::OnInputEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const
 {
+    g_onInputEvent = true;
     return true;
 }
 bool AceAbility::OnInputEvent(const std::shared_ptr<MMI::AxisEvent>& axisEvent) const
 {
+    g_onInputEvent = true;
     return true;
 }
 bool AceAbility::OnInputMethodEvent(const unsigned int codePoint) const
 {
+    g_onInputMethodEvent = true;
     return true;
 }
 
-void AceAbility::OnConfigurationChanged(const DeviceConfig& newConfig) {}
+void AceAbility::OnConfigurationChanged(const DeviceConfig& newConfig)
+{
+    g_onConfigurationChanged = true;
+}
+
 void AceAbility::SurfaceChanged(
     const DeviceOrientation& orientation, const double& resolution, int32_t& width, int32_t& height,
-    WindowSizeChangeReason type) {}
-void AceAbility::ReplacePage(const std::string& url, const std::string& params) {}
-void AceAbility::LoadDocument(const std::string& url, const std::string& componentName, SystemParams& systemParams) {}
+    WindowSizeChangeReason type)
+{
+    g_surfaceChanged = true;
+}
+
+void AceAbility::ReplacePage(const std::string& url, const std::string& params)
+{
+    g_replacePage = true;
+}
+void AceAbility::LoadDocument(const std::string& url, const std::string& componentName, SystemParams& systemParams)
+{
+    g_loadAceDocument = true;
+}
 
 std::string AceAbility::GetJSONTree()
 {
-    return "";
+    return "jsontree";
 }
+
 std::string AceAbility::GetDefaultJSONTree()
 {
-    return "";
+    return "defaultjsontree";
 }
+
 bool AceAbility::OperateComponent(const std::string& attrsJson)
 {
+    g_operateComponent = true;
     return true;
 }
-void AceAbility::SetWindow(sptr<OHOS::Rosen::Window> rsWindow) {}
+
+void AceAbility::SetWindow(sptr<OHOS::Rosen::Window> rsWindow)
+{
+    g_setWindow = true;
+}
 
 std::unique_ptr<AceAbility> AceAbility::CreateInstance(AceRunArgs& runArgs)
 {
