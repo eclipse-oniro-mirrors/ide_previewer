@@ -51,7 +51,7 @@ private:
     const static uint32_t MAX_COMMAND_LENGTH = 128;
     static bool isFirstWsSend;
     static bool isPipeConnected;
-    std::vector<std::string> staticIgnoreCmd = { "ResolutionSwitch" };
+    std::vector<std::string> staticIgnoreCmd = { "ResolutionSwitch", "exit", "Language", "SupportedLanguages" };
     bool IsStaticIgnoreCmd(const std::string cmd) const;
 };
 
