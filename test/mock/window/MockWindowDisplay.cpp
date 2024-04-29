@@ -14,6 +14,7 @@
  */
 
 #include "window_display.h"
+#include "MockGlobalResult.h"
 
 namespace OHOS {
 namespace Previewer {
@@ -33,7 +34,10 @@ void PreviewerDisplay::SetFoldStatus(const FoldStatus foldStatus)
     foldStatus_ = foldStatus;
 }
 
-void PreviewerDisplay::ExecStatusChangedCallback() {}
+void PreviewerDisplay::ExecStatusChangedCallback()
+{
+    g_execStatusChangedCallback = true;
+}
 
 } // namespace Previewer
 } // namespace OHOS

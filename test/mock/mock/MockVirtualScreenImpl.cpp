@@ -31,3 +31,23 @@ void VirtualScreenImpl::InitFlushEmptyTime()
 {
     // judge loadDocTimeStamp
 }
+
+void VirtualScreenImpl::InitAll(string pipeName, string pipePort) {}
+
+bool VirtualScreenImpl::LoadContentCallback(const std::string currentRouterPath)
+{
+    return true;
+}
+
+bool VirtualScreenImpl::Callback(const void* data, const size_t length,
+    const int32_t width, const int32_t height, const uint64_t timeStamp)
+{
+    return true;
+}
+
+bool VirtualScreenImpl::PageCallback(const std::string currentRouterPath)
+{
+    return true;
+}
+
+void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr) {}

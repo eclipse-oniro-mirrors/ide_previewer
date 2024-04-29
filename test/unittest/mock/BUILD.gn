@@ -13,47 +13,56 @@
 
 import("../../test.gni")
 
-module_output_path = "previewer/cli"
+module_output_path = "previewer/jsapp"
 
-group("cli_unittest") {
+group("mock_unittest") {
   testonly = true
-  deps = [ ":cli_test" ]
+  deps = [ ":mock_rich_test" ]
 }
 
-ide_unittest("cli_test") {
+ide_unittest("mock_rich_test") {
   testonly = true
   part_name = "previewer"
   subsystem_name = "ide"
   module_out_path = module_output_path
-  output_name = "cli"
+  output_name = "mock_rich"
   sources = [
     "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
     "$ide_previewer_path/cli/CommandLine.cpp",
     "$ide_previewer_path/cli/CommandLineFactory.cpp",
     "$ide_previewer_path/cli/CommandLineInterface.cpp",
     "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/LanguageManager.cpp",
     "$ide_previewer_path/mock/MouseInput.cpp",
     "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/SystemCapability.cpp",
     "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/mock/VirtualScreen.cpp",
+    "$ide_previewer_path/mock/rich/KeyInputImpl.cpp",
+    "$ide_previewer_path/mock/rich/LanguageManagerImpl.cpp",
+    "$ide_previewer_path/mock/rich/MouseInputImpl.cpp",
+    "$ide_previewer_path/mock/rich/MouseWheelImpl.cpp",
+    "$ide_previewer_path/mock/rich/VirtualMessageImpl.cpp",
+    "$ide_previewer_path/mock/rich/VirtualScreenImpl.cpp",
     "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
     "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
     "$ide_previewer_path/test/mock/jsapp/MockJsApp.cpp",
     "$ide_previewer_path/test/mock/jsapp/MockJsAppImpl.cpp",
-    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
-    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
-    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
-    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
-    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
-    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
+    "$ide_previewer_path/test/mock/util/MockKeyboardHelper.cpp",
     "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
     "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
     "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
     "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
     "$ide_previewer_path/util/CallbackQueue.cpp",
     "$ide_previewer_path/util/CommandParser.cpp",
     "$ide_previewer_path/util/CppTimer.cpp",
     "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/EndianUtil.cpp",
     "$ide_previewer_path/util/FileSystem.cpp",
     "$ide_previewer_path/util/Interrupter.cpp",
     "$ide_previewer_path/util/JsonReader.cpp",
@@ -63,23 +72,26 @@ ide_unittest("cli_test") {
     "$ide_previewer_path/util/TraceTool.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
-    "CommandLineFactoryTest.cpp",
-    "CommandLineInterfaceTest.cpp",
-    "CommandLineTest.cpp",
+    "KeyInputImplTest.cpp",
+    "LanguageManagerImplTest.cpp",
+    "MouseInputImplTest.cpp",
+    "MouseWheelImplTest.cpp",
+    "VirtualScreenImplTest.cpp",
   ]
   include_dirs = [
-    "$ide_previewer_path/test/mock",
     "$ide_previewer_path/cli",
     "$ide_previewer_path/util",
     "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/libjpeg-turbo/libjpeg-turbo-2.1.1",
   ]
   include_dirs += graphic_2d_include_path
   include_dirs += window_manager_include_path
   include_dirs += ability_runtime_include_path
   include_dirs += ace_engine_include_path
   include_dirs += [
+    "$ide_previewer_path/test/mock",
     "$ide_previewer_path/jsapp",
     "$ide_previewer_path/jsapp/rich",
     "$ide_previewer_path/mock",
@@ -88,8 +100,9 @@ ide_unittest("cli_test") {
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
-  libs = []
+  libs = [ "X11" ]
   cflags = [ "-Wno-error=overflow" ]
   cflags_cc = [ "-Wno-error=overflow" ]
   ldflags = [ "-Wno-error=overflow" ]

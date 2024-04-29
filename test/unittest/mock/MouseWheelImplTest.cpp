@@ -13,18 +13,26 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <vector>
 #include "gtest/gtest.h"
-#include "LocalDate.h"
-using namespace std;
+#define protected public
+#include "MouseWheelImpl.h"
 
 namespace {
-    TEST(LocalDateTest, IsBigEndianTest)
+    TEST(MouseWheelImplTest, SetMousePositionTest)
     {
-        LocalDate date;
-        time_t inputTime = time(nullptr); // 获取当前时间
-        struct tm utcTime;
-        date.GmTimeSafe(utcTime, inputTime);
-        LocalDate::GmTimeSafe(utcTime, inputTime);
-        EXPECT_GT(utcTime.tm_year + 1900, 1970);
+        double x = 100;
+        double y = 200;
+        MouseWheelImpl::GetInstance().SetMousePosition(x, y);
+        EXPECT_EQ(MouseWheelImpl::GetInstance().GetMouseXPosition(), x);
+        EXPECT_EQ(MouseWheelImpl::GetInstance().GetMouseYPosition(), y);
+    }
+
+    TEST(MouseWheelImplTest, SetRotateTest)
+    {
+        double rotate = 100;
+        MouseWheelImpl::GetInstance().SetRotate(rotate);
+        EXPECT_EQ(MouseWheelImpl::GetInstance().GetRotate(), rotate);
     }
 }

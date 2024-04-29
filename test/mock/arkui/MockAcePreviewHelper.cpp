@@ -13,18 +13,12 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
-#include "LocalDate.h"
-using namespace std;
+#include "ace_preview_helper.h"
 
-namespace {
-    TEST(LocalDateTest, IsBigEndianTest)
-    {
-        LocalDate date;
-        time_t inputTime = time(nullptr); // 获取当前时间
-        struct tm utcTime;
-        date.GmTimeSafe(utcTime, inputTime);
-        LocalDate::GmTimeSafe(utcTime, inputTime);
-        EXPECT_GT(utcTime.tm_year + 1900, 1970);
-    }
+namespace OHOS::Ace::Platform {
+AcePreviewHelper* AcePreviewHelper::GetInstance()
+{
+    static AcePreviewHelper instance;
+    return &instance;
 }
+} // namespace OHOS::Ace::Platform

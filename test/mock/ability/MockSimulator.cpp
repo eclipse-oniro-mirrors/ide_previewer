@@ -14,6 +14,7 @@
  */
 
 #include "simulator.h"
+#include "MockGlobalResult.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -29,13 +30,25 @@ public:
         return ret;
     }
 
-    void TerminateAbility(int64_t abilityId) override {}
+    void TerminateAbility(int64_t abilityId) override
+    {
+        g_terminateAbility = true;
+    }
 
-    void UpdateConfiguration(const AppExecFwk::Configuration &config) override {}
+    void UpdateConfiguration(const AppExecFwk::Configuration &config) override
+    {
+        g_updateConfiguration = true;
+    }
 
-    void SetMockList(const std::map<std::string, std::string> &mockList) override {}
+    void SetMockList(const std::map<std::string, std::string> &mockList) override
+    {
+        g_setAbilityMockList = true;
+    }
 
-    void SetHostResolveBufferTracker(ResolveBufferTrackerCallback cb) override {}
+    void SetHostResolveBufferTracker(ResolveBufferTrackerCallback cb) override
+    {
+        g_setHostResolveBufferTracker = true;
+    }
 
     Options option_;
 };
@@ -51,4 +64,3 @@ std::unique_ptr<Simulator> Simulator::Create(const Options &options)
 }
 }
 }
-

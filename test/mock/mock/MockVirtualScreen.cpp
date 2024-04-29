@@ -78,3 +78,65 @@ void VirtualScreen::SetLoadDocFlag(VirtualScreen::LoadDocType flag)
 {
     startLoadDoc = flag;
 }
+
+void VirtualScreen::InitVirtualScreen()
+{
+    orignalResolutionWidth = 1080; // 1080 is default width
+    orignalResolutionHeight = 2340; // 2340 is default height
+    compressionResolutionWidth = 1080; // 1080 is default width
+    compressionResolutionHeight = 2340; // 2340 is default height
+}
+
+void VirtualScreen::InitPipe(string pipeName, string pipePort) {}
+
+void VirtualScreen::WidthAndHeightReverse()
+{
+    int32_t temp = 0;
+    temp = orignalResolutionHeight;
+    orignalResolutionHeight = orignalResolutionWidth;
+    orignalResolutionWidth = temp;
+    temp = compressionResolutionHeight;
+    compressionResolutionHeight = compressionResolutionWidth;
+    compressionResolutionWidth = temp;
+}
+
+bool VirtualScreen::GetFoldable() const
+{
+    return foldable;
+}
+
+int32_t VirtualScreen::GetFoldWidth() const
+{
+    return foldWidth;
+}
+
+int32_t VirtualScreen::GetFoldHeight() const
+{
+    return foldHeight;
+}
+
+int32_t VirtualScreen::GetOrignalWidth() const
+{
+    return orignalResolutionWidth;
+}
+
+int32_t VirtualScreen::GetOrignalHeight() const
+{
+    return orignalResolutionHeight;
+}
+
+int32_t VirtualScreen::GetCompressionWidth() const
+{
+    return compressionResolutionWidth;
+}
+
+int32_t VirtualScreen::GetCompressionHeight() const
+{
+    return compressionResolutionHeight;
+}
+
+void VirtualScreen::SetCurrentResolution(int32_t width, int32_t height)
+{
+    currentWidth = width;
+    currentHeight = height;
+}
