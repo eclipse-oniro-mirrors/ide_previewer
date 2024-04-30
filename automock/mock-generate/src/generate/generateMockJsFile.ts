@@ -349,11 +349,16 @@ function handleExportDeclarations(sourceFileEntity: SourceFileEntity): string {
   let mockApi = '';
   if (sourceFileEntity.exportDeclarations.length > 0) {
     sourceFileEntity.exportDeclarations.forEach(value => {
-      if (value.includes('export type {')) {
+      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+      const flieText = value.replace(removeNoteRegx, '').replace(/\n/g, '');
+      if (flieText.includes('export type {')) {
         return;
       }
-      if (!value.includes('export {')) {
-        mockApi += `${value}\n`;
+      if (flieText.includes('export {') && value.includes(' from ')) {
+        mockApi += `${flieText}\n`;
+      }
+      if (flieText.includes('export *')) {
+        mockApi += `${flieText}\n`;
       }
     });
   }

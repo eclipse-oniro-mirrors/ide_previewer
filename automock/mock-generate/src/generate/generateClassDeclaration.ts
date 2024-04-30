@@ -218,7 +218,7 @@ function addCustomeClass(
   heritageClausesData: {isExtend: boolean, classBody:string},
   sourceFile: SourceFile,
   importDeclarations?: ImportElementEntity[]
-) :string {
+): string {
   if (!heritageClausesData.isExtend) {
     return '';
   }
@@ -229,26 +229,28 @@ function addCustomeClass(
     return '';
   }
   let mockClassBody = '';
-  if (heritageClausesData.classBody.startsWith('extends ')) {
-    const classArr = heritageClausesData.classBody.split('extends');
-    const className = classArr[classArr.length - 1].trim();
-    if (className !== 'extends') {
-      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
-      const fileContent = sourceFile.getText().replace(removeNoteRegx, '');
-      let hasImportType = false;
-      if (importDeclarations) {
-        importDeclarations.forEach(element => {
-          if (element.importElements.includes(className)) {
-            hasImportType = true;
-          }
-        });
+  if (!heritageClausesData.classBody.startsWith('extends ')) {
+    return mockClassBody;
+  }
+  const classArr = heritageClausesData.classBody.split('extends');
+  const className = classArr[classArr.length - 1].trim();
+  if (className === 'extends') {
+    return mockClassBody;
+  }
+  const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+  const fileContent = sourceFile.getText().replace(removeNoteRegx, '');
+  let hasImportType = false;
+  if (importDeclarations) {
+    importDeclarations.forEach(element => {
+      if (element.importElements.includes(className)) {
+        hasImportType = true;
       }
-      const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends)`);
-      const results = fileContent.match(regex);
-      if (!results && !hasImportType) {
-        mockClassBody = `class ${className} {};\n`;
-      }
-    }
+    });
+  }
+  const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends)`);
+  const results = fileContent.match(regex);
+  if (!results && !hasImportType) {
+    mockClassBody = `class ${className} {};\n`;
   }
   return mockClassBody;
 }
