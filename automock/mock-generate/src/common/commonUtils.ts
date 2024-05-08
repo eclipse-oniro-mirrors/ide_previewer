@@ -372,5 +372,6 @@ export const specialFiles = [
   '@internal/component/ets/button.d.ts',
   '@internal/component/ets/nav_destination.d.ts',
   '@internal/component/ets/navigation.d.ts',
-  '@internal/component/ets/text_common.d.ts'
+  '@internal/component/ets/text_common.d.ts',
+  '@internal/component/ets/styled_string.d.ts'
 ];

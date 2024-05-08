@@ -247,7 +247,7 @@ function addCustomeClass(
       }
     });
   }
-  const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends)`);
+  const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends|implements)`);
   const results = fileContent.match(regex);
   if (!results && !hasImportType) {
     mockClassBody = `class ${className} {};\n`;
