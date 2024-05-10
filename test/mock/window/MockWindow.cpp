@@ -89,7 +89,7 @@ public:
     WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) {}
     void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) {}
     void ConsumeKeyEvent(const std::shared_ptr<MMI::KeyEvent>& inputEvent) {}
-    void FlushFrameRate(uint32_t rate) {}
+    void FlushFrameRate(uint32_t rate, bool isAnimatorStopped) {}
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) {}
     WMError RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) {}
     void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) {}
