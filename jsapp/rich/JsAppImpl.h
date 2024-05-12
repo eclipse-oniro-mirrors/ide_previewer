@@ -98,6 +98,7 @@ protected:
     double twoInOneScreenDensity = 240;    // Car Screen Density
 
 private:
+    void SetPkgContextInfo();
     void SetMockJsonInfo();
     void SetAssetPath(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetProjectModel(OHOS::Ace::Platform::AceRunArgs& args) const;
