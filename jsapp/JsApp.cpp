@@ -184,3 +184,11 @@ bool JsApp::MemoryRefresh(const std::string) const
 void JsApp::LoadDocument(const std::string, const std::string, const Json2::Value&) {}
 
 void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) {}
+
+void JsApp::SetAvoidArea(const AvoidAreas& areas) {}
+
+const AvoidAreas JsApp::GetCurrentAvoidArea() const
+{
+    AvoidAreas areas;
+    return areas;
+}

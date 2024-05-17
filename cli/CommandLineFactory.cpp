@@ -48,6 +48,8 @@ void CommandLineFactory::InitCommandMap()
         typeMap["KeyPress"] = &CommandLineFactory::CreateObject<KeyPressCommand>;
         typeMap["LoadContent"] = &CommandLineFactory::CreateObject<LoadContentCommand>;
         typeMap["FoldStatus"] = &CommandLineFactory::CreateObject<FoldStatusCommand>;
+        typeMap["AvoidArea"] = &CommandLineFactory::CreateObject<AvoidAreaCommand>;
+        typeMap["AvoidAreaChanged"] = &CommandLineFactory::CreateObject<AvoidAreaChangedCommand>;
     } else {
         typeMap["Power"] = &CommandLineFactory::CreateObject<PowerCommand>;
         typeMap["Volume"] = &CommandLineFactory::CreateObject<VolumeCommand>;

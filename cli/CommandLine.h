@@ -502,4 +502,24 @@ protected:
     void RunSet() override;
     bool IsSetArgValid() const override;
 };
+
+class AvoidAreaCommand : public CommandLine {
+public:
+    AvoidAreaCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
+    ~AvoidAreaCommand() override {}
+
+protected:
+    void RunSet() override;
+    bool IsSetArgValid() const override;
+    bool IsObjectValid(const Json2::Value& val) const;
+};
+
+class AvoidAreaChangedCommand : public CommandLine {
+public:
+    AvoidAreaChangedCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
+    ~AvoidAreaChangedCommand() override {}
+
+protected:
+    void RunGet() override;
+};
 #endif // COMMANDLINE_H

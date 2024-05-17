@@ -35,6 +35,9 @@ namespace Previewer {
 namespace Rosen {
     class GlfwRenderContext;
     enum class FoldStatus: uint32_t;
+    enum class WindowType : uint32_t;
+    struct SystemBarProperty;
+    struct Rect;
 }
 #if defined(__APPLE__) || defined(_WIN32)
 namespace AbilityRuntime {
@@ -77,6 +80,9 @@ public:
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
     void LoadDocument(const std::string, const std::string, const Json2::Value&) override;
     void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) override;
+    void SetAvoidArea(const AvoidAreas& areas) override;
+    void UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::Rect& value);
+    OHOS::Rosen::Window* GetWindow() const;
 
     void DispatchBackPressedEvent() const;
     void DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const;
@@ -84,6 +90,9 @@ public:
     void DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const;
     void DispatchInputMethodEvent(const unsigned int codePoint) const;
     void InitGlfwEnv();
+    void CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
+        const OHOS::Rosen::SystemBarProperty& property);
+    void InitAvoidAreas(OHOS::Rosen::Window* window);
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);
@@ -137,6 +146,7 @@ private:
     int32_t height = 0;
     int32_t orignalWidth = 0;
     int32_t orignalHeight = 0;
+    AvoidAreas avoidInitialAreas;
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
 #if defined(__APPLE__) || defined(_WIN32)

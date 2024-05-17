@@ -40,6 +40,7 @@ ohos_source_set("jsapp_rich") {
     ".",
     "rich/",
     "../mock/rich/",
+    "../cli/",
     "../util/",
     "../mock/",
     "./external/",
@@ -67,6 +68,7 @@ ohos_source_set("jsapp_lite") {
     defines += [ "LITEWEARABLE_SUPPORTED=1" ]
   }
   configs = [ ":jsapp_config" ]
+  configs += [ "//third_party/freetype:freetype_config" ]
   sources = [
     "JsApp.cpp",
     "lite/JsAppImpl.cpp",

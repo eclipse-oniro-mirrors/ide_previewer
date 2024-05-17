@@ -71,6 +71,15 @@ static void InitFoldParams()
     }
 }
 
+static void ApplyConfig()
+{
+    string args = CommandParser::GetInstance().GetConfigPath();
+    if (args.empty()) {
+        ELOG("No persistent properties path found.");
+    }
+    CommandLineInterface::GetInstance().ReadAndApplyConfig(args);
+}
+
 static void InitJsApp()
 {
     CommandParser& parser = CommandParser::GetInstance();
@@ -115,7 +124,7 @@ static void InitJsApp()
     }
     InitResolution();
     InitFoldParams();
-
+    ApplyConfig();
     JsAppImpl::GetInstance().Start();
 }
 

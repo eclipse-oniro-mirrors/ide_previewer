@@ -1523,3 +1523,82 @@ void FoldStatusCommand::RunSet()
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set FoldStatus run finished, FoldStatus is: %s", args["FoldStatus"].AsString().c_str());
 }
+
+AvoidAreaCommand::AvoidAreaCommand(CommandType commandType, const Json2::Value& arg,
+    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+{
+}
+
+bool AvoidAreaCommand::IsSetArgValid() const
+{
+    if (args.IsNull() || !args.IsMember("topRect") || !args.IsMember("bottomRect") ||
+        !args.IsMember("leftRect") || !args.IsMember("rightRect")) {
+        ELOG("AvoidAreaCommand missing arguments!");
+        return false;
+    }
+    if (!args["topRect"].IsObject() || !args["bottomRect"].IsObject() || !args["leftRect"].IsObject()
+        || !args["rightRect"].IsObject()) {
+        ELOG("Invalid values of arguments!");
+        return false;
+    }
+    Json2::Value topRect = args.GetValue("topRect");
+    Json2::Value bottomRect = args.GetValue("bottomRect");
+    Json2::Value leftRect = args.GetValue("leftRect");
+    Json2::Value rightRect = args.GetValue("rightRect");
+    if (!IsObjectValid(topRect) || !IsObjectValid(bottomRect) ||
+        !IsObjectValid(leftRect) || !IsObjectValid(rightRect)) {
+        ELOG("Invalid values of arguments!");
+        return false;
+    }
+    return true;
+}
+
+bool AvoidAreaCommand::IsObjectValid(const Json2::Value& val) const
+{
+    if (val.IsNull() || !val.IsMember("posX") || !val["posY"].IsInt() ||
+        !val.IsMember("width") || !val.IsMember("height")) {
+        ELOG("AvoidAreaCommand missing arguments!");
+        return false;
+    }
+    if (!val["posX"].IsInt() || !val["posY"].IsInt() || !val["width"].IsUInt()
+        || !val["height"].IsUInt()) {
+        ELOG("Invalid values of arguments!");
+        return false;
+    }
+    if (val["posX"].AsInt() < 0 || val["posY"].AsInt() < 0 ||
+        val["width"].AsUInt() < 0 || val["height"].AsUInt() < 0) {
+        ELOG("Invalid values of arguments!");
+        return false;
+    }
+    return true;
+}
+
+void AvoidAreaCommand::RunSet()
+{
+    Json2::Value topRectObj = args.GetValue("topRect");
+    AvoidRect topRect = AvoidRect(topRectObj["posX"].AsInt(), topRectObj["posY"].AsInt(),
+        topRectObj["width"].AsUInt(), topRectObj["height"].AsUInt());
+    Json2::Value bottomRectObj = args.GetValue("bottomRect");
+    AvoidRect bottomRect = AvoidRect(bottomRectObj["posX"].AsInt(), bottomRectObj["posY"].AsInt(),
+        bottomRectObj["width"].AsUInt(), bottomRectObj["height"].AsUInt());
+    Json2::Value leftRectObj = args.GetValue("leftRect");
+    AvoidRect leftRect = AvoidRect(leftRectObj["posX"].AsInt(), leftRectObj["posY"].AsInt(),
+        leftRectObj["width"].AsUInt(), leftRectObj["height"].AsUInt());
+    Json2::Value rightRectObj = args.GetValue("rightRect");
+    AvoidRect rightRect = AvoidRect(rightRectObj["posX"].AsInt(), rightRectObj["posY"].AsInt(),
+        rightRectObj["width"].AsUInt(), rightRectObj["height"].AsUInt());
+    JsAppImpl::GetInstance().SetAvoidArea(AvoidAreas(topRect, leftRect, rightRect, bottomRect));
+    SetCommandResult("result", JsonReader::CreateBool(true));
+    ILOG("Set AvoidArea run finished");
+}
+
+AvoidAreaChangedCommand::AvoidAreaChangedCommand(CommandType commandType, const Json2::Value& arg,
+    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+{
+}
+
+void AvoidAreaChangedCommand::RunGet()
+{
+    SetResultToManager("args", args, "AvoidAreaChanged");
+    ILOG("Get AvoidAreaChangedCommand run finished.");
+}
