@@ -13,7 +13,7 @@
 
 import("../../test.gni")
 
-module_output_path = "previewer/jsapp"
+module_output_path = "previewer/mock"
 
 group("mock_unittest") {
   testonly = true
