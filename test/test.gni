@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ide_previewer_path = "//ide_previewer"
+ide_previewer_path = "//ide/tools/previewer"
 googletest_path = "//third_party/googletest"
 secodefuzz_path = "//Secodefuzz"
 secodepits_path = "//Secodepits"
@@ -125,6 +125,10 @@ template("ide_fuzztest") {
     output_name = invoker.output_name
     sources = invoker.sources
     include_dirs = invoker.include_dirs
+    include_dirs += [
+      secodefuzz_path,
+      secodepits_path,
+    ]
     deps = invoker.deps
     libs = invoker.libs
     cflags = invoker.cflags
