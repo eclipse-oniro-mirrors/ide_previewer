@@ -30,6 +30,7 @@
 #include "window_display.h"
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
+#include "CommandLineInterface.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -39,6 +40,18 @@
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::Ace;
+
+class PreviewerListener : public OHOS::Rosen::IWindowSystemBarEnableListener {
+public:
+    OHOS::Rosen::WMError OnSetSpecificBarProperty(OHOS::Rosen::WindowType type,
+        const OHOS::Rosen::SystemBarProperty& property)
+    {
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(type, property);
+        return OHOS::Rosen::WMError::WM_OK;
+    }
+};
+
+OHOS::sptr<PreviewerListener> listener = nullptr;
 
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 {
@@ -52,6 +65,14 @@ JsAppImpl::~JsAppImpl()
     if (glfwRenderContext != nullptr) {
         glfwRenderContext->DestroyWindow();
         glfwRenderContext->Terminate();
+    }
+    if (listener) {
+        OHOS::Rosen::Window* window = GetWindow();
+        if (!window) {
+            return;
+        }
+        window->UnRegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
+        listener = nullptr;
     }
 }
 
@@ -218,6 +239,7 @@ void JsAppImpl::RunJsApp()
         SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfSetClipboardData(ClipboardHelper::SetClipboardData);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfGetClipboardData(ClipboardHelper::GetClipboardData);
+    listener = new PreviewerListener();
     if (isDebug && debugServerPort >= 0) {
         RunDebugAbility(); // for debug preview
     } else {
@@ -253,10 +275,12 @@ void JsAppImpl::RunNormalAbility()
     OHOS::Rosen::WMError errCode;
     OHOS::sptr<OHOS::Rosen::WindowOption> sp = nullptr;
     auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
+    window->RegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
     window->SetContentInfoCallback(std::move(VirtualScreenImpl::LoadContentCallback));
     window->CreateSurfaceNode("preview_surface", std::move(VirtualScreenImpl::Callback));
     ability->SetWindow(window);
     ability->InitEnv();
+    InitAvoidAreas(window);
 }
 
 #if defined(__APPLE__) || defined(_WIN32)
@@ -306,8 +330,10 @@ void JsAppImpl::RunDebugAbility()
         ELOG("JsApp::Run get window failed.");
         return;
     }
+    window->RegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
     window->SetContentInfoCallback(std::move(VirtualScreenImpl::LoadContentCallback));
     window->CreateSurfaceNode(options.moduleName, std::move(VirtualScreenImpl::Callback));
+    InitAvoidAreas(window);
 }
 
 void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
@@ -614,6 +640,7 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
             ELOG("JsApp::Run get window failed.");
             return;
         }
+        InitAvoidAreas(window);
         OHOS::AppExecFwk::EventHandler::PostTask([this]() {
             glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
@@ -622,6 +649,7 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
 #endif
     } else {
         if (ability != nullptr) {
+            InitAvoidAreas(ability->GetWindow());
             OHOS::AppExecFwk::EventHandler::PostTask([this]() {
                 glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
             });
@@ -967,4 +995,77 @@ OHOS::Rosen::FoldStatus JsAppImpl::ConvertFoldStatus(std::string value) const
         foldStatus = OHOS::Rosen::FoldStatus::UNKNOWN;
     }
     return foldStatus;
+}
+
+void JsAppImpl::SetAvoidArea(const AvoidAreas& areas)
+{
+    avoidInitialAreas = areas;
+}
+
+void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
+    const OHOS::Rosen::SystemBarProperty& property)
+{
+    uint32_t width = static_cast<uint32_t>(aceRunArgs.deviceWidth);
+    uint32_t height = static_cast<uint32_t>(aceRunArgs.deviceHeight);
+    OHOS::Rosen::Window* window = GetWindow();
+    if (!window) {
+        ELOG("GetWindow failed");
+        return;
+    }
+    sptr<OHOS::Rosen::AvoidArea> statusArea(new OHOS::Rosen::AvoidArea());
+    if (OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR == type) {
+        if (property.enable_) {
+            statusArea->topRect_ = {0, 0, width, avoidInitialAreas.topRect.height};
+            window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_SYSTEM);
+        } else {
+            statusArea->topRect_ = {0, 0, 0, 0};
+            window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_SYSTEM);
+        }
+        UpdateAvoidArea2Ide("topRect", statusArea->topRect_);
+    } else if (OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR == type) {
+        if (property.enable_) {
+            statusArea->bottomRect_ = {0, height - avoidInitialAreas.bottomRect.height,
+                width, avoidInitialAreas.bottomRect.height};
+            window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_NAVIGATION_INDICATOR);
+        } else {
+            statusArea->bottomRect_ = {0, 0, 0, 0};
+            window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_NAVIGATION_INDICATOR);
+        }
+        UpdateAvoidArea2Ide("bottomRect", statusArea->bottomRect_);
+    } else {
+        return; // currently not support
+    }
+}
+
+void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::Rect& value)
+{
+    Json2::Value son = JsonReader::CreateObject();
+    son.Add("posX", value.posX_);
+    son.Add("posY", value.posY_);
+    son.Add("width", value.width_);
+    son.Add("height", value.height_);
+    Json2::Value val = JsonReader::CreateObject();
+    val.Add(key.c_str(), son);
+    CommandLineInterface::GetInstance().CreatCommandToSendData("AvoidAreaChanged", val, "get");
+}
+
+OHOS::Rosen::Window* JsAppImpl::GetWindow() const
+{
+    if (isDebug && debugServerPort >= 0) {
+#if defined(__APPLE__) || defined(_WIN32)
+        return OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
+#else
+        return nullptr;
+#endif
+    } else {
+        return ability->GetWindow();
+    }
+}
+
+void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
+{
+    CalculateAvoidAreaByType(OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR,
+        window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR));
+    CalculateAvoidAreaByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR,
+        window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR));
 }
