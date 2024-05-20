@@ -41,7 +41,10 @@ void modifyObject(cJSON *object, uint64_t& idx)
             item->valuestring = nullptr;
             int length = strVal.length() + 1;
             item->valuestring = (char*)malloc(length * sizeof(char)); // 分配内存
-            strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
+            errno_t ret1 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
+            if (ret1 != EOK) {
+                printf("strcpy_s in modifyObject copy error");
+            }
         } else if (item->type == cJSON_Number) {
             int intVal = *(s32 *)DT_SetGetS32(&g_Element[idx], item->valueint);
             idx++;
@@ -88,7 +91,10 @@ void modifyObject4ChangeType(cJSON *object, uint64_t& idx)
             item->type = cJSON_String;
             int length = strVal.length() + 1;
             item->valuestring = (char*)malloc(length * sizeof(char)); // 分配内存
-            strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
+            errno_t ret2 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
+            if (ret2 != EOK) {
+                printf("strcpy_s in modifyObject4ChangeType copy error");
+            }
         } else if (item->type == cJSON_Object) {
             cJSON *arrayItem = nullptr;
             cJSON_ArrayForEach(arrayItem, item) {
