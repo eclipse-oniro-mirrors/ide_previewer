@@ -1005,8 +1005,8 @@ void JsAppImpl::SetAvoidArea(const AvoidAreas& areas)
 void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
     const OHOS::Rosen::SystemBarProperty& property)
 {
-    uint32_t width = static_cast<uint32_t>(aceRunArgs.deviceWidth);
-    uint32_t height = static_cast<uint32_t>(aceRunArgs.deviceHeight);
+    uint32_t deviceWidth = static_cast<uint32_t>(aceRunArgs.deviceWidth);
+    uint32_t deviceHeight = static_cast<uint32_t>(aceRunArgs.deviceHeight);
     OHOS::Rosen::Window* window = GetWindow();
     if (!window) {
         ELOG("GetWindow failed");
@@ -1015,7 +1015,7 @@ void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
     sptr<OHOS::Rosen::AvoidArea> statusArea(new OHOS::Rosen::AvoidArea());
     if (OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR == type) {
         if (property.enable_) {
-            statusArea->topRect_ = {0, 0, width, avoidInitialAreas.topRect.height};
+            statusArea->topRect_ = {0, 0, deviceWidth, avoidInitialAreas.topRect.height};
             window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_SYSTEM);
         } else {
             statusArea->topRect_ = {0, 0, 0, 0};
@@ -1024,8 +1024,8 @@ void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
         UpdateAvoidArea2Ide("topRect", statusArea->topRect_);
     } else if (OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR == type) {
         if (property.enable_) {
-            statusArea->bottomRect_ = {0, height - avoidInitialAreas.bottomRect.height,
-                width, avoidInitialAreas.bottomRect.height};
+            statusArea->bottomRect_ = {0, deviceHeight - avoidInitialAreas.bottomRect.height,
+                deviceWidth, avoidInitialAreas.bottomRect.height};
             window->UpdateAvoidArea(statusArea, OHOS::Rosen::AvoidAreaType::TYPE_NAVIGATION_INDICATOR);
         } else {
             statusArea->bottomRect_ = {0, 0, 0, 0};
