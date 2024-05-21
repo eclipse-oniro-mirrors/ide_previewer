@@ -54,8 +54,8 @@ void ParamsParse::SetTestArgs(vector<string>& args)
 {
     int index = -1;
     for (const Param& param : paramList) {
-        args.push_back(param.Name);
-        for (const std::string& value : param.Values) {
+        args.push_back(param.name);
+        for (const std::string& value : param.values) {
             index++;
             std::string str = string(value);
             args.push_back(DT_SetGetString(&g_Element[index], str.size() + 1, DEFAULT_LENGTH, (char*)str.c_str()));

@@ -23,14 +23,14 @@
 #include <gtest/gtest.h>
 
 namespace fuzztest {
-    static std::string currDir = "";
-    static std::string currFile = "";
+    static std::string g_currDir = "";
+    static std::string g_currFile = "";
 
     class Param {
     public:
-        Param(std::string name, std::vector<std::string> values) : Name(name), Values(values) {}
-        std::string Name;
-        std::vector<std::string> Values;
+        Param(std::string name, std::vector<std::string> values) : name(name), values(values) {}
+        std::string name;
+        std::vector<std::string> values;
     };
 
     class ParamsParse {
@@ -40,14 +40,14 @@ namespace fuzztest {
         void CallParamsParseFunc(const std::vector<std::string>& args);
         void SetTestArgs(std::vector<std::string>& args);
         std::vector<Param> paramList = {
-            Param("-j", { currDir }),
+            Param("-j", { g_currDir }),
             Param("-n", { "entry" }),
             Param("-d", { "" }),
             Param("-p", { "8888" }),
             Param("-s", { "phone_1676450550023_1" }),
             Param("-or", { "1080", "2340" }),
             Param("-cr", { "1080", "2340" }),
-            Param("-f", { currFile }),
+            Param("-f", { g_currFile }),
             Param("-hs", { "102400" }),
             Param("-hf", { "true" }),
             Param("-shape", { "rect" }),
@@ -64,10 +64,10 @@ namespace fuzztest {
             Param("-l", { "zh_CN" }),
             Param("-sd", { "480" }),
             Param("-sm", { "dynamic" }),
-            Param("-arp", { currDir }),
+            Param("-arp", { g_currDir }),
             Param("-pm", { "Stage" }),
             Param("-pages", { "main_pages" }),
-            Param("-hsp", { currDir }),
+            Param("-hsp", { g_currDir }),
             Param("-cpm", { "true" }),
             Param("-abp", { "ets/entryability/EntryAbility.abc" }),
             Param("-abn", { "EntryAbility" }),
@@ -75,7 +75,7 @@ namespace fuzztest {
             Param("-foldable", { "true" }),
             Param("-foldStatus", { "unfold" }),
             Param("-fr", { "1080", "2340" }),
-            Param("-ljPath", { currFile })
+            Param("-ljPath", { g_currFile })
         };
     };
 
@@ -87,15 +87,15 @@ namespace fuzztest {
             // 使用空格分割字符串，并存入vector
             char buffer[FILENAME_MAX];
             if (getcwd(buffer, FILENAME_MAX) != nullptr) {
-                currDir = std::string(buffer);
-                currDir += "/MyApplication";
-                int status = mkdir(currDir.c_str(), 0777); // 0777 表示所有用户有读、写、执行权限
+                g_currDir = std::string(buffer);
+                g_currDir += "/MyApplication";
+                int status = mkdir(g_currDir.c_str(), 0777); // 0777 表示所有用户有读、写、执行权限
                 if (status != 0) {
                     printf("Error creating folder!\n");
                 }
-                currFile = currDir + "/test.json";
+                g_currFile = g_currDir + "/test.json";
                 // 创建文件流对象并打开文件
-                std::ofstream file(currFile);
+                std::ofstream file(g_currFile);
                 // 检查文件是否成功打开
                 if (file.is_open()) {
                     file.close();
@@ -110,10 +110,10 @@ namespace fuzztest {
         // 在整个测试夹具类执行后执行一次清理操作
         static void TearDownTestCase()
         {
-            if (std::remove(currFile.c_str()) != 0) {
+            if (std::remove(g_currFile.c_str()) != 0) {
                 printf("Error deleting file!\n");
             }
-            std::filesystem::remove(currDir.c_str());
+            std::filesystem::remove(g_currDir.c_str());
         }
 
         virtual void SetUp()
