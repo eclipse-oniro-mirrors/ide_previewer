@@ -359,7 +359,9 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
     options.modulePath = aceRunArgs.assetPath + FileSystem::GetSeparator() + "modules.abc";
     options.resourcePath = CommandParser::GetInstance().GetAppResourcePath() +
                                 FileSystem::GetSeparator() + "resources.index";
-    options.debugPort = debugServerPort;
+    if (debugServerPort > 0) {
+        options.debugPort = debugServerPort;
+    }
     options.assetPath = aceRunArgs.assetPath;
     options.systemResourcePath = aceRunArgs.systemResourcesPath;
     options.appResourcePath = aceRunArgs.appResourcesPath;
