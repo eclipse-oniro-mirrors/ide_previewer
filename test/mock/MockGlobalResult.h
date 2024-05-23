@@ -86,6 +86,8 @@ extern bool g_pollEvents;
 // MockWindow
 extern bool g_setContentInfoCallback;
 extern bool g_createSurfaceNode;
+extern bool g_getSystemBarPropertyByType;
+extern bool g_updateAvoidArea;
 
 // MockSimulator
 extern bool g_terminateAbility;

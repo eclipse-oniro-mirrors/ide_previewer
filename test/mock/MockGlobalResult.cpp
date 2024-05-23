@@ -85,6 +85,8 @@ bool g_pollEvents = false;
 // MockWindow
 bool g_setContentInfoCallback = false;
 bool g_createSurfaceNode = false;
+bool g_getSystemBarPropertyByType = false;
+bool g_updateAvoidArea = false;
 
 // MockSimulator
 bool g_terminateAbility = false;

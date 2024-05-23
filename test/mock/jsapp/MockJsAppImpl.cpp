@@ -149,3 +149,14 @@ void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& key
 {
     g_dispatchKeyEvent = true;
 }
+
+void JsAppImpl::SetAvoidArea(const AvoidAreas& areas)
+{
+    avoidInitialAreas = areas;
+}
+
+const AvoidAreas JsApp::GetCurrentAvoidArea() const
+{
+    AvoidAreas areas;
+    return areas;
+}

@@ -28,6 +28,9 @@ ide_unittest("jsapp_rich_test") {
   output_name = "jsapp_rich"
   sources = [
     "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
     "$ide_previewer_path/jsapp/JsApp.cpp",
     "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
     "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
@@ -74,6 +77,7 @@ ide_unittest("jsapp_rich_test") {
   ]
   include_dirs = [
     "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
     "$ide_previewer_path/cli",
     "$ide_previewer_path/util",
     "//third_party/libwebsockets/include",

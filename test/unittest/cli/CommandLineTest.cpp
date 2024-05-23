@@ -1418,4 +1418,65 @@ namespace {
         command1.CheckAndRun();
         EXPECT_TRUE(g_output);
     }
+
+    TEST_F(CommandLineTest, AvoidAreaCommandTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        std::string msg1 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":
+            {"bottomRect":0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0}})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
+        AvoidAreaCommand command1(type, args1, *socket);
+        g_output = false;
+        command1.CheckAndRun();
+        EXPECT_TRUE(g_output);
+        std::string msg2 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
+            0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},"rightRect":0})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        AvoidAreaCommand command2(type, args2, *socket);
+        g_output = false;
+        command2.CheckAndRun();
+        EXPECT_TRUE(g_output);
+        std::string msg3 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":
+            {"bottomRect":0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
+            "rightRect":{"posX":0,"posY":0,"width":0}})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        AvoidAreaCommand command3(type, args3, *socket);
+        g_output = false;
+        command3.CheckAndRun();
+        EXPECT_TRUE(g_output);
+        std::string msg4 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":
+            {"bottomRect":0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
+            "rightRect":{"posX":0,"posY":0,"width":0,"height":"350"}})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(msg4);
+        AvoidAreaCommand command4(type, args4, *socket);
+        g_output = false;
+        command4.CheckAndRun();
+        EXPECT_TRUE(g_output);
+        std::string msg5 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
+            0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
+            "rightRect":{"posX":0,"posY":0,"width":-1,"height":-1}})";
+        Json2::Value args5 = JsonReader::ParseJsonData2(msg5);
+        AvoidAreaCommand command5(type, args5, *socket);
+        g_output = false;
+        command5.CheckAndRun();
+        EXPECT_TRUE(g_output);
+        std::string msg6 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
+            0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
+            "rightRect":{"posX":0,"posY":0,"width":2340,"height":84}})";
+        Json2::Value args6 = JsonReader::ParseJsonData2(msg6);
+        AvoidAreaCommand command6(type, args6, *socket);
+        g_output = false;
+        command6.CheckAndRun();
+        EXPECT_TRUE(g_output);
+    }
+
+    TEST_F(CommandLineTest, AvoidAreaChangedCommandTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        Json2::Value args2 = JsonReader::CreateNull();
+        AvoidAreaChangedCommand command2(type, args2, *socket);
+        g_output = false;
+        command2.CheckAndRun();
+        EXPECT_TRUE(g_output);
+    }
 }
