@@ -26,6 +26,9 @@
 #include "external/StageContext.h"
 #include "viewport_config.h"
 #include "glfw_render_context.h"
+#if defined(REPLACE_WINDOW_HEADER)
+#include "window.h"
+#endif
 #include "window_model.h"
 #include "window_display.h"
 #include "ace_preview_helper.h"

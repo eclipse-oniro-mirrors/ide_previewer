@@ -83,3 +83,6 @@ PointEventCommand::RunAction
 PointEventCommand::IsActionArgValid
 PointEventCommand::IsArgsExist
 PointEventCommand::IsArgsValid
+AvoidAreaCommand::RunSet
+AvoidAreaCommand::IsSetArgValid
+AvoidAreaCommand::IsObjectValid

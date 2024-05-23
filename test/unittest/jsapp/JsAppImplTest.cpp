@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
 #include <string>
+#include <sys/stat.h>
 #include "gtest/gtest.h"
+#include "window.h"
 #define private public
 #define protected public
 #include "MockGlobalResult.h"
 #include "JsAppImpl.h"
+#include "CommandLineInterface.h"
 #include "CommandParser.h"
 #include "VirtualScreenImpl.h"
 #include "window_model.h"
@@ -27,19 +29,50 @@
 using namespace std;
 
 namespace {
+    class JsAppImplTest : public ::testing::Test {
+    public:
+        JsAppImplTest() {}
+        ~JsAppImplTest() {}
+    protected:
+        static void WriteFile(std::string testFile, std::string fileContent)
+        {
+            std::ofstream file(testFile, std::ios::out | std::ios::in | std::ios_base::trunc);
+            if (file.is_open()) {
+                file << fileContent;
+                file.close();
+            } else {
+                printf("Error open file!\n");
+            }
+        }
+
+        static void SetUpTestCase()
+        {
+            CommandLineInterface::GetInstance().Init("pipeName");
+            char buffer[FILENAME_MAX];
+            if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+                testDir = std::string(buffer);
+            } else {
+                printf("error: getcwd failed\n");
+            }
+        }
+
+        static std::string testDir;
+    };
+    std::string JsAppImplTest::testDir = "";
+
     // 测试拷贝构造函数是否被删除
-    TEST(JsAppImplTest, CopyConstructorDeletedTest)
+    TEST_F(JsAppImplTest, CopyConstructorDeletedTest)
     {
         EXPECT_TRUE(std::is_copy_constructible<JsApp>::value == false);
     }
 
     // 测试赋值运算符是否被删除
-    TEST(JsAppImplTest, AssignmentOperatorDeletedTest)
+    TEST_F(JsAppImplTest, AssignmentOperatorDeletedTest)
     {
         EXPECT_TRUE(std::is_copy_assignable<JsApp>::value == false);
     }
 
-    TEST(JsAppImplTest, StartTest)
+    TEST_F(JsAppImplTest, StartTest)
     {
         JsAppImpl::GetInstance().isStop = false;
         std::thread thread1([]() {
@@ -52,7 +85,7 @@ namespace {
         EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
     }
 
-    TEST(JsAppImplTest, RestartTest)
+    TEST_F(JsAppImplTest, RestartTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -61,7 +94,7 @@ namespace {
         EXPECT_TRUE(eq);
     }
 
-    TEST(JsAppImplTest, InterruptTest)
+    TEST_F(JsAppImplTest, InterruptTest)
     {
         JsAppImpl::GetInstance().isStop = false;
         JsAppImpl::GetInstance().ability =
@@ -72,17 +105,17 @@ namespace {
         EXPECT_TRUE(JsAppImpl::GetInstance().isStop);
     }
 
-    TEST(JsAppImplTest, GetJSONTreeTest)
+    TEST_F(JsAppImplTest, GetJSONTreeTest)
     {
         EXPECT_EQ(JsAppImpl::GetInstance().GetJSONTree(), "jsontree");
     }
 
-    TEST(JsAppImplTest, GetDefaultJSONTreeTest)
+    TEST_F(JsAppImplTest, GetDefaultJSONTreeTest)
     {
         EXPECT_EQ(JsAppImpl::GetInstance().GetDefaultJSONTree(), "defaultjsontree");
     }
 
-    TEST(JsAppImplTest, OrientationChangedTest)
+    TEST_F(JsAppImplTest, OrientationChangedTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -96,8 +129,14 @@ namespace {
         EXPECT_EQ(JsAppImpl::GetInstance().orientation, "landscape");
     }
 
-    TEST(JsAppImplTest, ResolutionChangedTest)
+    TEST_F(JsAppImplTest, ResolutionChangedTest)
     {
+        JsAppImpl::GetInstance().isStop = false;
+        std::thread thread1([]() {
+            JsAppImpl::GetInstance().Start();
+        });
+        thread1.detach();
+        this_thread::sleep_for(chrono::milliseconds(10));
         int32_t originWidth = 222;
         int32_t originHeight = 333;
         int32_t width = 222;
@@ -112,7 +151,7 @@ namespace {
         EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceHeight, 333);
     }
 
-    TEST(JsAppImplTest, ConvertResizeReasonTest)
+    TEST_F(JsAppImplTest, ConvertResizeReasonTest)
     {
         EXPECT_EQ(JsAppImpl::GetInstance().ConvertResizeReason("undefined"),
             OHOS::Ace::WindowSizeChangeReason::UNDEFINED);
@@ -122,7 +161,7 @@ namespace {
             OHOS::Ace::WindowSizeChangeReason::RESIZE);
     }
 
-    TEST(JsAppImplTest, SetResolutionParamsTest)
+    TEST_F(JsAppImplTest, SetResolutionParamsTest)
     {
         CommandParser::GetInstance().deviceType = "phone";
         int32_t originWidth = 111;
@@ -152,37 +191,37 @@ namespace {
             OHOS::Ace::DeviceOrientation::LANDSCAPE);
     }
 
-    TEST(JsAppImplTest, SetArgsColorModeTest)
+    TEST_F(JsAppImplTest, SetArgsColorModeTest)
     {
         JsAppImpl::GetInstance().SetArgsColorMode("light");
         EXPECT_EQ("light", JsAppImpl::GetInstance().colorMode);
     }
 
-    TEST(JsAppImplTest, SetArgsAceVersionTest)
+    TEST_F(JsAppImplTest, SetArgsAceVersionTest)
     {
         JsAppImpl::GetInstance().SetArgsAceVersion("ACE_2_0");
         EXPECT_EQ("ACE_2_0", JsAppImpl::GetInstance().aceVersion);
     }
 
-    TEST(JsAppImplTest, SetDeviceOrentationTest)
+    TEST_F(JsAppImplTest, SetDeviceOrentationTest)
     {
         JsAppImpl::GetInstance().SetDeviceOrentation("landscape");
         EXPECT_EQ("landscape", JsAppImpl::GetInstance().orientation);
     }
 
-    TEST(JsAppImplTest, GetOrientationTest)
+    TEST_F(JsAppImplTest, GetOrientationTest)
     {
         JsAppImpl::GetInstance().orientation = "portrait";
         EXPECT_EQ(JsAppImpl::GetInstance().GetOrientation(), "portrait");
     }
 
-    TEST(JsAppImplTest, GetColorModeTest)
+    TEST_F(JsAppImplTest, GetColorModeTest)
     {
         JsAppImpl::GetInstance().colorMode = "dark";
         EXPECT_EQ(JsAppImpl::GetInstance().GetColorMode(), "dark");
     }
 
-    TEST(JsAppImplTest, ColorModeChangedTest)
+    TEST_F(JsAppImplTest, ColorModeChangedTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -193,7 +232,7 @@ namespace {
             OHOS::Ace::ColorMode::LIGHT);
     }
 
-    TEST(JsAppImplTest, ReloadRuntimePageTest)
+    TEST_F(JsAppImplTest, ReloadRuntimePageTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -202,19 +241,19 @@ namespace {
         EXPECT_TRUE(g_replacePage);
     }
 
-    TEST(JsAppImplTest, SetScreenDensityTest)
+    TEST_F(JsAppImplTest, SetScreenDensityTest)
     {
         JsAppImpl::GetInstance().SetScreenDensity("360");
         EXPECT_EQ(JsAppImpl::GetInstance().screenDensity, "360");
     }
 
-    TEST(JsAppImplTest, SetConfigChangesTest)
+    TEST_F(JsAppImplTest, SetConfigChangesTest)
     {
         JsAppImpl::GetInstance().SetConfigChanges("aaa");
         EXPECT_EQ(JsAppImpl::GetInstance().configChanges, "aaa");
     }
 
-    TEST(JsAppImplTest, MemoryRefreshTest)
+    TEST_F(JsAppImplTest, MemoryRefreshTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -223,7 +262,7 @@ namespace {
         EXPECT_TRUE(g_operateComponent);
     }
 
-    TEST(JsAppImplTest, LoadDocumentTest)
+    TEST_F(JsAppImplTest, LoadDocumentTest)
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -233,8 +272,14 @@ namespace {
         EXPECT_TRUE(g_loadAceDocument);
     }
 
-    TEST(JsAppImplTest, FoldStatusChangedTest)
+    TEST_F(JsAppImplTest, FoldStatusChangedTest)
     {
+        JsAppImpl::GetInstance().isStop = false;
+        std::thread thread1([]() {
+            JsAppImpl::GetInstance().Start();
+        });
+        thread1.detach();
+        this_thread::sleep_for(chrono::milliseconds(10));
         int width = 200;
         int height = 300;
         g_execStatusChangedCallback = false;
@@ -264,35 +309,35 @@ namespace {
         EXPECT_NE(JsAppImpl::GetInstance().aceRunArgs.deviceHeight, height);
     }
 
-    TEST(JsAppImplTest, DispatchBackPressedEventTest)
+    TEST_F(JsAppImplTest, DispatchBackPressedEventTest)
     {
         g_onBackPressed = false;
         JsAppImpl::GetInstance().DispatchBackPressedEvent();
         EXPECT_TRUE(g_onBackPressed);
     }
 
-    TEST(JsAppImplTest, DispatchKeyEventTest)
+    TEST_F(JsAppImplTest, DispatchKeyEventTest)
     {
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchKeyEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
     }
 
-    TEST(JsAppImplTest, DispatchPointerEventTest)
+    TEST_F(JsAppImplTest, DispatchPointerEventTest)
     {
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchPointerEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
     }
 
-    TEST(JsAppImplTest, DispatchAxisEventTest)
+    TEST_F(JsAppImplTest, DispatchAxisEventTest)
     {
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchAxisEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
     }
 
-    TEST(JsAppImplTest, DispatchInputMethodEventTest)
+    TEST_F(JsAppImplTest, DispatchInputMethodEventTest)
     {
         g_onInputMethodEvent = false;
         int code = 12;
@@ -300,7 +345,7 @@ namespace {
         EXPECT_TRUE(g_onInputMethodEvent);
     }
 
-    TEST(JsAppImplTest, InitGlfwEnvTest)
+    TEST_F(JsAppImplTest, InitGlfwEnvTest)
     {
         g_glfwInit = false;
         g_createGlfwWindow = false;
@@ -309,7 +354,7 @@ namespace {
         EXPECT_TRUE(g_createGlfwWindow);
     }
 
-    TEST(JsAppImplTest, SetJsAppArgsTest)
+    TEST_F(JsAppImplTest, SetJsAppArgsTest)
     {
         CommandParser::GetInstance().isComponentMode = true;
         OHOS::Ace::Platform::AceRunArgs args;
@@ -318,7 +363,7 @@ namespace {
         EXPECT_TRUE(args.isComponentMode);
     }
 
-    TEST(JsAppImplTest, RunJsAppImplTest)
+    TEST_F(JsAppImplTest, RunJsAppImplTest)
     {
         JsAppImpl::GetInstance().isDebug = false;
         JsAppImpl::GetInstance().debugServerPort = 0;
@@ -344,7 +389,7 @@ namespace {
     }
 
     // JsApp start
-    TEST(JsAppImplTest, ResolutionParamTest)
+    TEST_F(JsAppImplTest, ResolutionParamTest)
     {
         int width = 100;
         ResolutionParam param(width, width, width, width);
@@ -354,7 +399,7 @@ namespace {
         EXPECT_EQ(param.compressionHeight, width);
     }
 
-    TEST(JsAppImplTest, StopTest)
+    TEST_F(JsAppImplTest, StopTest)
     {
         JsAppImpl::GetInstance().isStop = false;
         JsAppImpl::GetInstance().isFinished = false;
@@ -368,31 +413,31 @@ namespace {
         EXPECT_TRUE(JsAppImpl::GetInstance().isStop);
     }
 
-    TEST(JsAppImplTest, SetJsAppPathTest)
+    TEST_F(JsAppImplTest, SetJsAppPathTest)
     {
         JsAppImpl::GetInstance().SetJsAppPath("pages/Index");
         EXPECT_EQ(JsAppImpl::GetInstance().jsAppPath, "pages/Index");
     }
 
-    TEST(JsAppImplTest, SetUrlPathTest)
+    TEST_F(JsAppImplTest, SetUrlPathTest)
     {
         JsAppImpl::GetInstance().SetUrlPath("pages/Index");
         EXPECT_EQ(JsAppImpl::GetInstance().urlPath, "pages/Index");
     }
 
-    TEST(JsAppImplTest, SetPipeNameTest)
+    TEST_F(JsAppImplTest, SetPipeNameTest)
     {
         JsAppImpl::GetInstance().SetPipeName("phone_1");
         EXPECT_EQ(JsAppImpl::GetInstance().pipeName, "phone_1");
     }
 
-    TEST(JsAppImplTest, SetPipePortTest)
+    TEST_F(JsAppImplTest, SetPipePortTest)
     {
         JsAppImpl::GetInstance().SetPipePort("5000");
         EXPECT_EQ(JsAppImpl::GetInstance().pipePort, "5000");
     }
 
-    TEST(JsAppImplTest, SetBundleNameTest)
+    TEST_F(JsAppImplTest, SetBundleNameTest)
     {
         JsAppImpl::GetInstance().SetBundleName("aaa");
         EXPECT_EQ(JsAppImpl::GetInstance().bundleName, "aaa");
@@ -401,7 +446,7 @@ namespace {
         EXPECT_TRUE(pos != std::string::npos);
     }
 
-    TEST(JsAppImplTest, SetRunningTest)
+    TEST_F(JsAppImplTest, SetRunningTest)
     {
         JsAppImpl::GetInstance().SetRunning(true);
         EXPECT_TRUE(JsAppImpl::GetInstance().isRunning);
@@ -409,7 +454,7 @@ namespace {
         EXPECT_FALSE(JsAppImpl::GetInstance().isRunning);
     }
 
-    TEST(JsAppImplTest, GetRunningTest)
+    TEST_F(JsAppImplTest, GetRunningTest)
     {
         JsAppImpl::GetInstance().isRunning = true;
         EXPECT_TRUE(JsAppImpl::GetInstance().GetRunning());
@@ -417,7 +462,7 @@ namespace {
         EXPECT_FALSE(JsAppImpl::GetInstance().GetRunning());
     }
 
-    TEST(JsAppImplTest, SetIsDebugTest)
+    TEST_F(JsAppImplTest, SetIsDebugTest)
     {
         JsAppImpl::GetInstance().SetIsDebug(true);
         EXPECT_TRUE(JsAppImpl::GetInstance().isDebug);
@@ -425,24 +470,106 @@ namespace {
         EXPECT_FALSE(JsAppImpl::GetInstance().isDebug);
     }
 
-    TEST(JsAppImplTest, SetDebugServerPortTest)
+    TEST_F(JsAppImplTest, SetDebugServerPortTest)
     {
         int port = 5000;
         JsAppImpl::GetInstance().SetDebugServerPort(port);
         EXPECT_EQ(JsAppImpl::GetInstance().debugServerPort, port);
     }
 
-    TEST(JsAppImplTest, SetJSHeapSizeTest)
+    TEST_F(JsAppImplTest, SetJSHeapSizeTest)
     {
         int size = 5000;
         JsAppImpl::GetInstance().SetJSHeapSize(size);
         EXPECT_EQ(JsAppImpl::GetInstance().jsHeapSize, size);
     }
 
-    TEST(JsAppImplTest, IsLiteDeviceTest)
+    TEST_F(JsAppImplTest, IsLiteDeviceTest)
     {
         EXPECT_TRUE(JsApp::IsLiteDevice("liteWearable"));
         EXPECT_FALSE(JsApp::IsLiteDevice("phone"));
     }
     // JsApp end
+
+    TEST_F(JsAppImplTest, SetPkgContextInfoTest)
+    {
+        CommandParser::GetInstance().appResourcePath = testDir;
+        CommandParser::GetInstance().loaderJsonPath = testDir + "/loader.json";
+        const string moduleJsonPath = testDir + FileSystem::GetSeparator() + "module.json";
+        const string pkgContextInfoJsonPath = testDir + FileSystem::GetSeparator() + "pkgContextInfo.json";
+        // 直接调用
+        JsAppImpl::GetInstance().SetPkgContextInfo();
+        EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
+        // 创建module.json,json不写全1
+        std::string moduleJsonContent = R"({"aaa":"bbb"})";
+        WriteFile(moduleJsonPath, moduleJsonContent);
+        JsAppImpl::GetInstance().SetPkgContextInfo();
+        EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
+        // 创建module.json,json不写全2
+        moduleJsonContent = R"({"module":{"name":333}})";
+        WriteFile(moduleJsonPath, moduleJsonContent);
+        JsAppImpl::GetInstance().SetPkgContextInfo();
+        EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
+        // 创建module.json,json写全
+        moduleJsonContent = R"({"module":{"name":"entry","packageName":"entry"}})";
+        WriteFile(moduleJsonPath, moduleJsonContent);
+        JsAppImpl::GetInstance().SetPkgContextInfo();
+        EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
+        EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.pkgContextInfoJsonStringMap.empty());
+        // 创建pkgContextInfo.json
+        std::string pkgContextInfoJsonContent = R"({"entry":{"packageName":"entry"}})";
+        WriteFile(pkgContextInfoJsonPath, pkgContextInfoJsonContent);
+        JsAppImpl::GetInstance().SetPkgContextInfo();
+        EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
+        EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.pkgContextInfoJsonStringMap.empty());
+        if (std::remove(moduleJsonPath.c_str()) != 0) {
+            printf("Error deleting module.json file!\n");
+        }
+        if (std::remove(pkgContextInfoJsonPath.c_str()) != 0) {
+            printf("Error deleting pkgContextInfo.json file!\n");
+        }
+    }
+
+    TEST_F(JsAppImplTest, SetAvoidAreaTest)
+    {
+        AvoidAreas areas;
+        JsAppImpl::GetInstance().SetAvoidArea(areas);
+        bool ret = JsAppImpl::GetInstance().avoidInitialAreas == areas;
+        EXPECT_TRUE(ret);
+    }
+
+    TEST_F(JsAppImplTest, UpdateAvoidArea2IdeTest)
+    {
+        const OHOS::Rosen::Rect value = {0, 0, 0, 0};
+        g_output = false;
+        JsAppImpl::GetInstance().UpdateAvoidArea2Ide("topRect", value);
+        EXPECT_TRUE(g_output);
+    }
+
+    TEST_F(JsAppImplTest, GetWindowTest)
+    {
+        JsAppImpl::GetInstance().isDebug = true;
+        OHOS::Rosen::Window* win1 = JsAppImpl::GetInstance().GetWindow();
+        EXPECT_TRUE(win1 == nullptr);
+
+        JsAppImpl::GetInstance().isDebug = false;
+        JsAppImpl::GetInstance().ability =
+            OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
+        OHOS::Rosen::WMError errCode;
+        OHOS::sptr<OHOS::Rosen::WindowOption> sp = nullptr;
+        auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
+        JsAppImpl::GetInstance().ability->SetWindow(window);
+        OHOS::Rosen::Window* win2 = JsAppImpl::GetInstance().GetWindow();
+        EXPECT_TRUE(window == win2);
+    }
+
+    TEST_F(JsAppImplTest, InitAvoidAreasTest)
+    {
+        OHOS::Rosen::WMError errCode;
+        OHOS::sptr<OHOS::Rosen::WindowOption> sp = nullptr;
+        auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
+        g_getSystemBarPropertyByType = false;
+        JsAppImpl::GetInstance().InitAvoidAreas(window);
+        EXPECT_TRUE(g_getSystemBarPropertyByType);
+    }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include "ace_ability.h"
 #include "window.h"
 #include "MockGlobalResult.h"
@@ -97,6 +98,7 @@ bool AceAbility::OperateComponent(const std::string& attrsJson)
 
 void AceAbility::SetWindow(sptr<OHOS::Rosen::Window> rsWindow)
 {
+    rsWindow_ = rsWindow;
     g_setWindow = true;
 }
 
@@ -104,5 +106,10 @@ std::unique_ptr<AceAbility> AceAbility::CreateInstance(AceRunArgs& runArgs)
 {
     auto aceAbility = std::make_unique<AceAbility>(runArgs);
     return aceAbility;
+}
+
+sptr<OHOS::Rosen::Window> AceAbility::GetWindow()
+{
+    return rsWindow_;
 }
 }
