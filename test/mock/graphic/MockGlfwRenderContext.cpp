@@ -52,9 +52,5 @@ void GlfwRenderContext::PollEvents()
     g_pollEvents = true;
 }
 
-void GlfwRenderContext::SetWindowSize(int32_t width, int32_t height)
-{
-    width_ = width;
-    height_ = height;
-}
+void GlfwRenderContext::SetWindowSize(int32_t width, int32_t height) {}
 }
