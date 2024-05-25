@@ -19,7 +19,7 @@ group("fuzztest") {
   print(
       "======================================================================")
   deps = [
-    "./commandparse_fuzzer:fuzztest",
-    "./paramsparse_fuzzer:fuzztest",
+    "./commandparse_fuzzer:command_parse_fuzztest",
+    "./paramsparse_fuzzer:params_parse_fuzztest",
   ]
 }
