@@ -15,7 +15,7 @@ import("../../test.gni")
 
 module_output_path = "previewer/util"
 
-group("fuzztest") {
+group("params_parse_fuzztest") {
   testonly = true
   deps = [ ":ParamsParseFuzzTest" ]
 }

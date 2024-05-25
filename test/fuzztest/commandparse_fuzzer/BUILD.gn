@@ -15,7 +15,7 @@ import("../../test.gni")
 
 module_output_path = "previewer/cli"
 
-group("fuzztest") {
+group("command_parse_fuzztest") {
   testonly = true
   deps = [
     ":CommonCommandParseFuzzTest",
