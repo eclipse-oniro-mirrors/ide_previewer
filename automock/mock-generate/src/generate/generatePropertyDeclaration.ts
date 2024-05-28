@@ -54,15 +54,7 @@ export function generatePropertyDeclaration(rootName: string, propertyDeclaratio
     } else if (propertyDeclaration.propertyTypeName.startsWith('Map')) {
       propertyBody += '{key: {}};';
     } else if (propertyDeclaration.kind === SyntaxKind.TypeReference) {
-      if (getClassNameSet().has(propertyDeclaration.propertyTypeName)) {
-        if (!['Want', 'InputMethodExtensionContext'].includes(propertyDeclaration.propertyTypeName)) {
-          propertyBody += `new ${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)}();`;
-        } else {
-          propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
-        }
-      } else {
-        propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
-      }
+      propertyBody = generateTypeReference(propertyDeclaration, sourceFile, propertyBody);
     } else if (propertyDeclaration.kind === SyntaxKind.NumericLiteral || propertyDeclaration.kind === SyntaxKind.StringLiteral) {
       propertyBody += ` ${propertyDeclaration.propertyTypeName};`;
     } else {
@@ -72,6 +64,30 @@ export function generatePropertyDeclaration(rootName: string, propertyDeclaratio
       addExtraImport(extraImport, importDeclarations, sourceFile, propertyDeclaration);
       propertyBody += '\n })();';
     }
+  }
+  return propertyBody;
+}
+
+/**
+ * generate type reference
+ * @param propertyDeclaration
+ * @param sourceFile
+ * @param propertyBody
+ * @returns
+ */
+function generateTypeReference(
+  propertyDeclaration: PropertyEntity,
+  sourceFile: SourceFile,
+  propertyBody: string
+): string {
+  if (getClassNameSet().has(propertyDeclaration.propertyTypeName)) {
+    if (!['Want', 'InputMethodExtensionContext'].includes(propertyDeclaration.propertyTypeName)) {
+      propertyBody += `new ${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)}();`;
+    } else {
+      propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
+    }
+  } else {
+    propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
   }
   return propertyBody;
 }

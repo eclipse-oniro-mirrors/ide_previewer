@@ -311,18 +311,7 @@ function getImportTypeAliasNameFromImportElements(importElementEntity: ImportEle
   for (let i = 0; i < importElementEntity.length; i++) {
     if (importElementEntity[i].importElements.includes('_')) {
       const importElements = importElementEntity[i].importElements.replace('{', '').replace('}', '').split(',');
-      for (let j = 0; j < importElements.length; j++) {
-        const element = importElements[j].trimStart().trimEnd();
-        if (!element) {
-          continue;
-        }
-        if (`_${typeName}` === element.trim()) {
-          return `_${typeName}`;
-        }
-        if (element.includes(' as ') && `_${typeName}` === element.split('as')[1].trim()) {
-          return `_${typeName}`;
-        }
-      }
+      typeName = getTypeName(importElements, typeName);
     }
   }
   if (typeName === 'Want') {
@@ -331,6 +320,28 @@ function getImportTypeAliasNameFromImportElements(importElementEntity: ImportEle
     typeName = 'mockInputMethodExtensionContext().InputMethodExtensionContext';
   } else if (typeName.includes('<') && typeName.includes(',')) {
     typeName = '{}';
+  }
+  return typeName;
+}
+
+/**
+ * get type name , for example: {Context as _Context} return _Context
+ * @param importElements
+ * @param typeName
+ * @returns
+ */
+function getTypeName(importElements: string[], typeName: string): string {
+  for (let j = 0; j < importElements.length; j++) {
+    const element = importElements[j].trimStart().trimEnd();
+    if (!element) {
+      continue;
+    }
+    if (`_${typeName}` === element.trim()) {
+      return `_${typeName}`;
+    }
+    if (element.includes(' as ') && `_${typeName}` === element.split('as')[1].trim()) {
+      return `_${typeName}`;
+    }
   }
   return typeName;
 }
@@ -625,11 +636,10 @@ export function generateSymbolIterator(methodEntity: MethodEntity): string {
             value: '[PC Preview] unknown any',
             done: false
           };
-        } else {
-          return {
-            done: true
-          };
         }
+        return {
+          done: true
+        };
       }
     };
     return IteratorMock;`;
@@ -696,13 +706,7 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
     if (returnType.returnKind === SyntaxKind.UnionType) {
       // fun(): y | Promise<y>
       const returnNames = returnPromiseParams.split('|');
-      for (let i = 0; i < returnNames.length; i++) {
-        if (returnNames[i].trim().startsWith('Promise<')) {
-          // Promise<y>
-          returnPromiseParams = returnNames[i].trim();
-          break;
-        }
-      }
+      returnPromiseParams = loopReturnNames(returnNames, returnPromiseParams);
     }
     // At this point, obtain the values in these formats: Promise<x | y | z>, Promise<y>, Promise<x.y>, Promise<x>
     const kindName = returnPromiseParams;
@@ -742,6 +746,23 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
   } else {
     return `return ${data}`;
   }
+}
+
+/**
+ * loop ReturnNames
+ * @param returnNames
+ * @param returnPromiseParams
+ * @returns
+ */
+function loopReturnNames(returnNames: string[], returnPromiseParams: string): string {
+  for (let i = 0; i < returnNames.length; i++) {
+    if (returnNames[i].trim().startsWith('Promise<')) {
+      // Promise<y>
+      returnPromiseParams = returnNames[i].trim();
+      break;
+    }
+  }
+  return returnPromiseParams;
 }
 
 /**

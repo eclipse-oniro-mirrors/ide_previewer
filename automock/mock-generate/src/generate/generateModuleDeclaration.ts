@@ -33,6 +33,7 @@ import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateVariableStatementDelcatation } from './generateVariableStatementDeclaration';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { ClassEntity } from '../declaration-node/classDeclaration';
 
 interface ModuleExportEntity {
   type: string,
@@ -288,29 +289,45 @@ function defaultExportClassForEach(props: DefaultExportClassProps): DefaultExpor
     defaultExportClass.forEach(value => {
       if (value.exportModifiers.includes(SyntaxKind.DefaultKeyword) &&
         value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-        if (props.filename.startsWith('system_')) {
-          const mockNameArr = props.filename.split('_');
-          const mockName = mockNameArr[mockNameArr.length - 1];
-          addToSystemIndexArray({
-            filename: props.filename,
-            mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
-          });
-
-          props.moduleBody += `global.systemplugin.${mockName} = {`;
-          if (value.staticMethods.length > 0) {
-            let staticMethodBody = '';
-            value.staticMethods.forEach(val => {
-              staticMethodBody += generateStaticFunction(val, true, props.sourceFile, props.mockApi) + '\n';
-            });
-            props.moduleBody += staticMethodBody;
-          }
-          props.moduleBody += '}';
-        } else {
-          props.outBody += generateClassDeclaration('', value, false, '', props.filename,
-            props.sourceFile, false, props.mockApi);
-        }
+        const moduleBodyAndOutBodyBack = getModuleBodyAndOutBody(props, value);
+        props.outBody = moduleBodyAndOutBodyBack.outBody;
+        props.moduleBody = moduleBodyAndOutBodyBack.moduleBody;
       }
     });
+  }
+  return {
+    outBody: props.outBody,
+    moduleBody: props.moduleBody
+  };
+}
+
+/**
+ * get ModuleBodyAndOutBody
+ * @param props
+ * @param value
+ * @returns
+ */
+function getModuleBodyAndOutBody(props: DefaultExportClassProps, value: ClassEntity): DefaultExportClassBack {
+  if (props.filename.startsWith('system_')) {
+    const mockNameArr = props.filename.split('_');
+    const mockName = mockNameArr[mockNameArr.length - 1];
+    addToSystemIndexArray({
+      filename: props.filename,
+      mockFunctionName: `mock${firstCharacterToUppercase(mockName)}`
+    });
+
+    props.moduleBody += `global.systemplugin.${mockName} = {`;
+    if (value.staticMethods.length > 0) {
+      let staticMethodBody = '';
+      value.staticMethods.forEach(val => {
+        staticMethodBody += generateStaticFunction(val, true, props.sourceFile, props.mockApi) + '\n';
+      });
+      props.moduleBody += staticMethodBody;
+    }
+    props.moduleBody += '}';
+  } else {
+    props.outBody += generateClassDeclaration('', value, false, '', props.filename,
+      props.sourceFile, false, props.mockApi);
   }
   return {
     outBody: props.outBody,

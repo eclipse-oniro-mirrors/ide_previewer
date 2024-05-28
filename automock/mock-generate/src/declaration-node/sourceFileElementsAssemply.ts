@@ -226,29 +226,3 @@ function substepConsole(node: Node, fileName: string) {
     console.log('--------------------------- uncaught sourceFile type end -----------------------');
   }
 }
-
-interface SubstepClassParams {
-  node: ClassDeclaration,
-  sourceFile: SourceFile,
-  classDeclarations: Array<ClassEntity>,
-  staticMethods: Array<Array<StaticMethodEntity>>,
-}
-
-interface SubstepFuntionParams {
-  node: FunctionDeclaration,
-  sourceFile: SourceFile,
-  functionDeclarations: Map<string, Array<FunctionEntity>>
-}
-
-export interface SourceFileEntity {
-  importDeclarations: Array<ImportElementEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  enumDeclarations: Array<EnumEntity>,
-  exportAssignment: Array<string>,
-  staticMethods: Array<Array<StaticMethodEntity>>,
-  exportDeclarations: Array<string>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>
-}

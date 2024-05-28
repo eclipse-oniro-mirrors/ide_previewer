@@ -22,8 +22,8 @@ import {
   isClassDeclaration, isComputedPropertyName, isIdentifier, isModuleBlock, isModuleDeclaration, isPrivateIdentifier
 } from 'typescript';
 import fs from 'fs';
+import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
-
 
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
@@ -99,17 +99,28 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
     } else if (isModuleDeclaration(node)) {
       const moduleDeclaration = node as ModuleDeclaration;
       const moduleBody = moduleDeclaration.body;
-      if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
-        moduleBody.statements.forEach(value => {
-          if (isClassDeclaration(value)) {
-            if (value.name !== undefined) {
-              allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
-            }
-          }
-        });
-      }
+      getIsModuleDeclaration(moduleBody);
     }
   });
+  return allClassSet;
+}
+
+/**
+ * get module class declaration
+ * @param moduleBody
+ * @returns
+ */
+function getIsModuleDeclaration(moduleBody: ts.ModuleBody): Set<string> {
+  if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
+    moduleBody.statements.forEach(value => {
+      if (!isClassDeclaration(value)) {
+        return allClassSet;
+      }
+      if (value.name !== undefined) {
+        allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
+      }
+    });
+  }
   return allClassSet;
 }
 
