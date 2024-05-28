@@ -162,32 +162,3 @@ function substepModule(props: SubstepGetModuleparam): SubstepGetModuleparam {
   }
   return props;
 }
-
-interface SubstepGetModuleparam {
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>,
-  enumDeclarations: Array<EnumEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  variableStatements: Array<Array<StatementEntity>>,
-  moduleImportEquaqls: Array<ImportEuqalEntity>,
-  exportDeclarations: Array<string>,
-  sourceFile: SourceFile,
-  fileName: string,
-  moduleBody: ModuleBody
-}
-
-export interface ModuleBlockEntity {
-  moduleName: string,
-  exportModifiers: Array<number>,
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>,
-  enumDeclarations: Array<EnumEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  variableStatements: Array<Array<StatementEntity>>,
-  moduleImportEquaqls: Array<ImportEuqalEntity>,
-  exportDeclarations: Array<string>
-}
