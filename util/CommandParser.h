@@ -20,6 +20,25 @@
 #include <string>
 #include <vector>
 
+class CommandInfo {
+public:
+    std::string deviceType;
+    std::string pages;
+    std::string appResourcePath;
+    bool isCardDisplay;
+    std::string containerSdkPath;
+    bool isComponentMode;
+    std::string loaderJsonPath;
+    std::string abilityPath;
+    std::string abilityName;
+    std::string configPath;
+    std::string screenShape;
+    int32_t orignalResolutionWidth;
+    int32_t orignalResolutionHeight;
+    int32_t compressionResolutionWidth;
+    int32_t compressionResolutionHeight;
+};
+
 class CommandParser {
 public:
     CommandParser(const CommandParser&) = delete;
@@ -65,6 +84,8 @@ public:
     int32_t GetFoldResolutionWidth() const;
     int32_t GetFoldResolutionHeight() const;
     std::string GetLoaderJsonPath() const;
+    int ParseArgs(int argc, char* argv[]);
+    void GetCommandInfo(CommandInfo& info);
 
 private:
     CommandParser();

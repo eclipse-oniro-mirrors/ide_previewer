@@ -44,6 +44,9 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::Ace;
 
+ScreenInfo screenInfo;
+CommandInfo commandInfo;
+
 class PreviewerListener : public OHOS::Rosen::IWindowSystemBarEnableListener {
 public:
     OHOS::Rosen::WMError OnSetSpecificBarProperty(OHOS::Rosen::WindowType type,
@@ -87,6 +90,7 @@ JsAppImpl& JsAppImpl::GetInstance()
 
 void JsAppImpl::Start()
 {
+    CommandParser::GetInstance().GetCommandInfo(commandInfo);
     VirtualScreenImpl::GetInstance().InitVirtualScreen();
     VirtualScreenImpl::GetInstance().InitAll(pipeName, pipePort);
     isFinished = false;
@@ -105,16 +109,7 @@ void JsAppImpl::Start()
 
 void JsAppImpl::Restart()
 {
-    if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
-        if (simulator) {
-            simulator->TerminateAbility(debugAbilityId);
-        }
-#endif
-    } else {
-        ability = nullptr;
-    }
-    OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+    StopAbility();
 }
 
 std::string JsAppImpl::GetJSONTree()
@@ -136,7 +131,7 @@ void JsAppImpl::OrientationChanged(std::string commandOrientation)
     aceRunArgs.deviceWidth = height;
     aceRunArgs.deviceHeight = width;
     VirtualScreenImpl::GetInstance().WidthAndHeightReverse();
-    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(), aceRunArgs.deviceWidth);
+    AdaptDeviceType(aceRunArgs, commandInfo.deviceType, aceRunArgs.deviceWidth);
     if (commandOrientation == "portrait") {
         aceRunArgs.deviceConfig.orientation = DeviceOrientation::PORTRAIT;
     } else {
@@ -171,54 +166,40 @@ void JsAppImpl::ColorModeChanged(const std::string commandColorMode)
 void JsAppImpl::Interrupt()
 {
     isStop = true;
-    if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
-        if (simulator) {
-            simulator->TerminateAbility(debugAbilityId);
-        }
-#endif
-    } else {
-        ability = nullptr;
-    }
-    OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+    StopAbility();
+    ILOG("JsAppImpl::Interrupt finished");
 }
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 {
     ILOG("foldStatus:%s foldWidth:%d foldHeight:%d",
-        VirtualScreenImpl::GetInstance().GetFoldStatus().c_str(), VirtualScreenImpl::GetInstance().GetFoldWidth(),
-        VirtualScreenImpl::GetInstance().GetFoldHeight());
+        screenInfo.foldStatus.c_str(), screenInfo.foldWidth, screenInfo.foldHeight);
     SetAssetPath(args, jsAppPath);
     SetProjectModel(args);
-    SetPageProfile(args, CommandParser::GetInstance().GetPages());
-    SetDeviceWidth(args, ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
-        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
-        VirtualScreenImpl::GetInstance().GetOrignalWidth());
-    SetDeviceHeight(args, ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
-        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldHeight() :
-        VirtualScreenImpl::GetInstance().GetOrignalHeight());
+    SetPageProfile(args, commandInfo.pages);
+    SetDeviceWidth(args, ConvertFoldStatus(screenInfo.foldStatus) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? screenInfo.foldWidth : screenInfo.orignalResolutionWidth);
+    SetDeviceHeight(args, ConvertFoldStatus(screenInfo.foldStatus) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? screenInfo.foldHeight : screenInfo.orignalResolutionHeight);
     SetWindowTitle(args, "Ace");
     SetUrl(args, urlPath);
     SetConfigChanges(args, configChanges);
     SetColorMode(args, colorMode);
     SetOrientation(args, orientation);
     SetAceVersionArgs(args, aceVersion);
-    SetDeviceScreenDensity(atoi(screenDensity.c_str()),
-                           CommandParser::GetInstance().GetDeviceType());
+    SetDeviceScreenDensity(atoi(screenDensity.c_str()), commandInfo.deviceType);
     SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
     SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
     SetScript(args, "");
     SetSystemResourcesPath(args);
-    SetAppResourcesPath(args, CommandParser::GetInstance().GetAppResourcePath());
-    SetFormsEnabled(args, CommandParser::GetInstance().IsCardDisplay());
-    SetContainerSdkPath(args, CommandParser::GetInstance().GetContainerSdkPath());
-    AdaptDeviceType(args, CommandParser::GetInstance().GetDeviceType(),
-        ConvertFoldStatus(VirtualScreenImpl::GetInstance().GetFoldStatus()) ==
-        OHOS::Rosen::FoldStatus::FOLDED ? VirtualScreenImpl::GetInstance().GetFoldWidth() :
-        VirtualScreenImpl::GetInstance().GetOrignalWidth());
+    SetAppResourcesPath(args, commandInfo.appResourcePath);
+    SetFormsEnabled(args, commandInfo.isCardDisplay);
+    SetContainerSdkPath(args, commandInfo.containerSdkPath);
+    AdaptDeviceType(args, commandInfo.deviceType, ConvertFoldStatus(screenInfo.foldStatus) ==
+        OHOS::Rosen::FoldStatus::FOLDED ? screenInfo.foldWidth : screenInfo.orignalResolutionWidth);
     SetOnRouterChange(args);
     SetOnError(args);
-    SetComponentModeEnabled(args, CommandParser::GetInstance().IsComponentMode());
+    SetComponentModeEnabled(args, commandInfo.isComponentMode);
     SetPkgContextInfo();
     ILOG("start ability: %d %d %f", args.deviceWidth, args.deviceHeight, args.deviceConfig.density);
 }
@@ -226,16 +207,14 @@ void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 void JsAppImpl::RunJsApp()
 {
     ILOG("RunJsApp 1");
-    AssignValueForWidthAndHeight(VirtualScreenImpl::GetInstance().GetOrignalWidth(),
-                                 VirtualScreenImpl::GetInstance().GetOrignalHeight(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionWidth(),
-                                 VirtualScreenImpl::GetInstance().GetCompressionHeight());
+    screenInfo = VirtualScreenImpl::GetInstance().GetScreenInfo();
+    AssignValueForWidthAndHeight(screenInfo.orignalResolutionWidth, screenInfo.orignalResolutionHeight,
+                                 screenInfo.compressionResolutionWidth, screenInfo.compressionResolutionHeight);
     SetJsAppArgs(aceRunArgs);
-    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(CommandParser::GetInstance().GetLoaderJsonPath());
+    OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(commandInfo.loaderJsonPath);
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
-    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(VirtualScreenImpl::GetInstance().GetFoldable());
-    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(
-        VirtualScreenImpl::GetInstance().GetFoldStatus()));
+    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(screenInfo.foldable);
+    OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(screenInfo.foldStatus));
     InitGlfwEnv();
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
     Platform::AcePreviewHelper::GetInstance()->
@@ -319,8 +298,8 @@ void JsAppImpl::RunDebugAbility()
             return true;
         });
     SetMockJsonInfo();
-    std::string abilitySrcPath = CommandParser::GetInstance().GetAbilityPath();
-    std::string abilityName = CommandParser::GetInstance().GetAbilityName();
+    std::string abilitySrcPath = commandInfo.abilityPath;
+    std::string abilityName = commandInfo.abilityName;
     debugAbilityId = simulator->StartAbility(abilitySrcPath, [](int64_t abilityId) {}, abilityName);
     if (debugAbilityId < 0) {
         ELOG("JsApp::Run ability start failed. abilitySrcPath:%s abilityName:%s", abilitySrcPath.c_str(),
@@ -341,8 +320,7 @@ void JsAppImpl::RunDebugAbility()
 
 void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
 {
-    const string path = CommandParser::GetInstance().GetAppResourcePath() +
-                        FileSystem::GetSeparator() + "module.json";
+    const string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
     if (!FileSystem::IsFileExists(path)) {
         ELOG("The module.json file is not exist.");
         return;
@@ -360,8 +338,7 @@ void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
 void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
 {
     options.modulePath = aceRunArgs.assetPath + FileSystem::GetSeparator() + "modules.abc";
-    options.resourcePath = CommandParser::GetInstance().GetAppResourcePath() +
-                                FileSystem::GetSeparator() + "resources.index";
+    options.resourcePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "resources.index";
     if (debugServerPort > 0) {
         options.debugPort = debugServerPort;
     }
@@ -387,7 +364,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
     deviceCfg.colorMode = SetColorMode<OHOS::AbilityRuntime::ColorMode>(aceRunArgs.deviceConfig.colorMode);
     deviceCfg.density = aceRunArgs.deviceConfig.density;
     options.deviceConfig = deviceCfg;
-    string fPath = CommandParser::GetInstance().GetConfigPath();
+    string fPath = commandInfo.configPath;
     options.configuration = UpdateConfiguration(aceRunArgs);
     std::size_t pos = fPath.find(".idea");
     if (pos == std::string::npos) {
@@ -682,8 +659,8 @@ void JsAppImpl::SetResolutionParams(int32_t changedOriginWidth, int32_t changedO
     SetDeviceHeight(aceRunArgs, changedHeight);
     orignalWidth = changedOriginWidth;
     orignalHeight = changedOriginHeight;
-    SetDeviceScreenDensity(screenDensity, CommandParser::GetInstance().GetDeviceType());
-    AdaptDeviceType(aceRunArgs, CommandParser::GetInstance().GetDeviceType(), changedOriginWidth);
+    SetDeviceScreenDensity(screenDensity, commandInfo.deviceType);
+    AdaptDeviceType(aceRunArgs, commandInfo.deviceType, changedOriginWidth);
     AssignValueForWidthAndHeight(changedOriginWidth, changedOriginHeight, changedWidth, changedHeight);
     if (changedWidth <= changedHeight) {
         JsAppImpl::GetInstance().SetDeviceOrentation("portrait");
@@ -787,9 +764,8 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
                                      args.deviceWidth, args.deviceHeight);
         SetColorMode(args, colorMode);
         SetOrientation(args, orientation);
-        SetDeviceScreenDensity(atoi(screenDensity.c_str()),
-                               CommandParser::GetInstance().GetDeviceType());
-        AdaptDeviceType(args, CommandParser::GetInstance().GetDeviceType(), aceRunArgs.deviceWidth);
+        SetDeviceScreenDensity(atoi(screenDensity.c_str()), commandInfo.deviceType);
+        AdaptDeviceType(args, commandInfo.deviceType, aceRunArgs.deviceWidth);
         SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
         SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
     } else {
@@ -819,9 +795,8 @@ void JsAppImpl::SetSystemParams(OHOS::Ace::Platform::SystemParams& params, const
     params.orientation = aceRunArgs.deviceConfig.orientation;
     params.deviceType = aceRunArgs.deviceConfig.deviceType;
     params.density = aceRunArgs.deviceConfig.density;
-    params.isRound = (paramObj.IsNull()) ?
-                     (CommandParser::GetInstance().GetScreenShape() == "circle") :
-                     paramObj["roundScreen"].AsBool();
+    params.isRound = (paramObj.IsNull()) ? (commandInfo.screenShape == "circle") :
+        paramObj["roundScreen"].AsBool();
 }
 
 void JsAppImpl::LoadDocument(const std::string filePath,
@@ -925,8 +900,7 @@ void JsAppImpl::InitGlfwEnv()
 
 void JsAppImpl::SetMockJsonInfo()
 {
-    string filePath = CommandParser::GetInstance().GetAppResourcePath() +
-        FileSystem::GetSeparator() + "mock-config.json";
+    string filePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "mock-config.json";
     if (isDebug && debugServerPort >= 0) {
 #if defined(__APPLE__) || defined(_WIN32)
         simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
@@ -938,8 +912,7 @@ void JsAppImpl::SetMockJsonInfo()
 
 void JsAppImpl::SetPkgContextInfo()
 {
-    const string path = CommandParser::GetInstance().GetAppResourcePath() +
-                        FileSystem::GetSeparator() + "module.json";
+    const string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
     string moduleJsonStr = JsonReader::ReadFile(path);
     if (moduleJsonStr.empty()) {
         ELOG("Get module.json content empty.");
@@ -957,7 +930,7 @@ void JsAppImpl::SetPkgContextInfo()
         string pkgName = rootJson1["module"]["packageName"].AsString();
         aceRunArgs.packageNameList = {{moduleName, pkgName}};
     }
-    std::string loaderJsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
+    std::string loaderJsonPath = commandInfo.loaderJsonPath;
     std::string flag = "loader.json";
     int idx = loaderJsonPath.find_last_of(flag);
     std::string dirPath = loaderJsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
@@ -1073,4 +1046,67 @@ void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
         window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR));
     CalculateAvoidAreaByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR,
         window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR));
+}
+
+void JsAppImpl::InitJsApp()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    if (parser.IsSet("s")) {
+        SetPipeName(parser.Value("s"));
+    }
+    if (parser.IsSet("lws")) {
+        SetPipePort(parser.Value("lws"));
+    }
+    SetJsAppPath(parser.Value("j"));
+    if (parser.IsSet("url")) {
+        SetUrlPath(parser.Value("url"));
+    }
+    if (parser.IsSet("cm")) {
+        SetArgsColorMode(parser.Value("cm"));
+    }
+    if (parser.IsSet("av")) {
+        SetArgsAceVersion(parser.Value("av"));
+    }
+    if (parser.IsSet("sd")) {
+        SetScreenDensity(parser.Value("sd"));
+    }
+    if (parser.IsSet("cc")) {
+        SetConfigChanges(parser.Value("cc"));
+    }
+    if (parser.GetCompressionResolutionWidth() <= parser.GetCompressionResolutionHeight()) {
+        SetDeviceOrentation("portrait");
+    } else {
+        SetDeviceOrentation("landscape");
+    }
+    if (parser.IsSet("d")) {
+        SetIsDebug(true);
+        if (parser.IsSet("p")) {
+            SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
+        }
+    }
+    if (parser.IsSet("foldable")) {
+        VirtualScreenImpl::GetInstance().SetFoldable(parser.IsFoldable());
+    }
+    if (parser.IsSet("foldStatus")) {
+        VirtualScreenImpl::GetInstance().SetFoldStatus(parser.GetFoldStatus());
+    }
+    if (parser.IsSet("fr")) {
+        VirtualScreenImpl::GetInstance().SetFoldResolution(parser.GetFoldResolutionWidth(),
+            parser.GetFoldResolutionHeight());
+    }
+    Start();
+}
+
+void JsAppImpl::StopAbility()
+{
+    if (isDebug && debugServerPort >= 0) {
+#if defined(__APPLE__) || defined(_WIN32)
+        if (simulator) {
+            simulator->TerminateAbility(debugAbilityId);
+        }
+#endif
+    } else {
+        ability = nullptr;
+    }
+    OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
 }

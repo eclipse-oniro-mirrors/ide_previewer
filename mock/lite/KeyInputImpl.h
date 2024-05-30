@@ -21,12 +21,6 @@
 class KeyInputImpl : public KeyInput {
 public:
     static KeyInputImpl& GetInstance();
-    void DispatchOsInputMethodEvent() const override;
-    void DispatchOsKeyEvent() const override;
-    void SetKeyEvent(const int32_t keyCodeVal, const int32_t keyActionVal,
-                     const std::vector<int32_t> pressedCodesVal,
-                     const std::string keyStrVal) override;
-    void SetCodePoint(const unsigned int codePointVal) override;
 private:
     KeyInputImpl();
     virtual ~KeyInputImpl() {};

@@ -400,3 +400,17 @@ void VirtualScreenImpl::FreeJpgMemory()
         loadDocTempBuffer = nullptr;
     }
 }
+
+ScreenInfo VirtualScreenImpl::GetScreenInfo()
+{
+    ScreenInfo info;
+    info.orignalResolutionWidth = GetOrignalWidth();
+    info.orignalResolutionHeight = GetOrignalHeight();
+    info.compressionResolutionWidth = GetCompressionWidth();
+    info.compressionResolutionHeight = GetCompressionHeight();
+    info.foldStatus = GetFoldStatus();
+    info.foldable = GetFoldable();
+    info.foldWidth = GetFoldWidth();
+    info.foldHeight = GetFoldHeight();
+    return info;
+}

@@ -18,4 +18,3 @@
 KeyInput::KeyInput() : codePoint(0), keyCode(-1), keyAction(-1)
 {
 }
-

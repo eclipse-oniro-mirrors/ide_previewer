@@ -34,6 +34,7 @@ public:
     void Start() override;
     void Restart() override;
     void Interrupt() override;
+    void InitJsApp() override;
     static const uint8_t FONT_SIZE_DEFAULT = 30;
 
 private:
