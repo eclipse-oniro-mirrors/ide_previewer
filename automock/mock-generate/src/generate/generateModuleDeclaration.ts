@@ -222,6 +222,19 @@ function moduleEntityForEach(props: JudgmentModuleEntityProps, innerModuleBody: 
 }
 
 /**
+ * handle extra class declaration body
+ * @param value
+ * @param fileName
+ * @returns
+ */
+function handleExtraClassDeclarationBody(value: ClassEntity, fileName: string): boolean {
+  if (fileName.includes('@ohos.util.stream.d.ts') && value.className === 'Transform') {
+    return true;
+  }
+  return false;
+}
+
+/**
  * judgment ModuleEntity
  * @param props
  * @returns
@@ -239,15 +252,9 @@ function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleE
     });
   }
   if (props.moduleEntity.classDeclarations.length > 0) {
-    props.moduleEntity.classDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0 && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-        props.outBody += generateClassDeclaration(props.moduleName, value, false, '', '',
-          props.sourceFile, false, props.mockApi) + '\n';
-      } else {
-        props.moduleBody += '\t' + generateClassDeclaration(props.moduleName, value, false,
-          '', '', props.sourceFile, true, props.mockApi) + '\n';
-      }
-    });
+    const moduleBack = generateClassDeclarations(props);
+    props.outBody = moduleBack.outBody;
+    props.moduleBody = moduleBack.moduleBody;
   }
   if (props.moduleEntity.interfaceDeclarations.length > 0) {
     props.moduleEntity.interfaceDeclarations.forEach(value => {
@@ -274,6 +281,41 @@ function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleE
     outBody: props.outBody,
     moduleBody: props.moduleBody,
     enumBody: props.enumBody
+  };
+}
+
+/**
+ * generate classDeclarations
+ * @param props
+ * @returns
+ */
+function generateClassDeclarations(props: JudgmentModuleEntityProps): {outBody: string, moduleBody: string} {
+  let extraOutBody = '';
+  let extraModuleBody = '';
+  props.moduleEntity.classDeclarations.forEach(value => {
+    if (value.exportModifiers.length > 0 && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+      const body = generateClassDeclaration(props.moduleName, value, false, '', '',
+        props.sourceFile, false, props.mockApi) + '\n';
+      if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
+        extraOutBody = body;
+      } else {
+        props.outBody += body;
+      }
+    } else {
+      const body = '\t' + generateClassDeclaration(props.moduleName, value, false,
+        '', '', props.sourceFile, true, props.mockApi) + '\n';
+      if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
+        extraModuleBody = body;
+      } else {
+        props.moduleBody += body;
+      }
+    }
+  });
+  props.outBody += extraOutBody;
+  props.moduleBody += extraModuleBody;
+  return {
+    outBody: props.outBody,
+    moduleBody: props.moduleBody
   };
 }
 
@@ -354,8 +396,10 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
   });
   innerOutBody = moduleEntityLoopBack.innerOutBody;
   moduleBody = moduleEntityLoopBack.moduleBody;
-  const moduleEntityNextBack = moduleEntityNext({moduleEntity, innerFunctionBody, innerModuleBody, filename,
-    moduleBody, sourceFile, mockApi, extraImport, innerModuleName, importDeclarations});
+  const moduleEntityNextBack = moduleEntityNext({
+    moduleEntity, innerFunctionBody, innerModuleBody, filename,
+    moduleBody, sourceFile, mockApi, extraImport, innerModuleName, importDeclarations
+  });
   innerModuleName = moduleEntityNextBack.innerModuleName;
   moduleBody = moduleEntityNextBack.moduleBody;
   moduleBody += '\t};';

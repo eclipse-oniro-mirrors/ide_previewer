@@ -110,18 +110,14 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
  * @param moduleBody
  * @returns
  */
-function getIsModuleDeclaration(moduleBody: ts.ModuleBody): Set<string> {
+function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
   if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
     moduleBody.statements.forEach(value => {
-      if (!isClassDeclaration(value)) {
-        return allClassSet;
-      }
-      if (value.name !== undefined) {
+      if (isClassDeclaration(value) && value.name !== undefined) {
         allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
       }
     });
   }
-  return allClassSet;
 }
 
 /**
