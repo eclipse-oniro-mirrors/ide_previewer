@@ -23,6 +23,7 @@ import { getWarnConsole } from './generateCommonUtil';
 import { generatePropertyDeclaration } from './generatePropertyDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
 import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { HeritageClauseEntity } from '../declaration-node/heritageClauseDeclaration';
 
 interface AssemblyClassParams {
   isSystem: boolean,
@@ -75,7 +76,7 @@ export function generateClassDeclaration(
     classBody += `const ${className} = class ${className} `;
   }
 
-  const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity);
+  const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity, mockApi, sourceFile);
   const isExtend = heritageClausesData.isExtend;
   classBody = addCustomeClass(heritageClausesData, sourceFile, importDeclarations) + classBody;
   classBody += heritageClausesData.classBody;
@@ -171,7 +172,12 @@ function assemblyGlobal(porps: AssemblyClassParams): string {
  * @param classEntity
  * @returns
  */
-function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEntity): { isExtend: boolean, classBody: string } {
+function handleClassEntityHeritageClauses(
+  rootName: string,
+  classEntity: ClassEntity,
+  mockApi: string,
+  sourceFile: SourceFile
+): { isExtend: boolean, classBody: string } {
   let isExtend = false;
   let classBody = '';
   if (classEntity.heritageClauses.length > 0) {
@@ -179,26 +185,7 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
       if (value.clauseToken === 'extends') {
         isExtend = true;
         classBody += `${value.clauseToken} `;
-        value.types.forEach((val, index) => {
-          const extendClassName = val.split('<')[0];
-          const moduleName = firstCharacterToUppercase(rootName);
-          if (val.startsWith('Array<')) {
-            val = 'Array';
-          } else {
-            if (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) && rootName !== '') {
-              val = `mock${moduleName}().${val}`;
-            }
-          }
-          if (index !== value.types.length - 1) {
-            classBody += `${extendClassName},`;
-          } else if (val === 'uri.URI') {
-            classBody += 'mockUri().URI';
-          } else if (val === 'photoAccessHelper.BaseSelectOptions') {
-            classBody += 'mockPhotoAccessHelper().BaseSelectOptions';
-          } else {
-            classBody += `${extendClassName}`;
-          }
-        });
+        classBody = generateClassEntityHeritageClauses(classEntity, value, classBody, rootName, mockApi, sourceFile);
       }
     });
   }
@@ -206,6 +193,51 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
     isExtend,
     classBody
   };
+}
+
+/**
+ * generate classEntity heritageClauses
+ * @param classEntity
+ * @param value
+ * @param classBody
+ * @param rootName
+ * @param mockApi
+ * @param sourceFile
+ * @returns
+ */
+function generateClassEntityHeritageClauses(
+  classEntity: ClassEntity,
+  value: HeritageClauseEntity,
+  classBody: string,
+  rootName: string,
+  mockApi: string,
+  sourceFile: SourceFile
+): string {
+  value.types.forEach((val, index) => {
+    const extendClassName = val.trim().split('<')[0];
+    const moduleName = firstCharacterToUppercase(rootName);
+    if (val.startsWith('Array<')) {
+      val = 'Array';
+    } else {
+      if (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) && rootName !== '') {
+        val = `mock${moduleName}().${val}`;
+      }
+    }
+    if (index !== value.types.length - 1) {
+      classBody += `${extendClassName},`;
+    } else if (val.includes('.')) {
+      const name = val.split('.')[0];
+      if (mockApi.includes(`import { mock${firstCharacterToUppercase(name)} }`) &&
+            path.basename(sourceFile.fileName).startsWith('@ohos.')) {
+        classBody += val.replace(name, `mock${firstCharacterToUppercase(name)}()`);
+      } else {
+        classBody += `${extendClassName}`;
+      }
+    } else {
+      classBody += `${extendClassName}`;
+    }
+  });
+  return classBody;
 }
 
 /**
