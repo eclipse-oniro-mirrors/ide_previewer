@@ -1026,3 +1026,11 @@ void CommandParser::GetCommandInfo(CommandInfo& info)
     info.compressionResolutionWidth = GetCompressionResolutionWidth();
     info.compressionResolutionHeight = GetCompressionResolutionHeight();
 }
+
+void CommandParser::GetFoldInfo(FoldInfo& info)
+{
+    info.foldable = IsFoldable();
+    info.foldStatus = GetFoldStatus();
+    info.foldResolutionWidth = GetFoldResolutionWidth();
+    info.foldResolutionHeight = GetFoldResolutionHeight();
+}

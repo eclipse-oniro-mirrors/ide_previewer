@@ -39,6 +39,14 @@ public:
     int32_t compressionResolutionHeight;
 };
 
+class FoldInfo {
+public:
+    bool foldable;
+    std::string foldStatus;
+    int32_t foldResolutionWidth;
+    int32_t foldResolutionHeight;
+};
+
 class CommandParser {
 public:
     CommandParser(const CommandParser&) = delete;
@@ -86,6 +94,7 @@ public:
     std::string GetLoaderJsonPath() const;
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info);
+    void GetFoldInfo(FoldInfo& info);
 
 private:
     CommandParser();
