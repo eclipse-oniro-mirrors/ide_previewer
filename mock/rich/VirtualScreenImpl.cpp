@@ -247,6 +247,12 @@ void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr)
     CommandLineInterface::GetInstance().CreatCommandToSendData("FastPreviewMsg", val, "get");
 }
 
+void VirtualScreenImpl::AvoidAreaChangedCallback(const std::string& jsonStr)
+{
+    Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
+    CommandLineInterface::GetInstance().CreatCommandToSendData("AvoidAreaChanged", val, "get");
+}
+
 void VirtualScreenImpl::InitAll(string pipeName, string pipePort)
 {
     VirtualScreen::InitPipe(pipeName, pipePort);
@@ -413,4 +419,20 @@ ScreenInfo VirtualScreenImpl::GetScreenInfo()
     info.foldWidth = GetFoldWidth();
     info.foldHeight = GetFoldHeight();
     return info;
+}
+
+void VirtualScreenImpl::InitFoldParams()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    FoldInfo info;
+    parser.GetFoldInfo(info);
+    if (parser.IsSet("foldable")) {
+        SetFoldable(info.foldable);
+    }
+    if (parser.IsSet("foldStatus")) {
+        SetFoldStatus(info.foldStatus);
+    }
+    if (parser.IsSet("fr")) {
+        SetFoldResolution(info.foldResolutionWidth, info.foldResolutionHeight);
+    }
 }

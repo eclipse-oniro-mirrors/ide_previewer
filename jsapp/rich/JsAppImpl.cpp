@@ -33,7 +33,6 @@
 #include "window_display.h"
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
-#include "CommandLineInterface.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -72,14 +71,6 @@ JsAppImpl::~JsAppImpl()
         glfwRenderContext->DestroyWindow();
         glfwRenderContext->Terminate();
     }
-    if (listener) {
-        OHOS::Rosen::Window* window = GetWindow();
-        if (!window) {
-            return;
-        }
-        window->UnRegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
-        listener = nullptr;
-    }
 }
 
 JsAppImpl& JsAppImpl::GetInstance()
@@ -90,7 +81,6 @@ JsAppImpl& JsAppImpl::GetInstance()
 
 void JsAppImpl::Start()
 {
-    CommandParser::GetInstance().GetCommandInfo(commandInfo);
     VirtualScreenImpl::GetInstance().InitVirtualScreen();
     VirtualScreenImpl::GetInstance().InitAll(pipeName, pipePort);
     isFinished = false;
@@ -1024,7 +1014,7 @@ void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::R
     son.Add("height", value.height_);
     Json2::Value val = JsonReader::CreateObject();
     val.Add(key.c_str(), son);
-    CommandLineInterface::GetInstance().CreatCommandToSendData("AvoidAreaChanged", val, "get");
+    VirtualScreenImpl::AvoidAreaChangedCallback(val.ToString());
 }
 
 OHOS::Rosen::Window* JsAppImpl::GetWindow() const
@@ -1051,15 +1041,16 @@ void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
 void JsAppImpl::InitJsApp()
 {
     CommandParser& parser = CommandParser::GetInstance();
+    CommandParser::GetInstance().GetCommandInfo(commandInfo);
+    SetJsAppPath(parser.Value("j"));
     if (parser.IsSet("s")) {
         SetPipeName(parser.Value("s"));
     }
-    if (parser.IsSet("lws")) {
-        SetPipePort(parser.Value("lws"));
-    }
-    SetJsAppPath(parser.Value("j"));
     if (parser.IsSet("url")) {
         SetUrlPath(parser.Value("url"));
+    }
+    if (parser.IsSet("lws")) {
+        SetPipePort(parser.Value("lws"));
     }
     if (parser.IsSet("cm")) {
         SetArgsColorMode(parser.Value("cm"));
@@ -1073,7 +1064,7 @@ void JsAppImpl::InitJsApp()
     if (parser.IsSet("cc")) {
         SetConfigChanges(parser.Value("cc"));
     }
-    if (parser.GetCompressionResolutionWidth() <= parser.GetCompressionResolutionHeight()) {
+    if (commandInfo.compressionResolutionWidth <= commandInfo.compressionResolutionHeight) {
         SetDeviceOrentation("portrait");
     } else {
         SetDeviceOrentation("landscape");
@@ -1084,21 +1075,20 @@ void JsAppImpl::InitJsApp()
             SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
         }
     }
-    if (parser.IsSet("foldable")) {
-        VirtualScreenImpl::GetInstance().SetFoldable(parser.IsFoldable());
-    }
-    if (parser.IsSet("foldStatus")) {
-        VirtualScreenImpl::GetInstance().SetFoldStatus(parser.GetFoldStatus());
-    }
-    if (parser.IsSet("fr")) {
-        VirtualScreenImpl::GetInstance().SetFoldResolution(parser.GetFoldResolutionWidth(),
-            parser.GetFoldResolutionHeight());
-    }
+    VirtualScreenImpl::GetInstance().InitFoldParams();
     Start();
 }
 
 void JsAppImpl::StopAbility()
 {
+    if (listener) {
+        OHOS::Rosen::Window* window = GetWindow();
+        if (!window) {
+            return;
+        }
+        window->UnRegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
+        listener = nullptr;
+    }
     if (isDebug && debugServerPort >= 0) {
 #if defined(__APPLE__) || defined(_WIN32)
         if (simulator) {
