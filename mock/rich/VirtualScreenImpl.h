@@ -18,6 +18,18 @@
 
 #include "VirtualScreen.h"
 
+class ScreenInfo {
+public:
+    int32_t orignalResolutionWidth;
+    int32_t orignalResolutionHeight;
+    int32_t compressionResolutionWidth;
+    int32_t compressionResolutionHeight;
+    std::string foldStatus;
+    bool foldable;
+    int32_t foldWidth;
+    int32_t foldHeight;
+};
+
 class VirtualScreenImpl : public VirtualScreen {
 public:
     VirtualScreenImpl(const VirtualScreenImpl&) = delete;
@@ -38,6 +50,7 @@ public:
     static bool LoadContentCallback(const std::string currentRouterPath);
     static void FastPreviewCallback(const std::string& jsonStr);
     void InitAll(std::string pipeName, std::string pipePort);
+    ScreenInfo GetScreenInfo();
 private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();

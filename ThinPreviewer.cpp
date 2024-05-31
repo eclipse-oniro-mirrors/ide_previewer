@@ -35,63 +35,23 @@
 #include "jsi.h"
 
 using namespace std;
-static const int START_PARAM_INVALID_CODE = 11;
 static const int NOTIFY_INTERVAL_TIME = 1000; // Unit millisecond
 
 static void InitSettings()
 {
-    CommandParser& parser = CommandParser::GetInstance();
     // Setting the Simulator Model
-    ModelManager::SetCurrentDevice(parser.GetDeviceType());
-
-    // Setting the screen resolution
-    VirtualScreenImpl::GetInstance().SetOrignalWidth(parser.GetOrignalResolutionWidth());
-    VirtualScreenImpl::GetInstance().SetOrignalHeight(parser.GetOrignalResolutionHeight());
-    VirtualScreenImpl::GetInstance().SetCompressionWidth(parser.GetCompressionResolutionWidth());
-    VirtualScreenImpl::GetInstance().SetCompressionHeight(parser.GetCompressionResolutionHeight());
-    VirtualScreenImpl::GetInstance().SetCurrentResolution(parser.GetOrignalResolutionWidth(),
-        parser.GetOrignalResolutionHeight());
+    ModelManager::SetCurrentDevice(CommandParser::GetInstance().GetDeviceType());
+    VirtualScreenImpl::GetInstance().InitResolution();
     VirtualScreenImpl::GetInstance().InitFrameCountTimer();
 }
 
-static void InitJsApp()
+static void ApplyConfig()
 {
-    CommandParser& parser = CommandParser::GetInstance();
-    string args = parser.GetConfigPath();
-    if (args.empty()) {
+    string liteConfigArgs = CommandParser::GetInstance().GetConfigPath();
+    if (liteConfigArgs.empty()) {
         ELOG("No persistent properties path found.");
     }
-
-    CommandLineInterface::GetInstance().ReadAndApplyConfig(args);
-    // Initialize Image Pipeline Name
-    if (parser.IsSet("s")) {
-        JsAppImpl::GetInstance().SetPipeName(parser.Value("s"));
-    }
-
-    if (parser.IsSet("lws")) {
-        JsAppImpl::GetInstance().SetPipePort(parser.Value("lws"));
-    }
-
-    // Set the application name.
-    JsAppImpl::GetInstance().SetBundleName(parser.GetAppName());
-
-    // Processing JSheap
-    JsAppImpl::GetInstance().SetJSHeapSize(parser.GetJsHeapSize());
-
-    // Start JSApp
-    if (!parser.IsSet("t")) {
-        if (parser.IsSet("d")) {
-            JsAppImpl::GetInstance().SetIsDebug(true);
-            if (parser.IsSet("p")) {
-                JsAppImpl::GetInstance().SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
-            }
-        }
-        JsAppImpl::GetInstance().SetJsAppPath(parser.Value("j"));
-        if (parser.IsSet("url")) {
-            JsAppImpl::GetInstance().SetUrlPath(parser.Value("url"));
-        }
-        JsAppImpl::GetInstance().Start();
-    }
+    CommandLineInterface::GetInstance().ReadAndApplyConfig(liteConfigArgs);
 }
 
 static void DataChangeCheck()
@@ -133,26 +93,6 @@ static void SendJsHeapData()
     CommandLineInterface::GetInstance().SendJSHeapMemory(status.totalBytes, status.allocBytes, status.peakAllocBytes);
 }
 
-int ParseArgs(CommandParser& parser, int argc, char* argv[])
-{
-    int defaultReturnVal = -1;
-    vector<string> strs;
-    for (int i = 1; i < argc; ++i) {
-        if (parser.IsMainArgLengthInvalid(argv[i])) {
-            return START_PARAM_INVALID_CODE;
-        }
-        strs.push_back(argv[i]);
-    }
-    if (!parser.ProcessCommand(strs)) {
-        return 0;
-    }
-    if (!parser.IsCommandValid()) {
-        FLOG("Start args is invalid.");
-        return START_PARAM_INVALID_CODE;
-    }
-    return defaultReturnVal;
-}
-
 int main(int argc, char* argv[])
 {
     ILOG("ThinPreviewer enter the main function.");
@@ -167,7 +107,7 @@ int main(int argc, char* argv[])
     CppTimerManager& manager = CppTimerManager::GetTimerManager();
     // Parsing User Commands
     CommandParser& parser = CommandParser::GetInstance();
-    int ret = ParseArgs(parser, argc, argv);
+    int ret = parser.ParseArgs(argc, argv);
     if (ret >= 0) {
         return ret;
     }
@@ -176,7 +116,8 @@ int main(int argc, char* argv[])
     if (parser.IsSet("s")) {
         CommandLineInterface::GetInstance().Init(parser.Value("s"));
     }
-    InitJsApp();
+    ApplyConfig();
+    JsAppImpl::GetInstance().InitJsApp();
     TraceTool::GetInstance().HandleTrace("Enter the main function");
     CppTimer dataCheckTimer(DataChangeCheck);
     manager.AddCppTimer(dataCheckTimer);

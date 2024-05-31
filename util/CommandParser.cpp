@@ -986,3 +986,43 @@ bool CommandParser::IsLoaderJsonPathValid()
     loaderJsonPath = path;
     return true;
 }
+
+int CommandParser::ParseArgs(int argc, char* argv[])
+{
+    int startParamInvalidCode = 11;
+    int defaultReturnVal = -1;
+    vector<string> strs;
+    for (int i = 1; i < argc; ++i) {
+        if (IsMainArgLengthInvalid(argv[i])) {
+            return startParamInvalidCode;
+        }
+        strs.push_back(argv[i]);
+    }
+    if (!ProcessCommand(strs)) {
+        return 0;
+    }
+    if (!IsCommandValid()) {
+        FLOG("Start args is invalid.");
+        return startParamInvalidCode;
+    }
+    return defaultReturnVal;
+}
+
+void CommandParser::GetCommandInfo(CommandInfo& info)
+{
+    info.deviceType = GetDeviceType();
+    info.pages = GetPages();
+    info.appResourcePath = GetAppResourcePath();
+    info.isCardDisplay = IsCardDisplay();
+    info.containerSdkPath = GetContainerSdkPath();
+    info.isComponentMode = IsComponentMode();
+    info.loaderJsonPath = GetLoaderJsonPath();
+    info.abilityPath = GetAbilityPath();
+    info.abilityName = GetAbilityName();
+    info.configPath = GetConfigPath();
+    info.screenShape = GetScreenShape();
+    info.orignalResolutionWidth = GetOrignalResolutionWidth();
+    info.orignalResolutionHeight = GetOrignalResolutionHeight();
+    info.compressionResolutionWidth = GetCompressionResolutionWidth();
+    info.compressionResolutionHeight = GetCompressionResolutionHeight();
+}

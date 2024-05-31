@@ -106,7 +106,7 @@ public:
     virtual void Start() = 0;
     virtual void Restart() = 0;
     virtual void Interrupt() = 0;
-    void Stop();
+    virtual void Stop();
     void SetJsAppPath(const std::string& value);
     void SetUrlPath(const std::string& value);
     void SetPipeName(const std::string& name);
@@ -135,6 +135,7 @@ public:
     virtual void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height);
     virtual void SetAvoidArea(const AvoidAreas& areas);
     virtual const AvoidAreas GetCurrentAvoidArea() const;
+    virtual void InitJsApp();
 protected:
     JsApp();
     virtual ~JsApp() {};

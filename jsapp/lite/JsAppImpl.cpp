@@ -251,3 +251,33 @@ void JsAppImpl::StartJsApp()
     ILOG("JsApp::StartJsApp launch with single page mode finished.");
     isFinished = false;
 }
+
+void JsAppImpl::InitJsApp()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    // Initialize Image Pipeline Name
+    if (parser.IsSet("s")) {
+        SetPipeName(parser.Value("s"));
+    }
+    if (parser.IsSet("lws")) {
+        SetPipePort(parser.Value("lws"));
+    }
+    // Set the application name.
+    SetBundleName(parser.GetAppName());
+    // Processing JSheap
+    SetJSHeapSize(parser.GetJsHeapSize());
+    // Start JSApp
+    if (!parser.IsSet("t")) {
+        if (parser.IsSet("d")) {
+            SetIsDebug(true);
+            if (parser.IsSet("p")) {
+                SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
+            }
+        }
+        SetJsAppPath(parser.Value("j"));
+        if (parser.IsSet("url")) {
+            SetUrlPath(parser.Value("url"));
+        }
+        Start();
+    }
+}

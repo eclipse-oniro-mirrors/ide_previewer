@@ -371,3 +371,14 @@ int32_t VirtualScreen::GetCurrentHeight() const
 }
 
 void VirtualScreen::InitFlushEmptyTime() {}
+
+void VirtualScreen::InitResolution()
+{
+    CommandInfo commandInfo;
+    CommandParser::GetInstance().GetCommandInfo(commandInfo);
+    SetOrignalWidth(commandInfo.orignalResolutionWidth);
+    SetOrignalHeight(commandInfo.orignalResolutionHeight);
+    SetCompressionWidth(commandInfo.compressionResolutionWidth);
+    SetCompressionHeight(commandInfo.compressionResolutionHeight);
+    SetCurrentResolution(commandInfo.orignalResolutionWidth, commandInfo.orignalResolutionHeight);
+}

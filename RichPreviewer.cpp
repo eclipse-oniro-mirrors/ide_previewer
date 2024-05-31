@@ -30,102 +30,15 @@
 #include "VirtualScreenImpl.h"
 
 using namespace std;
-static const int START_PARAM_INVALID_CODE = 11;
 static const int NOTIFY_INTERVAL_TIME = 1000; // Unit millisecond
-
-static void InitDeviceOrientation()
-{
-    CommandParser& parser = CommandParser::GetInstance();
-    if (parser.GetCompressionResolutionWidth() <= parser.GetCompressionResolutionHeight()) {
-        ILOG("InitDeviceOrientation is portrait.");
-        JsAppImpl::GetInstance().SetDeviceOrentation("portrait");
-    } else {
-        ILOG("InitDeviceOrientation is landscape.");
-        JsAppImpl::GetInstance().SetDeviceOrentation("landscape");
-    }
-}
-
-static void InitResolution()
-{
-    CommandParser& parser = CommandParser::GetInstance();
-    VirtualScreenImpl::GetInstance().SetOrignalWidth(parser.GetOrignalResolutionWidth());
-    VirtualScreenImpl::GetInstance().SetOrignalHeight(parser.GetOrignalResolutionHeight());
-    VirtualScreenImpl::GetInstance().SetCompressionWidth(parser.GetCompressionResolutionWidth());
-    VirtualScreenImpl::GetInstance().SetCompressionHeight(parser.GetCompressionResolutionHeight());
-    VirtualScreenImpl::GetInstance().SetCurrentResolution(parser.GetOrignalResolutionWidth(),
-        parser.GetOrignalResolutionHeight());
-}
-
-static void InitFoldParams()
-{
-    CommandParser& parser = CommandParser::GetInstance();
-    if (parser.IsSet("foldable")) {
-        VirtualScreenImpl::GetInstance().SetFoldable(parser.IsFoldable());
-    }
-    if (parser.IsSet("foldStatus")) {
-        VirtualScreenImpl::GetInstance().SetFoldStatus(parser.GetFoldStatus());
-    }
-    if (parser.IsSet("fr")) {
-        VirtualScreenImpl::GetInstance().SetFoldResolution(parser.GetFoldResolutionWidth(),
-            parser.GetFoldResolutionHeight());
-    }
-}
 
 static void ApplyConfig()
 {
-    string args = CommandParser::GetInstance().GetConfigPath();
-    if (args.empty()) {
+    string richConfigArgs = CommandParser::GetInstance().GetConfigPath();
+    if (richConfigArgs.empty()) {
         ELOG("No persistent properties path found.");
     }
-    CommandLineInterface::GetInstance().ReadAndApplyConfig(args);
-}
-
-static void InitJsApp()
-{
-    CommandParser& parser = CommandParser::GetInstance();
-    // Initialize Image Pipeline Name
-    if (parser.IsSet("s")) {
-        JsAppImpl::GetInstance().SetPipeName(parser.Value("s"));
-    }
-
-    if (parser.IsSet("lws")) {
-        JsAppImpl::GetInstance().SetPipePort(parser.Value("lws"));
-    }
-
-    JsAppImpl::GetInstance().SetJsAppPath(parser.Value("j"));
-
-    if (parser.IsSet("url")) {
-        JsAppImpl::GetInstance().SetUrlPath(parser.Value("url"));
-    }
-
-    if (parser.IsSet("cm")) {
-        JsAppImpl::GetInstance().SetArgsColorMode(parser.Value("cm"));
-    }
-
-    if (parser.IsSet("av")) {
-        JsAppImpl::GetInstance().SetArgsAceVersion(parser.Value("av"));
-    }
-
-    if (parser.IsSet("sd")) {
-        JsAppImpl::GetInstance().SetScreenDensity(parser.Value("sd"));
-    }
-
-    if (parser.IsSet("cc")) {
-        JsAppImpl::GetInstance().SetConfigChanges(parser.Value("cc"));
-    }
-
-    InitDeviceOrientation();
-
-    if (parser.IsSet("d")) {
-        JsAppImpl::GetInstance().SetIsDebug(true);
-        if (parser.IsSet("p")) {
-            JsAppImpl::GetInstance().SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
-        }
-    }
-    InitResolution();
-    InitFoldParams();
-    ApplyConfig();
-    JsAppImpl::GetInstance().Start();
+    CommandLineInterface::GetInstance().ReadAndApplyConfig(richConfigArgs);
 }
 
 static void NotifyInspectorChanged()
@@ -193,22 +106,10 @@ int main(int argc, char* argv[])
     richCrashHandler->InitExceptionHandler();
     // Parsing User Commands
     CommandParser& parser = CommandParser::GetInstance();
-    vector<string> strs;
-    for (int i = 1; i < argc; ++i) {
-        if (parser.IsMainArgLengthInvalid(argv[i])) {
-            return START_PARAM_INVALID_CODE;
-        }
-        strs.push_back(argv[i]);
+    int ret = parser.ParseArgs(argc, argv);
+    if (ret >= 0) {
+        return ret;
     }
-
-    if (!parser.ProcessCommand(strs)) {
-        return 0;
-    }
-    // check params
-    if (!parser.IsCommandValid()) {
-        return START_PARAM_INVALID_CODE;
-    }
-
     InitSharedData();
     if (parser.IsSet("s")) {
         CommandLineInterface::GetInstance().Init(parser.Value("s"));
@@ -218,7 +119,9 @@ int main(int argc, char* argv[])
 
     std::thread commandThead(ProcessCommand);
     commandThead.detach();
-    InitJsApp();
+    VirtualScreenImpl::GetInstance().InitResolution();
+    ApplyConfig();
+    JsAppImpl::GetInstance().InitJsApp();
     this_thread::sleep_for(chrono::milliseconds(500)); // sleep 500 ms
     return 0;
 }

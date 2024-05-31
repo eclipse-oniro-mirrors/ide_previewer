@@ -93,6 +93,8 @@ public:
     void CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
         const OHOS::Rosen::SystemBarProperty& property);
     void InitAvoidAreas(OHOS::Rosen::Window* window);
+    void InitJsApp() override;
+    void StopAbility();
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);
