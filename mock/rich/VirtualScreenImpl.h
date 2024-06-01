@@ -49,7 +49,6 @@ public:
     static bool PageCallback(const std::string currentRouterPath);
     static bool LoadContentCallback(const std::string currentRouterPath);
     static void FastPreviewCallback(const std::string& jsonStr);
-    static void AvoidAreaChangedCallback(const std::string& jsonStr);
     void InitAll(std::string pipeName, std::string pipePort);
     ScreenInfo GetScreenInfo();
     void InitFoldParams();

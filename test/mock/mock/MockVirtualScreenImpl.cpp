@@ -51,3 +51,11 @@ bool VirtualScreenImpl::PageCallback(const std::string currentRouterPath)
 }
 
 void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr) {}
+
+ScreenInfo VirtualScreenImpl::GetScreenInfo()
+{
+    ScreenInfo info;
+    return info;
+}
+
+void VirtualScreenImpl::InitFoldParams() {}
