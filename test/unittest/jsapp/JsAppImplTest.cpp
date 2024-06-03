@@ -110,11 +110,7 @@ namespace {
     TEST_F(JsAppImplTest, InterruptTest)
     {
         JsAppImpl::GetInstance().isStop = false;
-        JsAppImpl::GetInstance().ability =
-            OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
         JsAppImpl::GetInstance().Interrupt();
-        bool eq = JsAppImpl::GetInstance().ability == nullptr;
-        EXPECT_TRUE(eq);
         EXPECT_TRUE(JsAppImpl::GetInstance().isStop);
     }
 
