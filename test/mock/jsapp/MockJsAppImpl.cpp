@@ -155,8 +155,4 @@ void JsAppImpl::SetAvoidArea(const AvoidAreas& areas)
     avoidInitialAreas = areas;
 }
 
-const AvoidAreas JsApp::GetCurrentAvoidArea() const
-{
-    AvoidAreas areas;
-    return areas;
-}
+void JsAppImpl::InitJsApp() {}

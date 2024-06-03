@@ -95,6 +95,8 @@ public:
     void InitAvoidAreas(OHOS::Rosen::Window* window);
     void InitJsApp() override;
     void StopAbility();
+    void InitCommandInfo();
+    void InitScreenInfo();
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);

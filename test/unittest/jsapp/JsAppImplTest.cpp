@@ -85,6 +85,19 @@ namespace {
         EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
     }
 
+    TEST_F(JsAppImplTest, InitJsAppTest)
+    {
+        JsAppImpl::GetInstance().isStop = false;
+        std::thread thread1([]() {
+            JsAppImpl::GetInstance().InitJsApp();
+        });
+        thread1.detach();
+        this_thread::sleep_for(chrono::milliseconds(10));
+        JsAppImpl::GetInstance().isStop = true;
+        this_thread::sleep_for(chrono::milliseconds(10));
+        EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
+    }
+
     TEST_F(JsAppImplTest, RestartTest)
     {
         JsAppImpl::GetInstance().ability =
@@ -164,6 +177,7 @@ namespace {
     TEST_F(JsAppImplTest, SetResolutionParamsTest)
     {
         CommandParser::GetInstance().deviceType = "phone";
+        JsAppImpl::GetInstance().InitCommandInfo();
         int32_t originWidth = 111;
         int32_t originHeight = 222;
         int32_t width = 111;
@@ -357,6 +371,7 @@ namespace {
     TEST_F(JsAppImplTest, SetJsAppArgsTest)
     {
         CommandParser::GetInstance().isComponentMode = true;
+        JsAppImpl::GetInstance().InitCommandInfo();
         OHOS::Ace::Platform::AceRunArgs args;
         JsAppImpl::GetInstance().SetJsAppArgs(args);
         EXPECT_EQ(args.windowTitle, "Ace");
@@ -495,6 +510,7 @@ namespace {
     {
         CommandParser::GetInstance().appResourcePath = testDir;
         CommandParser::GetInstance().loaderJsonPath = testDir + "/loader.json";
+        JsAppImpl::GetInstance().InitCommandInfo();
         const string moduleJsonPath = testDir + FileSystem::GetSeparator() + "module.json";
         const string pkgContextInfoJsonPath = testDir + FileSystem::GetSeparator() + "pkgContextInfo.json";
         // 直接调用

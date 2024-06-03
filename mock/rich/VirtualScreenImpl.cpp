@@ -247,12 +247,6 @@ void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr)
     CommandLineInterface::GetInstance().CreatCommandToSendData("FastPreviewMsg", val, "get");
 }
 
-void VirtualScreenImpl::AvoidAreaChangedCallback(const std::string& jsonStr)
-{
-    Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
-    CommandLineInterface::GetInstance().CreatCommandToSendData("AvoidAreaChanged", val, "get");
-}
-
 void VirtualScreenImpl::InitAll(string pipeName, string pipePort)
 {
     VirtualScreen::InitPipe(pipeName, pipePort);

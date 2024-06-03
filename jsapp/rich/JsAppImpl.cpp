@@ -33,6 +33,7 @@
 #include "window_display.h"
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
+#include "CommandLineInterface.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -197,7 +198,7 @@ void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
 void JsAppImpl::RunJsApp()
 {
     ILOG("RunJsApp 1");
-    screenInfo = VirtualScreenImpl::GetInstance().GetScreenInfo();
+    InitScreenInfo();
     AssignValueForWidthAndHeight(screenInfo.orignalResolutionWidth, screenInfo.orignalResolutionHeight,
                                  screenInfo.compressionResolutionWidth, screenInfo.compressionResolutionHeight);
     SetJsAppArgs(aceRunArgs);
@@ -1014,7 +1015,7 @@ void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::R
     son.Add("height", value.height_);
     Json2::Value val = JsonReader::CreateObject();
     val.Add(key.c_str(), son);
-    VirtualScreenImpl::AvoidAreaChangedCallback(val.ToString());
+    CommandLineInterface::GetInstance().CreatCommandToSendData("AvoidAreaChanged", val, "get");
 }
 
 OHOS::Rosen::Window* JsAppImpl::GetWindow() const
@@ -1041,7 +1042,7 @@ void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
 void JsAppImpl::InitJsApp()
 {
     CommandParser& parser = CommandParser::GetInstance();
-    CommandParser::GetInstance().GetCommandInfo(commandInfo);
+    InitCommandInfo();
     SetJsAppPath(parser.Value("j"));
     if (parser.IsSet("s")) {
         SetPipeName(parser.Value("s"));
@@ -1083,11 +1084,10 @@ void JsAppImpl::StopAbility()
 {
     if (listener) {
         OHOS::Rosen::Window* window = GetWindow();
-        if (!window) {
-            return;
+        if (window) {
+            window->UnRegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
+            listener = nullptr;
         }
-        window->UnRegisterSystemBarEnableListener(sptr<OHOS::Rosen::IWindowSystemBarEnableListener>(listener));
-        listener = nullptr;
     }
     if (isDebug && debugServerPort >= 0) {
 #if defined(__APPLE__) || defined(_WIN32)
@@ -1099,4 +1099,14 @@ void JsAppImpl::StopAbility()
         ability = nullptr;
     }
     OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+}
+
+void JsAppImpl::InitCommandInfo()
+{
+    CommandParser::GetInstance().GetCommandInfo(commandInfo);
+}
+
+void JsAppImpl::InitScreenInfo()
+{
+    screenInfo = VirtualScreenImpl::GetInstance().GetScreenInfo();
 }
