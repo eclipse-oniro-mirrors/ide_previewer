@@ -66,13 +66,7 @@ JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 #endif
 }
 
-JsAppImpl::~JsAppImpl()
-{
-    if (glfwRenderContext != nullptr) {
-        glfwRenderContext->DestroyWindow();
-        glfwRenderContext->Terminate();
-    }
-}
+JsAppImpl::~JsAppImpl() {}
 
 JsAppImpl& JsAppImpl::GetInstance()
 {
@@ -95,6 +89,8 @@ void JsAppImpl::Start()
         glfwRenderContext->PollEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    StopAbility(); // start and stop ability at the same thread
+    ILOG("JsAppImpl::Interrupt finished");
     isFinished = true;
 }
 
@@ -157,8 +153,6 @@ void JsAppImpl::ColorModeChanged(const std::string commandColorMode)
 void JsAppImpl::Interrupt()
 {
     isStop = true;
-    StopAbility();
-    ILOG("JsAppImpl::Interrupt finished");
 }
 
 void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
@@ -1099,6 +1093,11 @@ void JsAppImpl::StopAbility()
         ability = nullptr;
     }
     OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+    if (glfwRenderContext != nullptr) {
+        glfwRenderContext->DestroyWindow();
+        glfwRenderContext->Terminate();
+        ILOG("glfw Terminate finished");
+    }
 }
 
 void JsAppImpl::InitCommandInfo()
