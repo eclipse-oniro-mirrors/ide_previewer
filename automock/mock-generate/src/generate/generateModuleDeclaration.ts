@@ -252,29 +252,17 @@ function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleE
     });
   }
   if (props.moduleEntity.classDeclarations.length > 0) {
-    const moduleBack = generateClassDeclarations(props);
-    props.outBody = moduleBack.outBody;
-    props.moduleBody = moduleBack.moduleBody;
+    props.outBody = generateClassDeclarations(props);
   }
   if (props.moduleEntity.interfaceDeclarations.length > 0) {
     props.moduleEntity.interfaceDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0) {
-        props.outBody += generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
-          props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
-      } else {
-        props.moduleBody += '\t' +
-          generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
-            props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
-      }
+      props.outBody += generateInterfaceDeclaration(value, props.sourceFile, false, props.mockApi,
+        props.moduleEntity.interfaceDeclarations, props.importDeclarations, props.extraImport) + ';\n';
     });
   }
   if (props.moduleEntity.enumDeclarations.length > 0) {
     props.moduleEntity.enumDeclarations.forEach(value => {
-      if (value.exportModifiers.length > 0) {
-        props.outBody += generateEnumDeclaration(props.moduleName, value) + '\n';
-      } else {
-        props.enumBody += generateEnumDeclaration(props.moduleName, value);
-      }
+      props.enumBody += generateEnumDeclaration(props.moduleName, value) + '\n';
     });
   }
   return {
@@ -289,34 +277,19 @@ function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleE
  * @param props
  * @returns
  */
-function generateClassDeclarations(props: JudgmentModuleEntityProps): {outBody: string, moduleBody: string} {
+function generateClassDeclarations(props: JudgmentModuleEntityProps): string {
   let extraOutBody = '';
-  let extraModuleBody = '';
   props.moduleEntity.classDeclarations.forEach(value => {
-    if (value.exportModifiers.length > 0 && value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
-      const body = generateClassDeclaration(props.moduleName, value, false, '', '',
-        props.sourceFile, false, props.mockApi) + '\n';
-      if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
-        extraOutBody = body;
-      } else {
-        props.outBody += body;
-      }
+    const body = generateClassDeclaration(props.moduleName, value, false, '', '',
+      props.sourceFile, false, props.mockApi) + '\n';
+    if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
+      extraOutBody = body;
     } else {
-      const body = '\t' + generateClassDeclaration(props.moduleName, value, false,
-        '', '', props.sourceFile, true, props.mockApi) + '\n';
-      if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
-        extraModuleBody = body;
-      } else {
-        props.moduleBody += body;
-      }
+      props.outBody += body;
     }
   });
   props.outBody += extraOutBody;
-  props.moduleBody += extraModuleBody;
-  return {
-    outBody: props.outBody,
-    moduleBody: props.moduleBody
-  };
+  return props.outBody;
 }
 
 /**
