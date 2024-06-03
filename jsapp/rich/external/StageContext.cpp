@@ -55,12 +55,17 @@ const std::optional<std::vector<uint8_t>> StageContext::ReadFileContents(const s
 
 void StageContext::SetLoaderJsonPath(const std::string& assetPath)
 {
-    loaderJsonPath = assetPath;
+    loaderJsonPath = FileSystem::NormalizePath(assetPath);
     if (loaderJsonPath.empty() || !FileSystem::IsFileExists(loaderJsonPath)) {
         ELOG("the loaderJsonPath %s is not exist.", loaderJsonPath.c_str());
         return;
     }
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
+}
+
+void StageContext::SetHosSdkPath(const std::string& hosSdkPath)
+{
+    this->hosSdkPath = hosSdkPath;
 }
 
 void StageContext::GetModulePathMapFromLoaderJson()
@@ -152,8 +157,16 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
             ILOG("cloud hsp bundleName is same as the local project.");
             return GetCloudModuleBuffer(moduleName);
         }
-    } else { // cloud hsp
-        return GetCloudModuleBuffer(moduleName);
+    } else {
+        // 先找三方hsp，再找系统hsp
+        std::vector<uint8_t>* buf = GetCloudModuleBuffer(moduleName);
+        if (buf) { // cloud hsp
+            return buf;
+        } else { // system hsp
+            std::vector<uint8_t>* buf = GetSystemModuleBuffer(inputPath, moduleName);
+            ILOG("system hsp buf size is %d", buf->size());
+            return buf;
+        }
     }
 }
 
@@ -452,5 +465,33 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
         }
     }
     return num;
+}
+
+std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inputPath,
+    const std::string& moduleName)
+{
+    string head = "com.huawei";
+    string tail = moduleName;
+    size_t pos1 = inputPath.find(head) + head.size();
+    size_t pos2 = inputPath.find(tail);
+    std::string relativePath = inputPath.substr(pos1, pos2 - pos1);
+    size_t found = relativePath.find(".");
+    int len = 1;
+    while (found != std::string::npos) {
+        relativePath.replace(found, len, "/");
+        found = relativePath.find(".", found + len);
+    }
+    std::string moduleHspFile = hosSdkPath + "/systemHsp" + relativePath + moduleName + ".hsp";
+    ILOG("get system moduleHspFile:%s.", moduleHspFile.c_str());
+    if (!FileSystem::IsFileExists(moduleHspFile)) {
+        ELOG("the system moduleHspFile:%s is not exist.", moduleHspFile.c_str());
+        return nullptr;
+    }
+    // unzip and get ets/moudles.abc buffer
+    std::vector<uint8_t>* buf = GetModuleBufferFromHsp(moduleHspFile, "ets/modules.abc");
+    if (!buf) {
+        ELOG("read modules.abc buffer failed.");
+    }
+    return buf;
 }
 }

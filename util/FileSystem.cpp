@@ -110,3 +110,15 @@ std::string FileSystem::FindSubfolderByName(const std::string& parentFolderPath,
 {
     return OHOS::Ide::NativeFileSystem::FindSubfolderByName(parentFolderPath, subfolderName);
 }
+
+std::string FileSystem::NormalizePath(const std::string& path)
+{
+    std::string normalizedPath = path;
+    char separatorChar = FileSystem::separator[0]; // 0 is get fist char of string
+    for (char& c : normalizedPath) {
+        if (c == '/' || c == '\\') {
+            c = separatorChar;
+        }
+    }
+    return normalizedPath;
+}
