@@ -13,4 +13,3 @@ automock/.eslintrc
 automock/dist/
 automock/package.json
 automock/runtime/
-automock/tsconfig.json

@@ -29,8 +29,6 @@ const babel = require('rollup-plugin-babel');
 
 const typescript = require('rollup-plugin-typescript2');
 
-const { uglify } = require('rollup-plugin-uglify');
-
 const {
   eslint
 } = require('rollup-plugin-eslint');
