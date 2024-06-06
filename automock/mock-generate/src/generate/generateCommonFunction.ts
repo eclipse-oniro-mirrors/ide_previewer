@@ -24,6 +24,23 @@ import {
   getOverloadedFunctionCallbackStatement,
   overloadedFunctionArr
 } from './generateCommonUtil';
+import { methodArrayItemForEach } from './generateCommonMethod';
+
+interface AssemblyFunctionProps {
+  functionArray: Array<FunctionEntity>,
+  functionEntity: FunctionEntity,
+  functionBody: string,
+  sourceFile: SourceFile,
+  mockApi: string
+}
+
+interface AssemblyFunctionBack {
+  isReturnPromise: boolean,
+  promiseReturnValue: string,
+  functionOtherReturnValue: string,
+  isCallBack: boolean,
+  functionBody: string
+}
 
 /**
  * generate function
@@ -66,74 +83,9 @@ export function generateCommonFunction(
       }
     }
   } else {
-    const argSet: Set<string> = new Set<string>();
-    let argParamsSet: string = '';
-    const returnSet: Set<string> = new Set<string>();
-    let isCallBack = false;
-    let needOverloaded = false;
-    functionArray.forEach(value => {
-      returnSet.add(value.returnType.returnKindName);
-      value.args.forEach(arg => {
-        argSet.add(arg.paramName);
-        if (arg.paramName.toLowerCase().includes('callback')) {
-          isCallBack = true;
-          if (arg.paramTypeString) {
-            argParamsSet = arg.paramTypeString;
-          }
-        }
-        if (
-          arg.paramTypeString.startsWith("'") && arg.paramTypeString.endsWith("'") ||
-          arg.paramTypeString.startsWith('"') && arg.paramTypeString.endsWith('"')
-        ) {
-          needOverloaded = true;
-        }
-      });
-    });
-    if (isCallBack) {
-      if (overloadedFunctionArr.includes(functionEntity.functionName) && needOverloaded) {
-        functionBody += getOverloadedFunctionCallbackStatement(functionArray, sourceFile, mockApi);
-      } else {
-        functionBody += getCallbackStatement(mockApi, argParamsSet);
-      }
-    }
-    let isReturnPromise = false;
-    let promiseReturnValue = '';
-    let otherReturnValue = '';
-    returnSet.forEach(value => {
-      if (value.includes('Promise<')) {
-        isReturnPromise = true;
-        promiseReturnValue = value;
-      } else {
-        if (!otherReturnValue) {
-          otherReturnValue = value;
-        }
-      }
-    });
-    if (isReturnPromise) {
-      if (promiseReturnValue) {
-        let returnType = null;
-        functionArray.forEach(value => {
-          if (value.returnType.returnKindName === promiseReturnValue) {
-            returnType = value.returnType;
-          }
-        });
-        functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
-      } else {
-        functionBody += `
-            return new Promise((resolve, reject) => {
-              resolve('[PC Preview] unknow boolean');
-            })
-          `;
-      }
-    } else if (otherReturnValue) {
-      let returnType = null;
-      functionArray.forEach(value => {
-        if (value.returnType.returnKindName === otherReturnValue) {
-          returnType = value.returnType;
-        }
-      });
-      functionBody += getReturnData(isCallBack, isReturnPromise, returnType, sourceFile, mockApi);
-    }
+    const assemblyBack = assemblyFunctionBody({ functionArray, functionEntity, functionBody, mockApi, sourceFile });
+    functionBody = assemblyFuntion(assemblyBack, functionArray, sourceFile, mockApi);
+    functionBody = assemblyBack.functionBody;
   }
   functionBody += isRoot ? '};' : '},';
   if (isRoot) {
@@ -145,3 +97,109 @@ export function generateCommonFunction(
   }
   return functionBody;
 }
+
+/**
+ * generate assembly function
+ * @param props
+ * @returns
+ */
+function assemblyFunctionBody(props: AssemblyFunctionProps): AssemblyFunctionBack {
+  let argSet: Set<string> = new Set<string>();
+  let argParamsSet: string = '';
+  let returnSet: Set<string> = new Set<string>();
+  let isCallBack = false;
+  let needOverloaded = false;
+  props.functionArray.forEach(value => {
+    ({ returnSet, argSet, isCallBack, argParamsSet, needOverloaded} =
+      methodArrayItemForEach({returnSet, value, argSet, isCallBack, argParamsSet, needOverloaded}));
+  });
+  props.functionBody = forEachFuntionArray(isCallBack, props, needOverloaded, argParamsSet);
+  let isReturnPromise = false;
+  let promiseReturnValue = '';
+  let functionOtherReturnValue = '';
+  returnSet.forEach(value => {
+    if (value.includes('Promise<')) {
+      isReturnPromise = true;
+      promiseReturnValue = value;
+    } else {
+      if (!functionOtherReturnValue) {
+        functionOtherReturnValue = value;
+      }
+    }
+  });
+  return {
+    isReturnPromise,
+    promiseReturnValue,
+    functionOtherReturnValue,
+    isCallBack,
+    functionBody: props.functionBody
+  };
+}
+
+/**
+ * forEach functionArray
+ * @param isCallBack
+ * @param props
+ * @param needOverloaded
+ * @param argParamsSet
+ * @returns
+ */
+function forEachFuntionArray(
+  isCallBack: boolean,
+  props: AssemblyFunctionProps,
+  needOverloaded: boolean,
+  argParamsSet:string
+): string {
+  if (isCallBack) {
+    if (overloadedFunctionArr.includes(props.functionEntity.functionName) && needOverloaded) {
+      const stateEment = getOverloadedFunctionCallbackStatement(props.functionArray, props.sourceFile, props.mockApi);
+      props.functionBody += stateEment;
+    } else {
+      props.functionBody += getCallbackStatement(props.mockApi, argParamsSet);
+    }
+  }
+  return props.functionBody;
+}
+
+/**
+ * assembly Function
+ * @param porps
+ * @param functionArray
+ * @param sourceFile
+ * @param mockApi
+ * @returns
+ */
+function assemblyFuntion(
+  porps: AssemblyFunctionBack,
+  functionArray: Array<FunctionEntity>,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
+  if (porps.isReturnPromise) {
+    if (porps.promiseReturnValue) {
+      let returnType = null;
+      functionArray.forEach(value => {
+        if (value.returnType.returnKindName === porps.promiseReturnValue) {
+          returnType = value.returnType;
+        }
+      });
+      porps.functionBody += getReturnData(porps.isCallBack, porps.isReturnPromise, returnType, sourceFile, mockApi);
+    } else {
+      porps.functionBody += `
+          return new Promise((resolve, reject) => {
+            resolve('[PC Preview] unknow boolean');
+          })
+        `;
+    }
+  } else if (porps.functionOtherReturnValue) {
+    let returnType = null;
+    functionArray.forEach(value => {
+      if (value.returnType.returnKindName === porps.functionOtherReturnValue) {
+        returnType = value.returnType;
+      }
+    });
+    porps.functionBody += getReturnData(porps.isCallBack, porps.isReturnPromise, returnType, sourceFile, mockApi);
+  }
+  return porps.functionBody;
+}
+

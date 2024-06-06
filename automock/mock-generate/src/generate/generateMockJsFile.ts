@@ -15,9 +15,19 @@
 
 import fs from 'fs';
 import path from 'path';
-import { ScriptTarget, SyntaxKind, createSourceFile } from 'typescript';
+import {
+  ScriptTarget,
+  SyntaxKind,
+  createSourceFile
+} from 'typescript';
 import type { SourceFile } from 'typescript';
-import { collectAllLegalImports, dtsFileList, firstCharacterToUppercase, getAllFileNameList, getApiInputPath } from '../common/commonUtils';
+import {
+  collectAllLegalImports,
+  dtsFileList,
+  firstCharacterToUppercase,
+  getAllFileNameList,
+  getApiInputPath
+} from '../common/commonUtils';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 import { getDefaultExportClassDeclaration } from '../declaration-node/sourceFileElementsAssemply';
 import type { SourceFileEntity } from '../declaration-node/sourceFileElementsAssemply';
@@ -31,24 +41,27 @@ import { generateStaticFunction } from './generateStaticFunction';
 import { addToSystemIndexArray } from './generateSystemIndex';
 import { generateTypeAliasDeclaration } from './generateTypeAlias';
 import { generateCommonFunction } from './generateCommonFunction';
-import { needToAddBrace, hasExportDefaultKeyword } from './generateCommonUtil';
-
-interface ReturnDataParams {
-  mockData: string,
-  mockFunctionElements: Array<MockFunctionElementEntity>
-}
-
-const paramIndex = 2;
+import {
+  needToAddBrace,
+  hasExportDefaultKeyword,
+  MockFunctionElementEntity,
+  ReturnDataParams
+} from './generateCommonUtil';
 
 /**
  * generate mock file string
- * @param rootName
- * @param sourceFileEntity
- * @param sourceFile
- * @param fileName
- * @returns
+ * @param rootName absolute path to the mock file to be generated
+ * @param sourceFileEntity all node information in the file
+ * @param sourceFile file Text Information
+ * @param fileName file name
+ * @returns file mock text
  */
-export function generateSourceFileElements(rootName: string, sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, fileName: string): string {
+export function generateSourceFileElements(
+  rootName: string,
+  sourceFileEntity: SourceFileEntity,
+  sourceFile: SourceFile,
+  fileName: string
+): string {
   let mockApi = '';
   let mockFunctionElements: Array<MockFunctionElementEntity> = [];
   const dependsSourceFileList = collectReferenceFiles(sourceFile);
@@ -76,43 +89,25 @@ export function generateSourceFileElements(rootName: string, sourceFileEntity: S
 
   mockApi += functionDeclarationsGenerate(sourceFileEntity, sourceFile, mockApi);
 
-  mockApi += otherDeclarationsGenerate(rootName, sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName).mockData;
+  mockApi += otherDeclarationsGenerate(rootName, sourceFileEntity, mockFunctionElements, sourceFile, mockApi, fileName, extraImport).mockData;
 
-  if (sourceFileEntity.exportDeclarations.length > 0) {
-    sourceFileEntity.exportDeclarations.forEach(value => {
-      if (value.includes('export type {')) {
-        return;
-      }
-      if (!value.includes('export {')) {
-        mockApi += `${value}\n`;
-      }
-    });
-  }
+  mockApi += handleExportDeclarations(sourceFileEntity);
+
   mockApi = extraImport.join('') + mockApi;
-  const reg = /export\sconst\s.*\s=/g;
-  const regDefault = /export\sdefault\s/g;
-  const regFunc = /export\sfunction\s/g;
-  const results = mockApi.match(reg);
-  const resultDefaults = mockApi.match(regDefault);
-  const resultFuncs = mockApi.match(regFunc);
-  if (results && results.length === 1 && !resultDefaults && !resultFuncs) {
-    const arr = results[0].split(' ');
-    const moduleName = arr[arr.length - paramIndex];
-    mockApi += `\nexport default ${moduleName};`;
-  }
+
+  mockApi = addExportDefaultExpression(mockApi);
+
   return mockApi;
 }
 
-const needAddExtraClass = ['date_picker.d.ts', 'rich_editor.d.ts', 'text_picker.d.ts', 'text_timer.d.ts'];
-
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param sourceFile
- * @param fileName
- * @param heritageClausesArray
- * @param dependsSourceFileList
- * @returns
+ * get import declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param sourceFile file Text Information
+ * @param fileName file name
+ * @param heritageClausesArray  heritage elements array data
+ * @param dependsSourceFileList reference Files data
+ * @returns string
  */
 function importDeclarationsGenerate(
   sourceFileEntity: SourceFileEntity,
@@ -122,14 +117,12 @@ function importDeclarationsGenerate(
   dependsSourceFileList: SourceFile[]
 ): string {
   let mockData = '';
-  if (needAddExtraClass.includes(`${fileName}.d.ts`)) {
-    mockData += 'import { CommonMethod } from \'./common\';\n';
-  }
   if (sourceFileEntity.importDeclarations.length > 0) {
     sourceFileEntity.importDeclarations.forEach(value => {
       if (
         sourceFile.fileName.endsWith('@ohos.arkui.UIContext.d.ts') &&
-        ['\'DatePickerDialogParam\'', '\'TimePickerDialogParam\'', '\'textPickerDialogParam\''].includes(value.importPath)
+        ['\'DatePickerDialogParam\'', '\'TimePickerDialogParam\'',
+          '\'textPickerDialogParam\'', '\'./@ohos.app.ability.common\''].includes(value.importPath)
       ) {
         mockData += '';
       } else {
@@ -137,16 +130,22 @@ function importDeclarationsGenerate(
       }
     });
   }
+  if (fileName === 'ohos_arkui_observer') {
+    mockData += 'const NavigationOperation = { PUSH: 1, POP: 2, REPLACE: 3 }\n';
+  }
   return mockData;
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param mockFunctionElements
- * @returns
+ * get enum declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param mockFunctionElements all function element entity
+ * @returns ReturnDataParams
  */
-function enumDeclarationsGenerate(sourceFileEntity: SourceFileEntity, mockFunctionElements: Array<MockFunctionElementEntity>): ReturnDataParams {
+function enumDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  mockFunctionElements: Array<MockFunctionElementEntity>
+): ReturnDataParams {
   const data: ReturnDataParams = {
     mockData: '',
     mockFunctionElements: mockFunctionElements
@@ -161,13 +160,13 @@ function enumDeclarationsGenerate(sourceFileEntity: SourceFileEntity, mockFuncti
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param mockFunctionElements
- * @param sourceFile
- * @param extraImport
- * @param mockApi
- * @returns
+ * get typeAlias declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param mockFunctionElements all function element entity
+ * @param sourceFile file Text Information
+ * @param extraImport extra import data
+ * @param mockApi file mock text
+ * @returns ReturnDataParams
  */
 function typeAliasDeclarationsGenerate(
   sourceFileEntity: SourceFileEntity,
@@ -190,16 +189,16 @@ function typeAliasDeclarationsGenerate(
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param mockFunctionElements
- * @param sourceFile
- * @param extraImport
- * @param mockApi
- * @returns
+ * get interface declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param mockFunctionElements all function element entity
+ * @param sourceFile file Text Information
+ * @param extraImport Additional exported data
+ * @param mockApi  file mock into text
+ * @returns ReturnDataParams
  */
 function interfaceDeclarationsGenerate(
-  sourceFileEntity: SourceFileEntity,
+  entity: SourceFileEntity,
   mockFunctionElements: Array<MockFunctionElementEntity>,
   sourceFile: SourceFile,
   extraImport: string[],
@@ -209,10 +208,12 @@ function interfaceDeclarationsGenerate(
     mockData: '',
     mockFunctionElements: mockFunctionElements
   };
-  if (sourceFileEntity.interfaceDeclarations.length > 0) {
-    sourceFileEntity.interfaceDeclarations.forEach(value => {
-      data.mockData += generateInterfaceDeclaration('', value, sourceFile, true, mockApi, sourceFileEntity.interfaceDeclarations,
-        sourceFileEntity.importDeclarations, extraImport) + '\n';
+  if (entity.interfaceDeclarations.length > 0) {
+    entity.interfaceDeclarations.forEach(value => {
+      data.mockData += generateInterfaceDeclaration(
+        value, sourceFile, true, mockApi, entity.interfaceDeclarations,
+        entity.importDeclarations, extraImport
+      ) + '\n';
       data.mockFunctionElements.push({ elementName: value.interfaceName, type: 'interface' });
     });
   }
@@ -220,13 +221,13 @@ function interfaceDeclarationsGenerate(
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param mockFunctionElements
- * @param sourceFile
- * @param mockApi
- * @param fileName
- * @returns
+ * get class declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param mockFunctionElements all function element entity
+ * @param sourceFile file Text Information
+ * @param mockApi file mock text
+ * @param fileName file name
+ * @returns ReturnDataParams
  */
 function classDeclarationsGenerate(
   sourceFileEntity: SourceFileEntity,
@@ -251,13 +252,13 @@ function classDeclarationsGenerate(
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param sourceFile
- * @param mockApi
- * @param fileName
- * @param extraImport
- * @returns
+ * get module declarations generate
+ * @param sourceFileEntity all node information in the file
+ * @param sourceFile file Text Information
+ * @param mockApi file mock text
+ * @param fileName  file name
+ * @param extraImport  extra import data
+ * @returns string
  */
 function moduleDeclarationsGenerate(
   sourceFileEntity: SourceFileEntity,
@@ -269,20 +270,24 @@ function moduleDeclarationsGenerate(
   let mockData = '';
   if (sourceFileEntity.moduleDeclarations.length > 0) {
     sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockData += generateModuleDeclaration('', value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
+      mockData += generateModuleDeclaration(value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
     });
   }
   return mockData;
 }
 
 /**
- * generate mock file string
- * @param sourceFileEntity
- * @param sourceFile
- * @param mockApi
- * @returns
+ * get function declarations generate
+ * @param sourceFileEntity  all node information in the file
+ * @param sourceFile file Text Information
+ * @param mockApi file mock text
+ * @returns string
  */
-function functionDeclarationsGenerate(sourceFileEntity: SourceFileEntity, sourceFile: SourceFile, mockApi: string): string {
+function functionDeclarationsGenerate(
+  sourceFileEntity: SourceFileEntity,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let mockData = '';
   if (sourceFileEntity.functionDeclarations.size > 0) {
     Array.from(sourceFileEntity.functionDeclarations.keys()).forEach(key => {
@@ -293,24 +298,30 @@ function functionDeclarationsGenerate(sourceFileEntity: SourceFileEntity, source
 }
 
 /**
- * generate mock file string
- * @param rootName
- * @param sourceFileEntity
- * @param mockFunctionElements
- * @param sourceFile
- * @param mockApi
- * @param fileName
- * @returns
+ * get other declarations generate
+ * @param rootName  absolute path to the mock file to be generated
+ * @param sourceFileEntity  all node information in the file
+ * @param mockFunctionElements  all function element entity
+ * @param sourceFile  file Text Information
+ * @param mockApi  file mock text
+ * @param fileName file name
+ * @returns ReturnDataParams
  */
 function otherDeclarationsGenerate(
-  rootName: string, sourceFileEntity: SourceFileEntity, mockFunctionElements: Array<MockFunctionElementEntity>,
-  sourceFile: SourceFile, mockApi: string, fileName: string
+  rootName: string,
+  sourceFileEntity: SourceFileEntity,
+  mockFunctionElements: Array<MockFunctionElementEntity>,
+  sourceFile: SourceFile,
+  mockApi: string,
+  fileName: string,
+  extraImport: string[]
 ): ReturnDataParams {
   const data: ReturnDataParams = {
     mockData: '',
     mockFunctionElements: []
   };
-  if (sourceFileEntity.moduleDeclarations.length === 0 &&
+  if (
+    sourceFileEntity.moduleDeclarations.length === 0 &&
     (fileName.startsWith('ohos_') || fileName.startsWith('system_') || fileName.startsWith('webgl'))
   ) {
     const moduleDeclarationsData = handleModuleDeclarationsNotExist(rootName, fileName, sourceFile, mockApi, mockFunctionElements);
@@ -322,7 +333,7 @@ function otherDeclarationsGenerate(
       const mockNameArr = fileName.split('_');
       const mockName = mockNameArr[mockNameArr.length - 1];
       defaultExportClass.forEach(value => {
-        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi) + '\n';
+        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
       });
     }
   }
@@ -330,25 +341,72 @@ function otherDeclarationsGenerate(
 }
 
 /**
+ * handle Export Declarations
+ * @param sourceFileEntity all node information in the file
+ * @returns export text info
+ */
+function handleExportDeclarations(sourceFileEntity: SourceFileEntity): string {
+  let mockApi = '';
+  if (sourceFileEntity.exportDeclarations.length > 0) {
+    sourceFileEntity.exportDeclarations.forEach(value => {
+      const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+      const flieText = value.replace(removeNoteRegx, '').replace(/\n/g, '');
+      if (flieText.includes('export type {')) {
+        return;
+      }
+      if (flieText.includes('export {') && value.includes(' from ')) {
+        mockApi += `${flieText}\n`;
+      }
+      if (flieText.includes('export *')) {
+        mockApi += `${flieText}\n`;
+      }
+    });
+  }
+  return mockApi;
+}
+
+/**
+ * add extra export default expression
+ * @param mockApi file mock text
+ * @returns export text info
+ */
+function addExportDefaultExpression(mockApi: string): string {
+  const paramIndex = 2;
+  const reg = /export\sconst\s.*\s=/g;
+  const regDefault = /export\sdefault\s/g;
+  const regFunc = /export\sfunction\s/g;
+  const results = mockApi.match(reg);
+  const resultDefaults = mockApi.match(regDefault);
+  const resultFuncs = mockApi.match(regFunc);
+  if (results && results.length === 1 && !resultDefaults && !resultFuncs) {
+    const arr = results[0].split(' ');
+    const moduleName = arr[arr.length - paramIndex];
+    mockApi += `\nexport default ${moduleName};`;
+  }
+  return mockApi;
+}
+
+/**
  * generate import definition
- * @param importEntity
- * @param sourceFileName
- * @param heritageClausesArray
- * @param currentFilePath
- * @param dependsSourceFileList
- * @returns
+ * @param importEntity import entity data
+ * @param sourceFileName file name
+ * @param heritageClausesArray heritage elements array data
+ * @param currentFilePath current file path
+ * @param dependsSourceFileList reference Files data
+ * @returns string
  */
 export function generateImportDeclaration(
   importEntity: ImportElementEntity,
   sourceFileName: string,
   heritageClausesArray: string[],
   currentFilePath: string,
-  dependsSourceFileList: SourceFile[]): string {
+  dependsSourceFileList: SourceFile[]
+): string {
   const importDeclaration = referenctImport2ModuleImport(importEntity, currentFilePath, dependsSourceFileList);
   if (importDeclaration) {
     return importDeclaration;
   }
-  
+
   const importPathSplit = importEntity.importPath.split('/');
 
   let importPath = importPathSplit.slice(0, -1).join('/') + '/';
@@ -363,12 +421,12 @@ export function generateImportDeclaration(
     return '';
   }
 
-  let tmpImportPath = importPath.replace(/'/g, '').replace(/"/g, '');
+  const tmpImportPath = importPath.replace(/'/g, '').replace(/"/g, '');
   if (!tmpImportPath.startsWith('./') && !tmpImportPath.startsWith('../')) {
     importPath = `'./${tmpImportPath}'`;
   }
   if (sourceFileName === 'tagSession' && tmpImportPath === './basic' || sourceFileName === 'notificationContent' &&
-  tmpImportPath === './ohos_multimedia_image') {
+    tmpImportPath === './ohos_multimedia_image') {
     importPath = `'.${importPath.replace(/'/g, '')}'`;
   }
 
@@ -383,6 +441,15 @@ export function generateImportDeclaration(
   return `import ${importElements} from ${importPath}\n`;
 }
 
+/**
+ * handle module declarations does it exist
+ * @param rootName absolute path to the mock file to be generated
+ * @param fileName file name
+ * @param sourceFile file Text Information
+ * @param mockApi file mock text
+ * @param mockFunctionElements all function element entity
+ * @returns ReturnDataParams
+ */
 function handleModuleDeclarationsNotExist(
   rootName: string, fileName: string, sourceFile: SourceFile, mockApi: string, mockFunctionElements: Array<MockFunctionElementEntity>
 ): ReturnDataParams {
@@ -434,7 +501,7 @@ function handleModuleDeclarationsNotExist(
 /**
  * adapter default export
  * @param importName
- * @returns
+ * @returns boolean
  */
 function checIsDefaultExportClass(importName: string): boolean {
   const defaultExportClass = ['Context', 'BaseContext', 'ExtensionContext', 'ApplicationContext',
@@ -444,9 +511,9 @@ function checIsDefaultExportClass(importName: string): boolean {
 
 /**
  * get heritage elements
- * @param sourceFileEntity
- * @param sourceFile
- * @returns
+ * @param sourceFileEntity all node information in the file
+ * @param sourceFile file Text Information
+ * @returns string[]
  */
 function getCurrentApiHeritageArray(sourceFileEntity: SourceFileEntity, sourceFile: SourceFile): string[] {
   const heritageClausesArray = [];
@@ -468,6 +535,11 @@ function getCurrentApiHeritageArray(sourceFileEntity: SourceFileEntity, sourceFi
   return heritageClausesArray;
 }
 
+/**
+ * collect reference Files
+ * @param sourceFile file Text Information
+ * @returns SourceFile[]
+ */
 function collectReferenceFiles(sourceFile: SourceFile): SourceFile[] {
   const referenceElementTemplate = /\/\/\/\s*<reference\s+path="[^'"\[\]]+/g;
   const referenceFiles: SourceFile[] = [];
@@ -492,6 +564,12 @@ function collectReferenceFiles(sourceFile: SourceFile): SourceFile[] {
   return referenceFiles;
 }
 
+/**
+ * content relatePath to real relatePath
+ * @param currentFilePath file name
+ * @param contentReferenceRelatePath reference relate Path
+ * @returns string
+ */
 function contentRelatePath2RealRelatePath(currentFilePath: string, contentReferenceRelatePath: string): string {
   const conmponentSourceFileTemplate = /component\/[^'"\/]+\.d\.ts/;
   const currentFolderSourceFileTemplate = /\.\/[^\/]+\.d\.ts/;
@@ -512,8 +590,18 @@ function contentRelatePath2RealRelatePath(currentFilePath: string, contentRefere
   return realReferenceFilePath;
 }
 
-export function referenctImport2ModuleImport(importEntity: ImportElementEntity, currentFilePath: string,
-  dependsSourceFileList: SourceFile[]): string {
+/**
+ * referenct import to module import
+ * @param importEntity import entity data
+ * @param currentFilePath current file path data
+ * @param dependsSourceFileList reference Files data
+ * @returns string
+ */
+export function referenctImport2ModuleImport(
+  importEntity: ImportElementEntity,
+  currentFilePath: string,
+  dependsSourceFileList: SourceFile[]
+): string {
   if (dependsSourceFileList.length && !importEntity.importPath.includes('.')) {
     for (let i = 0; i < dependsSourceFileList.length; i++) {
       if (dependsSourceFileList[i].text.includes(`declare module ${importEntity.importPath.replace(/'/g, '"')}`)) {
@@ -522,13 +610,18 @@ export function referenctImport2ModuleImport(importEntity: ImportElementEntity, 
           .replace(/.d.ts/g, '')
           .replace(/.d.es/g, '');
         relatePath = (relatePath.startsWith('@internal/component') ? './' : '') + relatePath;
-        return `import ${importEntity.importElements} from "${relatePath}"\n`;
+        return `import ${importEntity.importElements} from '${relatePath}'\n`;
       }
     }
   }
   return '';
 }
 
+/**
+ * get import pathName
+ * @param importPathSplit import path split to array data
+ * @returns string
+ */
 function getImportPathName(importPathSplit: string[]): string {
   let importPathName: string;
   let fileName = importPathSplit[importPathSplit.length - 1];
@@ -543,9 +636,20 @@ function getImportPathName(importPathSplit: string[]): string {
   return importPathName;
 }
 
+/**
+ * get import pathName
+ * @param importEntity import entity data
+ * @param heritageClausesArray heritage elements array data
+ * @returns string
+ */
 function generateImportElements(importEntity: ImportElementEntity, heritageClausesArray: string[]): string {
   let importElements = importEntity.importElements;
-  if (!importElements.includes('{') && !importElements.includes('* as') && !heritageClausesArray.includes(importElements) && importEntity.importPath.includes('@ohos')) {
+  if (
+    !importElements.includes('{') &&
+    !importElements.includes('* as') &&
+    !heritageClausesArray.includes(importElements) &&
+    importEntity.importPath.includes('@ohos')
+  ) {
     const tmpArr = importEntity.importPath.split('.');
     const mockModuleName = firstCharacterToUppercase(tmpArr[tmpArr.length - 1].replace('"', '').replace('\'', ''));
     if (importElements === 'observer' && importEntity.importPath.includes('@ohos.arkui.observer')) {
@@ -554,16 +658,11 @@ function generateImportElements(importEntity: ImportElementEntity, heritageClaus
     importElements = `{ mock${mockModuleName} }`;
   } else {
     // adapt no rules .d.ts
-    if (importElements.trimRight().trimEnd() === 'AccessibilityExtensionContext, { AccessibilityElement }') {
+    if (importElements.trim() === 'AccessibilityExtensionContext, { AccessibilityElement }') {
       importElements = '{ AccessibilityExtensionContext, AccessibilityElement }';
-    } else if (importElements.trimRight().trimEnd() === '{ image }') {
+    } else if (importElements.trim() === '{ image }') {
       importElements = '{ mockImage as image }';
     }
   }
   return importElements;
-}
-
-interface MockFunctionElementEntity {
-  elementName: string,
-  type: string
 }

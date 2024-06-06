@@ -28,7 +28,7 @@ export function getHeritageClauseDeclaration(node: Node, sourceFile: SourceFile)
   const types: Array<string> = [];
 
   heritageClauseNode.types.forEach(value => {
-    types.push(sourceFile.text.substring(value.pos, value.end).trimStart().trimEnd());
+    types.push(sourceFile.text.substring(value.pos, value.end).trim());
   });
 
   return {

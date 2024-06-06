@@ -37,7 +37,7 @@ export function getPropertySignatureDeclaration(node: PropertySignature, sourceF
   }
 
   if (propertyType !== undefined) {
-    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trimStart().trimEnd();
+    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
     kind = propertyType.kind;
   }
 
@@ -53,5 +53,6 @@ export interface PropertySignatureEntity {
   modifiers: Array<string>,
   propertyName: string,
   propertyTypeName: string,
-  kind: number
+  kind: number,
+  kinds?: number
 }

@@ -76,7 +76,7 @@ action("gen_snapshot_jsmock") {
     # config of compiler
     "./mock-generate/.eslintrc",
     "build_jsmock_system_plugin.js",
-    "tsconfig.json",
+    "./tsconfig.json",
   ]
   outputs = [ prebuilt_js_api_mock_path ]
 }

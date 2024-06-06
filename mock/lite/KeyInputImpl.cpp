@@ -24,21 +24,3 @@ KeyInputImpl& KeyInputImpl::GetInstance()
     static KeyInputImpl instance;
     return instance;
 }
-
-void KeyInputImpl::DispatchOsInputMethodEvent() const
-{
-}
-
-void KeyInputImpl::DispatchOsKeyEvent() const
-{
-}
-
-void KeyInputImpl::SetKeyEvent(const int32_t keyCodeVal, const int32_t keyActionVal,
-                               const std::vector<int32_t> pressedCodesVal,
-                               const std::string keyStrVal)
-{
-}
-
-void KeyInputImpl::SetCodePoint(const unsigned int codePointVal)
-{
-}

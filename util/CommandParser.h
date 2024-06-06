@@ -20,6 +20,33 @@
 #include <string>
 #include <vector>
 
+class CommandInfo {
+public:
+    std::string deviceType;
+    std::string pages;
+    std::string appResourcePath;
+    bool isCardDisplay;
+    std::string containerSdkPath;
+    bool isComponentMode;
+    std::string loaderJsonPath;
+    std::string abilityPath;
+    std::string abilityName;
+    std::string configPath;
+    std::string screenShape;
+    int32_t orignalResolutionWidth;
+    int32_t orignalResolutionHeight;
+    int32_t compressionResolutionWidth;
+    int32_t compressionResolutionHeight;
+};
+
+class FoldInfo {
+public:
+    bool foldable;
+    std::string foldStatus;
+    int32_t foldResolutionWidth;
+    int32_t foldResolutionHeight;
+};
+
 class CommandParser {
 public:
     CommandParser(const CommandParser&) = delete;
@@ -57,12 +84,17 @@ public:
     bool CheckParamInvalidity(std::string param, bool isNum);
     bool IsComponentMode() const;
     std::string GetAbilityPath() const;
+    std::string GetAbilityName() const;
     bool IsStaticCard() const;
     bool IsMainArgLengthInvalid(const char* str) const;
     bool IsFoldable() const;
     std::string GetFoldStatus() const;
     int32_t GetFoldResolutionWidth() const;
     int32_t GetFoldResolutionHeight() const;
+    std::string GetLoaderJsonPath() const;
+    int ParseArgs(int argc, char* argv[]);
+    void GetCommandInfo(CommandInfo& info);
+    void GetFoldInfo(FoldInfo& info);
 
 private:
     CommandParser();
@@ -112,16 +144,18 @@ private:
     std::string projectModel;
     std::string pages;
     std::string containerSdkPath;
-    std::string regex4Num = "^(?:0|[1-9])+(?:.[0-9]*)$";
+    std::string regex4Num = "^(0|[1-9][0-9]*)(\\.[0-9]+)?$";
     std::string regex4Str = "^(?:[a-zA-Z0-9-_./\\s]+)$";
     bool isComponentMode;
     std::string abilityPath;
+    std::string abilityName;
     bool staticCard;
     const size_t maxMainArgLength = 1024;
     bool foldable;
     std::string foldStatus;
     int32_t foldResolutionWidth;
     int32_t foldResolutionHeight;
+    std::string loaderJsonPath;
 
     bool IsDebugPortValid();
     bool IsAppPathValid();
@@ -154,10 +188,12 @@ private:
     bool IsContainerSdkPathValid();
     bool IsComponentModeValid();
     bool IsAbilityPathValid();
+    bool IsAbilityNameValid();
     bool IsStaticCardValid();
     bool IsFoldableValid();
     bool IsFoldStatusValid();
     bool IsFoldResolutionValid();
+    bool IsLoaderJsonPathValid();
     std::string HelpText();
     void ProcessingCommand(const std::vector<std::string>& strs);
 };

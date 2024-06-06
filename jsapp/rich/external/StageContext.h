@@ -21,7 +21,7 @@
 #include <optional>
 #include <map>
 
-namespace Json {
+namespace Json2 {
     class Value;
 }
 
@@ -50,9 +50,16 @@ private:
     std::string GetCloudHspPath(const std::string& hspDir, const std::string& moduleName);
     std::string ReplaceLastStr(const std::string& str, const std::string& find, const std::string& replace);
     int GetHspActualName(const std::string& input, std::string& ret);
+    std::string GetActualCloudHspDir(const std::string& actualName);
+    std::string GetCloudModuleHspPath(const std::string& actualName);
+    std::string GetCloudProjectHspPath(const std::string& actualName);
+    std::string GetCloudHspVersion(const std::string& hspPath, const std::string& actualName);
+    std::vector<int> SplitHspVersion(const std::string& version);
+    int CompareHspVersion(const std::string& version1, const std::string& version2);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::map<std::string, std::string> harNameOhmMap;
+    std::string projectRootPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string localBundleName = "bundle";

@@ -14,7 +14,7 @@
  */
 
 #include "CommandParser.h"
-
+#include <cstring>
 #include <algorithm>
 #include <cstdlib>
 #include <regex>
@@ -82,10 +82,12 @@ CommandParser::CommandParser()
     Register("-hsp", 1, "Set container sdk path.");
     Register("-cpm", 1, "Set previewer start mode.");
     Register("-abp", 1, "Set abilityPath for debug.");
+    Register("-abn", 1, "Set abilityName for debug.");
     Register("-staticCard", 1, "Set card mode.");
     Register("-foldable", 1, "Set foldable for Previewer.");
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
+    Register("-ljPath", 1, "Set loader.json path for Previewer");
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -121,10 +123,11 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsConfigPathValid() && IsJsHeapValid() && IsJsHeapFlagValid() && IsScreenShapeValid();
     partRet = partRet && IsDeviceValid() && IsUrlValid() && IsRefreshValid() && IsCardValid() && IsProjectIDValid();
     partRet = partRet && IsColorModeValid() && IsOrientationValid() && IsWebSocketPortValid() && IsAceVersionValid();
-    partRet = partRet && IsScreenModeValid() && IsAppResourcePathValid();
+    partRet = partRet && IsScreenModeValid() && IsAppResourcePathValid() && IsLoaderJsonPathValid();
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
+    partRet = partRet && IsAbilityNameValid();
     if (partRet) {
         return true;
     }
@@ -277,6 +280,11 @@ bool CommandParser::IsComponentMode() const
 string CommandParser::GetAbilityPath() const
 {
     return abilityPath;
+}
+
+string CommandParser::GetAbilityName() const
+{
+    return abilityName;
 }
 
 bool CommandParser::IsStaticCard() const
@@ -570,7 +578,7 @@ bool CommandParser::IsProjectIDValid()
 {
     if (IsSet("projectID")) {
         projectID = Value("projectID");
-        if (CheckParamInvalidity(projectID, true)) {
+        if (CheckParamInvalidity(projectID, false)) {
             errorInfo = "Launch -projectID parameters is not match regex.";
             return false;
         }
@@ -664,7 +672,7 @@ bool CommandParser::IsLanguageValid()
     if (!IsSet("l")) {
         return true;
     }
-    string lan = Value("pages");
+    string lan = Value("l");
     if (CheckParamInvalidity(lan, false)) {
         errorInfo = "Launch -l parameters is not match regex.";
         return false;
@@ -837,6 +845,28 @@ bool CommandParser::IsAbilityPathValid()
     return true;
 }
 
+bool CommandParser::IsAbilityNameValid()
+{
+    if (!IsSet("d")) {
+        return true;
+    }
+    if (deviceType == "liteWearable" || deviceType == "smartVision") {
+        return true;
+    }
+    if (!IsSet("abn")) {
+        ELOG("Launch -d parameters without -abn parameters.");
+        return true; // 兼容老版本IDE（沒有abn参数）
+    }
+    string name = Value("abn");
+    if (name.empty()) {
+        errorInfo = string("The ability name is empty.");
+        ELOG("Launch -abn parameters abnormal!");
+        return false;
+    }
+    abilityName = name;
+    return true;
+}
+
 bool CommandParser::IsStaticCardValid()
 {
     if (!IsSet("staticCard")) {
@@ -866,7 +896,6 @@ bool CommandParser::IsMainArgLengthInvalid(const char* str) const
 
 bool CommandParser::IsFoldableValid()
 {
-    ELOG("param size is more than %d", maxMainArgLength);
     if (!IsSet("foldable")) {
         return true;
     }
@@ -936,4 +965,72 @@ int32_t CommandParser::GetFoldResolutionWidth() const
 int32_t CommandParser::GetFoldResolutionHeight() const
 {
     return foldResolutionHeight;
+}
+
+string CommandParser::GetLoaderJsonPath() const
+{
+    return loaderJsonPath;
+}
+
+bool CommandParser::IsLoaderJsonPathValid()
+{
+    if (!IsSet("ljPath")) {
+        return true;
+    }
+    string path = Value("ljPath");
+    if (!FileSystem::IsFileExists(path)) {
+        errorInfo = string("The configuration loader.json path does not exist.");
+        ELOG("Launch -ljPath parameters abnormal!");
+        return false;
+    }
+    loaderJsonPath = path;
+    return true;
+}
+
+int CommandParser::ParseArgs(int argc, char* argv[])
+{
+    int startParamInvalidCode = 11;
+    int defaultReturnVal = -1;
+    vector<string> strs;
+    for (int i = 1; i < argc; ++i) {
+        if (IsMainArgLengthInvalid(argv[i])) {
+            return startParamInvalidCode;
+        }
+        strs.push_back(argv[i]);
+    }
+    if (!ProcessCommand(strs)) {
+        return 0;
+    }
+    if (!IsCommandValid()) {
+        FLOG("Start args is invalid.");
+        return startParamInvalidCode;
+    }
+    return defaultReturnVal;
+}
+
+void CommandParser::GetCommandInfo(CommandInfo& info)
+{
+    info.deviceType = GetDeviceType();
+    info.pages = GetPages();
+    info.appResourcePath = GetAppResourcePath();
+    info.isCardDisplay = IsCardDisplay();
+    info.containerSdkPath = GetContainerSdkPath();
+    info.isComponentMode = IsComponentMode();
+    info.loaderJsonPath = GetLoaderJsonPath();
+    info.abilityPath = GetAbilityPath();
+    info.abilityName = GetAbilityName();
+    info.configPath = GetConfigPath();
+    info.screenShape = GetScreenShape();
+    info.orignalResolutionWidth = GetOrignalResolutionWidth();
+    info.orignalResolutionHeight = GetOrignalResolutionHeight();
+    info.compressionResolutionWidth = GetCompressionResolutionWidth();
+    info.compressionResolutionHeight = GetCompressionResolutionHeight();
+}
+
+void CommandParser::GetFoldInfo(FoldInfo& info)
+{
+    info.foldable = IsFoldable();
+    info.foldStatus = GetFoldStatus();
+    info.foldResolutionWidth = GetFoldResolutionWidth();
+    info.foldResolutionHeight = GetFoldResolutionHeight();
 }

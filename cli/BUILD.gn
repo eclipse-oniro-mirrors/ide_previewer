@@ -18,10 +18,7 @@ config("cli_config") {
   cflags = [ "-std=c++17" ]
 }
 ohos_source_set("cli_lite") {
-  configs = [
-    ":cli_config",
-    "//third_party/jsoncpp:jsoncpp_public_config",
-  ]
+  configs = [ ":cli_config" ]
   sources = [
     "CommandLine.cpp",
     "CommandLineFactory.cpp",
@@ -53,6 +50,7 @@ ohos_source_set("cli_lite") {
   include_dirs += [
     "../mock/",
     "../mock/lite/",
+    "//third_party/cJSON/",
   ]
 
   cflags = [ "-Wno-deprecated-declarations" ]
@@ -61,10 +59,7 @@ ohos_source_set("cli_lite") {
 }
 
 ohos_source_set("cli_rich") {
-  configs = [
-    ":cli_config",
-    "//third_party/jsoncpp:jsoncpp_public_config",
-  ]
+  configs = [ ":cli_config" ]
   sources = [
     "CommandLine.cpp",
     "CommandLineFactory.cpp",
@@ -87,6 +82,7 @@ ohos_source_set("cli_rich") {
   include_dirs += [
     "../mock/",
     "../mock/rich/",
+    "//third_party/cJSON/",
   ]
 
   include_dirs += os_include_dirs

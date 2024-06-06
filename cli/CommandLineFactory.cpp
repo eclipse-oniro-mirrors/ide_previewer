@@ -48,6 +48,8 @@ void CommandLineFactory::InitCommandMap()
         typeMap["KeyPress"] = &CommandLineFactory::CreateObject<KeyPressCommand>;
         typeMap["LoadContent"] = &CommandLineFactory::CreateObject<LoadContentCommand>;
         typeMap["FoldStatus"] = &CommandLineFactory::CreateObject<FoldStatusCommand>;
+        typeMap["AvoidArea"] = &CommandLineFactory::CreateObject<AvoidAreaCommand>;
+        typeMap["AvoidAreaChanged"] = &CommandLineFactory::CreateObject<AvoidAreaChangedCommand>;
     } else {
         typeMap["Power"] = &CommandLineFactory::CreateObject<PowerCommand>;
         typeMap["Volume"] = &CommandLineFactory::CreateObject<VolumeCommand>;
@@ -76,15 +78,15 @@ void CommandLineFactory::InitCommandMap()
 
 unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
                                                               CommandLine::CommandType type,
-                                                              Json::Value val,
+                                                              const Json2::Value& val,
                                                               const LocalSocket& socket)
 {
     if (typeMap.find(command) == typeMap.end()) {
-        Json::Value commandResult;
-        commandResult["version"] = CommandLineInterface::COMMAND_VERSION;
-        commandResult["command"] = command;
-        commandResult["result"] = "Unsupported command";
-        socket << commandResult.toStyledString();
+        Json2::Value commandResult = JsonReader::CreateObject();
+        commandResult.Add("version", CommandLineInterface::COMMAND_VERSION.c_str());
+        commandResult.Add("command", command.c_str());
+        commandResult.Add("result", "Unsupported command");
+        socket << commandResult.ToStyledString();
         ELOG("Unsupported command");
         TraceTool::GetInstance().HandleTrace("Mismatched SDK version");
         return nullptr;
@@ -103,7 +105,7 @@ unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
 
 template <typename T>
 unique_ptr<CommandLine> CommandLineFactory::CreateObject(CommandLine::CommandType type,
-                                                         const Json::Value& args, const LocalSocket& socket)
+                                                         const Json2::Value& args, const LocalSocket& socket)
 {
     return make_unique<T>(type, args, socket);
 }

@@ -28,28 +28,26 @@ export function getTypeAliasDeclaration(node: Node, sourceFile: SourceFile): Typ
   const typeAliasTypeKind = typeAliasNode.type.kind;
   const typeAliasTypeElements: Array<TypeAliasTypeEntity> = [];
   const modifiers: Array<number> = [];
-
   const modifiersNode = typeAliasNode.modifiers;
   if (modifiersNode !== undefined) {
     modifiersNode.forEach(value => {
       modifiers.push(value.kind);
     });
   }
-
   const typeAliasTypeElementsNode = typeAliasNode.type;
   if (typeAliasTypeElementsNode !== undefined) {
     if (isUnionTypeNode(typeAliasTypeElementsNode)) {
       typeAliasTypeElementsNode.types.forEach(value => {
-        const typeName = sourceFile.text.substring(value.pos, value.end).trimStart().trimEnd();
+        const typeName = sourceFile.text.substring(value.pos, value.end).trim();
         const typeKind = value.kind;
         typeAliasTypeElements.push({ typeName: typeName, typeKind: typeKind });
       });
     } else if (isTypeReferenceNode(typeAliasTypeElementsNode)) {
-      const typeName = sourceFile.text.substring(typeAliasTypeElementsNode.typeName.pos, typeAliasTypeElementsNode.typeName.end).trimStart().trimEnd();
+      const typeName = sourceFile.text.substring(typeAliasTypeElementsNode.typeName.pos, typeAliasTypeElementsNode.typeName.end).trim();
       typeAliasTypeElements.push({ typeName: typeName, typeKind: typeAliasTypeElementsNode.typeName.kind });
     } else if (isTypeLiteralNode(typeAliasTypeElementsNode)) {
       typeAliasTypeElementsNode.members.forEach(value => {
-        const typeName = sourceFile.text.substring(value.pos, value.end).trimStart().trimEnd();
+        const typeName = sourceFile.text.substring(value.pos, value.end).trim();
         const typeKind = value.kind;
         typeAliasTypeElements.push({ typeName: typeName, typeKind: typeKind });
       });
@@ -62,7 +60,6 @@ export function getTypeAliasDeclaration(node: Node, sourceFile: SourceFile): Typ
       );
     }
   }
-
   return {
     typeAliasName: typeAliasName,
     typeAliasTypeKind: typeAliasTypeKind,

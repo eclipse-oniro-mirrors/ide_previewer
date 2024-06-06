@@ -17,7 +17,9 @@ import { SyntaxKind } from 'typescript';
 import type { SourceFile } from 'typescript';
 import { getClassNameSet } from '../common/commonUtils';
 import type { PropertyEntity } from '../declaration-node/propertyDeclaration';
-import { getTheRealReferenceFromImport } from './generateCommonUtil';
+import { getTheRealReferenceFromImport, getWarnConsole } from './generateCommonUtil';
+import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { addExtraImport } from './generateInterfaceDeclaration';
 
 /**
  * generate class property
@@ -26,41 +28,66 @@ import { getTheRealReferenceFromImport } from './generateCommonUtil';
  * @param sourceFile
  * @returns
  */
-export function generatePropertyDeclaration(rootName: string, propertyDeclaration: PropertyEntity, sourceFile: SourceFile): string {
+export function generatePropertyDeclaration(rootName: string, propertyDeclaration: PropertyEntity,
+  sourceFile: SourceFile, extraImport: string[], importDeclarations?: ImportElementEntity[]): string {
   let propertyBody = '';
   if (propertyDeclaration.isInitializer) {
     propertyBody = `this.${propertyDeclaration.propertyName} = ${propertyDeclaration.initializer};`;
   } else {
-    if (propertyDeclaration.propertyTypeName.startsWith('{')) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = {};`;
-    } else if (propertyDeclaration.kind === SyntaxKind.LiteralType) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = ${propertyDeclaration.propertyTypeName};`;
-    } else if (propertyDeclaration.kind === SyntaxKind.NumberKeyword) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = 0;`;
-    } else if (propertyDeclaration.kind === SyntaxKind.StringKeyword) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = ''`;
-    } else if (propertyDeclaration.kind === SyntaxKind.BooleanKeyword) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = true`;
-    } else if (propertyDeclaration.propertyTypeName.startsWith('Array')) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = [];`;
-    } else if (propertyDeclaration.propertyTypeName.startsWith('Map')) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = {key: {}};`;
-    } else if (propertyDeclaration.kind === SyntaxKind.TypeReference) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = `;
-      if (getClassNameSet().has(propertyDeclaration.propertyTypeName)) {
-        if (!['Want', 'InputMethodExtensionContext'].includes(propertyDeclaration.propertyTypeName)) {
-          propertyBody += `new ${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)}();`;
-        } else {
-          propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
-        }
-      } else {
-        propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
-      }
-    } else if (propertyDeclaration.kind === SyntaxKind.NumericLiteral || propertyDeclaration.kind === SyntaxKind.StringLiteral) {
-      propertyBody = `this.${propertyDeclaration.propertyName} = ${propertyDeclaration.propertyTypeName};`;
-    } else {
-      propertyBody = `this.${propertyDeclaration.propertyName} = '[PC Previwe] unknown ${propertyDeclaration.propertyName}';`;
+    propertyBody = `this.${propertyDeclaration.propertyName} = `;
+    if (propertyDeclaration.kinds === SyntaxKind.GetAccessor) {
+      const warnCon = getWarnConsole(rootName, propertyDeclaration.propertyName);
+      propertyBody += `(function () {\n ${warnCon} \n return `;
     }
+    if (propertyDeclaration.propertyTypeName.startsWith('{')) {
+      propertyBody += '{};';
+    } else if (propertyDeclaration.kind === SyntaxKind.LiteralType) {
+      propertyBody += `${propertyDeclaration.propertyTypeName};`;
+    } else if (propertyDeclaration.kind === SyntaxKind.NumberKeyword) {
+      propertyBody += '0;';
+    } else if (propertyDeclaration.kind === SyntaxKind.StringKeyword) {
+      propertyBody += '\'\'';
+    } else if (propertyDeclaration.kind === SyntaxKind.BooleanKeyword) {
+      propertyBody += 'true';
+    } else if (propertyDeclaration.propertyTypeName.startsWith('Array')) {
+      propertyBody += '[];';
+    } else if (propertyDeclaration.propertyTypeName.startsWith('Map')) {
+      propertyBody += '{key: {}};';
+    } else if (propertyDeclaration.kind === SyntaxKind.TypeReference) {
+      propertyBody = generateTypeReference(propertyDeclaration, sourceFile, propertyBody);
+    } else if (propertyDeclaration.kind === SyntaxKind.NumericLiteral || propertyDeclaration.kind === SyntaxKind.StringLiteral) {
+      propertyBody += ` ${propertyDeclaration.propertyTypeName};`;
+    } else {
+      propertyBody += `'[PC Previwe] unknown ${propertyDeclaration.propertyName}';`;
+    }
+    if (propertyDeclaration.kinds === SyntaxKind.GetAccessor) {
+      addExtraImport(extraImport, importDeclarations, sourceFile, propertyDeclaration);
+      propertyBody += '\n })();';
+    }
+  }
+  return propertyBody;
+}
+
+/**
+ * generate type reference
+ * @param propertyDeclaration
+ * @param sourceFile
+ * @param propertyBody
+ * @returns
+ */
+function generateTypeReference(
+  propertyDeclaration: PropertyEntity,
+  sourceFile: SourceFile,
+  propertyBody: string
+): string {
+  if (getClassNameSet().has(propertyDeclaration.propertyTypeName)) {
+    if (!['Want', 'InputMethodExtensionContext'].includes(propertyDeclaration.propertyTypeName)) {
+      propertyBody += `new ${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)}();`;
+    } else {
+      propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
+    }
+  } else {
+    propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
   }
   return propertyBody;
 }

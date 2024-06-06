@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import path from 'path';
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
 import { firstCharacterToUppercase } from '../common/commonUtils';
@@ -21,6 +22,22 @@ import { generateCommonMethod } from './generateCommonMethod';
 import { getWarnConsole } from './generateCommonUtil';
 import { generatePropertyDeclaration } from './generatePropertyDeclaration';
 import { generateStaticFunction } from './generateStaticFunction';
+import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { HeritageClauseEntity } from '../declaration-node/heritageClauseDeclaration';
+
+interface AssemblyClassParams {
+  isSystem: boolean,
+  classEntity: ClassEntity,
+  classBody: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  isInnerMockFunction: boolean,
+  filename: string,
+  isExtend: boolean,
+  className: string,
+  extraImport?: string[],
+  importDeclarations?: ImportElementEntity[]
+}
 
 /**
  * generate class
@@ -33,8 +50,18 @@ import { generateStaticFunction } from './generateStaticFunction';
  * @param isInnerMockFunction
  * @returns
  */
-export function generateClassDeclaration(rootName: string, classEntity: ClassEntity, isSystem: boolean, globalName: string,
-  filename: string, sourceFile: SourceFile, isInnerMockFunction: boolean, mockApi: string): string {
+export function generateClassDeclaration(
+  rootName: string,
+  classEntity: ClassEntity,
+  isSystem: boolean,
+  globalName: string,
+  filename: string,
+  sourceFile: SourceFile,
+  isInnerMockFunction: boolean,
+  mockApi: string,
+  extraImport?: string[],
+  importDeclarations?: ImportElementEntity[]
+): string {
   if (isSystem) {
     return '';
   }
@@ -49,59 +76,94 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
     classBody += `const ${className} = class ${className} `;
   }
 
-  const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity);
+  const heritageClausesData = handleClassEntityHeritageClauses(rootName, classEntity, mockApi, sourceFile);
   const isExtend = heritageClausesData.isExtend;
+  classBody = addCustomeClass(heritageClausesData, sourceFile, importDeclarations) + classBody;
   classBody += heritageClausesData.classBody;
+  classBody = assemblyClassBody({
+    isSystem,
+    classEntity,
+    classBody,
+    className,
+    isExtend,
+    sourceFile,
+    mockApi,
+    isInnerMockFunction,
+    filename,
+    extraImport,
+    importDeclarations
+  });
+  return classBody;
+}
 
-  if (!isSystem) {
-    classBody += '{';
-    if (classEntity.classConstructor.length > 1) {
-      classBody += 'constructor(...arg) { ';
+/**
+ * generate some class
+ * @param porps
+ * @returns
+ */
+function assemblyClassBody(porps: AssemblyClassParams): string {
+  if (!porps.isSystem) {
+    porps.classBody += '{';
+    if (porps.classEntity.classConstructor.length > 1) {
+      porps.classBody += 'constructor(...arg) { ';
     } else {
-      classBody += 'constructor() { ';
+      porps.classBody += 'constructor() { ';
     }
-    if (isExtend) {
-      classBody += 'super();\n';
+    if (porps.isExtend) {
+      porps.classBody += 'super();\n';
     }
-    classBody += sourceFile.fileName.endsWith('PermissionRequestResult.d.ts') ? '' : getWarnConsole(className, 'constructor');
+    const warnCon = getWarnConsole(porps.className, 'constructor');
+    porps.classBody += porps.sourceFile.fileName.endsWith('PermissionRequestResult.d.ts') ? '' : warnCon;
   }
-  if (classEntity.classProperty.length > 0) {
-    classEntity.classProperty.forEach(value => {
-      classBody += generatePropertyDeclaration(className, value, sourceFile) + '\n';
+  if (porps.classEntity.classProperty.length > 0) {
+    porps.classEntity.classProperty.forEach(value => {
+      porps.classBody += generatePropertyDeclaration(porps.className, value,
+        porps.sourceFile, porps.extraImport, porps.importDeclarations) + '\n';
     });
   }
 
-  if (classEntity.classMethod.size > 0) {
-    classEntity.classMethod.forEach(value => {
-      classBody += generateCommonMethod(className, value, sourceFile, mockApi);
+  if (porps.classEntity.classMethod.size > 0) {
+    porps.classEntity.classMethod.forEach(value => {
+      porps.classBody += generateCommonMethod(porps.className, value, porps.sourceFile, porps.mockApi);
     });
   }
 
-  classBody += '}\n};';
+  porps.classBody += '}\n};';
+  porps.classBody = assemblyGlobal(porps);
+
+  if (!porps.filename.startsWith('system_')) {
+    if (porps.classEntity.staticMethods.length > 0) {
+      let staticMethodBody = '';
+      porps.classEntity.staticMethods.forEach(value => {
+        staticMethodBody += generateStaticFunction(value, false, porps.sourceFile, porps.mockApi) + '\n';
+      });
+      porps.classBody += staticMethodBody;
+    }
+  }
+  if (porps.classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
+    porps.classBody += `\nexport default ${porps.className};`;
+  }
+  return porps.classBody;
+}
+
+/**
+ * generate some class
+ * @param porps
+ * @returns
+ */
+function assemblyGlobal(porps: AssemblyClassParams): string {
   if (
-    (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
-    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
-    !isInnerMockFunction
+    (porps.classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
+      porps.classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
+    !porps.isInnerMockFunction
   ) {
-    classBody += `
-      if (!global.${className}) {
-        global.${className} = ${className};\n
+    porps.classBody += `
+      if (!global.${porps.className}) {
+        global.${porps.className} = ${porps.className};\n
       }
     `;
   }
-  if (!filename.startsWith('system_')) {
-    if (classEntity.staticMethods.length > 0) {
-      let staticMethodBody = '';
-      classEntity.staticMethods.forEach(value => {
-        staticMethodBody += generateStaticFunction(value, false, sourceFile, mockApi) + '\n';
-      });
-      classBody += staticMethodBody;
-    }
-  }
-  if (classEntity.exportModifiers.includes(SyntaxKind.DefaultKeyword)) {
-    classBody += `\nexport default ${className};`;
-  }
-  return classBody;
+  return porps.classBody;
 }
 
 /**
@@ -110,7 +172,12 @@ export function generateClassDeclaration(rootName: string, classEntity: ClassEnt
  * @param classEntity
  * @returns
  */
-function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEntity): { isExtend: boolean, classBody: string } {
+function handleClassEntityHeritageClauses(
+  rootName: string,
+  classEntity: ClassEntity,
+  mockApi: string,
+  sourceFile: SourceFile
+): { isExtend: boolean, classBody: string } {
   let isExtend = false;
   let classBody = '';
   if (classEntity.heritageClauses.length > 0) {
@@ -118,22 +185,7 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
       if (value.clauseToken === 'extends') {
         isExtend = true;
         classBody += `${value.clauseToken} `;
-        value.types.forEach((val, index) => {
-          const extendClassName = val.split('<')[0];
-          const moduleName = firstCharacterToUppercase(rootName);
-          if (val.startsWith('Array<')) {
-            val = 'Array';
-          } else {
-            if (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) && rootName !== '') {
-              val = `mock${moduleName}().${val}`;
-            }
-          }
-          if (index !== value.types.length - 1) {
-            classBody += `${extendClassName},`;
-          } else {
-            classBody += val === 'uri.URI' ? 'mockUri().URI' : `${extendClassName}`;
-          }
-        });
+        classBody = generateClassEntityHeritageClauses(classEntity, value, classBody, rootName, mockApi, sourceFile);
       }
     });
   }
@@ -141,4 +193,96 @@ function handleClassEntityHeritageClauses(rootName: string, classEntity: ClassEn
     isExtend,
     classBody
   };
+}
+
+/**
+ * generate classEntity heritageClauses
+ * @param classEntity
+ * @param value
+ * @param classBody
+ * @param rootName
+ * @param mockApi
+ * @param sourceFile
+ * @returns
+ */
+function generateClassEntityHeritageClauses(
+  classEntity: ClassEntity,
+  value: HeritageClauseEntity,
+  classBody: string,
+  rootName: string,
+  mockApi: string,
+  sourceFile: SourceFile
+): string {
+  value.types.forEach((val, index) => {
+    const extendClassName = val.trim().split('<')[0];
+    const moduleName = firstCharacterToUppercase(rootName);
+    if (val.startsWith('Array<')) {
+      val = 'Array';
+    } else {
+      if (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) && rootName !== '') {
+        val = `mock${moduleName}().${val}`;
+      }
+    }
+    if (index !== value.types.length - 1) {
+      classBody += `${extendClassName},`;
+    } else if (val.includes('.')) {
+      const name = val.split('.')[0];
+      if (mockApi.includes(`import { mock${firstCharacterToUppercase(name)} }`) &&
+            path.basename(sourceFile.fileName).startsWith('@ohos.')) {
+        classBody += val.replace(name, `mock${firstCharacterToUppercase(name)}()`);
+      } else {
+        classBody += `${extendClassName}`;
+      }
+    } else {
+      classBody += `${extendClassName}`;
+    }
+  });
+  return classBody;
+}
+
+/**
+ * add custome class
+ * @param heritageClausesData
+ * @param sourceFile
+ * @returns
+ */
+function addCustomeClass(
+  heritageClausesData: {isExtend: boolean, classBody:string},
+  sourceFile: SourceFile,
+  importDeclarations?: ImportElementEntity[]
+): string {
+  if (!heritageClausesData.isExtend) {
+    return '';
+  }
+  if (
+    !path.resolve(sourceFile.fileName).includes(path.join('@internal', 'component', 'ets')) &&
+    path.basename(sourceFile.fileName).startsWith('@ohos.')
+  ) {
+    return '';
+  }
+  let mockClassBody = '';
+  if (!heritageClausesData.classBody.startsWith('extends ')) {
+    return mockClassBody;
+  }
+  const classArr = heritageClausesData.classBody.split('extends');
+  const className = classArr[classArr.length - 1].trim();
+  if (className === 'extends') {
+    return mockClassBody;
+  }
+  const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
+  const fileContent = sourceFile.getText().replace(removeNoteRegx, '');
+  let hasImportType = false;
+  if (importDeclarations) {
+    importDeclarations.forEach(element => {
+      if (element.importElements.includes(className)) {
+        hasImportType = true;
+      }
+    });
+  }
+  const regex = new RegExp(`\\sclass\\s*${className}\\s*(<|{|extends|implements)`);
+  const results = fileContent.match(regex);
+  if (!results && !hasImportType) {
+    mockClassBody = `class ${className} {};\n`;
+  }
+  return mockClassBody;
 }

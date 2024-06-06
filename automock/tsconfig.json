@@ -23,12 +23,6 @@
       "es2015"
     ]
   },
-  "include": [
-    "./mock-generate/src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
   "ts-node": {
     "logError": true
   }

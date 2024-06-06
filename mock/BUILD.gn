@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine_lite/simulator.gni")
 import("../gn/config.gni")
 
 config("myconfig") {
@@ -54,17 +55,12 @@ ohos_source_set("mock_rich") {
 
   include_dirs += [ "./rich/" ]
 
-  configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
-
   part_name = "previewer"
   subsystem_name = "ide"
 }
 
 ohos_source_set("mock_lite") {
-  configs = [
-    ":myconfig",
-    "//third_party/jsoncpp:jsoncpp_public_config",
-  ]
+  configs = [ ":myconfig" ]
   include_dirs = [
     ".",
     "../util/",
@@ -126,6 +122,7 @@ ohos_source_set("mock_lite") {
       "//foundation/arkui/ui_ext_lite/tools/ide/brightness_lite/js/builtin:nativeapi_brightness_static",
     ]
     sources += [
+      "lite/BrightnessModuleImpl.cpp",
       "lite/GeoLocation.cpp",
       "lite/SensorModuleImpl.cpp",
       "lite/VibratorModuleImpl.cpp",

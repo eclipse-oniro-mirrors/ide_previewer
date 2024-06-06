@@ -19,6 +19,13 @@ import path from 'path';
 import fs from 'fs';
 import type { SourceFile } from 'typescript';
 
+interface SubstepParseProps {
+  importFileContent: string,
+  realImportPath: string,
+  extraImport: string[],
+  properties: string
+}
+
 const interceptIndex = 2;
 
 /**
@@ -88,8 +95,7 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
   }
   const currentFileDifferPathSteps = currentFilePathSteps.slice(differStepIndex);
   const importFileDifferPathSteps = importFilePathSteps.slice(differStepIndex);
-  if (currentFileDifferPathSteps.length === importFileDifferPathSteps.length
-    && currentFileDifferPathSteps.length === 1) {
+  if (currentFileDifferPathSteps.length === importFileDifferPathSteps.length && currentFileDifferPathSteps.length === 1) {
     return `./${path.basename(importFilePath)}`;
   } else {
     const steps = [];
@@ -115,7 +121,8 @@ function parseImportExpression(
       if (name.includes('.')) {
         name = name.trim().split('.')[0];
       }
-      if (mockApi.includes(`import { ${name} `) || mockApi.includes(` as ${name.trim()} `) || mockApi.includes(`import ${name} `)) {
+      if (mockApi.includes(`import { ${name} `) || mockApi.includes(` as ${name.trim()} `) ||
+        mockApi.includes(`import ${name} `)) {
         return typeName.trim();
       }
       continue;
@@ -130,22 +137,9 @@ function parseImportExpression(
     }
     const importFileContent = fs.readFileSync(importPath, 'utf-8');
     if (properties.startsWith('.default')) {
-      let result = importFileContent.match(/export\sdefault\sclass\s[a-zA-Z]+/);
-      if (result) {
-        const defaultModuleName = '_' + result[0].replace(/export\sdefault\sclass\s/, '');
-        const importStr = `import ${defaultModuleName} from '${realImportPath}';\n`;
-        !extraImport.includes(importStr) && extraImport.push(importStr);
-        return `${defaultModuleName}${properties.replace('.default', '')}`;
-      }
-      result = importFileContent.match(/export\sdefault\s[a-zA-Z]+;/);
-      if (result) {
-        const moduleName = result[0]
-          .replace(/export\sdefault\s/, '')
-          .replace(';', '');
-        const mockFunctionName = `mock${firstCharacterToUppercase(moduleName)}`;
-        const importStr = `import {${mockFunctionName}} from '${realImportPath}';\n`;
-        !extraImport.includes(importStr) && extraImport.push(importStr);
-        return `${mockFunctionName}()${properties.replace('.default', '')}`;
+      const result = substepParseImportExpression({importFileContent, realImportPath, extraImport, properties});
+      if (result !== '') {
+        return result;
       }
     } else {
       const moduleName = properties.replace('.', '').split('.')[0];
@@ -156,3 +150,28 @@ function parseImportExpression(
   }
   return '';
 }
+
+/**
+ * generate type alias
+ * @param props
+ * @returns
+ */
+function substepParseImportExpression(props:SubstepParseProps): string {
+  let result = props.importFileContent.match(/export\sdefault\sclass\s[a-zA-Z]+/);
+  if (result) {
+    const defaultModuleName = '_' + result[0].replace(/export\sdefault\sclass\s/, '');
+    const importStr = `import ${defaultModuleName} from '${props.realImportPath}';\n`;
+    !props.extraImport.includes(importStr) && props.extraImport.push(importStr);
+    return `${defaultModuleName}${props.properties.replace('.default', '')}`;
+  }
+  result = props.importFileContent.match(/export\sdefault\s[a-zA-Z]+;/);
+  if (result) {
+    const moduleName = result[0].replace(/export\sdefault\s/, '').replace(';', '');
+    const mockFunctionName = `mock${firstCharacterToUppercase(moduleName)}`;
+    const importStr = `import {${mockFunctionName}} from '${props.realImportPath}';\n`;
+    !props.extraImport.includes(importStr) && props.extraImport.push(importStr);
+    return `${mockFunctionName}()${props.properties.replace('.default', '')}`;
+  }
+  return '';
+}
+

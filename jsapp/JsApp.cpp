@@ -14,11 +14,10 @@
  */
 
 #include "JsApp.h"
-
+#include <algorithm>
 #include <sstream>
 #include <cstdio>
 #include "FileSystem.h"
-#include "JsAppImpl.h"
 #include "PreviewerEngineLog.h"
 
 using namespace std;
@@ -49,7 +48,7 @@ void JsApp::Stop()
     ILOG("JsApp::Stop start stop js app.");
     auto start = std::chrono::system_clock::now();
     while (!isFinished) {
-        JsAppImpl::GetInstance().Interrupt();
+        Interrupt();
         this_thread::sleep_for(chrono::milliseconds(1));
         auto end = std::chrono::system_clock::now();
         auto passedSecond = chrono::duration_cast<chrono::seconds>(end - start).count();
@@ -60,6 +59,8 @@ void JsApp::Stop()
     }
     ILOG("JsApp::Stop js app stop finished.");
 }
+
+void JsApp::Interrupt() {}
 
 bool JsApp::IsLiteDevice(std::string deviceType)
 {
@@ -181,6 +182,16 @@ bool JsApp::MemoryRefresh(const std::string) const
     return false;
 }
 
-void JsApp::LoadDocument(const std::string, const std::string, const Json::Value) {}
+void JsApp::LoadDocument(const std::string, const std::string, const Json2::Value&) {}
 
-void JsApp::FoldStatusChanged(const std::string commandFoldStatus) {}
+void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) {}
+
+void JsApp::SetAvoidArea(const AvoidAreas& areas) {}
+
+const AvoidAreas JsApp::GetCurrentAvoidArea() const
+{
+    AvoidAreas areas;
+    return areas;
+}
+
+void JsApp::InitJsApp() {}

@@ -35,6 +35,9 @@ namespace Previewer {
 namespace Rosen {
     class GlfwRenderContext;
     enum class FoldStatus: uint32_t;
+    enum class WindowType : uint32_t;
+    struct SystemBarProperty;
+    struct Rect;
 }
 #if defined(__APPLE__) || defined(_WIN32)
 namespace AbilityRuntime {
@@ -75,14 +78,25 @@ public:
     void SetScreenDensity(const std::string value) override;
     void SetConfigChanges(const std::string value) override;
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
-    void LoadDocument(const std::string, const std::string, const Json::Value) override;
-    void FoldStatusChanged(const std::string commandFoldStatus) override;
+    void LoadDocument(const std::string, const std::string, const Json2::Value&) override;
+    void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) override;
+    void SetAvoidArea(const AvoidAreas& areas) override;
+    void UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::Rect& value);
+    OHOS::Rosen::Window* GetWindow() const;
 
     void DispatchBackPressedEvent() const;
     void DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const;
     void DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const;
     void DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const;
     void DispatchInputMethodEvent(const unsigned int codePoint) const;
+    void InitGlfwEnv();
+    void CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
+        const OHOS::Rosen::SystemBarProperty& property);
+    void InitAvoidAreas(OHOS::Rosen::Window* window);
+    void InitJsApp() override;
+    void StopAbility();
+    void InitCommandInfo();
+    void InitScreenInfo();
 
 protected:
     void SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args);
@@ -97,6 +111,7 @@ protected:
     double twoInOneScreenDensity = 240;    // Car Screen Density
 
 private:
+    void SetPkgContextInfo();
     void SetMockJsonInfo();
     void SetAssetPath(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetProjectModel(OHOS::Ace::Platform::AceRunArgs& args) const;
@@ -116,7 +131,6 @@ private:
     void SetAppResourcesPath(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetFormsEnabled(OHOS::Ace::Platform::AceRunArgs& args, bool formsEnabled) const;
     void SetContainerSdkPath(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
-    void SetOnRender(OHOS::Ace::Platform::AceRunArgs& args) const;
     void SetOnRouterChange(OHOS::Ace::Platform::AceRunArgs& args) const;
     void SetOnError(OHOS::Ace::Platform::AceRunArgs& args) const;
     void SetComponentModeEnabled(OHOS::Ace::Platform::AceRunArgs& args, bool isComponentMode) const;
@@ -124,12 +138,11 @@ private:
                                       const int32_t compWidth, const int32_t compHeight);
     void AdaptDeviceType(OHOS::Ace::Platform::AceRunArgs& args, const std::string,
                          const int32_t, double screenDendity = 0) const;
-    void ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, Json::Value paramObj);
-    void SetSystemParams(OHOS::Ace::Platform::SystemParams& args, Json::Value paramObj);
+    void ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const Json2::Value& paramObj);
+    void SetSystemParams(OHOS::Ace::Platform::SystemParams& args, const Json2::Value& paramObj);
     void SetDeviceScreenDensity(const int32_t screenDensity, const std::string type);
     std::string GetDeviceTypeName(const OHOS::Ace::DeviceType) const;
     OHOS::Rosen::FoldStatus ConvertFoldStatus(std::string value) const;
-    void InitGlfwEnv();
     const double BASE_SCREEN_DENSITY = 160; // Device Baseline Screen Density
     std::unique_ptr<OHOS::Ace::Platform::AceAbility> ability;
     std::atomic<bool> isStop;
@@ -137,6 +150,7 @@ private:
     int32_t height = 0;
     int32_t orignalWidth = 0;
     int32_t orignalHeight = 0;
+    AvoidAreas avoidInitialAreas;
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
 #if defined(__APPLE__) || defined(_WIN32)

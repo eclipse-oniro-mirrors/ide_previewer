@@ -34,6 +34,34 @@ import type { PropertySignatureEntity } from './propertySignatureDeclaration';
 import { getTypeParameterDeclaration } from './typeParameterDeclaration';
 import type { TypeParameterEntity } from './typeParameterDeclaration';
 
+interface SubstepInterfaceEntity {
+  interfaceName: string,
+  heritageClauses: Array<HeritageClauseEntity>,
+  typeParameters: Array<TypeParameterEntity>,
+  interfaceConstructors: Array<Array<ConstructorEntity>>,
+  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>,
+  interfacePropertySignatures: Array<PropertySignatureEntity>,
+  callSignatures: Array<CallSignatureEntity>,
+  indexSignature: Array<IndexSignatureEntity>
+}
+
+interface SubstepGetClassparam {
+  interfaceNode: InterfaceDeclaration,
+  sourceFile: SourceFile,
+  heritageClauses: Array<HeritageClauseEntity>
+}
+export interface InterfaceEntity {
+  interfaceName: string,
+  typeParameters: Array<TypeParameterEntity>,
+  heritageClauses: Array<HeritageClauseEntity>,
+  interfaceConstructors: Array<Array<ConstructorEntity>>,
+  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>,
+  interfacePropertySignatures: Array<PropertySignatureEntity>,
+  callSignatures: Array<CallSignatureEntity>,
+  exportModifiers: Array<number>,
+  indexSignature: Array<IndexSignatureEntity>
+}
+
 /**
  * get interface info
  * @param interfaceNode
@@ -46,21 +74,39 @@ export function getInterfaceDeclaration(interfaceNode: InterfaceDeclaration, sou
     exportModifiers = getExportKeyword(interfaceNode.modifiers);
   }
 
-  const interfaceName = interfaceNode.name.escapedText.toString();
   const heritageClauses: Array<HeritageClauseEntity> = [];
-  const interfaceConstructors: Array<Array<ConstructorEntity>> = [];
-  const interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>> = new Map<string, Array<MethodSignatureEntity>>();
-  const interfacePropertySignatures: Array<PropertySignatureEntity> = [];
-  const callSignature: Array<CallSignatureEntity> = [];
-  const typeParameters: Array<TypeParameterEntity> = [];
-  const indexSignature: Array<IndexSignatureEntity> = [];
 
   if (interfaceNode.heritageClauses !== undefined) {
     interfaceNode.heritageClauses.forEach(value => {
       heritageClauses.push(getHeritageClauseDeclaration(value, sourceFile));
     });
   }
+  const SubstepInterfaceEntitys: SubstepInterfaceEntity = substepGetInterface({
+    interfaceNode,
+    sourceFile,
+    heritageClauses
+  });
 
+  return {
+    ...SubstepInterfaceEntitys,
+    exportModifiers
+  };
+}
+
+/**
+ * get some interface info
+ * @param substepGetClassparam
+ * @returns
+ */
+function substepGetInterface(substepGetClassparam: SubstepGetClassparam): SubstepInterfaceEntity {
+  const { interfaceNode, sourceFile, heritageClauses } = substepGetClassparam;
+  const interfaceName = interfaceNode.name.escapedText.toString();
+  const interfaceConstructors: Array<Array<ConstructorEntity>> = [];
+  const interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>> = new Map<string, Array<MethodSignatureEntity>>();
+  const interfacePropertySignatures: Array<PropertySignatureEntity> = [];
+  const callSignature: Array<CallSignatureEntity> = [];
+  const typeParameters: Array<TypeParameterEntity> = [];
+  const indexSignature: Array<IndexSignatureEntity> = [];
   interfaceNode.members.forEach(value => {
     if (isPropertySignature(value)) {
       interfacePropertySignatures.push(getPropertySignatureDeclaration(value, sourceFile));
@@ -90,28 +136,14 @@ export function getInterfaceDeclaration(interfaceNode: InterfaceDeclaration, sou
       console.log('--------------------------- uncaught interface type end -----------------------');
     }
   });
-
   return {
-    interfaceName: interfaceName,
-    typeParameters: typeParameters,
-    heritageClauses: heritageClauses,
-    interfaceConstructors: interfaceConstructors,
-    interfaceMethodSignature: interfaceMethodSignature,
-    interfacePropertySignatures: interfacePropertySignatures,
+    interfaceName,
+    typeParameters,
+    heritageClauses,
+    interfaceConstructors,
+    interfaceMethodSignature,
+    interfacePropertySignatures,
     callSignatures: callSignature,
-    exportModifiers: exportModifiers,
-    indexSignature: indexSignature
+    indexSignature
   };
-}
-
-export interface InterfaceEntity {
-  interfaceName: string,
-  typeParameters: Array<TypeParameterEntity>,
-  heritageClauses: Array<HeritageClauseEntity>,
-  interfaceConstructors: Array<Array<ConstructorEntity>>,
-  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>,
-  interfacePropertySignatures: Array<PropertySignatureEntity>,
-  callSignatures: Array<CallSignatureEntity>,
-  exportModifiers: Array<number>,
-  indexSignature: Array<IndexSignatureEntity>
 }

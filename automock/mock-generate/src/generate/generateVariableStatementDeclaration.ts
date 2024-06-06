@@ -29,39 +29,22 @@ export function generateVariableStatementDelcatation(statementEntity: StatementE
   } else {
     statementBody = `${statementEntity.statementName}: `;
   }
-  let statementValue;
+  let statementValue: string;
   if (statementEntity.typeKind === SyntaxKind.StringKeyword) {
     statementValue = '\'\'';
   } else if (statementEntity.typeKind === SyntaxKind.LiteralType || statementEntity.typeKind === SyntaxKind.StringLiteral ||
     statementEntity.typeKind === SyntaxKind.NumericLiteral) {
-    if (statementEntity.initializer === '') {
-      if (statementEntity.typeName.endsWith('n')) {
-        statementValue = statementEntity.typeName.replace('n', '');
-      } else {
-        statementValue = statementEntity.typeName;
-      }
-    } else {
-      statementValue = statementEntity.initializer;
-    }
+    statementValue = judgmentStatementEntity(statementEntity, statementValue);
   } else if (statementEntity.typeKind === SyntaxKind.NumberKeyword) {
-    statementValue = 0;
+    statementValue = '0';
   } else if (statementEntity.typeKind === SyntaxKind.UnionType) {
     statementValue = statementEntity.typeName.split('|')[0];
   } else if (statementEntity.typeKind === SyntaxKind.TypeReference) {
-    if (statementEntity.typeName.includes('<')) {
-      const tmpTypeName = statementEntity.typeName.split('<')[0];
-      if (getClassNameSet().has(tmpTypeName)) {
-        statementValue = `new ${tmpTypeName}()`;
-      } else {
-        statementValue = `${tmpTypeName}`;
-      }
-    } else {
-      statementValue = statementEntity.typeName;
-    }
+    statementValue = judgmentStatementEntityTypeName(statementEntity, statementValue);
   } else if (statementEntity.typeKind === SyntaxKind.BooleanKeyword) {
     statementValue = 'true';
   } else if (statementEntity.initializer !== '') {
-    statementValue = statementEntity.initializer.endsWith('n');
+    statementValue = statementEntity.initializer.endsWith('n').toString();
   } else {
     statementValue = `'[PC Preivew] unknown ${statementEntity.statementName}'`;
   }
@@ -72,4 +55,30 @@ export function generateVariableStatementDelcatation(statementEntity: StatementE
     statementBody += ',';
   }
   return statementBody;
+}
+
+function judgmentStatementEntity(statementEntity: StatementEntity, statementValue: string): string {
+  if (statementEntity.initializer === '') {
+    if (statementEntity.typeName.endsWith('n')) {
+      statementValue = statementEntity.typeName.replace('n', '');
+    } else {
+      statementValue = statementEntity.typeName;
+    }
+  } else {
+    statementValue = statementEntity.initializer;
+  }
+  return statementValue;
+}
+function judgmentStatementEntityTypeName(statementEntity: StatementEntity, statementValue: string): string {
+  if (statementEntity.typeName.includes('<')) {
+    const tmpTypeName = statementEntity.typeName.split('<')[0];
+    if (getClassNameSet().has(tmpTypeName)) {
+      statementValue = `new ${tmpTypeName}()`;
+    } else {
+      statementValue = `${tmpTypeName}`;
+    }
+  } else {
+    statementValue = statementEntity.typeName;
+  }
+  return statementValue;
 }

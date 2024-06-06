@@ -27,14 +27,20 @@ import type { PropertySignatureEntity } from '../declaration-node/propertySignat
 
 /**
  * generate interface
- * @param rootName
  * @param interfaceEntity
  * @param sourceFile
  * @param isSourceFile
  * @returns
  */
-export function generateInterfaceDeclaration(rootName: string, interfaceEntity: InterfaceEntity, sourceFile: SourceFile, isSourceFile: boolean,
-  mockApi: string, currentSourceInterfaceArray: InterfaceEntity[], importDeclarations?: ImportElementEntity[], extraImport?: string[]): string {
+export function generateInterfaceDeclaration(
+  interfaceEntity: InterfaceEntity,
+  sourceFile: SourceFile,
+  isSourceFile: boolean,
+  mockApi: string,
+  currentSourceInterfaceArray: InterfaceEntity[],
+  importDeclarations?: ImportElementEntity[],
+  extraImport?: string[]
+): string {
   const interfaceName = interfaceEntity.interfaceName;
   let interfaceBody = '';
   const interfaceElementSet = new Set<string>();
@@ -43,7 +49,6 @@ export function generateInterfaceDeclaration(rootName: string, interfaceEntity: 
   } else {
     interfaceBody += `const ${interfaceName} = { \n`;
   }
-
   if (interfaceEntity.interfacePropertySignatures.length > 0) {
     interfaceEntity.interfacePropertySignatures.forEach(value => {
       interfaceBody += generatePropertySignatureDeclaration(interfaceName, value, sourceFile, mockApi) + '\n';
@@ -51,21 +56,39 @@ export function generateInterfaceDeclaration(rootName: string, interfaceEntity: 
       addExtraImport(extraImport, importDeclarations, sourceFile, value);
     });
   }
-
   if (interfaceEntity.interfaceMethodSignature.size > 0) {
     interfaceEntity.interfaceMethodSignature.forEach(value => {
       interfaceBody += generateCommonMethodSignature(interfaceName, value, sourceFile, mockApi) + '\n';
       interfaceElementSet.add(value[0].functionName);
     });
   }
-
+  if (extraImport.length > 0) {
+    for (let i = 0; i < extraImport.length; i++) {
+      if (mockApi.includes(extraImport[i])) {
+        extraImport.splice(i, 1);
+      }
+    }
+  }
   if (interfaceEntity.indexSignature.length > 0) {
     interfaceEntity.indexSignature.forEach(value => {
       interfaceBody += generateIndexSignature(value) + '\n';
       interfaceElementSet.add(value.indexSignatureKey);
     });
   }
+  interfaceBody = assemblyInterface(interfaceEntity, currentSourceInterfaceArray, interfaceBody,
+    sourceFile, interfaceElementSet, mockApi, interfaceName);
+  return interfaceBody;
+}
 
+function assemblyInterface(
+  interfaceEntity: InterfaceEntity,
+  currentSourceInterfaceArray: InterfaceEntity[],
+  interfaceBody: string,
+  sourceFile: SourceFile,
+  interfaceElementSet: Set<string>,
+  mockApi: string,
+  interfaceName: string
+) :string {
   if (interfaceEntity.heritageClauses.length > 0) {
     interfaceEntity.heritageClauses.forEach(value => {
       currentSourceInterfaceArray.forEach(currentInterface => {
@@ -75,7 +98,6 @@ export function generateInterfaceDeclaration(rootName: string, interfaceEntity: 
       });
     });
   }
-
   interfaceBody += '}\n';
   if (interfaceEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) {
     interfaceBody += `
@@ -123,7 +145,7 @@ function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile:
  * @param value
  * @returns
  */
-function addExtraImport(
+export function addExtraImport(
   extraImport: string[], importDeclarations: ImportElementEntity[], sourceFile: SourceFile, value: PropertySignatureEntity
 ): void {
   if (extraImport && importDeclarations) {
@@ -149,7 +171,7 @@ function addExtraImport(
  * @param extraImport
  * @returns
  */
-function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]) {
+function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]): void {
   for (let i = 0; i < specialFilesList.length; i++) {
     const specialFilePath = specialFilesList[i];
     if (!fs.existsSync(specialFilePath)) {
@@ -158,7 +180,7 @@ function searchHasExtraImport(specialFilesList: string[], propertyTypeName: stri
     let specialFileContent = fs.readFileSync(specialFilePath, 'utf-8');
     const removeNoteRegx = /\/\*[\s\S]*?\*\//g;
     specialFileContent = specialFileContent.replace(removeNoteRegx, '');
-    const regex = new RegExp(`\\s${propertyTypeName}\\s({|=|extends)`);
+    const regex = new RegExp(`\\s${propertyTypeName}\\s*(<|{|=|extends)`);
     const results = specialFileContent.match(regex);
     if (!results) {
       continue;
@@ -174,7 +196,7 @@ function searchHasExtraImport(specialFilesList: string[], propertyTypeName: stri
       dtsFileList.push(specialFilePath);
     }
     specialFileRelatePath = specialFileRelatePath.split(path.sep).join('/');
-    const importStr = `import {${propertyTypeName}} from '${
+    const importStr = `import { ${propertyTypeName} } from '${
       specialFileRelatePath}${
       specialFileRelatePath.endsWith('/') ? '' : '/'}${
       path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;

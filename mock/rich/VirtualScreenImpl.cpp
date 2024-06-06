@@ -15,6 +15,7 @@
 
 #include "VirtualScreenImpl.h"
 
+#include <cinttypes>
 #define boolean jpegboolean
 #include "jpeglib.h"
 #undef boolean
@@ -23,6 +24,7 @@
 #include "CommandParser.h"
 #include "PreviewerEngineLog.h"
 #include "TraceTool.h"
+#include <sstream>
 
 using namespace std;
 
@@ -32,46 +34,110 @@ VirtualScreenImpl& VirtualScreenImpl::GetInstance()
     return virtualScreen;
 }
 
+void VirtualScreenImpl::SendBufferOnTimer()
+{
+    GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::NORMAL);
+    if (GetInstance().loadDocTempBuffer == nullptr) {
+        PrintLoadDocFinishedLog("onRender timeout,no buffer to send");
+        return;
+    }
+    VirtualScreen::isStartCount = true;
+    {
+        std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
+        if (GetInstance().loadDocCopyBuffer != nullptr) {
+            delete [] GetInstance().loadDocCopyBuffer;
+            GetInstance().loadDocCopyBuffer = nullptr;
+        }
+        GetInstance().loadDocCopyBuffer = new uint8_t[GetInstance().lengthTemp];
+        std::copy(GetInstance().loadDocTempBuffer,
+            GetInstance().loadDocTempBuffer + GetInstance().lengthTemp,
+            GetInstance().loadDocCopyBuffer);
+    }
+    VirtualScreenImpl::GetInstance().protocolVersion =
+        static_cast<uint16_t>(VirtualScreen::ProtocolVersion::LOADDOC);
+    GetInstance().bufferSize = GetInstance().lengthTemp + GetInstance().headSize;
+    GetInstance().wholeBuffer = new uint8_t[LWS_PRE + GetInstance().bufferSize];
+    GetInstance().screenBuffer = GetInstance().wholeBuffer + LWS_PRE;
+    GetInstance().SendPixmap(GetInstance().loadDocCopyBuffer, GetInstance().lengthTemp,
+        GetInstance().widthTemp, GetInstance().heightTemp);
+}
+
+void VirtualScreenImpl::PrintLoadDocFinishedLog(const std::string& logStr)
+{
+    ILOG("loadDoc: LoadDocFlag2:finished %s, onRenderTime:%" PRIu64 ", flushEmptyTime:%" PRIu64 ", \
+        onRenderTimeStamp:%" PRIu64 " flushEmptyTimeStamp:%" PRIu64 "", logStr.c_str(),
+        GetInstance().onRenderTime, GetInstance().flushEmptyTime,
+        GetInstance().timeStampTemp, GetInstance().flushEmptyTimeStamp);
+}
+
+bool VirtualScreenImpl::FlushEmptyFunc(std::chrono::system_clock::time_point endTime, int64_t timePassed)
+{
+    if (GetInstance().onRenderTime > GetInstance().flushEmptyTime) {
+        if (GetInstance().timeStampTemp < GetInstance().flushEmptyTimeStamp) {
+            SendBufferOnTimer(); // 有收到结束标记，且flushEmpty后有继续出图
+            PrintLoadDocFinishedLog("flushEmpty normal, onRender normal");
+            return true;
+        }
+    } else {
+        // flushEmpty后没有继续出图，计时100ms，如果仍没有onRender，发送上一次的的onRender buffer
+        int64_t timePassed2 = chrono::duration_cast<chrono::milliseconds>(endTime -
+            GetInstance().flushEmptyTime).count();
+        if (timePassed2 > TIMEOUT_ONRENDER_DURATION_MS) {
+            if (GetInstance().timeStampTemp < GetInstance().flushEmptyTimeStamp) {
+                SendBufferOnTimer();
+                PrintLoadDocFinishedLog("flushEmpty normal, onRender timeout");
+                return true;
+            }
+        }
+    }
+    if (timePassed >= TIMEOUT_NINE_S) { // 有结束点，无出图
+        PrintLoadDocFinishedLog("flushEmpty normal, onRender timeout");
+        return true; // 有收到结束标记，且超过最大时限还没有出图则结束
+    }
+    return false;
+}
+
+bool VirtualScreenImpl::NoFlushEmptyFunc(int64_t timePassed)
+{
+    if (timePassed >= SEND_IMG_DURATION_MS &&
+        GetInstance().onRenderTime != std::chrono::system_clock::time_point::min()) {
+        SendBufferOnTimer(); // 没有收到结束标记，300ms内有出图选取最后一张图
+        PrintLoadDocFinishedLog("async load, flushEmpty timeout, onRender normal");
+        return true;
+    }
+    if (timePassed >= TIMEOUT_NINE_S) {
+        SendBufferOnTimer();
+        PrintLoadDocFinishedLog("flushEmpty timeout, onRender unknown");
+        return true; // 没有收到结束标记，且超过最大时限还没有出图则结束
+    }
+    return false;
+}
+
+
 void VirtualScreenImpl::StartTimer()
 {
     while (true) {
         auto endTime = std::chrono::system_clock::now();
         int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
-                             VirtualScreenImpl::GetInstance().startTime).count();
-        if (timePassed >= SEND_IMG_DURATION_MS) {
-            GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::NORMAL);
-            VirtualScreen::isStartCount = true;
-            {
-                std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
-                if (GetInstance().loadDocCopyBuffer != nullptr) {
-                    delete [] GetInstance().loadDocCopyBuffer;
-                    GetInstance().loadDocCopyBuffer = nullptr;
-                }
-                GetInstance().loadDocCopyBuffer = new uint8_t[GetInstance().lengthTemp];
-                std::copy(GetInstance().loadDocTempBuffer,
-                          GetInstance().loadDocTempBuffer + GetInstance().lengthTemp,
-                          GetInstance().loadDocCopyBuffer);
-            }
-            VirtualScreenImpl::GetInstance().protocolVersion =
-                static_cast<uint16_t>(VirtualScreen::ProtocolVersion::LOADDOC);
-            GetInstance().bufferSize = GetInstance().lengthTemp + GetInstance().headSize;
-            GetInstance().wholeBuffer = new uint8_t[LWS_PRE + GetInstance().bufferSize];
-            GetInstance().screenBuffer = GetInstance().wholeBuffer + LWS_PRE;
-            GetInstance().SendPixmap(GetInstance().loadDocCopyBuffer,
-                                     GetInstance().lengthTemp,
-                                     GetInstance().widthTemp,
-                                     GetInstance().heightTemp);
-            ILOG("LoadDocFlag2:finished");
+                                VirtualScreenImpl::GetInstance().startTime).count();
+        bool ret = false;
+        if (GetInstance().isFlushEmpty) {
+            ret = FlushEmptyFunc(endTime, timePassed);
+        } else {
+            ret = NoFlushEmptyFunc(timePassed);
+        }
+        if (ret) {
             return;
         }
     }
 }
 
-bool VirtualScreenImpl::LoadDocCallback(const void* data,
-                                        const size_t length,
-                                        const int32_t width,
-                                        const int32_t height)
+bool VirtualScreenImpl::LoadDocCallback(const void* data, const size_t length, const int32_t width,
+                                        const int32_t height, const uint64_t timeStamp)
 {
+    if (timeStamp < GetInstance().loadDocTimeStamp) {
+        return false;
+    }
     if (GetInstance().GetLoadDocFlag() == VirtualScreen::LoadDocType::FINISHED) {
         {
             std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
@@ -82,12 +148,14 @@ bool VirtualScreenImpl::LoadDocCallback(const void* data,
             GetInstance().lengthTemp = length;
             GetInstance().widthTemp = width;
             GetInstance().heightTemp = height;
+            GetInstance().timeStampTemp = timeStamp;
             if (length <= 0) {
                 return false;
             }
             GetInstance().loadDocTempBuffer = new uint8_t[length];
             uint8_t*  dataPtr = reinterpret_cast<uint8_t*>(const_cast<void*>(data));
             std::copy(dataPtr, dataPtr + length, GetInstance().loadDocTempBuffer);
+            GetInstance().onRenderTime = std::chrono::system_clock::now();
         }
         if (VirtualScreen::isStartCount) {
             VirtualScreen::isStartCount = false;
@@ -100,26 +168,25 @@ bool VirtualScreenImpl::LoadDocCallback(const void* data,
     return true;
 }
 
-bool VirtualScreenImpl::CallBack(const void* data, const size_t length,
-                                 const int32_t width, const int32_t height)
+bool VirtualScreenImpl::Callback(const void* data, const size_t length,
+                                 const int32_t width, const int32_t height, const uint64_t timeStamp)
 {
+    ILOG("loadDoc: Callback timeStamp%" PRIu64 "", timeStamp);
     if (VirtualScreenImpl::GetInstance().StopSendStaticCardImage(STOP_SEND_CARD_DURATION_MS)) {
-        return false;
+        return false; // 静态卡片
     }
     if (VirtualScreenImpl::GetInstance().GetLoadDocFlag() < VirtualScreen::LoadDocType::FINISHED) {
         return false;
     }
     if (VirtualScreenImpl::GetInstance().JudgeAndDropFrame()) {
-        return false;
+        return false; // 丢帧*
     }
-
     bool staticRet = VirtualScreen::JudgeStaticImage(SEND_IMG_DURATION_MS);
     if (!staticRet) {
-        return false;
+        return false; // 平行世界
     }
-
-    if (!LoadDocCallback(data, length, width, height)) {
-        return false;
+    if (!LoadDocCallback(data, length, width, height, timeStamp)) {
+        return false; // 组件预览
     }
 
     GetInstance().bufferSize = length + GetInstance().headSize;
@@ -129,29 +196,54 @@ bool VirtualScreenImpl::CallBack(const void* data, const size_t length,
     return GetInstance().SendPixmap(data, length, width, height);
 }
 
-bool VirtualScreenImpl::PageCallBack(const std::string currentRouterPath)
+bool VirtualScreenImpl::FlushEmptyCallback(const uint64_t timeStamp)
+{
+    if (timeStamp < GetInstance().loadDocTimeStamp) {
+        return false;
+    }
+    ILOG("loadDoc: flushEmptyTimeStamp:%" PRIu64 ", loadDocTimeStamp:%" PRIu64 "",
+        timeStamp, GetInstance().loadDocTimeStamp);
+    GetInstance().isFlushEmpty = true;
+    GetInstance().flushEmptyTime = std::chrono::system_clock::now();
+    GetInstance().flushEmptyTimeStamp = timeStamp;
+    return true;
+}
+
+void VirtualScreenImpl::InitFlushEmptyTime()
+{
+    GetInstance().isFlushEmpty = false;
+    GetInstance().flushEmptyTime = std::chrono::system_clock::time_point::min();
+    GetInstance().onRenderTime = std::chrono::system_clock::time_point::min();
+    GetInstance().flushEmptyTimeStamp = 0;
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    loadDocTimeStamp = ts.tv_sec * SEC_TO_NANOSEC + ts.tv_nsec;
+    ILOG("loadDoc: loadDocTimeStamp:%" PRIu64 "", loadDocTimeStamp);
+}
+
+bool VirtualScreenImpl::PageCallback(const std::string currentRouterPath)
 {
     std::string currentRouter = currentRouterPath.substr(0, currentRouterPath.size() - 3);
     ILOG("PageCallback currentPage is : %s", currentRouter.c_str());
     GetInstance().SetCurrentRouter(currentRouter);
-    Json::Value val;
+    Json2::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("CurrentRouter", val, "get");
     return true;
 }
 
-bool VirtualScreenImpl::LoadContentCallBack(const std::string currentRouterPath)
+bool VirtualScreenImpl::LoadContentCallback(const std::string currentRouterPath)
 {
     ILOG("LoadContentCallback currentPage is : %s", currentRouterPath.c_str());
     GetInstance().SetAbilityCurrentRouter(currentRouterPath);
-    Json::Value val;
+    Json2::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("LoadContent", val, "get");
     return true;
 }
 
-void VirtualScreenImpl::FastPreviewCallBack(const std::string& jsonStr)
+void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr)
 {
     GetInstance().SetFastPreviewMsg(jsonStr);
-    Json::Value val;
+    Json2::Value val;
     CommandLineInterface::GetInstance().CreatCommandToSendData("FastPreviewMsg", val, "get");
 }
 
@@ -201,11 +293,11 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
     unsigned char* dataTemp = new unsigned char[retWidth * retHeight * jpgPix];
     for (int i = 0; i < retHeight; i++) {
         for (int j = 0; j < retWidth; j++) {
-            int input_base_pos = i * retWidth * pixelSize + j * pixelSize;
-            int now_base_pos = i * retWidth * jpgPix + j * jpgPix;
-            dataTemp[now_base_pos + redPos] = *((char*)data + input_base_pos + redPos);
-            dataTemp[now_base_pos + greenPos] = *((char*)data + input_base_pos + greenPos);
-            dataTemp[now_base_pos + bluePos] = *((char*)data + input_base_pos + bluePos);
+            int inputBasePos = i * retWidth * pixelSize + j * pixelSize;
+            int nowBasePos = i * retWidth * jpgPix + j * jpgPix;
+            dataTemp[nowBasePos + redPos] = *((char*)data + inputBasePos + redPos);
+            dataTemp[nowBasePos + greenPos] = *((char*)data + inputBasePos + greenPos);
+            dataTemp[nowBasePos + bluePos] = *((char*)data + inputBasePos + bluePos);
         }
     }
     VirtualScreen::RgbToJpg(dataTemp, retWidth, retHeight);
@@ -299,8 +391,42 @@ void VirtualScreenImpl::FreeJpgMemory()
         jpgScreenBuffer = NULL;
         jpgBufferSize = 0;
     }
-    if (VirtualScreenImpl::GetInstance().loadDocCopyBuffer != nullptr) {
-        delete [] VirtualScreenImpl::GetInstance().loadDocCopyBuffer;
-        VirtualScreenImpl::GetInstance().loadDocCopyBuffer = nullptr;
+    if (loadDocCopyBuffer != nullptr) {
+        delete [] loadDocCopyBuffer;
+        loadDocCopyBuffer = nullptr;
+    }
+    if (loadDocTempBuffer != nullptr) {
+        delete [] loadDocTempBuffer;
+        loadDocTempBuffer = nullptr;
+    }
+}
+
+ScreenInfo VirtualScreenImpl::GetScreenInfo()
+{
+    ScreenInfo info;
+    info.orignalResolutionWidth = GetOrignalWidth();
+    info.orignalResolutionHeight = GetOrignalHeight();
+    info.compressionResolutionWidth = GetCompressionWidth();
+    info.compressionResolutionHeight = GetCompressionHeight();
+    info.foldStatus = GetFoldStatus();
+    info.foldable = GetFoldable();
+    info.foldWidth = GetFoldWidth();
+    info.foldHeight = GetFoldHeight();
+    return info;
+}
+
+void VirtualScreenImpl::InitFoldParams()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    FoldInfo info;
+    parser.GetFoldInfo(info);
+    if (parser.IsSet("foldable")) {
+        SetFoldable(info.foldable);
+    }
+    if (parser.IsSet("foldStatus")) {
+        SetFoldStatus(info.foldStatus);
+    }
+    if (parser.IsSet("fr")) {
+        SetFoldResolution(info.foldResolutionWidth, info.foldResolutionHeight);
     }
 }

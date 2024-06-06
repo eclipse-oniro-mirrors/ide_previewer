@@ -22,8 +22,8 @@ import {
   isClassDeclaration, isComputedPropertyName, isIdentifier, isModuleBlock, isModuleDeclaration, isPrivateIdentifier
 } from 'typescript';
 import fs from 'fs';
+import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
-
 
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
@@ -99,18 +99,25 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
     } else if (isModuleDeclaration(node)) {
       const moduleDeclaration = node as ModuleDeclaration;
       const moduleBody = moduleDeclaration.body;
-      if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
-        moduleBody.statements.forEach(value => {
-          if (isClassDeclaration(value)) {
-            if (value.name !== undefined) {
-              allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
-            }
-          }
-        });
-      }
+      getIsModuleDeclaration(moduleBody);
     }
   });
   return allClassSet;
+}
+
+/**
+ * get module class declaration
+ * @param moduleBody
+ * @returns
+ */
+function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
+  if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
+    moduleBody.statements.forEach(value => {
+      if (isClassDeclaration(value) && value.name !== undefined) {
+        allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
+      }
+    });
+  }
 }
 
 /**
@@ -137,9 +144,9 @@ export function getPropertyName(node: PropertyName, sourceFile: SourceFile): str
     propertyName = newNameNode.escapedText.toString();
   } else if (isComputedPropertyName(node)) {
     const newNameNode = node as ComputedPropertyName;
-    propertyName = sourceFile.text.substring(newNameNode.expression.pos, newNameNode.expression.end).trimStart().trimEnd();
+    propertyName = sourceFile.text.substring(newNameNode.expression.pos, newNameNode.expression.end).trim();
   } else {
-    propertyName = sourceFile.text.substring(node.pos, node.end).trimStart().trimEnd();
+    propertyName = sourceFile.text.substring(node.pos, node.end).trim();
   }
   return propertyName;
 }
@@ -159,12 +166,12 @@ export function getParameter(parameter: ParameterDeclaration, sourceFile: Source
   } else {
     const start = parameter.name.pos === undefined ? 0 : parameter.name.pos;
     const end = parameter.name.end === undefined ? 0 : parameter.name.end;
-    paramName = sourceFile.text.substring(start, end).trimStart().trimEnd();
+    paramName = sourceFile.text.substring(start, end).trim();
   }
 
   const start = parameter.type?.pos === undefined ? 0 : parameter.type.pos;
   const end = parameter.type?.end === undefined ? 0 : parameter.type.end;
-  paramTypeString = sourceFile.text.substring(start, end).trimStart().trimEnd();
+  paramTypeString = sourceFile.text.substring(start, end).trim();
   return {
     paramName: paramName,
     paramTypeString: paramTypeString,
@@ -178,13 +185,15 @@ export function getParameter(parameter: ParameterDeclaration, sourceFile: Source
  * @param sourceFile
  * @returns
  */
-export function getFunctionAndMethodReturnInfo(node: FunctionDeclaration | MethodDeclaration |
-  MethodSignature | CallSignatureDeclaration, sourceFile: SourceFile): ReturnTypeEntity {
+export function getFunctionAndMethodReturnInfo(
+  node: FunctionDeclaration | MethodDeclaration | MethodSignature | CallSignatureDeclaration,
+  sourceFile: SourceFile
+): ReturnTypeEntity {
   const returnInfo = { returnKindName: '', returnKind: -1 };
   if (node.type !== undefined) {
     const start = node.type.pos === undefined ? 0 : node.type.pos;
     const end = node.type.end === undefined ? 0 : node.type.end;
-    returnInfo.returnKindName = sourceFile.text.substring(start, end).trimStart().trimEnd();
+    returnInfo.returnKindName = sourceFile.text.substring(start, end).trim();
     returnInfo.returnKind = node.type.kind;
   }
   return returnInfo;
@@ -340,7 +349,12 @@ export function hasBeenImported(importDeclarations: ImportElementEntity[], typeN
   if (isFirstCharLowerCase(typeName)) {
     return true;
   }
-  return importDeclarations.some(importDeclaration => importDeclaration.importElements.includes(typeName));
+  return importDeclarations.some(importDeclaration => {
+    if (importDeclaration.importElements.includes(typeName) && importDeclaration.importPath.includes('./')) {
+      return true;
+    }
+    return false;
+  });
 }
 
 /**
@@ -361,5 +375,10 @@ export const specialFiles = [
   '@internal/component/ets/alert_dialog.d.ts',
   '@internal/component/ets/ability_component.d.ts',
   '@internal/component/ets/rich_editor.d.ts',
-  '@internal/component/ets/symbolglyph.d.ts'
+  '@internal/component/ets/symbolglyph.d.ts',
+  '@internal/component/ets/button.d.ts',
+  '@internal/component/ets/nav_destination.d.ts',
+  '@internal/component/ets/navigation.d.ts',
+  '@internal/component/ets/text_common.d.ts',
+  '@internal/component/ets/styled_string.d.ts'
 ];

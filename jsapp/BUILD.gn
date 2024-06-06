@@ -12,7 +12,9 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine_lite/simulator.gni")
 import("../gn/config.gni")
+
 config("jsapp_config") {
   cflags = [
     "-std=c++17",
@@ -29,10 +31,7 @@ config("jsapp_config_rich") {
 }
 
 ohos_source_set("jsapp_rich") {
-  configs = [
-    ":jsapp_config",
-    "//third_party/jsoncpp:jsoncpp_public_config",
-  ]
+  configs = [ ":jsapp_config" ]
   sources = [
     "JsApp.cpp",
     "rich/JsAppImpl.cpp",
@@ -41,6 +40,7 @@ ohos_source_set("jsapp_rich") {
     ".",
     "rich/",
     "../mock/rich/",
+    "../cli/",
     "../util/",
     "../mock/",
     "./external/",
@@ -67,10 +67,8 @@ ohos_source_set("jsapp_lite") {
   if (build_lite_full) {
     defines += [ "LITEWEARABLE_SUPPORTED=1" ]
   }
-  configs = [
-    ":jsapp_config",
-    "//third_party/jsoncpp:jsoncpp_public_config",
-  ]
+  configs = [ ":jsapp_config" ]
+  configs += [ "//third_party/freetype:freetype_config" ]
   sources = [
     "JsApp.cpp",
     "lite/JsAppImpl.cpp",
