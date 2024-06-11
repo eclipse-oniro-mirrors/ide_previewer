@@ -63,9 +63,9 @@ void StageContext::SetLoaderJsonPath(const std::string& assetPath)
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
 }
 
-void StageContext::SetHosSdkPath(const std::string& hosSdkPath)
+void StageContext::SetHosSdkPath(const std::string& hosSdkPathValue)
 {
-    this->hosSdkPath = hosSdkPath;
+    this->hosSdkPath = hosSdkPathValue;
 }
 
 void StageContext::GetModulePathMapFromLoaderJson()

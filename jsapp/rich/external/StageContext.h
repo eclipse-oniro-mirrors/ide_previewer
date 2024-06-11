@@ -32,7 +32,7 @@ public:
     const std::optional<std::vector<uint8_t>> ReadFileContents(const std::string& filePath) const;
     // for Previewer
     void SetLoaderJsonPath(const std::string& assetPath);
-    void SetHosSdkPath(const std::string& hosSdkPath);
+    void SetHosSdkPath(const std::string& hosSdkPathValue);
     void GetModulePathMapFromLoaderJson();
     std::string GetHspAceModuleBuild(const std::string& hspConfigPath);
     void ReleaseHspBuffers();
