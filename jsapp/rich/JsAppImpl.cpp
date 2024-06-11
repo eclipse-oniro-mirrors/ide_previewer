@@ -197,6 +197,7 @@ void JsAppImpl::RunJsApp()
                                  screenInfo.compressionResolutionWidth, screenInfo.compressionResolutionHeight);
     SetJsAppArgs(aceRunArgs);
     OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(commandInfo.loaderJsonPath);
+    OHOS::Ide::StageContext::GetInstance().SetHosSdkPath(commandInfo.containerSdkPath);
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(screenInfo.foldable);
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(screenInfo.foldStatus));
@@ -542,6 +543,7 @@ void JsAppImpl::SetSystemResourcesPath(Platform::AceRunArgs& args) const
 {
     string sep = FileSystem::GetSeparator();
     string rPath = FileSystem::GetApplicationPath();
+    rPath = FileSystem::NormalizePath(rPath);
     int idx = rPath.find_last_of(sep);
     rPath = rPath.substr(0, idx + 1) + "resources";
     args.systemResourcesPath = rPath;

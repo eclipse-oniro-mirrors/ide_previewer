@@ -30,6 +30,7 @@ public:
     static void SetBundleName(std::string name);
     static std::string GetSeparator();
     static std::string FindSubfolderByName(const std::string& parentFolderPath, const std::string& subfolderName);
+    static std::string NormalizePath(const std::string& path);
 private:
     static std::vector<std::string> pathList;
     static std::string separator;
