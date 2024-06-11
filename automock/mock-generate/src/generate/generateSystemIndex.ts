@@ -30,7 +30,7 @@ export function getSystemIndexArray(): Array<SystemIndexEntity> {
  * @returns
  */
 export function generateSystemIndex(): string {
-  let systemIndex = 'import regeneratorRuntime from \'babel-runtime/regenerator\'\n';
+  let systemIndex = 'import regeneratorRuntime from \'@babel/runtime/regenerator\'\n';
   let exportFunction = '';
   systemIndexArray.forEach(value => {
     if (!systemNoMockArray.includes(value.filename.replace('_', '.'))) {

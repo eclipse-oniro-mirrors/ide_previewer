@@ -9,6 +9,8 @@
     ]
   ],
   "plugins": [
-    "external-helpers"
+    ["@babel/plugin-transform-runtime", {
+      "corejs": 3
+    }]
   ]
 }

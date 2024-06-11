@@ -16,7 +16,7 @@
 import path from 'path';
 import type {
   CallSignatureDeclaration, ComputedPropertyName, FunctionDeclaration, Identifier, MethodDeclaration,
-  MethodSignature, ModifiersArray, ModuleDeclaration, NodeArray, ParameterDeclaration, PropertyName, SourceFile
+  MethodSignature, ModifierLike, ModuleDeclaration, NodeArray, ParameterDeclaration, PropertyName, SourceFile
 } from 'typescript';
 import {
   isClassDeclaration, isComputedPropertyName, isIdentifier, isModuleBlock, isModuleDeclaration, isPrivateIdentifier
@@ -125,7 +125,7 @@ function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
  * @param modifiers
  * @returns
  */
-export function getModifiers(modifiers: ModifiersArray): Array<number> {
+export function getModifiers(modifiers: NodeArray<ModifierLike>): Array<number> {
   const modifiersArray: Array<number> = [];
   modifiers.forEach(value => modifiersArray.push(value.kind));
   return modifiersArray;
@@ -204,7 +204,7 @@ export function getFunctionAndMethodReturnInfo(
  * @param modifiers
  * @returns
  */
-export function getExportKeyword(modifiers: ModifiersArray): Array<number> {
+export function getExportKeyword(modifiers: NodeArray<ModifierLike>): Array<number> {
   const modifiersArray: Array<number> = [];
   modifiers.forEach(value => {
     modifiersArray.push(value.kind);
