@@ -25,6 +25,7 @@
 using namespace std;
 using namespace fuzztest;
 
+namespace {
 std::map<std::string, std::string> richDataMap = {
     {"BackClicked", ""},
     {"inspector", ""},
@@ -72,4 +73,5 @@ TEST(RichCommandParseFuzzTest, test_command)
         printf("test RichCommandParseFuzzTest is ok\r\n");
     }
     std::cout << "--> RichCommandParseFuzzTest for rich end <--" << std::endl;
+}
 }

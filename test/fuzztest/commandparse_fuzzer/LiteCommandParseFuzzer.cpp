@@ -26,6 +26,7 @@
 using namespace std;
 using namespace fuzztest;
 
+namespace {
 std::map<std::string, std::string> liteDataMap = {
     {"Power", R"({"Power":1.0})"},
     {"Volume", R"({"Volume":90})"},
@@ -60,4 +61,5 @@ TEST(LiteCommandParseFuzzTest, test_command)
         printf("test LiteCommandParseFuzzTest is ok\r\n");
     }
     std::cout << "--> LiteCommandParseFuzzTest for rich end <--" << std::endl;
+}
 }

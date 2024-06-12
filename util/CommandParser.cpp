@@ -1008,7 +1008,7 @@ int CommandParser::ParseArgs(int argc, char* argv[])
     return defaultReturnVal;
 }
 
-void CommandParser::GetCommandInfo(CommandInfo& info)
+void CommandParser::GetCommandInfo(CommandInfo& info) const
 {
     info.deviceType = GetDeviceType();
     info.pages = GetPages();
@@ -1027,7 +1027,7 @@ void CommandParser::GetCommandInfo(CommandInfo& info)
     info.compressionResolutionHeight = GetCompressionResolutionHeight();
 }
 
-void CommandParser::GetFoldInfo(FoldInfo& info)
+void CommandParser::GetFoldInfo(FoldInfo& info) const
 {
     info.foldable = IsFoldable();
     info.foldStatus = GetFoldStatus();
