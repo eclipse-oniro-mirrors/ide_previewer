@@ -24,6 +24,7 @@ using namespace fuzztest;
 
 const int DEFAULT_LENGTH = 1000;
 const int DEFAULT_INT = 1000;
+namespace {
 const std::string DEFAULT_STRING = "aaaa";
 
 void modifyObject(cJSON *object, uint64_t& idx)
@@ -107,6 +108,7 @@ void modifyObject4ChangeType(cJSON *object, uint64_t& idx)
             }
         }
     }
+}
 }
 
 void CommandParse::Execute(std::string& commond, std::string& jsonArgsStr,

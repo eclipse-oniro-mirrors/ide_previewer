@@ -44,8 +44,10 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::Ace;
 
+namespace {
 ScreenInfo screenInfo;
 CommandInfo commandInfo;
+}
 
 class PreviewerListener : public OHOS::Rosen::IWindowSystemBarEnableListener {
 public:
@@ -57,7 +59,9 @@ public:
     }
 };
 
+namespace {
 OHOS::sptr<PreviewerListener> listener = nullptr;
+}
 
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 {

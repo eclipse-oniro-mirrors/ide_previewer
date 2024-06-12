@@ -25,6 +25,7 @@
 using namespace std;
 using namespace fuzztest;
 
+namespace {
 std::map<std::string, std::string> commonDataMap = {
     {"MousePress", R"({"x":365,"y":1076,"duration":""})"},
     {"MouseRelease", R"({"x":365,"y":1071})"},
@@ -56,4 +57,5 @@ TEST(CommonCommandParseFuzzTest, test_command)
         printf("test CommonCommandParseFuzzTest is ok\r\n");
     }
     std::cout << "--> CommonCommandParseFuzzTest for common end <--" << std::endl;
+}
 }

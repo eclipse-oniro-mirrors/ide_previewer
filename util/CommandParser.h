@@ -93,8 +93,8 @@ public:
     int32_t GetFoldResolutionHeight() const;
     std::string GetLoaderJsonPath() const;
     int ParseArgs(int argc, char* argv[]);
-    void GetCommandInfo(CommandInfo& info);
-    void GetFoldInfo(FoldInfo& info);
+    void GetCommandInfo(CommandInfo& info) const;
+    void GetFoldInfo(FoldInfo& info) const;
 
 private:
     CommandParser();
