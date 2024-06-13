@@ -293,7 +293,11 @@ export function getTheRealReferenceFromImport(sourceFile: SourceFile, typeName: 
       left += `.${splitReturnKindName[i]}`;
     }
     if (isOhos) {
-      returnName = `mock${firstCharacterToUppercase(mockMockName)}()${left}`;
+      if (mockMockName === 'observer') {
+        returnName = `${mockMockName}()${left}`;
+      } else {
+        returnName = `mock${firstCharacterToUppercase(mockMockName)}()${left}`;
+      }
     }
   } else {
     returnName = getImportTypeAliasNameFromImportElements(importArray, typeName);
