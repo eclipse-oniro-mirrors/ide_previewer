@@ -15,7 +15,7 @@
 
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
-import { firstCharacterToUppercase, getClassNameSet } from '../common/commonUtils';
+import { firstCharacterToUppercase, getClassNameSet, specialType } from '../common/commonUtils';
 import type { ReturnTypeEntity } from '../common/commonUtils';
 import { getImportDeclarationArray } from '../declaration-node/importAndExportDeclaration';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
@@ -142,13 +142,25 @@ function handleTypeReferenceReturnBody(returnType: ReturnTypeEntity, sourceFile:
   if (returnType.returnKindName.includes('<')) {
     return returnType.returnKindName.includes(',') ? 'return {};' : `return new ${returnType.returnKindName.split('<')[0]}()`;
   } else {
-    if (getClassNameSet().has(returnType.returnKindName)) {
-      return returnType.returnKindName === 'Want' ? 'return mockWant().Want' : `return new ${returnType.returnKindName}()`;
-    } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
-      return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
-    } else {
-      return `return ${propertyTypeWhiteList(returnType.returnKindName)}`;
-    }
+    return generateReturnType(returnType, sourceFile);
+  }
+}
+
+/**
+ * generate return type
+ * @param returnType
+ * @param sourceFile
+ * @returns
+ */
+function generateReturnType(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
+  if (getClassNameSet().has(returnType.returnKindName) && !specialType.includes(returnType.returnKindName)) {
+    return returnType.returnKindName === 'Want' ? 'return mockWant().Want' : `return new ${returnType.returnKindName}()`;
+  } else if (getClassNameSet().has(returnType.returnKindName) && specialType.includes(returnType.returnKindName)) {
+    return `return ${returnType.returnKindName}()`;
+  } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
+    return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
+  } else {
+    return `return ${propertyTypeWhiteList(returnType.returnKindName)}`;
   }
 }
 

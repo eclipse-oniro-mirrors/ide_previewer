@@ -382,3 +382,12 @@ export const specialFiles = [
   '@internal/component/ets/text_common.d.ts',
   '@internal/component/ets/styled_string.d.ts'
 ];
+
+export const specialType = [
+  'Storage',
+  'File',
+  'ChildProcess',
+  'Cipher',
+  'Sensor',
+  'Authenticator'
+];
