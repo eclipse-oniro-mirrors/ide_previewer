@@ -30,7 +30,7 @@ export function getSystemIndexArray(): Array<SystemIndexEntity> {
  * @returns
  */
 export function generateSystemIndex(): string {
-  let systemIndex = 'import regeneratorRuntime from \'@babel/runtime/regenerator\'\n';
+  let systemIndex = '';
   let exportFunction = '';
   systemIndexArray.forEach(value => {
     if (!systemNoMockArray.includes(value.filename.replace('_', '.'))) {
@@ -40,7 +40,6 @@ export function generateSystemIndex(): string {
   });
   systemIndex += 'import {mockRequireNapiFun} from \'./napi/index\';\n';
   systemIndex += `;(function mockSystemPlugin() {
-    global.regeneratorRuntime = regeneratorRuntime
     global.systemplugin = {}
     global.ohosplugin = {}\n`;
   systemIndex += exportFunction;
