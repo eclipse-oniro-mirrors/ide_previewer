@@ -156,7 +156,7 @@ function generateReturnType(returnType: ReturnTypeEntity, sourceFile: SourceFile
   if (getClassNameSet().has(returnType.returnKindName) && !specialType.includes(returnType.returnKindName)) {
     return returnType.returnKindName === 'Want' ? 'return mockWant().Want' : `return new ${returnType.returnKindName}()`;
   } else if (getClassNameSet().has(returnType.returnKindName) && specialType.includes(returnType.returnKindName)) {
-    return `return ${returnType.returnKindName}()`;
+    return `return ${returnType.returnKindName}`;
   } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
     return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
   } else {
