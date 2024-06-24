@@ -47,6 +47,7 @@ import {
   MockFunctionElementEntity,
   ReturnDataParams
 } from './generateCommonUtil';
+import { handleImportKit } from '../common/kitUtils';
 
 /**
  * generate mock file string
@@ -132,9 +133,6 @@ function importDeclarationsGenerate(
   }
   if (fileName === 'ohos_arkui_observer') {
     mockData += 'const NavigationOperation = { PUSH: 1, POP: 2, REPLACE: 3 }\n';
-  }
-  if (fileName === 'ohos_PiPWindow') {
-    mockData += 'import { NodeController } from \'./ohos_arkui_node\'\n';
   }
   return mockData;
 }
@@ -405,6 +403,13 @@ export function generateImportDeclaration(
   currentFilePath: string,
   dependsSourceFileList: SourceFile[]
 ): string {
+  const importEntities = handleImportKit(importEntity);
+  if (importEntities.length) {
+    return importEntities.map(
+      entity => generateImportDeclaration(entity, sourceFileName, heritageClausesArray, currentFilePath, dependsSourceFileList)
+    ).join('\n');
+  }
+  
   const importDeclaration = referenctImport2ModuleImport(importEntity, currentFilePath, dependsSourceFileList);
   if (importDeclaration) {
     return importDeclaration;

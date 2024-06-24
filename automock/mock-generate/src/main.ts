@@ -21,7 +21,8 @@ import {
   getAllClassDeclaration,
   dtsFileList,
   getOhosInterfacesDir,
-  specialFiles
+  specialFiles,
+  generateKitMap
 } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
 import { generateEntry } from './generate/generateEntry';
@@ -170,6 +171,7 @@ function etsFileToMock(outMockJsFileDir: string): void {
 function main(apiInputPath): void {
   const dtsDir = apiInputPath;
   const outMockJsFileDir = path.join(__dirname, '../../runtime/main/extend/systemplugin');
+  generateKitMap(apiInputPath);
   getAllDtsFile(dtsDir);
   getAllComponentsFilePath(dtsDir);
   dtsFileList.forEach(value => {
