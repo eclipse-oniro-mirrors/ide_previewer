@@ -24,6 +24,7 @@ import {
 import fs from 'fs';
 import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { collectAllKitFiles } from './kitUtils';
 
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
@@ -391,3 +392,16 @@ export const specialType = [
   'Sensor',
   'Authenticator'
 ];
+
+/**
+ * get add kit file map
+ * @param apiInputPath api input path
+ * @returns 
+ */
+export function generateKitMap(apiInputPath: string) {
+  const kitPath = path.join(apiInputPath, '../', 'kits');
+  if (!fs.existsSync(kitPath)) {
+    throw new Error(`${kitPath} does not exist.`);
+  }
+  collectAllKitFiles(kitPath);
+}
