@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/adapter/preview/build/component_test.gni")
 import("//foundation/arkui/ace_engine_lite/simulator.gni")
 import("../gn/config.gni")
 
@@ -31,6 +32,11 @@ config("jsapp_config_rich") {
 }
 
 ohos_source_set("jsapp_rich") {
+  defines = []
+  if (platform == "mingw_x86_64" && defined(enable_component_test) &&
+      enable_component_test) {
+    defines += [ "COMPONENT_TEST_ENABLED" ]
+  }
   configs = [ ":jsapp_config" ]
   sources = [
     "JsApp.cpp",

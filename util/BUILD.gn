@@ -12,7 +12,9 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/adapter/preview/build/component_test.gni")
 import("../gn/config.gni")
+
 ohos_source_set("util_lite") {
   sources = [
     "CallbackQueue.cpp",
@@ -136,6 +138,9 @@ ohos_shared_library("ide_util") {
         "windows/NativeFileSystem.cpp",
         "windows/StringHelper.cpp",
       ]
+      if (defined(enable_component_test) && enable_component_test) {
+        defines = [ "COMPONENT_TEST_ENABLED" ]
+      }
     } else if (platform == "mac_arm64" || platform == "mac_x64") {
       cflags += [ "-DNS_FORMAT_ARGUMENT(A)=" ]
       sources += [

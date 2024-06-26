@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/adapter/preview/build/component_test.gni")
 import("./gn/config.gni")
 
 template("previewer_executable") {
@@ -35,6 +36,9 @@ template("previewer_executable") {
 
     if (platform == "mingw_x86_64") {
       defines = [ "NOGDI" ]
+      if (defined(enable_component_test) && enable_component_test) {
+        defines += [ "COMPONENT_TEST_ENABLED" ]
+      }
       ldflags = [
         "-static",
         "-lws2_32",

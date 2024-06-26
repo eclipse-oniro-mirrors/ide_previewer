@@ -89,6 +89,9 @@ public:
     void DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const;
     void DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const;
     void DispatchInputMethodEvent(const unsigned int codePoint) const;
+#ifdef COMPONENT_TEST_ENABLED
+    void SetComponentTestModeConfig(const std::string value);
+#endif // COMPONENT_TEST_ENABLED
     void InitGlfwEnv();
     void CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
         const OHOS::Rosen::SystemBarProperty& property);
@@ -121,6 +124,9 @@ private:
     void SetWindowTitle(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetUrl(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetConfigChanges(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
+#ifdef COMPONENT_TEST_ENABLED
+    void SetComponentTestConfig(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
+#endif // COMPONENT_TEST_ENABLED
     void SetColorMode(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetOrientation(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
     void SetAceVersionArgs(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
@@ -153,6 +159,9 @@ private:
     AvoidAreas avoidInitialAreas;
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
+#ifdef COMPONENT_TEST_ENABLED
+    std::string componentTestModeConfig;
+#endif // COMPONENT_TEST_ENABLED
 #if defined(__APPLE__) || defined(_WIN32)
     std::unique_ptr<OHOS::AbilityRuntime::Simulator> simulator;
     int64_t debugAbilityId = -1;
