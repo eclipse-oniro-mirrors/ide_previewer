@@ -43,18 +43,17 @@ export function generateInterfaceDeclaration(
 ): string {
   const interfaceName = interfaceEntity.interfaceName;
   let interfaceBody = '';
-  const interfaceElementSet = new Set<string>();
+  let interfaceElementSet = new Set<string>();
   if (interfaceEntity.exportModifiers.length > 0 || isSourceFile) {
     interfaceBody += `export const ${interfaceName} = { \n`;
   } else {
     interfaceBody += `const ${interfaceName} = { \n`;
   }
   if (interfaceEntity.interfacePropertySignatures.length > 0) {
-    interfaceEntity.interfacePropertySignatures.forEach(value => {
-      interfaceBody += generatePropertySignatureDeclaration(interfaceName, value, sourceFile, mockApi) + '\n';
-      interfaceElementSet.add(value.propertyName);
-      addExtraImport(extraImport, importDeclarations, sourceFile, value);
-    });
+    const isAddExtraImportReturn = isNeedAddExtraImport(interfaceEntity, interfaceBody, interfaceName, mockApi, sourceFile,
+      interfaceElementSet, extraImport, importDeclarations);
+    interfaceElementSet = isAddExtraImportReturn.interfaceElementSet;
+    interfaceBody = isAddExtraImportReturn.interfaceBody;
   }
   if (interfaceEntity.interfaceMethodSignature.size > 0) {
     interfaceEntity.interfaceMethodSignature.forEach(value => {
@@ -78,6 +77,45 @@ export function generateInterfaceDeclaration(
   interfaceBody = assemblyInterface(interfaceEntity, currentSourceInterfaceArray, interfaceBody,
     sourceFile, interfaceElementSet, mockApi, interfaceName);
   return interfaceBody;
+}
+
+/**
+ * @param interfaceEntity
+ * @param interfaceBody
+ * @param interfaceName
+ * @param mockApi
+ * @param sourceFile
+ * @param interfaceElementSet
+ * @param extraImport
+ * @param importDeclarations
+ * @returns
+ */
+function isNeedAddExtraImport(
+  interfaceEntity: InterfaceEntity,
+  interfaceBody: string,
+  interfaceName: string,
+  mockApi: string,
+  sourceFile:SourceFile,
+  interfaceElementSet:Set<string>,
+  extraImport:string[],
+  importDeclarations:ImportElementEntity[]
+) : {interfaceBody: string, interfaceElementSet: Set<string>} {
+  interfaceEntity.interfacePropertySignatures.forEach(value => {
+    interfaceBody += generatePropertySignatureDeclaration(interfaceName, value, sourceFile, mockApi) + '\n';
+    interfaceElementSet.add(value.propertyName);
+    if (!value.propertyTypeName.includes(' ')) {
+      const regex = new RegExp(`import[\\s\n]*?{?[\\s\n]*?${value.propertyTypeName}[,\\s\n]*?`);
+      const results = mockApi.match(regex);
+      if (results) {
+        return;
+      }
+    }
+    addExtraImport(extraImport, importDeclarations, sourceFile, value);
+  });
+  return {
+    interfaceBody,
+    interfaceElementSet
+  };
 }
 
 function assemblyInterface(
