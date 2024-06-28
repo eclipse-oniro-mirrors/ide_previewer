@@ -47,6 +47,7 @@ import {
   MockFunctionElementEntity,
   ReturnDataParams
 } from './generateCommonUtil';
+import { handleImportKit } from '../common/kitUtils';
 
 /**
  * generate mock file string
@@ -402,6 +403,13 @@ export function generateImportDeclaration(
   currentFilePath: string,
   dependsSourceFileList: SourceFile[]
 ): string {
+  const importEntities = handleImportKit(importEntity);
+  if (importEntities.length) {
+    return importEntities.map(
+      entity => generateImportDeclaration(entity, sourceFileName, heritageClausesArray, currentFilePath, dependsSourceFileList)
+    ).join('\n');
+  }
+  
   const importDeclaration = referenctImport2ModuleImport(importEntity, currentFilePath, dependsSourceFileList);
   if (importDeclaration) {
     return importDeclaration;

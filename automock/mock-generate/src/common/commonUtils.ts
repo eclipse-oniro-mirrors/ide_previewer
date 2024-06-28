@@ -16,7 +16,7 @@
 import path from 'path';
 import type {
   CallSignatureDeclaration, ComputedPropertyName, FunctionDeclaration, Identifier, MethodDeclaration,
-  MethodSignature, ModifiersArray, ModuleDeclaration, NodeArray, ParameterDeclaration, PropertyName, SourceFile
+  MethodSignature, ModifierLike, ModuleDeclaration, NodeArray, ParameterDeclaration, PropertyName, SourceFile
 } from 'typescript';
 import {
   isClassDeclaration, isComputedPropertyName, isIdentifier, isModuleBlock, isModuleDeclaration, isPrivateIdentifier
@@ -24,6 +24,7 @@ import {
 import fs from 'fs';
 import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { collectAllKitFiles } from './kitUtils';
 
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
@@ -125,7 +126,7 @@ function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
  * @param modifiers
  * @returns
  */
-export function getModifiers(modifiers: ModifiersArray): Array<number> {
+export function getModifiers(modifiers: NodeArray<ModifierLike>): Array<number> {
   const modifiersArray: Array<number> = [];
   modifiers.forEach(value => modifiersArray.push(value.kind));
   return modifiersArray;
@@ -204,7 +205,7 @@ export function getFunctionAndMethodReturnInfo(
  * @param modifiers
  * @returns
  */
-export function getExportKeyword(modifiers: ModifiersArray): Array<number> {
+export function getExportKeyword(modifiers: NodeArray<ModifierLike>): Array<number> {
   const modifiersArray: Array<number> = [];
   modifiers.forEach(value => {
     modifiersArray.push(value.kind);
@@ -382,3 +383,25 @@ export const specialFiles = [
   '@internal/component/ets/text_common.d.ts',
   '@internal/component/ets/styled_string.d.ts'
 ];
+
+export const specialType = [
+  'Storage',
+  'File',
+  'ChildProcess',
+  'Cipher',
+  'Sensor',
+  'Authenticator'
+];
+
+/**
+ * get add kit file map
+ * @param apiInputPath api input path
+ * @returns
+ */
+export function generateKitMap(apiInputPath: string) : void {
+  const kitPath = path.join(apiInputPath, '../', 'kits');
+  if (!fs.existsSync(kitPath)) {
+    throw new Error(`${kitPath} does not exist.`);
+  }
+  collectAllKitFiles(kitPath);
+}
