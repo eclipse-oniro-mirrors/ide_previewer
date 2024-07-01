@@ -393,12 +393,18 @@ export const specialType = [
   'Authenticator'
 ];
 
+export const specialClassName = [
+  'Want',
+  'Configuration',
+  'InputMethodExtensionContext'
+];
+
 /**
  * get add kit file map
  * @param apiInputPath api input path
- * @returns 
+ * @returns
  */
-export function generateKitMap(apiInputPath: string) {
+export function generateKitMap(apiInputPath: string): void {
   const kitPath = path.join(apiInputPath, '../', 'kits');
   if (!fs.existsSync(kitPath)) {
     throw new Error(`${kitPath} does not exist.`);

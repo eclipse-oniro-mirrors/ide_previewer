@@ -109,6 +109,18 @@ function isNeedAddExtraImport(
       if (results) {
         return;
       }
+      let temp = false;
+      importDeclarations.forEach(element => {
+        if (
+          element.importPath.startsWith('\'@ohos')
+          && element.importElements.match(new RegExp(`[\\s\n]*${value.propertyTypeName}[,\\s\n]*`))
+        ) {
+          temp = true;
+        }
+      });
+      if (temp) {
+        return;
+      }
     }
     addExtraImport(extraImport, importDeclarations, sourceFile, value);
   });
