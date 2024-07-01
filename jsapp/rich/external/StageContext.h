@@ -61,6 +61,7 @@ private:
     std::map<std::string, std::string> modulePathMap;
     std::map<std::string, std::string> harNameOhmMap;
     std::string projectRootPath;
+    std::string buildConfigPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string localBundleName = "bundle";
