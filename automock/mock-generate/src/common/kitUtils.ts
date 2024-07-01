@@ -157,5 +157,5 @@ function getKitImportInfo(kitImportInfos: KitImportInfo[], element: string, impo
   return {
     importElements: `${defaultImportStr} ${commonImportsStr}`,
     importPath: kitImportInfo.fromPath
-  }
+  };
 }
