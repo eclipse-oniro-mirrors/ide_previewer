@@ -93,6 +93,7 @@ void StageContext::GetModulePathMapFromLoaderJson()
         harNameOhmMap[key] = jsonObjOhm[key].AsString();
     }
     projectRootPath = rootJson["projectRootPath"].AsString();
+    buildConfigPath = rootJson["buildConfigPath"].AsString();
 }
 
 std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
@@ -190,6 +191,10 @@ std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& modu
     // 读取hsp的.preview/config/buildConfig.json获取aceModuleBuild值就是hsp的modules.abc所在文件夹
     std::string hspConfigPath = modulePath + separator + ".preview" + separator + "config" +
         separator + "buildConfig.json";
+    if (!buildConfigPath.empty()) {
+        ILOG("buildConfigPath is not empty.");
+        hspConfigPath = modulePath + separator + buildConfigPath;
+    }
     std::string abcDir = GetHspAceModuleBuild(hspConfigPath);
     if (!FileSystem::IsDirectoryExists(abcDir)) {
         ELOG("the abcDir:%s is not exist.", abcDir.c_str());
