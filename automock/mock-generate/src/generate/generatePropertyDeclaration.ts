@@ -15,7 +15,7 @@
 
 import { SyntaxKind } from 'typescript';
 import type { SourceFile } from 'typescript';
-import { getClassNameSet } from '../common/commonUtils';
+import { getClassNameSet, specialClassName } from '../common/commonUtils';
 import type { PropertyEntity } from '../declaration-node/propertyDeclaration';
 import { getTheRealReferenceFromImport, getWarnConsole } from './generateCommonUtil';
 import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
@@ -81,7 +81,7 @@ function generateTypeReference(
   propertyBody: string
 ): string {
   if (getClassNameSet().has(propertyDeclaration.propertyTypeName)) {
-    if (!['Want', 'InputMethodExtensionContext'].includes(propertyDeclaration.propertyTypeName)) {
+    if (!specialClassName.includes(propertyDeclaration.propertyTypeName)) {
       propertyBody += `new ${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)}();`;
     } else {
       propertyBody += `${getTheRealReferenceFromImport(sourceFile, propertyDeclaration.propertyTypeName)};`;
