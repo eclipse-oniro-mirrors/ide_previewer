@@ -20,6 +20,7 @@ group("fuzztest") {
       "======================================================================")
   deps = [
     "./commandparse_fuzzer:command_parse_fuzztest",
+    "./jsonparse_fuzzer:json_parse_fuzztest",
     "./paramsparse_fuzzer:params_parse_fuzztest",
   ]
 }
