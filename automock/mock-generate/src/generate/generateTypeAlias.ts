@@ -131,7 +131,7 @@ function parseImportExpression(
     const propertiesIndex = 1;
     let properties = splitTypeName[propertiesIndex];
     if (properties.includes('<') && properties.includes('>')) {
-      properties = properties.replace(/<.*?>/sg,'');
+      properties = properties.replace(/<.*?>/sg, '');
     }
     const importPath = getImportFileFullPath(typeName);
     const realImportPath = pathToImportPath(sourceFile.fileName, importPath);

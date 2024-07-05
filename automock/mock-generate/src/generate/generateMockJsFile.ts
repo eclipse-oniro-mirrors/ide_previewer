@@ -438,9 +438,11 @@ export function generateImportDeclaration(
     importPath = `'.${importPath.replace(/'/g, '')}'`;
   }
 
-  if (sourceFileName === 'AbilityContext' && tmpImportPath === '../ohos_application_Ability' ||
-    sourceFileName === 'Context' && tmpImportPath === './ApplicationContext') {
+  if (sourceFileName === 'AbilityContext' && tmpImportPath === '../ohos_application_Ability') {
     return '';
+  }
+  if (sourceFileName === 'Context' && tmpImportPath === './ApplicationContext') {
+    return 'import { mockEnvironmentCallback } from \'../ohos_app_ability_EnvironmentCallback\'\n';
   }
   if (!importElements.includes('{') && !importElements.includes('}') && needToAddBrace.includes(importElements)) {
     importElements = `{ ${importElements} }`;
