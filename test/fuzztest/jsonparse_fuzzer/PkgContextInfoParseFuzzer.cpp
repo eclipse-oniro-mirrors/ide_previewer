@@ -28,28 +28,28 @@ using namespace std;
 using namespace fuzztest;
 
 namespace {
-std::string g_ModuleJson_NoModule = R"({
+std::string g_moduleJsonNoModule = R"({
     "app" :
     {
         "apiReleaseType" : "Beta1"
     }
 })";
 
-std::string g_ModuleJson_NoModuleName = R"({
+std::string g_moduleJsonNoModuleName = R"({
     "module" :
     {
         "packageName" : "entry"
     }
 })";
 
-std::string g_ModuleJson_NoModulePackageName = R"({
+std::string g_moduleJsonNoModulePackageName = R"({
     "module" :
     {
         "name" : "entry"
     }
 })";
 
-std::string g_ModuleJson = R"({
+std::string g_moduleJson = R"({
     "app" :
     {
         "apiReleaseType" : "Beta1",
@@ -128,7 +128,7 @@ std::string g_ModuleJson = R"({
     }
 })";
 
-std::string g_PkgInfoJson = R"({
+std::string g_pkgInfoJson = R"({
     "entry": {
         "packageName": "entry",
         "bundleName": "",
@@ -169,20 +169,20 @@ TEST(PkgContextInfoParseTest, test_json)
         JsAppImpl::GetInstance().SetPkgContextInfo();
         // 变化数据
         std::string filePath = "module.json";
-        ChangeJsonUtil::WriteFile(filePath, g_ModuleJson_NoModule);
+        ChangeJsonUtil::WriteFile(filePath, g_moduleJsonNoModule);
         JsAppImpl::GetInstance().SetPkgContextInfo();
-        ChangeJsonUtil::WriteFile(filePath, g_ModuleJson_NoModuleName);
+        ChangeJsonUtil::WriteFile(filePath, g_moduleJsonNoModuleName);
         JsAppImpl::GetInstance().SetPkgContextInfo();
-        ChangeJsonUtil::WriteFile(filePath, g_ModuleJson_NoModulePackageName);
+        ChangeJsonUtil::WriteFile(filePath, g_moduleJsonNoModulePackageName);
         JsAppImpl::GetInstance().SetPkgContextInfo();
         uint64_t moduleIndex = 0;
-        cJSON* moduleJsonArgs = cJSON_Parse(g_ModuleJson.c_str());
+        cJSON* moduleJsonArgs = cJSON_Parse(g_moduleJson.c_str());
         ChangeJsonUtil::ModifyObject(moduleJsonArgs, moduleIndex);
         ChangeJsonUtil::WriteFile(filePath, moduleJsonArgs);
         cJSON_Delete(moduleJsonArgs);
         std::string pkgContextFilePath = "pkgContextInfo.json";
         uint64_t pkgContextIndex = 0;
-        cJSON* pkgContextJsonArgs = cJSON_Parse(pkgContextFilePath.c_str());
+        cJSON* pkgContextJsonArgs = cJSON_Parse(g_pkgInfoJson.c_str());
         ChangeJsonUtil::ModifyObject(pkgContextJsonArgs, pkgContextIndex);
         ChangeJsonUtil::WriteFile(filePath, pkgContextJsonArgs);
         cJSON_Delete(pkgContextJsonArgs);
