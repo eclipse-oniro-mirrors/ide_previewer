@@ -59,7 +59,7 @@ private:
     int CompareHspVersion(const std::string& version1, const std::string& version2);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
-    std::map<std::string, std::string> harNameOhmMap;
+    std::map<std::string, std::string> hspNameOhmMap;
     std::string projectRootPath;
     std::string buildConfigPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
