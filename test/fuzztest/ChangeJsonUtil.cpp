@@ -83,7 +83,7 @@ void ChangeJsonUtil::ModifyObject4ChangeType(cJSON *object, uint64_t& idx)
             int32_t intValue = *(s32 *)DT_SetGetS32(&g_Element[idx], DEFAULT_INT);
             idx++;
             item->type = cJSON_Number;
-            item->valuedouble = (double)intValue;
+            item->valuedouble = static_cast<double>(intValue);
             item->valueint = intValue;
             cJSON_free(item->valuestring); // 释放原字符串内存
             item->valuestring = nullptr;

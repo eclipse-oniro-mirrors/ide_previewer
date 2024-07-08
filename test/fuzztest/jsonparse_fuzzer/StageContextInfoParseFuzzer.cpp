@@ -29,7 +29,7 @@ using namespace fuzztest;
 using namespace testmock;
 
 namespace {
-std::string g_ModuleJson1 = R"({
+std::string g_moduleJson1 = R"({
     "modulePathMap" : {
         "entry" : "C:\\MyApp\\entry",
         "library" : "C:\\MyApp\\library"
@@ -52,22 +52,22 @@ std::string g_ModuleJson1 = R"({
     "buildConfigPath" : ".preview\\config\\buildConfig.json"
 })";
 
-std::string g_ModuleJson2 = R"({
+std::string g_moduleJson2 = R"({
     "projectRootPath": "C:\\MyApp"
 })";
 
-std::string g_MockConfigJson = R"({
+std::string g_mockConfigJson = R"({
     "libentry.so": {
         "source": "src/mock/libentry.mock.ets"
     }
 })";
 
-std::string g_BuildConfigJson1 = R"({
+std::string g_buildConfigJson1 = R"({
     "deviceType": "phone,tablet,2in1",
     "aceModuleBuild": "C:\\MyApp\\entry\\.preview\\default\\intermediates\\assets\\default\\ets"
 })";
 
-std::string g_BuildConfigJson2 = R"({
+std::string g_buildConfigJson2 = R"({
     "deviceType": "phone,tablet,2in1",
     "checkEntry": "true"
 })";
@@ -79,7 +79,7 @@ TEST(LoaderInfoParseFuzzTest, test_json)
     {
         uint64_t index = 0;
         // 变化数据
-        cJSON* jsonArgs = cJSON_Parse(g_ModuleJson1.c_str());
+        cJSON* jsonArgs = cJSON_Parse(g_moduleJson1.c_str());
         ChangeJsonUtil::ModifyObject(jsonArgs, index);
         // 保存到文件
         std::string filePath = "loader.json";
@@ -90,7 +90,7 @@ TEST(LoaderInfoParseFuzzTest, test_json)
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(filePath);
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
-        ChangeJsonUtil::WriteFile(filePath, g_ModuleJson2);
+        ChangeJsonUtil::WriteFile(filePath, g_moduleJson2);
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         ChangeJsonUtil::WriteFile(filePath, "aaa");
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
@@ -112,7 +112,7 @@ TEST(MockConfigParseFuzzTest, test_json)
     {
         uint64_t index = 0;
         // 变化数据
-        cJSON* jsonArgs = cJSON_Parse(g_MockConfigJson.c_str());
+        cJSON* jsonArgs = cJSON_Parse(g_mockConfigJson.c_str());
         ChangeJsonUtil::ModifyObject(jsonArgs, index);
         // 保存到文件
         std::string filePath = "mock-config.json";
@@ -143,11 +143,11 @@ TEST(BuildConfigParseFuzzTest, test_json)
         OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild("aaa");
         ChangeJsonUtil::WriteFile(filePath, "aaa");
         OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild(filePath);
-        ChangeJsonUtil::WriteFile(filePath, g_BuildConfigJson2);
+        ChangeJsonUtil::WriteFile(filePath, g_buildConfigJson2);
         OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild(filePath);
         uint64_t index = 0;
         // 变化数据
-        cJSON* jsonArgs = cJSON_Parse(g_BuildConfigJson1.c_str());
+        cJSON* jsonArgs = cJSON_Parse(g_buildConfigJson1.c_str());
         ChangeJsonUtil::ModifyObject(jsonArgs, index);
         // 保存到文件
         ChangeJsonUtil::WriteFile(filePath, jsonArgs);
@@ -202,7 +202,7 @@ TEST(FileBufferFuzzTest, test_json)
     {
         uint64_t index = 0;
         // 变化数据
-        cJSON* jsonArgs = cJSON_Parse(g_ModuleJson1.c_str());
+        cJSON* jsonArgs = cJSON_Parse(g_moduleJson1.c_str());
         ChangeJsonUtil::ModifyObject(jsonArgs, index);
         // 保存到文件
         std::string filePath = "testFile.json";
