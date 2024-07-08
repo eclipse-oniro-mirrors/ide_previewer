@@ -89,9 +89,13 @@ void StageContext::GetModulePathMapFromLoaderJson()
     for (const auto& key : jsonObj.GetMemberNames()) {
         modulePathMap[key] = jsonObj[key].AsString();
     }
-    Json2::Value jsonObjOhm = rootJson["harNameOhmMap"];
+    Json2::Value jsonObjOhm = rootJson["hspNameOhmMap"];
+    if (jsonObjOhm.IsNull() || !jsonObjOhm.IsValid()) {
+        ILOG("hspNameOhmMap isNull");
+        jsonObjOhm = rootJson["harNameOhmMap"];
+    }
     for (const auto& key : jsonObjOhm.GetMemberNames()) {
-        harNameOhmMap[key] = jsonObjOhm[key].AsString();
+        hspNameOhmMap[key] = jsonObjOhm[key].AsString();
     }
     projectRootPath = rootJson["projectRootPath"].AsString();
     if (rootJson.IsMember("buildConfigPath")) {
@@ -463,7 +467,7 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 {
     int num = 0;
     string flag = "/" + input + "/";
-    for (const auto& pair : harNameOhmMap) {
+    for (const auto& pair : hspNameOhmMap) {
         if (pair.second.find(flag) != std::string::npos) {
             if (num == 0) {
                 ret = pair.first;
