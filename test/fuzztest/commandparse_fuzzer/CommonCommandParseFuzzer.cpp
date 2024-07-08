@@ -43,7 +43,7 @@ std::map<std::string, std::string> commonDataMap = {
 TEST(CommonCommandParseFuzzTest, test_command)
 {
     std::cout << "--> CommonCommandParseFuzzTest for common start <--" << std::endl;
-    DT_FUZZ_START(0, TEST_TIMES, (char*)"RichCommandParseFuzzTest", 0)
+    DT_FUZZ_START(0, TEST_TIMES, (char*)"CommonCommandParseFuzzTest", 0)
     {
         CommandParse parse;
         CommandParser::GetInstance().deviceType = "common";

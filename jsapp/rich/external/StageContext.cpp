@@ -80,8 +80,9 @@ void StageContext::GetModulePathMapFromLoaderJson()
         ELOG("Get loader.json content failed.");
         return;
     }
-    if (!rootJson.IsMember("modulePathMap")) {
-        ELOG("Don't find modulePathMap node in loader.json.");
+    if (!rootJson.IsMember("modulePathMap") || !rootJson.IsMember("harNameOhmMap") ||
+        !rootJson.IsMember("projectRootPath")) {
+        ELOG("Don't find some necessary node in loader.json.");
         return;
     }
     Json2::Value jsonObj = rootJson["modulePathMap"];
@@ -93,7 +94,9 @@ void StageContext::GetModulePathMapFromLoaderJson()
         harNameOhmMap[key] = jsonObjOhm[key].AsString();
     }
     projectRootPath = rootJson["projectRootPath"].AsString();
-    buildConfigPath = rootJson["buildConfigPath"].AsString();
+    if (rootJson.IsMember("buildConfigPath")) {
+        buildConfigPath = rootJson["buildConfigPath"].AsString();
+    }
 }
 
 std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
