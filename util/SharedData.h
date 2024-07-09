@@ -45,6 +45,7 @@ public:
     {
         staticDataMutex.lock();
         if (dataMap.find(type) == dataMap.end()) {
+            staticDataMutex.unlock();
             FLOG("SharedData::SetData invalid data type.");
             return false;
         }
