@@ -118,8 +118,9 @@ void WebSocketServer::StartWebsocketListening()
 
 void WebSocketServer::Run()
 {
-    serverThread = std::make_unique<std::thread>(&WebSocketServer::StartWebsocketListening,
-                                                &WebSocketServer::GetInstance());
+    serverThread = std::make_unique<std::thread>([this]() {
+        this->StartWebsocketListening();
+    });
     if (serverThread == nullptr) {
         ELOG("WebSocketServer::Start serverThread memory allocation failed");
     }
