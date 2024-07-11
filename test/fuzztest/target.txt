@@ -88,8 +88,7 @@ AvoidAreaCommand::RunSet
 AvoidAreaCommand::IsSetArgValid
 AvoidAreaCommand::IsObjectValid
 
-JsAppImpl::SetPkgContextInfo
-
+StageContext::SetPkgContextInfo
 StageContext::ReadFileContents
 StageContext::GetModulePathMapFromLoaderJson
 StageContext::GetHspAceModuleBuild

@@ -903,35 +903,8 @@ void JsAppImpl::SetMockJsonInfo()
 
 void JsAppImpl::SetPkgContextInfo()
 {
-    const string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
-    string moduleJsonStr = JsonReader::ReadFile(path);
-    if (moduleJsonStr.empty()) {
-        ELOG("Get module.json content empty.");
-    }
-    Json2::Value rootJson1 = JsonReader::ParseJsonData2(moduleJsonStr);
-    if (rootJson1.IsNull() || !rootJson1.IsValid() || !rootJson1.IsMember("module")) {
-        ELOG("Get module.json content failed.");
-        return;
-    }
-    if (!rootJson1["module"].IsMember("name") || !rootJson1["module"]["name"].IsString()) {
-        return;
-    }
-    string moduleName = rootJson1["module"]["name"].AsString();
-    if (rootJson1["module"].IsMember("packageName") && rootJson1["module"]["packageName"].IsString()) {
-        string pkgName = rootJson1["module"]["packageName"].AsString();
-        aceRunArgs.packageNameList = {{moduleName, pkgName}};
-    }
-    std::string loaderJsonPath = commandInfo.loaderJsonPath;
-    std::string flag = "loader.json";
-    int idx = loaderJsonPath.find_last_of(flag);
-    std::string dirPath = loaderJsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
-    std::string ctxPath = dirPath + "pkgContextInfo.json";
-    string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
-    if (ctxInfoJsonStr.empty()) {
-        ELOG("Get pkgContextInfo.json content empty.");
-        return;
-    }
-    aceRunArgs.pkgContextInfoJsonStringMap = {{moduleName, ctxInfoJsonStr}};
+    Ide::StageContext::GetInstance().SetPkgContextInfo(aceRunArgs.pkgContextInfoJsonStringMap,
+        aceRunArgs.packageNameList);
 }
 
 void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height)
