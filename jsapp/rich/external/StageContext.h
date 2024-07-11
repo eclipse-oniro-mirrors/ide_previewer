@@ -43,6 +43,8 @@ public:
     std::vector<uint8_t>* GetCloudModuleBuffer(const std::string& moduleName);
     std::vector<uint8_t>* GetSystemModuleBuffer(const std::string& inputPath, const std::string& moduleName);
     std::vector<uint8_t>* GetModuleBufferFromHsp(const std::string& hspFilePath, const std::string& fileName);
+    void SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
+        std::map<std::string, std::string>& packageNameList);
 private:
     StageContext() = default;
     ~StageContext() = default;

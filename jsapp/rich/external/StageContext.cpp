@@ -20,6 +20,7 @@
 #include "FileSystem.h"
 #include "TraceTool.h"
 #include "PreviewerEngineLog.h"
+#include "CommandParser.h"
 #include "zlib.h"
 #include "contrib/minizip/unzip.h"
 using namespace std;
@@ -505,5 +506,40 @@ std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inp
         ELOG("read modules.abc buffer failed.");
     }
     return buf;
+}
+
+void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
+    std::map<std::string, std::string>& packageNameList)
+{
+    const string path = CommandParser::GetInstance().GetAppResourcePath() +
+        FileSystem::GetSeparator() + "module.json";
+    string moduleJsonStr = JsonReader::ReadFile(path);
+    if (moduleJsonStr.empty()) {
+        ELOG("Get module.json content empty.");
+    }
+    Json2::Value rootJson1 = JsonReader::ParseJsonData2(moduleJsonStr);
+    if (rootJson1.IsNull() || !rootJson1.IsValid() || !rootJson1.IsMember("module")) {
+        ELOG("Get module.json content failed.");
+        return;
+    }
+    if (!rootJson1["module"].IsMember("name") || !rootJson1["module"]["name"].IsString()) {
+        return;
+    }
+    string moduleName = rootJson1["module"]["name"].AsString();
+    if (rootJson1["module"].IsMember("packageName") && rootJson1["module"]["packageName"].IsString()) {
+        string pkgName = rootJson1["module"]["packageName"].AsString();
+        packageNameList = {{moduleName, pkgName}};
+    }
+    std::string loaderJsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
+    std::string flag = "loader.json";
+    int idx = loaderJsonPath.find_last_of(flag);
+    std::string dirPath = loaderJsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
+    std::string ctxPath = dirPath + "pkgContextInfo.json";
+    string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
+    if (ctxInfoJsonStr.empty()) {
+        ELOG("Get pkgContextInfo.json content empty.");
+        return;
+    }
+    pkgContextInfoJsonStringMap = {{moduleName, ctxInfoJsonStr}};
 }
 }

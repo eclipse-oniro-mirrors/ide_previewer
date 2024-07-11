@@ -19,8 +19,12 @@ group("json_parse_fuzztest") {
   testonly = true
   deps = [
     ":DeviceConfigParseFuzzTest",
-    ":PkgContextInfoParseFuzzTest",
-    ":StageContextInfoParseFuzzTest",
+    ":GetHspAceModuleBuildFuzzTest",
+    ":GetModuleBufferFromHspFuzzTest",
+    ":GetModulePathMapFuzzTest",
+    ":ParseMockJsonFileFuzzTest",
+    ":ReadFileContentsFuzzTest",
+    ":SetPkgContextInfoFuzzTest",
   ]
 }
 
@@ -102,43 +106,86 @@ ide_fuzztest("DeviceConfigParseFuzzTest") {
   ldflags = [ "-Wno-error=overflow" ]
 }
 
-ide_fuzztest("StageContextInfoParseFuzzTest") {
+ide_fuzztest("ReadFileContentsFuzzTest") {
   testonly = true
   part_name = "previewer"
   subsystem_name = "ide"
   module_out_path = module_output_path
-  output_name = "StageContextInfoParseFuzzTest"
+  output_name = "ReadFileContentsFuzzTest"
   sources = [
+    "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
+    "$ide_previewer_path/jsapp/JsApp.cpp",
+    "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
     "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
     "$ide_previewer_path/jsapp/rich/external/EventQueue.cpp",
     "$ide_previewer_path/jsapp/rich/external/EventRunner.cpp",
     "$ide_previewer_path/jsapp/rich/external/StageContext.cpp",
-    "$ide_previewer_path/test/mock/MockFile.cpp",
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
     "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
     "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
     "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
     "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
     "$ide_previewer_path/util/JsonReader.cpp",
     "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
+  sources += [ "$ide_previewer_path/test/mock/MockFile.cpp" ]
   sources += [
     "../ChangeJsonUtil.cpp",
     "../main.cpp",
-    "StageContextInfoParseFuzzer.cpp",
+    "ReadFileContentsFuzzer.cpp",
   ]
   include_dirs = [
     "../",
     "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
+    "$ide_previewer_path/cli",
     "$ide_previewer_path/util",
+    "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
     "//third_party/zlib",
   ]
-  include_dirs += [ "$ide_previewer_path/jsapp/rich/external" ]
+  include_dirs += graphic_2d_include_path
+  include_dirs += window_manager_include_path
+  include_dirs += ability_runtime_include_path
+  include_dirs += ace_engine_include_path
+  include_dirs += [
+    "$ide_previewer_path/jsapp",
+    "$ide_previewer_path/jsapp/rich",
+    "$ide_previewer_path/jsapp/rich/external",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/rich",
+  ]
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
@@ -150,12 +197,12 @@ ide_fuzztest("StageContextInfoParseFuzzTest") {
   ldflags = [ "-Wno-error=overflow" ]
 }
 
-ide_fuzztest("PkgContextInfoParseFuzzTest") {
+ide_fuzztest("GetModulePathMapFuzzTest") {
   testonly = true
   part_name = "previewer"
   subsystem_name = "ide"
   module_out_path = module_output_path
-  output_name = "PkgContextInfoParseFuzzTest"
+  output_name = "GetModulePathMapFuzzTest"
   sources = [
     "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
     "$ide_previewer_path/cli/CommandLine.cpp",
@@ -205,7 +252,368 @@ ide_fuzztest("PkgContextInfoParseFuzzTest") {
   sources += [
     "../ChangeJsonUtil.cpp",
     "../main.cpp",
-    "PkgContextInfoParseFuzzer.cpp",
+    "GetModulePathMapFuzzer.cpp",
+  ]
+  include_dirs = [
+    "../",
+    "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
+    "$ide_previewer_path/cli",
+    "$ide_previewer_path/util",
+    "//third_party/libwebsockets/include",
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
+  ]
+  include_dirs += graphic_2d_include_path
+  include_dirs += window_manager_include_path
+  include_dirs += ability_runtime_include_path
+  include_dirs += ace_engine_include_path
+  include_dirs += [
+    "$ide_previewer_path/jsapp",
+    "$ide_previewer_path/jsapp/rich",
+    "$ide_previewer_path/jsapp/rich/external",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/rich",
+  ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
+  ]
+  libs = []
+  cflags = [ "-Wno-error=overflow" ]
+  cflags_cc = [ "-Wno-error=overflow" ]
+  ldflags = [ "-Wno-error=overflow" ]
+}
+
+ide_fuzztest("GetHspAceModuleBuildFuzzTest") {
+  testonly = true
+  part_name = "previewer"
+  subsystem_name = "ide"
+  module_out_path = module_output_path
+  output_name = "GetHspAceModuleBuildFuzzTest"
+  sources = [
+    "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
+    "$ide_previewer_path/jsapp/JsApp.cpp",
+    "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventQueue.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventRunner.cpp",
+    "$ide_previewer_path/jsapp/rich/external/StageContext.cpp",
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
+    "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
+    "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
+    "$ide_previewer_path/util/JsonReader.cpp",
+    "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
+    "$ide_previewer_path/util/TimeTool.cpp",
+    "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/unix/LocalDate.cpp",
+    "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
+  ]
+  sources += [
+    "../ChangeJsonUtil.cpp",
+    "../main.cpp",
+    "GetHspAceModuleBuildFuzzer.cpp",
+  ]
+  include_dirs = [
+    "../",
+    "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
+    "$ide_previewer_path/cli",
+    "$ide_previewer_path/util",
+    "//third_party/libwebsockets/include",
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
+  ]
+  include_dirs += graphic_2d_include_path
+  include_dirs += window_manager_include_path
+  include_dirs += ability_runtime_include_path
+  include_dirs += ace_engine_include_path
+  include_dirs += [
+    "$ide_previewer_path/jsapp",
+    "$ide_previewer_path/jsapp/rich",
+    "$ide_previewer_path/jsapp/rich/external",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/rich",
+  ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
+  ]
+  libs = []
+  cflags = [ "-Wno-error=overflow" ]
+  cflags_cc = [ "-Wno-error=overflow" ]
+  ldflags = [ "-Wno-error=overflow" ]
+}
+
+ide_fuzztest("GetModuleBufferFromHspFuzzTest") {
+  testonly = true
+  part_name = "previewer"
+  subsystem_name = "ide"
+  module_out_path = module_output_path
+  output_name = "GetModuleBufferFromHspFuzzTest"
+  sources = [
+    "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
+    "$ide_previewer_path/jsapp/JsApp.cpp",
+    "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventQueue.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventRunner.cpp",
+    "$ide_previewer_path/jsapp/rich/external/StageContext.cpp",
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
+    "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
+    "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
+    "$ide_previewer_path/util/JsonReader.cpp",
+    "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
+    "$ide_previewer_path/util/TimeTool.cpp",
+    "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/unix/LocalDate.cpp",
+    "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
+  ]
+  sources += [ "$ide_previewer_path/test/mock/MockFile.cpp" ]
+  sources += [
+    "../ChangeJsonUtil.cpp",
+    "../main.cpp",
+    "GetModuleBufferFromHspFuzzer.cpp",
+  ]
+  include_dirs = [
+    "../",
+    "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
+    "$ide_previewer_path/cli",
+    "$ide_previewer_path/util",
+    "//third_party/libwebsockets/include",
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
+  ]
+  include_dirs += graphic_2d_include_path
+  include_dirs += window_manager_include_path
+  include_dirs += ability_runtime_include_path
+  include_dirs += ace_engine_include_path
+  include_dirs += [
+    "$ide_previewer_path/jsapp",
+    "$ide_previewer_path/jsapp/rich",
+    "$ide_previewer_path/jsapp/rich/external",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/rich",
+  ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
+  ]
+  libs = []
+  cflags = [ "-Wno-error=overflow" ]
+  cflags_cc = [ "-Wno-error=overflow" ]
+  ldflags = [ "-Wno-error=overflow" ]
+}
+
+ide_fuzztest("ParseMockJsonFileFuzzTest") {
+  testonly = true
+  part_name = "previewer"
+  subsystem_name = "ide"
+  module_out_path = module_output_path
+  output_name = "ParseMockJsonFileFuzzTest"
+  sources = [
+    "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
+    "$ide_previewer_path/jsapp/JsApp.cpp",
+    "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventQueue.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventRunner.cpp",
+    "$ide_previewer_path/jsapp/rich/external/StageContext.cpp",
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
+    "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
+    "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
+    "$ide_previewer_path/util/JsonReader.cpp",
+    "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
+    "$ide_previewer_path/util/TimeTool.cpp",
+    "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/unix/LocalDate.cpp",
+    "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
+  ]
+  sources += [
+    "../ChangeJsonUtil.cpp",
+    "../main.cpp",
+    "ParseMockJsonFileFuzzer.cpp",
+  ]
+  include_dirs = [
+    "../",
+    "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/window",
+    "$ide_previewer_path/cli",
+    "$ide_previewer_path/util",
+    "//third_party/libwebsockets/include",
+    "//third_party/cJSON",
+    "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
+  ]
+  include_dirs += graphic_2d_include_path
+  include_dirs += window_manager_include_path
+  include_dirs += ability_runtime_include_path
+  include_dirs += ace_engine_include_path
+  include_dirs += [
+    "$ide_previewer_path/jsapp",
+    "$ide_previewer_path/jsapp/rich",
+    "$ide_previewer_path/jsapp/rich/external",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/rich",
+  ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
+  ]
+  libs = []
+  cflags = [ "-Wno-error=overflow" ]
+  cflags_cc = [ "-Wno-error=overflow" ]
+  ldflags = [ "-Wno-error=overflow" ]
+}
+
+ide_fuzztest("SetPkgContextInfoFuzzTest") {
+  testonly = true
+  part_name = "previewer"
+  subsystem_name = "ide"
+  module_out_path = module_output_path
+  output_name = "SetPkgContextInfoFuzzTest"
+  sources = [
+    "$graphic_2d_path/rosen/modules/platform/utils/refbase.cpp",
+    "$ide_previewer_path/cli/CommandLine.cpp",
+    "$ide_previewer_path/cli/CommandLineFactory.cpp",
+    "$ide_previewer_path/cli/CommandLineInterface.cpp",
+    "$ide_previewer_path/jsapp/JsApp.cpp",
+    "$ide_previewer_path/jsapp/rich/JsAppImpl.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventHandler.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventQueue.cpp",
+    "$ide_previewer_path/jsapp/rich/external/EventRunner.cpp",
+    "$ide_previewer_path/jsapp/rich/external/StageContext.cpp",
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
+    "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualMessageImpl.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreen.cpp",
+    "$ide_previewer_path/test/mock/mock/MockVirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/util/MockClipboardHelper.cpp",
+    "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindow.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowDisplay.cpp",
+    "$ide_previewer_path/test/mock/window/MockWindowModel.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
+    "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
+    "$ide_previewer_path/util/JsonReader.cpp",
+    "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
+    "$ide_previewer_path/util/TimeTool.cpp",
+    "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/unix/LocalDate.cpp",
+    "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
+  ]
+  sources += [
+    "../ChangeJsonUtil.cpp",
+    "../main.cpp",
+    "SetPkgContextInfoFuzzer.cpp",
   ]
   include_dirs = [
     "../",
