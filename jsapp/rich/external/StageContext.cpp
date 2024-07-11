@@ -530,10 +530,10 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
         string pkgName = rootJson1["module"]["packageName"].AsString();
         packageNameList = {{moduleName, pkgName}};
     }
-    std::string loaderJsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
+    std::string jsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
     std::string flag = "loader.json";
-    int idx = loaderJsonPath.find_last_of(flag);
-    std::string dirPath = loaderJsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
+    int idx = jsonPath.find_last_of(flag);
+    std::string dirPath = jsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string ctxPath = dirPath + "pkgContextInfo.json";
     string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
     if (ctxInfoJsonStr.empty()) {
