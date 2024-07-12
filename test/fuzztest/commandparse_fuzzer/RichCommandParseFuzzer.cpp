@@ -50,7 +50,7 @@ std::map<std::string, std::string> richDataMap = {
     {"PointEvent", R"({"x":365,"y":1071,"duration":"","button":-1,"action": 3,"axisValues":[0,0,0,0],
         "sourceType":1,"sourceTool": 7,"pressedButtons":[0,1]})"},
     {"FoldStatus", R"({"FoldStatus":"fold","width":1080,"height":2504})"},
-    {"AvoidArea", R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
+    {"AvoidArea", R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"posX":
         0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
         "rightRect":{"posX":0,"posY":0,"width":2340,"height":84}})"},
     {"AvoidAreaChanged", ""}
