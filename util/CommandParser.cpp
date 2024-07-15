@@ -127,7 +127,8 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
-    partRet = partRet && IsAbilityNameValid();
+    partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
+    partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
     if (partRet) {
         return true;
     }

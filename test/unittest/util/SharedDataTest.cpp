@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #define private public
 #include "SharedData.h"
+#include "SharedDataManager.h"
 using namespace std;
 
 namespace {
@@ -49,11 +50,12 @@ namespace {
         SharedData<uint8_t>(SharedDataType::HEARTBEAT_VALUE, g_intValue, g_intMinValue, g_intMaxValue);
         thread::id curThreadId = this_thread::get_id();
         uint8_t num = 3;
-        uint8_t doubleNum = num + num;
         std::function<void(uint8_t)> func = [&num](uint8_t val) { num += val; };
-        SharedData<uint8_t>::AppendNotify(SharedDataType::BRIGHTNESS_VALUE, func, curThreadId);
-        auto newFunc = SharedData<uint8_t>::dataMap[SharedDataType::BRIGHTNESS_VALUE].callBacks[curThreadId].first;
-        newFunc(num);
-        EXPECT_EQ(num, doubleNum);
+        SharedData<uint8_t>::AppendNotify(SharedDataType::HEARTBEAT_VALUE, func, curThreadId);
+        int newValue = 200;
+        int retValue = num + newValue;
+        SharedData<uint8_t>::SetData(SharedDataType::HEARTBEAT_VALUE, newValue);
+        SharedDataManager::CheckTick();
+        EXPECT_EQ(num, retValue);
     }
 }
