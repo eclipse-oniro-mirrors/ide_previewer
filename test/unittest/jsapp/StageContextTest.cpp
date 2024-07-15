@@ -95,7 +95,7 @@ namespace {
         OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(testFile);
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().modulePathMap.size(), 2);
-        EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().harNameOhmMap.size(), 1);
+        EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().hspNameOhmMap.size(), 1);
         EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().projectRootPath, "MyApplication32");
     }
 
@@ -225,7 +225,7 @@ namespace {
 
     TEST_F(StageContextTest, GetHspActualNameTest)
     {
-        OHOS::Ide::StageContext::GetInstance().harNameOhmMap["testlibrary1"] =
+        OHOS::Ide::StageContext::GetInstance().hspNameOhmMap["testlibrary1"] =
             "@bundle:aaa.bbb.ccc/Testlibrary/Index";
         std::string input = "Testlibrary";
         std::string ret;
