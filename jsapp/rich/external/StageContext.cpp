@@ -90,10 +90,12 @@ void StageContext::GetModulePathMapFromLoaderJson()
     for (const auto& key : jsonObj.GetMemberNames()) {
         modulePathMap[key] = jsonObj[key].AsString();
     }
-    Json2::Value jsonObjOhm = rootJson["hspNameOhmMap"];
-    if (jsonObjOhm.IsNull() || !jsonObjOhm.IsValid()) {
-        ILOG("hspNameOhmMap isNull");
-        jsonObjOhm = rootJson["harNameOhmMap"];
+    Json2::Value jsonObjOhm = rootJson["harNameOhmMap"];
+    if (rootJson.IsMember("hspNameOhmMap")) {
+        if (!rootJson["hspNameOhmMap"].IsNull() && rootJson["hspNameOhmMap"].IsValid()) {
+            ILOG("hspNameOhmMap is valid");
+            jsonObjOhm = rootJson["hspNameOhmMap"];
+        }
     }
     for (const auto& key : jsonObjOhm.GetMemberNames()) {
         hspNameOhmMap[key] = jsonObjOhm[key].AsString();
