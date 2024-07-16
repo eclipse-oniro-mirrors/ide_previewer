@@ -178,6 +178,7 @@ bool MockFile::CompressFiles(const std::vector<std::string>& files, const std::s
     return true;
 }
 
+namespace {
 // 将内容写入 module.json 文件
 void WriteToFile(const std::string& filePath, const std::string& content)
 {
@@ -207,6 +208,7 @@ void CreateFiles(const std::string hspAbcContent)
     WriteToFile("ets/modules.abc", hspAbcContent);
     // 在当前目录下写入文件module.json
     WriteToFile("module.json", hspAbcContent);
+}
 }
 
 std::string MockFile::CreateHspFile(const std::string hspFileName, const std::string hspAbcContent)
