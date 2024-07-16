@@ -251,8 +251,8 @@ void JsAppImpl::RunNormalAbility()
     window->SetContentInfoCallback(std::move(VirtualScreenImpl::LoadContentCallback));
     window->CreateSurfaceNode("preview_surface", std::move(VirtualScreenImpl::Callback));
     ability->SetWindow(window);
-    ability->InitEnv();
     InitAvoidAreas(window);
+    ability->InitEnv();
 }
 
 #if defined(__APPLE__) || defined(_WIN32)
