@@ -139,6 +139,20 @@ namespace {
         EXPECT_TRUE(CommandLineInterface::isPipeConnected);
     }
 
+    TEST(CommandLineInterfaceTest, ProcessCommandTest)
+    {
+        CommandLineInterface& instance = CommandLineInterface::GetInstance();
+        instance.ProcessCommand();
+        EXPECT_TRUE(instance.isFirstWsSend);
+    }
+
+    TEST(CommandLineInterfaceTest, ProcessCommandMessageTest)
+    {
+        CommandLineInterface& instance = CommandLineInterface::GetInstance();
+        std::string msg = R"({"type":"action","command":"MousePress","version":"1.0.1"})";
+        instance.ProcessCommandMessage(msg);
+    }
+
     TEST(CommandLineInterfaceTest, ProcessCommandValidateTest)
     {
         CommandLineInterface& instance = CommandLineInterface::GetInstance();
@@ -174,6 +188,15 @@ namespace {
         instance.Init("phone");
         EXPECT_TRUE(CommandLineFactory::typeMap.size() > 0);
         EXPECT_TRUE(CommandLineInterface::isPipeConnected);
+    }
+
+    TEST(CommandLineInterfaceTest, IsStaticIgnoreCmdTest)
+    {
+        CommandLineInterface& instance = CommandLineInterface::GetInstance();
+        std::string msg = "Language";
+        EXPECT_FALSE(instance.IsStaticIgnoreCmd(msg));
+        std::string msg1 = "Language1";
+        EXPECT_TRUE(instance.IsStaticIgnoreCmd(msg1));
     }
 
     void InitSharedData(std::string deviceType)

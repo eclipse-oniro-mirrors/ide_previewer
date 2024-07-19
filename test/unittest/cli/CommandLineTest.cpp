@@ -222,6 +222,54 @@ namespace {
         EXPECT_TRUE(g_reloadRuntimePage);
     }
 
+    TEST_F(CommandLineTest, ToUint8Test)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_EQ(command1.ToUint8("256"), 0);
+    }
+ 
+    TEST_F(CommandLineTest, IsBoolTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsBoolType("true"));
+        EXPECT_FALSE(command1.IsBoolType("XX"));
+    }
+ 
+    TEST_F(CommandLineTest, IsIntTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsIntType("123"));
+    }
+ 
+    TEST_F(CommandLineTest, IsOneDigitFloatTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsOneDigitFloatType("-6", true));
+        EXPECT_TRUE(command1.IsOneDigitFloatType("3", false));
+    }
+
+    TEST_F(CommandLineTest, IsSetArgValidTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ColorModeCommand command1(type, args1, *socket);
+        command1.RunSet();
+        EXPECT_FALSE(command1.IsSetArgValid());
+    }
+
     TEST_F(CommandLineTest, FontSelectCommandTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::GET;
@@ -229,6 +277,8 @@ namespace {
         FontSelectCommand command1(type, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
+        command1.RunSet();
+        EXPECT_FALSE(command1.IsSetArgValid());
         EXPECT_TRUE(g_output);
         std::string msg = "{\"FontSelect\":true}";
         Json2::Value args2 = JsonReader::ParseJsonData2(msg);
@@ -688,6 +738,7 @@ namespace {
         PowerCommand command2(type2, args2, *socket);
         g_output = false;
         command2.CheckAndRun();
+        command2.RunGet();
         EXPECT_TRUE(g_output);
     }
 
@@ -1399,6 +1450,14 @@ namespace {
         EXPECT_TRUE(g_output);
     }
 
+    TEST_F(CommandLineTest, RestartCommandTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        Json2::Value args2 = JsonReader::CreateNull();
+        RestartCommand command2(type, args2, *socket);
+        command2.RunAction();
+    }
+
     TEST_F(CommandLineTest, ResolutionCommandTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::SET;
@@ -1428,6 +1487,7 @@ namespace {
         AvoidAreaCommand command1(type, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
+        command1.RunSet();
         EXPECT_TRUE(g_output);
         std::string msg2 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
             0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},"rightRect":0})";
