@@ -289,6 +289,7 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
 
     if (retWidth < 1 || retHeight < 1) {
         FLOG("VirtualScreenImpl::RgbToJpg the retWidth or height is invalid value");
+        return;
     }
     unsigned char* dataTemp = new unsigned char[retWidth * retHeight * jpgPix];
     for (int i = 0; i < retHeight; i++) {
@@ -304,6 +305,7 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
     delete [] dataTemp;
     if (jpgBufferSize > bufferSize - headSize) {
         FLOG("VirtualScreenImpl::Send length must < %d", bufferSize - headSize);
+        return;
     }
 
     std::copy(jpgScreenBuffer, jpgScreenBuffer + jpgBufferSize, screenBuffer + headSize);

@@ -121,13 +121,13 @@ namespace Json2 {
 
 class JsonReader {
 public:
-    static std::string ReadFile(const std::string path);
-    static Json2::Value ParseJsonData2(const std::string jsonStr);
+    static std::string ReadFile(const std::string& path);
+    static Json2::Value ParseJsonData2(const std::string& jsonStr);
     static std::string GetErrorPtr();
     static Json2::Value CreateObject();
     static Json2::Value CreateArray();
     static Json2::Value CreateBool(const bool value);
-    static Json2::Value CreateString(const std::string value);
+    static Json2::Value CreateString(const std::string& value);
     static Json2::Value DepthCopy(const Json2::Value& value);
     static Json2::Value CreateNull();
 };

@@ -25,6 +25,7 @@
 #include "CommandParser.h"
 #include "SharedData.h"
 #include "MockGlobalResult.h"
+#include "VirtualScreen.h"
 using namespace std;
 
 namespace {
@@ -141,16 +142,55 @@ namespace {
 
     TEST(CommandLineInterfaceTest, ProcessCommandTest)
     {
-        CommandLineInterface& instance = CommandLineInterface::GetInstance();
-        instance.ProcessCommand();
-        EXPECT_TRUE(instance.isFirstWsSend);
+        // normal
+        g_input = false;
+        CommandLineInterface::GetInstance().ProcessCommand();
+        EXPECT_TRUE(g_input);
+        // socket is null
+        g_input = false;
+        std::unique_ptr<LocalSocket> temp = std::move(CommandLineInterface::GetInstance().socket);
+        CommandLineInterface::GetInstance().socket = nullptr;
+        CommandLineInterface::GetInstance().ProcessCommand();
+        EXPECT_FALSE(g_input);
+        CommandLineInterface::GetInstance().socket = std::move(temp);
+        // isFirstWsSend
+        g_input = false;
+        CommandLineInterface::GetInstance().isPipeConnected = true;
+        VirtualScreen::isWebSocketListening = true;
+        CommandLineInterface::GetInstance().isFirstWsSend = true;
+        CommandLineInterface::GetInstance().ProcessCommand();
+        EXPECT_FALSE(CommandLineInterface::GetInstance().isFirstWsSend);
+        EXPECT_TRUE(g_input);
     }
 
     TEST(CommandLineInterfaceTest, ProcessCommandMessageTest)
     {
-        CommandLineInterface& instance = CommandLineInterface::GetInstance();
-        std::string msg = R"({"type":"action","command":"MousePress","version":"1.0.1"})";
-        instance.ProcessCommandMessage(msg);
+        // normal
+        g_output = false;
+        std::string msg = R"({"type" : "action", "command" : "MousePress", "version" : "1.0.1"})";
+        CommandLineInterface::GetInstance().ProcessCommandMessage(msg);
+        EXPECT_TRUE(g_output);
+        // json parse failed
+        g_output = false;
+        std::string msg0 = R"({"type" : "aaaaa", "command" : "MousePress", "bbbb" : "1.0.1", "args" : {}})";
+        CommandLineInterface::GetInstance().ProcessCommandMessage("");
+        EXPECT_FALSE(g_output);
+        // json args invalid
+        g_output = false;
+        std::string msg1 = R"({"type" : "aaaaa", "command" : "MousePress", "bbbb" : "1.0.1"})";
+        CommandLineInterface::GetInstance().ProcessCommandMessage(msg1);
+        EXPECT_FALSE(g_output);
+        // cmd type error
+        g_output = false;
+        std::string msg2 = R"({"type" : "aaaaa", "command" : "MousePress", "version" : "1.0.1"})";
+        CommandLineInterface::GetInstance().ProcessCommandMessage(msg2);
+        EXPECT_FALSE(g_output);
+        // static card
+        g_output = false;
+        CommandParser::GetInstance().staticCard = true;
+        CommandLineInterface::GetInstance().ProcessCommandMessage(msg);
+        CommandParser::GetInstance().staticCard = false;
+        EXPECT_FALSE(g_output);
     }
 
     TEST(CommandLineInterfaceTest, ProcessCommandValidateTest)
@@ -162,13 +202,13 @@ namespace {
         msg = "[]";
         Json2::Value jsonData2 = JsonReader::ParseJsonData2(msg);
         EXPECT_FALSE(instance.ProcessCommandValidate(true, jsonData2, "Command is not a object"));
-        msg = R"({"type":"action","command":"MousePress"})";
+        msg = R"({"type" : "action", "command" : "MousePress"})";
         Json2::Value jsonData3 = JsonReader::ParseJsonData2(msg);
         EXPECT_FALSE(instance.ProcessCommandValidate(true, jsonData3, "Command error"));
-        msg = R"({"type":"action","command":"MousePress","version":"s.0.1"})";
+        msg = R"({"type" : "action", "command" : "MousePress", "version" : "s.0.1"})";
         Json2::Value jsonData4 = JsonReader::ParseJsonData2(msg);
         EXPECT_FALSE(instance.ProcessCommandValidate(true, jsonData4, "Invalid command version"));
-        msg = R"({"type":"action","command":"MousePress","version":"1.0.1"})";
+        msg = R"({"type" : "action", "command" : "MousePress", "version" : "1.0.1"})";
         Json2::Value jsonData5 = JsonReader::ParseJsonData2(msg);
         EXPECT_TRUE(instance.ProcessCommandValidate(true, jsonData5, ""));
     }
@@ -237,6 +277,10 @@ namespace {
         string deviceType = "liteWearable";
         CommandParser::GetInstance().deviceType = deviceType;
         CommandLineInterface& instance = CommandLineInterface::GetInstance();
+        // path is empty
+        instance.ReadAndApplyConfig("");
+        EXPECT_FALSE(SharedData<bool>::GetData(SharedDataType::KEEP_SCREEN_ON));
+        // path not empty
         instance.Init(deviceType);
         InitSharedData(deviceType);
         char buffer[FILENAME_MAX];
@@ -261,6 +305,21 @@ namespace {
         EXPECT_TRUE(SharedData<bool>::GetData(SharedDataType::KEEP_SCREEN_ON));
         EXPECT_EQ(SharedData<uint8_t>::GetData(SharedDataType::BRIGHTNESS_VALUE), 170);
         EXPECT_EQ(SharedData<uint8_t>::GetData(SharedDataType::HEARTBEAT_VALUE), 100);
+    }
+
+    TEST(CommandLineInterfaceTest, ApplyConfigCommandsTest_Err)
+    {
+        g_output = false;
+        CommandLineInterface::GetInstance().ApplyConfigCommands("MousePress", nullptr);
+        EXPECT_FALSE(g_output);
+    }
+
+    TEST(CommandLineInterfaceTest, CreatCommandToSendDataTest_Err)
+    {
+        g_output = false;
+        Json2::Value val;
+        CommandLineInterface::GetInstance().CreatCommandToSendData("aaaa", val, "set");
+        EXPECT_TRUE(g_output);
     }
 
     TEST(CommandLineInterfaceTest, SendJsonDataTest)
@@ -296,5 +355,45 @@ namespace {
         Json2::Value val;
         CommandLineInterface::GetInstance().CreatCommandToSendData("LoadContent", val, "get");
         EXPECT_TRUE(g_output);
+    }
+
+    TEST(CommandLineInterfaceTest, ApplyConfigMembersTest_Err)
+    {
+        string deviceType = "liteWearable";
+        CommandParser::GetInstance().deviceType = deviceType;
+        CommandLineInterface::GetInstance().Init(deviceType);
+        std::string jsonStr = R"({ "Language" : { "args" : { "Language" : "zh-CN" }},
+                                    "Language2" : { "args1" : { "Language" : "zh-CN" }},
+                                    "Language3" : "",
+                                    "Language4" : { "args" : ""}})";
+        Json2::Value::Members members= { "Language", "Language2", "Language3", "Language4" };
+        Json2::Value commands = JsonReader::ParseJsonData2(jsonStr);
+        CommandLineInterface::GetInstance().ApplyConfigMembers(commands, members);
+        std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        EXPECT_EQ(language, "zh-CN");
+    }
+
+    TEST(CommandLineInterfaceTest, ApplyConfigTest_Err)
+    {
+        g_output = false;
+        std::string jsonStr1 = R"({ "setting" : { "1.0.1" : "aaa"}})";
+        Json2::Value json1 = JsonReader::ParseJsonData2(jsonStr1);
+        CommandLineInterface::GetInstance().ApplyConfig(json1);
+        EXPECT_FALSE(g_output);
+        g_output = false;
+        std::string jsonStr2 = R"({ "setting" : "aaa"})";
+        Json2::Value json2 = JsonReader::ParseJsonData2(jsonStr2);
+        CommandLineInterface::GetInstance().ApplyConfig(json2);
+        EXPECT_FALSE(g_output);
+    }
+
+    TEST(CommandLineInterfaceTest, SendJSHeapMemoryTest_Err)
+    {
+        g_output = false;
+        std::unique_ptr<LocalSocket> temp = std::move(CommandLineInterface::GetInstance().socket);
+        CommandLineInterface::GetInstance().socket = nullptr;
+        CommandLineInterface::GetInstance().SendJSHeapMemory(0, 0, 0);
+        EXPECT_FALSE(g_output);
+        CommandLineInterface::GetInstance().socket = std::move(temp);
     }
 }

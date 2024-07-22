@@ -22,6 +22,7 @@
 #include "MockGlobalResult.h"
 #include "CommandParser.h"
 #include "VirtualScreen.h"
+#include "CommandLineInterface.h"
 
 namespace {
     class VirtualScreenImplTest : public ::testing::Test {
@@ -47,6 +48,7 @@ namespace {
 
         static void SetUpTestCase()
         {
+            CommandLineInterface::GetInstance().InitPipe("phone");
             socket = std::make_unique<LocalSocket>();
         }
 
@@ -344,7 +346,7 @@ namespace {
         VirtualScreenImpl::GetInstance().loadDocTempBuffer = nullptr;
         VirtualScreenImpl::GetInstance().SendBufferOnTimer();
 
-        InitBuffer();
+        InitBuffer(); // jpgBuffer在loadDocTempBuffer释放时释放
         VirtualScreenImpl::GetInstance().lengthTemp = jpgBuffSize;
         VirtualScreenImpl::GetInstance().loadDocTempBuffer = jpgBuff;
         VirtualScreenImpl::GetInstance().widthTemp = jpgWidth;
@@ -365,6 +367,8 @@ namespace {
         int tm = 100;
         VirtualScreenImpl::Callback(jpgBuff, jpgBuffSize, jpgWidth, jpgHeight, tm);
         EXPECT_TRUE(g_writeData);
+        delete[] jpgBuff;
+        jpgBuff = nullptr;
     }
 
     TEST_F(VirtualScreenImplTest, FlushEmptyCallbackTest)
@@ -384,5 +388,214 @@ namespace {
         std::string port = "8888";
         VirtualScreenImpl::GetInstance().InitAll("aaa", port);
         EXPECT_EQ(WebSocketServer::GetInstance().serverPort, atoi(port.c_str()));
+    }
+
+    TEST_F(VirtualScreenImplTest, GetScreenInfoTest)
+    {
+        int width = 1000;
+        VirtualScreenImpl::GetInstance().SetOrignalWidth(width);
+        ScreenInfo info = VirtualScreenImpl::GetInstance().GetScreenInfo();
+        EXPECT_EQ(info.orignalResolutionWidth, width);
+    }
+
+    TEST_F(VirtualScreenImplTest, InitFoldParamsTest)
+    {
+        int width = 1080;
+        int height = 2504;
+        std::string foldable = "true";
+        std::string foldStatus = "half_fold";
+        CommandParser& parser = CommandParser::GetInstance();
+        CommandParser::GetInstance().argsMap.clear();
+        CommandParser::GetInstance().argsMap["-foldable"] = { foldable };
+        CommandParser::GetInstance().argsMap["-foldStatus"] = { foldStatus };
+        CommandParser::GetInstance().argsMap["-fr"] = { std::to_string(width),  std::to_string(height) };
+        CommandParser::GetInstance().foldable = (foldable == "true");
+        CommandParser::GetInstance().foldStatus = foldStatus;
+        CommandParser::GetInstance().foldResolutionWidth = width;
+        CommandParser::GetInstance().foldResolutionHeight = height;
+        VirtualScreenImpl::GetInstance().InitFoldParams();
+        EXPECT_TRUE(VirtualScreenImpl::GetInstance().GetFoldable());
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetFoldStatus(), "half_fold");
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetFoldWidth(), width);
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetFoldHeight(), height);
+    }
+
+    TEST_F(VirtualScreenImplTest, SendPixmapTest_Err)
+    {
+        int height = 100;
+        int width = 100;
+        int pixSize = 4;
+        int length = height * width * pixSize;
+        VirtualScreenImpl::GetInstance().bufferSize = length + VirtualScreenImpl::GetInstance().headSize;
+        VirtualScreenImpl::GetInstance().wholeBuffer =
+            new uint8_t[LWS_PRE + VirtualScreenImpl::GetInstance().bufferSize];
+        VirtualScreenImpl::GetInstance().screenBuffer = VirtualScreenImpl::GetInstance().wholeBuffer + LWS_PRE;
+        // data is nullptr
+        bool ret = VirtualScreenImpl::GetInstance().SendPixmap(nullptr, length, width, height);
+        EXPECT_FALSE(ret);
+        // isWebSocketConfiged is false
+        VirtualScreenImpl::GetInstance().isWebSocketConfiged = false;
+        InitBuffer();
+        ret = VirtualScreenImpl::GetInstance().SendPixmap(jpgBuff, length, width, height);
+        EXPECT_FALSE(ret);
+        VirtualScreenImpl::GetInstance().isWebSocketConfiged = true;
+        // IsRegionRefresh function retrun true
+        bool temp = CommandParser::GetInstance().isRegionRefresh;
+        CommandParser::GetInstance().isRegionRefresh = true;
+        ret = VirtualScreenImpl::GetInstance().SendPixmap(jpgBuff, length, width, height);
+        CommandParser::GetInstance().isRegionRefresh = temp;
+        EXPECT_FALSE(ret);
+        delete[] jpgBuff;
+        jpgBuff = nullptr;
+    }
+
+    TEST_F(VirtualScreenImplTest, PageCallbackTest)
+    {
+        EXPECT_TRUE(VirtualScreenImpl::GetInstance().PageCallback("pages/Index"));
+    }
+
+    TEST_F(VirtualScreenImplTest, LoadContentCallbackTest)
+    {
+        EXPECT_TRUE(VirtualScreenImpl::GetInstance().LoadContentCallback("pages/Index"));
+    }
+
+    TEST_F(VirtualScreenImplTest, FastPreviewCallbackTest)
+    {
+        g_output = false;
+        std::string jsonStr = R"({"FastPreview" : "true"})";;
+        VirtualScreenImpl::GetInstance().FastPreviewCallback(jsonStr);
+        EXPECT_TRUE(g_output);
+    }
+
+    TEST_F(VirtualScreenImplTest, SendTest_Err)
+    {
+        int width = 100;
+        int pixSize = 4;
+        int height = 100;
+        int length = height * width * pixSize;
+        VirtualScreenImpl::GetInstance().bufferSize = length + VirtualScreenImpl::GetInstance().headSize;
+        VirtualScreenImpl::GetInstance().wholeBuffer =
+            new uint8_t[LWS_PRE + VirtualScreenImpl::GetInstance().bufferSize];
+        VirtualScreenImpl::GetInstance().screenBuffer = VirtualScreenImpl::GetInstance().wholeBuffer + LWS_PRE;
+        // static mode
+        CommandParser::ScreenMode tempMode = CommandParser::GetInstance().screenMode;
+        CommandParser::GetInstance().screenMode = CommandParser::ScreenMode::STATIC;
+        bool isOutOfSecondsTemp = VirtualScreen::isOutOfSeconds;
+        VirtualScreen::isOutOfSeconds = true;
+        InitBuffer();
+        VirtualScreenImpl::GetInstance().Send(jpgBuff, width, height);
+        VirtualScreen::isOutOfSeconds = false;
+        CommandParser::GetInstance().screenMode = tempMode;
+        EXPECT_NE(VirtualScreenImpl::GetInstance().screenBuffer, nullptr);
+        // height < 1
+        height = 0;
+        VirtualScreenImpl::GetInstance().Send(jpgBuff, width, height);
+        EXPECT_NE(VirtualScreenImpl::GetInstance().screenBuffer, nullptr);
+        height = 100;
+        // width < 1
+        width = 0;
+        VirtualScreenImpl::GetInstance().Send(jpgBuff, width, height);
+        EXPECT_NE(VirtualScreenImpl::GetInstance().screenBuffer, nullptr);
+        width = 100;
+        // jpgBufferSize > bufferSize - headSize
+        VirtualScreenImpl::GetInstance().bufferSize = VirtualScreenImpl::GetInstance().headSize;
+        VirtualScreenImpl::GetInstance().Send(jpgBuff, width, height);
+        EXPECT_NE(VirtualScreenImpl::GetInstance().screenBuffer, nullptr);
+        delete[] jpgBuff;
+        jpgBuff = nullptr;
+    }
+
+    TEST_F(VirtualScreenImplTest, InitResolutionTest_Err)
+    {
+        int width = 200;
+        int height = 100;
+        CommandParser::GetInstance().orignalResolutionWidth = width;
+        CommandParser::GetInstance().orignalResolutionHeight = height;
+        CommandParser::GetInstance().compressionResolutionWidth = width;
+        CommandParser::GetInstance().compressionResolutionHeight = height;
+        VirtualScreenImpl::GetInstance().InitResolution();
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetOrignalWidth(), width);
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetOrignalHeight(), height);
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetCompressionWidth(), width);
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().GetCompressionHeight(), height);
+    }
+
+    TEST_F(VirtualScreenImplTest, LoadDocCallbackTest)
+    {
+        InitBuffer();
+        int tm = 100;
+        // timeStamp < loadDocTimeStamp
+        VirtualScreenImpl::GetInstance().loadDocTimeStamp = 200;
+        bool ret = VirtualScreenImpl::LoadDocCallback(jpgBuff, jpgBuffSize, jpgWidth, jpgHeight, tm);
+        VirtualScreenImpl::GetInstance().loadDocTimeStamp = 0;
+        EXPECT_FALSE(ret);
+        // GetLoadDocFlag is VirtualScreen::LoadDocType::FINISHED && length = 0
+        VirtualScreen::LoadDocType temp = VirtualScreenImpl::GetInstance().startLoadDoc;
+        VirtualScreenImpl::GetInstance().startLoadDoc = VirtualScreen::LoadDocType::FINISHED;
+        VirtualScreenImpl::GetInstance().loadDocTempBuffer = new uint8_t[1];
+        ret = VirtualScreenImpl::LoadDocCallback(jpgBuff, 0, jpgWidth, jpgHeight, tm);
+        EXPECT_FALSE(ret);
+        VirtualScreenImpl::GetInstance().startLoadDoc = temp;
+        delete[] jpgBuff;
+        jpgBuff = nullptr;
+    }
+
+    TEST_F(VirtualScreenImplTest, StartTimerTest)
+    {
+        g_writeData = false;
+        VirtualScreenImpl::GetInstance().isFlushEmpty = false;
+        VirtualScreenImpl::GetInstance().StartTimer();
+        EXPECT_FALSE(g_writeData);
+        VirtualScreenImpl::GetInstance().isFlushEmpty = true;
+        VirtualScreenImpl::GetInstance().StartTimer();
+        EXPECT_FALSE(g_writeData);
+    }
+
+    TEST_F(VirtualScreenImplTest, NoFlushEmptyFuncTest)
+    {
+        VirtualScreenImpl::GetInstance().onRenderTime = std::chrono::system_clock::now();
+        bool ret = VirtualScreenImpl::GetInstance().NoFlushEmptyFunc(300);
+        EXPECT_TRUE(ret);
+        VirtualScreenImpl::GetInstance().onRenderTime = std::chrono::system_clock::time_point::min();
+        ret = VirtualScreenImpl::GetInstance().NoFlushEmptyFunc(10000);
+        EXPECT_TRUE(ret);
+        ret = VirtualScreenImpl::GetInstance().NoFlushEmptyFunc(1);
+        EXPECT_FALSE(ret);
+    }
+
+    TEST_F(VirtualScreenImplTest, FlushEmptyFuncTest)
+    {
+        std::time_t timestamp = 1719273600; // 这个时间戳代表2024年7月25日00:00:00 UTC
+        std::time_t gap = 100;
+        int64_t timePassed = 9000;
+        int64_t time = 8000;
+        VirtualScreenImpl::GetInstance().onRenderTime = std::chrono::system_clock::from_time_t(timestamp);
+        VirtualScreenImpl::GetInstance().flushEmptyTime = std::chrono::system_clock::from_time_t(timestamp - gap);
+        VirtualScreenImpl::GetInstance().flushEmptyTimeStamp = 200;
+        VirtualScreenImpl::GetInstance().timeStampTemp = 100;
+        bool ret = VirtualScreenImpl::GetInstance().FlushEmptyFunc(std::chrono::system_clock::from_time_t(
+            timestamp + gap), timePassed);
+        EXPECT_TRUE(ret);
+
+        VirtualScreenImpl::GetInstance().timeStampTemp = 300;
+        ret = VirtualScreenImpl::GetInstance().FlushEmptyFunc(std::chrono::system_clock::from_time_t(
+            timestamp + gap), time);
+        EXPECT_FALSE(ret);
+
+        VirtualScreenImpl::GetInstance().timeStampTemp = 100;
+        VirtualScreenImpl::GetInstance().flushEmptyTime = std::chrono::system_clock::from_time_t(
+            timestamp + gap);
+        ret = VirtualScreenImpl::GetInstance().FlushEmptyFunc(std::chrono::system_clock::from_time_t(
+            timestamp + gap + gap + gap), timePassed);
+        EXPECT_TRUE(ret);
+
+        VirtualScreenImpl::GetInstance().timeStampTemp = 300;
+        ret = VirtualScreenImpl::GetInstance().FlushEmptyFunc(std::chrono::system_clock::from_time_t(
+            timestamp + gap), timePassed);
+        EXPECT_TRUE(ret);
+
+        ret = VirtualScreenImpl::GetInstance().FlushEmptyFunc(std::chrono::system_clock::from_time_t(
+            timestamp + gap), time);
+        EXPECT_FALSE(ret);
     }
 }
