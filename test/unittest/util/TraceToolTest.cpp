@@ -25,4 +25,12 @@ namespace {
         TraceTool::GetInstance().HandleTrace("sendmsg");
         EXPECT_TRUE(TraceTool::GetInstance().isReady);
     }
+
+    TEST(TraceToolTest, HandleTraceTest_NoReady)
+    {
+        TraceTool::GetInstance().InitPipe();
+        TraceTool::GetInstance().isReady = false;
+        TraceTool::GetInstance().HandleTrace("sendmsg");
+        EXPECT_FALSE(TraceTool::GetInstance().isReady);
+    }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <string>
+#include <fstream>
 #include "gtest/gtest.h"
 #include "JsonReader.h"
 using namespace std;
@@ -194,5 +195,309 @@ namespace {
         EXPECT_EQ(objVal.GetDouble("height1", 0.0), 0.0); // key not exist retrun default value
         EXPECT_EQ(objVal.GetValue("school").GetString("schoolName"), g_schoolName);
         EXPECT_EQ(objVal.GetValue("school").GetString("schoolAddr"), g_schoolAddr);
+    }
+
+    TEST(JsonReaderTest, OperatorBracketCharPtrTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        const char* key = "name";
+        Json2::Value name = objVal[key];
+        std::string value = name.AsString();
+        EXPECT_EQ(value, g_name);
+        // key not exist
+        const char* key2 = "name22";
+        Json2::Value name2 = objVal[key2];
+        std::string value2 = name2.AsString();
+        EXPECT_EQ(value2, "");
+    }
+
+    TEST(JsonReaderTest, OperatorBracketConstCharPtrTest)
+    {
+        const Json2::Value objVal = static_cast<const Json2::Value>(JsonReader::ParseJsonData2(g_obj));
+        const char* key = "name";
+        const Json2::Value name = objVal[key];
+        std::string value = name.AsString();
+        EXPECT_EQ(value, g_name);
+        // key not exist
+        const char* key2 = "name22";
+        Json2::Value name2 = objVal[key2];
+        std::string value2 = name2.AsString();
+        EXPECT_EQ(value2, "");
+    }
+
+    TEST(ValueTest, OperatorBracketStdStringTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key = "name";
+        Json2::Value name = objVal[key];
+        std::string value = name.AsString();
+        EXPECT_EQ(value, g_name);
+        // key not exist
+        std::string key2 = "name22";
+        Json2::Value name2 = objVal[key2];
+        std::string value2 = name2.AsString();
+        EXPECT_EQ(value2, "");
+    }
+
+    TEST(ValueTest, OperatorBracketConstStdStringTest)
+    {
+        const Json2::Value objVal = static_cast<const Json2::Value>(JsonReader::ParseJsonData2(g_obj));
+        std::string key = "name";
+        const Json2::Value name = objVal[key];
+        std::string value = name.AsString();
+        EXPECT_EQ(value, g_name);
+        // key not exist
+        std::string key2 = "name22";
+        Json2::Value name2 = objVal[key2];
+        std::string value2 = name2.AsString();
+        EXPECT_EQ(value2, "");
+    }
+
+    TEST(ValueTest, GetMemberNamesTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        Json2::Value::Members members = objVal.GetMemberNames();
+        int size = 7;
+        int memberSize = members.size();
+        EXPECT_EQ(memberSize, size);
+    }
+
+    TEST(ValueTest, ToStringTest_NoJsonPtr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key2 = "name22";
+        Json2::Value name2 = objVal[key2];
+        std::string str = name2.ToString();
+        EXPECT_TRUE(str.empty());
+    }
+
+    TEST(ValueTest, ToStyledStringTest)
+    {
+        // no jsonPtr
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name22";
+        Json2::Value name1= objVal[key1];
+        std::string str1 = name1.ToStyledString();
+        EXPECT_TRUE(str1.empty());
+        // jsonPtr exist
+        std::string key2 = "name";
+        Json2::Value name2= objVal[key2];
+        std::string str2 = name2.ToStyledString();
+        EXPECT_FALSE(str2.empty());
+    }
+
+    TEST(ValueTest, IsIntTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name";
+        Json2::Value name = objVal[key1];
+        EXPECT_FALSE(name.IsInt());
+
+        std::string key2 = "age";
+        Json2::Value age = objVal[key2];
+        EXPECT_TRUE(age.IsInt());
+    }
+
+    TEST(ValueTest, IsUIntTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name";
+        Json2::Value name = objVal[key1];
+        EXPECT_FALSE(name.IsUInt());
+
+        std::string key2 = "age";
+        Json2::Value age = objVal[key2];
+        EXPECT_TRUE(age.IsUInt());
+    }
+
+    TEST(ValueTest, IsInt64Test)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name";
+        Json2::Value name = objVal[key1];
+        EXPECT_FALSE(name.IsInt64());
+
+        std::string key2 = "age";
+        Json2::Value age = objVal[key2];
+        EXPECT_TRUE(age.IsInt64());
+    }
+
+    TEST(ValueTest, IsUInt64Test)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name";
+        Json2::Value name = objVal[key1];
+        EXPECT_FALSE(name.IsUInt64());
+
+        std::string key2 = "age";
+        Json2::Value age = objVal[key2];
+        EXPECT_TRUE(age.IsUInt64());
+    }
+
+    TEST(ValueTest, IsDoubleTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key1 = "name";
+        Json2::Value name = objVal[key1];
+        EXPECT_FALSE(name.IsDouble());
+
+        std::string key2 = "age";
+        Json2::Value age = objVal[key2];
+        EXPECT_TRUE(age.IsDouble());
+    }
+
+    TEST(ValueTest, IsObjectTest)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string key = "school";
+        Json2::Value school = objVal[key];
+        EXPECT_TRUE(school.IsObject());
+    }
+
+    TEST(ValueTest, GetBoolTest_TypeErr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        bool ret = objVal.GetBool("name");
+        EXPECT_FALSE(ret);
+    }
+
+    TEST(ValueTest, GetStringTest_TypeErr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        std::string ret = objVal.GetString("age");
+        EXPECT_EQ(ret, "");
+    }
+
+    TEST(ValueTest, AsFolatTest_TypeErr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        Json2::Value height = objVal.GetValue("height");
+        float val = height.AsFloat();
+        float expectVal = 165.3;
+        EXPECT_EQ(val, expectVal);
+    }
+
+    TEST(ValueTest, AsDoubleTest_TypeErr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        Json2::Value name = objVal.GetValue("name");
+        double val = name.AsDouble();
+        float expectVal = 0.0;
+        EXPECT_EQ(val, expectVal);
+    }
+
+    TEST(ValueTest, AsBoolTest_TypeErr)
+    {
+        Json2::Value objVal = JsonReader::ParseJsonData2(g_obj);
+        Json2::Value name = objVal.GetValue("name");
+        bool val = name.AsBool();
+        EXPECT_FALSE(val);
+    }
+
+    TEST(JsonReaderTest, CreateNullTest)
+    {
+        Json2::Value value = JsonReader::CreateNull();
+        EXPECT_TRUE(value.IsNull());
+    }
+
+    TEST(JsonReaderTest, GetKeyTest)
+    {
+        Json2::Value jsonData1 = JsonReader::ParseJsonData2(g_obj);
+        Json2::Value height = jsonData1.GetValue("height");
+        std::string str = height.GetKey();
+        EXPECT_EQ(str, "height");
+    }
+
+    TEST(JsonReaderTest, ReadFileTest)
+    {
+        std::string path = "1.json";
+        std::ofstream file(path);
+        if (!file) {
+            printf("Error creating file: %s\r\n", path.c_str());
+            EXPECT_TRUE(false);
+            return;
+        }
+        file << g_obj;
+        file.close();
+        std::string readStr = JsonReader::ReadFile(path);
+        EXPECT_EQ(readStr, g_obj);
+    }
+
+    TEST(JsonReaderTest, GetErrorPtrTest)
+    {
+        Json2::Value jsonData = JsonReader::ParseJsonData2(g_obj);
+        std::string errors = JsonReader::GetErrorPtr();
+        EXPECT_FALSE(jsonData.IsNull());
+        EXPECT_TRUE(errors.empty());
+    }
+
+    TEST(JsonReaderTest, AddTest_Err)
+    {
+        Json2::Value jsonData = JsonReader::ParseJsonData2(g_obj);
+        // key is nullptr
+        const char* key = nullptr;
+        bool ret = jsonData.Add(key, "aaa");
+        EXPECT_FALSE(ret);
+        ret = jsonData.Add(key, false);
+        EXPECT_FALSE(ret);
+        double d = 22.0;
+        ret = jsonData.Add(key, d);
+        EXPECT_FALSE(ret);
+        std::string str = "{\"name\":\"jin\", \"age\":20}";
+        Json2::Value val = JsonReader::ParseJsonData2(str);
+        ret = jsonData.Add(key, val);
+        EXPECT_FALSE(ret);
+    }
+
+    TEST(JsonReaderTest, AddTest_ArrayErr)
+    {
+        Json2::Value jsonData = JsonReader::ParseJsonData2(g_obj);
+        bool ret = jsonData.Add("aaa");
+        EXPECT_FALSE(ret);
+        ret = jsonData.Add(false);
+        EXPECT_FALSE(ret);
+        double d = 436.96;
+        ret = jsonData.Add(d);
+        EXPECT_FALSE(ret);
+        Json2::Value val = JsonReader::CreateNull();
+        ret = jsonData.Add(val);
+        EXPECT_FALSE(ret);
+    }
+
+    TEST(JsonReaderTest, ReplaceTest_Err)
+    {
+        Json2::Value jsonData = JsonReader::ParseJsonData2(g_obj);
+        // key is nullptr
+        const char* key = nullptr;
+        bool ret = jsonData.Replace(key, "aaa");
+        EXPECT_FALSE(ret);
+        ret = jsonData.Replace(key, false);
+        EXPECT_FALSE(ret);
+        double d = 22.0;
+        ret = jsonData.Replace(key, d);
+        EXPECT_FALSE(ret);
+        std::string str = "{\"name\":\"jin\", \"age\":20}";
+        Json2::Value val = JsonReader::ParseJsonData2(str);
+        ret = jsonData.Replace(key, val);
+        EXPECT_FALSE(ret);
+    }
+
+    TEST(JsonReaderTest, ReplaceTest_ArrayErr)
+    {
+        Json2::Value jsonData = JsonReader::ParseJsonData2(g_obj);
+        // key is nullptr
+        const char* key = nullptr;
+        int invalidIndex = -1;
+        bool ret = jsonData.Replace(invalidIndex, "aaa");
+        EXPECT_FALSE(ret);
+        ret = jsonData.Replace(invalidIndex, false);
+        EXPECT_FALSE(ret);
+        double d = 22.0;
+        ret = jsonData.Replace(invalidIndex, d);
+        EXPECT_FALSE(ret);
+        std::string str = "{\"name\":\"jin\", \"age\":20}";
+        Json2::Value val = JsonReader::ParseJsonData2(str);
+        ret = jsonData.Replace(invalidIndex, val);
+        EXPECT_FALSE(ret);
     }
 }

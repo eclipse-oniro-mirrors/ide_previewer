@@ -120,21 +120,766 @@ namespace {
 
     TEST_F(CommandParserTest, IsSetTest)
     {
+        CommandParser::GetInstance().argsMap.clear();
         EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
         EXPECT_TRUE(CommandParser::GetInstance().IsSet("arp"));
         EXPECT_FALSE(CommandParser::GetInstance().IsSet("abc"));
     }
 
-    TEST_F(CommandParserTest, IsCommandValidTest1)
-    {
-        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
-        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
-    }
-
     TEST_F(CommandParserTest, IsCommandValidTest2)
     {
+        CommandParser::GetInstance().argsMap.clear();
         EXPECT_FALSE(CommandParser::GetInstance().ProcessCommand(invalidParamVec));
         EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_VErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        invalidParamVec.push_back("-v");
+        EXPECT_FALSE(CommandParser::GetInstance().ProcessCommand(invalidParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_PErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-p");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "new_value";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "655350";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "8888";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_JErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-j");
+        if (it != validParamVec.end()) {
+            *it = "-jjjjj";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-j";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_NErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-n");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            std::string str(257, 'a');
+            *std::next(it) = str;
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "entry";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_CrOrErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        // no -cr param
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-cr");
+        if (it != validParamVec.end()) {
+            *it = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-cr";
+        }
+        // -cr value invalid
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "aaaa";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        // params value invalid
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "4000";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "1080";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_HsErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-hs");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "524289";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "100000";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_HfErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-hf");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_ShapeErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-shape");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "rect";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_DeviceErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-device");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^&";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "phone";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_UrlErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-url");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "pages/BigImg_1M";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_FErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-f");
+        if (it != validParamVec.end()) {
+            *it = "ffff";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-f";
+            *std::next(it) = "pages/BigImg_1M";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = currFile;
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_ArpErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-arp");
+        if (it != validParamVec.end()) {
+            *it = "aaarp";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-arp";
+            *std::next(it) = "pages/BigImg_1M";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = currDir;
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_PmErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-pm");
+        if (it != validParamVec.end()) {
+            *it = "aaapm";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-pm";
+            *std::next(it) = "aaa";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "Stage";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_PagesErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-pages");
+        if (it != validParamVec.end()) {
+            *it = "aaapages";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-pages";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "main_pages";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_RefreshErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-refresh");
+        if (it != validParamVec.end()) {
+            *it = "aaarefresh";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-refresh";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "region";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_CardErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-card");
+        if (it != validParamVec.end()) {
+            *it = "aaacard";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-card";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_ProjectIdErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-projectID");
+        if (it != validParamVec.end()) {
+            *it = "aaaprojectID";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-projectID";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "138968279";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_CmErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-cm");
+        if (it != validParamVec.end()) {
+            *it = "aaacm";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-cm";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "light";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_AvErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-av");
+        if (it != validParamVec.end()) {
+            *it = "aaaav";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-av";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "ACE_2_0";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_OErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-o");
+        if (it != validParamVec.end()) {
+            *it = "aaao";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-o";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "portrait";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_LwsErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-lws");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "65536";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "40003";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_SmErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-sm");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "static";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_HspErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-hsp");
+        if (it != validParamVec.end()) {
+            *it = "aaahsp";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-hsp";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = currDir;
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_CpmErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-cpm");
+        if (it != validParamVec.end()) {
+            *it = "aaacpm";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-cpm";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_AbpErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        // lite device
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-device");
+        if (it != validParamVec.end()) {
+            *std::next(it) = "liteWearable";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *std::next(it) = "phone";
+        }
+        // no -d
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-d");
+        if (it != validParamVec.end()) {
+            *it = "aaad";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-d";
+        }
+        // no -abp
+        CommandParser::GetInstance().argsMap.clear();
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-abp");
+        if (it != validParamVec.end()) {
+            *it = "aaaabp";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        // -abp value empty
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-abp";
+            *std::next(it) = "";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "ets/entryability/EntryAbility.abc";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_AbnErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        // no -d
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-d");
+        if (it != validParamVec.end()) {
+            *it = "aaad";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-d";
+        }
+        // lite device
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-device");
+        if (it != validParamVec.end()) {
+            *std::next(it) = "liteWearable";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *std::next(it) = "phone";
+        }
+        // no -abn
+        CommandParser::GetInstance().argsMap.clear();
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-abn");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "aaaabn";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        // -abn value empty
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-abn";
+            *std::next(it) = "";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "EntryAbility";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_StaticCardErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-staticCard");
+        if (it != validParamVec.end()) {
+            *it = "aaastaticCard";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-staticCard";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_FoldableErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-foldable");
+        if (it != validParamVec.end()) {
+            *it = "aaafoldable";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-foldable";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_FoldStatusErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        // no -foldable
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-foldable");
+        if (it != validParamVec.end()) {
+            *it = "aaafoldable";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        // param -foldable value is false
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-foldable";
+            *std::next(it) = "false";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+        // param foldStatus value invalid
+        CommandParser::GetInstance().argsMap.clear();
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-foldStatus");
+        if (it != validParamVec.end()) {
+            *it = "aaafoldStatus";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-foldStatus";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_FrErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        // no -foldable
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-foldable");
+        if (it != validParamVec.end()) {
+            *it = "aaafoldable";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        // param -foldable value is false
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-foldable";
+            *std::next(it) = "false";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "true";
+        }
+        // no param -fr
+        CommandParser::GetInstance().argsMap.clear();
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-fr");
+        if (it != validParamVec.end()) {
+            *it = "aaafr";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end()) {
+            *it = "-fr";
+        }
+        // param -fr value is invalid
+        it = std::find(validParamVec.begin(), validParamVec.end(), "-fr");
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "aaaa";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "1080";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_LjPathErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-ljPath");
+        if (it != validParamVec.end()) {
+            *it = "aaaljPath";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-ljPath";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = currFile;
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_LErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-l");
+        if (it != validParamVec.end()) {
+            *it = "aaal";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-l";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "zh_CN";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_TsErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-ts");
+        if (it != validParamVec.end()) {
+            *it = "aaats";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-ts";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "trace_70259_commandPipe";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_SErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-s");
+        if (it != validParamVec.end()) {
+            *it = "aaas";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-s";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "componentpreviewinstance_1712054594321_1";
+        }
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_SdErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-sd");
+        if (it != validParamVec.end()) {
+            *it = "aaasd";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-sd";
+            *std::next(it) = "~!@#$%^";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "480";
+        }
+    }
+
+
+    TEST_F(CommandParserTest, IsCommandValidTest1)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
     }
 
     TEST_F(CommandParserTest, ValueTest)
@@ -356,19 +1101,9 @@ namespace {
     {
         std::string validStr = "1111111";
         EXPECT_FALSE(CommandParser::GetInstance().IsMainArgLengthInvalid(validStr.c_str()));
-        std::string invalidStr = R"(11111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111
-            11111111111111111111111111111111111111111111111111111111111111111111111111111111)";
+        int desiredLength = 1184;
+        char initialChar = '1';
+        std::string invalidStr(desiredLength, initialChar);
         EXPECT_TRUE(CommandParser::GetInstance().IsMainArgLengthInvalid(invalidStr.c_str()));
     }
 
@@ -400,4 +1135,44 @@ namespace {
         EXPECT_EQ(CommandParser::GetInstance().GetLoaderJsonPath(), currFile);
     }
 
+    TEST_F(CommandParserTest, GetCommandInfoTest)
+    {
+        CommandInfo info;
+        CommandParser::GetInstance().GetCommandInfo(info);
+        EXPECT_EQ(info.deviceType, "phone");
+        EXPECT_TRUE(info.isComponentMode);
+    }
+
+    TEST_F(CommandParserTest, GetFoldInfoTest)
+    {
+        FoldInfo info;
+        CommandParser::GetInstance().GetFoldInfo(info);
+        EXPECT_TRUE(info.foldable);
+        EXPECT_EQ(info.foldStatus, "half_fold");
+    }
+
+    TEST_F(CommandParserTest, ParseArgsTest)
+    {
+        int argc = 5;
+        char* argv[5]; // 5 is array length
+        // param value length is out of range
+        int desiredLength = 1184;
+        char initialChar = '1';
+        std::string invalidStr(desiredLength, initialChar);
+        argv[1] = "-p";
+        argv[2] = const_cast<char*>(invalidStr.c_str());
+        int ret = CommandParser::GetInstance().ParseArgs(argc, argv);
+        EXPECT_EQ(ret, 11); // 11 is expect return value
+        // param value invalid
+        argv[2] = "999999999";
+        ret = CommandParser::GetInstance().ParseArgs(argc, argv);
+        EXPECT_EQ(ret, 11); // 11 is expect return value
+        argv[2] = "9999";
+        ret = CommandParser::GetInstance().ParseArgs(argc, argv);
+        EXPECT_EQ(ret, -1); // -1 is expect return valu
+        // invalid param
+        argv[3] = "-v";
+        ret = CommandParser::GetInstance().ParseArgs(argc, argv);
+        EXPECT_EQ(ret, 0); // 0 is expect return value
+    }
 }
