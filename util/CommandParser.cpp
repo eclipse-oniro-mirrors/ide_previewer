@@ -702,7 +702,9 @@ bool CommandParser::IsLocalSocketNameValid()
         return true;
     }
     string socketName = Value("s");
-    if (CheckParamInvalidity(socketName, false)) {
+    std::string regexStr = "^(?:[a-zA-Z0-9-_./\\s*]+)$";
+    regex reg(regexStr);
+    if (!regex_match(socketName.cbegin(), socketName.cend(), reg)) {
         errorInfo = "Launch -s parameters is not match regex.";
         return false;
     }
