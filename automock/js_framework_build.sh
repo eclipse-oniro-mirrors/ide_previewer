@@ -58,9 +58,6 @@ if [ -d "$prebuilts_path" ]; then
   link_path=$(realpath $2)
   ln -s $link_path "$7/current"
   cd $7
-  # echo "download node_modules..."
-  # npm install
-  # echo "download node_modules finally"
   if [ "${8}" == 'true' ];then
     if [ "${12}" == 'true' ];then
       ./current/bin/node ./mock-generate/build.js ${10}
