@@ -15,9 +15,12 @@
 
 #include <string>
 #include <fstream>
+#include "FileSystem.h"
 #include "gtest/gtest.h"
 #define private public
 #include "StageContext.h"
+#include "MockFile.h"
+using namespace testmock;
 
 namespace {
     class StageContextTest : public ::testing::Test {
@@ -25,11 +28,11 @@ namespace {
         StageContextTest() {}
         ~StageContextTest() {}
     protected:
-        static void WriteFile(std::string fileContent)
+        static void WriteFile(const std::string& filePath, const std::string& content)
         {
-            std::ofstream file(testFile, std::ios_base::trunc);
+            std::ofstream file(filePath, std::ios_base::trunc);
             if (file.is_open()) {
-                file << fileContent;
+                file << content;
                 file.close();
             } else {
                 printf("Error open file!\n");
@@ -42,7 +45,34 @@ namespace {
             if (getcwd(buffer, FILENAME_MAX) != nullptr) {
                 testDir = std::string(buffer);
                 testFile = testDir + "/testfile";
-                WriteFile(testLoadJsonContent);
+                WriteFile(testFile, testLoadJsonContent);
+
+                testFileError = testDir + "/testfileError";
+                WriteFile(testFileError, R"({"anBuildOutPut","anBuildMode":"type"})");
+
+                testfileErrorMember = testDir + "/testfileErrorMember";
+                WriteFile(testfileErrorMember, R"({"modulePathMap":{"entry":"entry","lib1":"lib1"},
+                    "harNameOhmMap1":{"lib1":"lib1"}, "packageManagerType":"ohpm", "compileEntry":[],
+                    "dynamicImportLibInfo":{}, "routerMap":[], "anBuildOutPut":"arm64-v8a", "anBuildMode":"type"})");
+                std::string hspDir = testDir + "/MyApplication32/oh_modules/.hsp";
+                if (!FileSystem::IsDirectoryExists(hspDir)) {
+                    FileSystem::MakeDir(testDir + "/MyApplication32");
+                    FileSystem::MakeDir(testDir + "/MyApplication32/oh_modules");
+                    FileSystem::MakeDir(testDir + "/MyApplication32/oh_modules/.hsp");
+                    
+                    testFileHsp = hspDir + "/example.hsp";
+                    WriteFile(testFileHsp, "example.hsp");
+                }
+                
+                if (!FileSystem::IsDirectoryExists("ets")) {
+                    FileSystem::MakeDir(testDir + "/ets");
+                }
+                WriteFile(testDir + "/ets/buildConfig.json", "{\"aceModuleBuild\":\""+testDir + "/ets"+ "\"}");
+
+                const int defaultLength = 1000;
+                const std::string defaultString = "aaaa";
+                std::string strVal = "bbb";
+                MockFile::CreateHspFile("testHspFile", strVal);   //写ets/modules.abc
             } else {
                 printf("error: getcwd failed\n");
             }
@@ -56,15 +86,22 @@ namespace {
         }
         static std::string testDir;
         static std::string testFile;
+        static std::string testFileError;
+        static std::string testfileErrorMember;
+        static std::string testFileHsp;
         static std::string testLoadJsonContent;
     };
     std::string StageContextTest::testDir = "";
     std::string StageContextTest::testFile = "";
+    std::string StageContextTest::testFileError = "";
+    std::string StageContextTest::testFileHsp = "";
+    std::string StageContextTest::testfileErrorMember = "";
     std::string StageContextTest::testLoadJsonContent =
-        R"({"modulePathMap":{"entry":"entry","lib1":"lib1"},"compileMode":"esmodule",
-            "projectRootPath":"MyApplication32", "nodeModulesPath":"node_modules","moduleName":"entry",
-            "hspNameOhmMap":{"lib1":"lib1"},"packageManagerType":"ohpm", "compileEntry":[],
-            "dynamicImportLibInfo":{},"routerMap":[],"anBuildOutPut":"arm64-v8a","anBuildMode":"type"})";
+        R"({"modulePathMap":{"entry":"entry","lib1":"lib1"}, "compileMode":"esmodule",
+            "projectRootPath":"MyApplication32", "nodeModulesPath":"node_modules", "moduleName":"entry",
+            "harNameOhmMap":{"lib1":"lib1"}, "hspNameOhmMap":{"lib1":"lib1"}, "buildConfigPath":"buildConfig.json",
+            "packageManagerType":"ohpm", "compileEntry":[], "dynamicImportLibInfo":{}, "routerMap":[],
+            "anBuildOutPut":"arm64-v8a", "anBuildMode":"type"})";
 
     TEST_F(StageContextTest, ReadFileContentsTest)
     {
@@ -92,6 +129,10 @@ namespace {
 
     TEST_F(StageContextTest, GetModulePathMapFromLoaderJsonTest)
     {
+        OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(testFileError);
+        OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
+        OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(testfileErrorMember);
+        OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(testFile);
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().modulePathMap.size(), 2);
@@ -102,7 +143,7 @@ namespace {
     TEST_F(StageContextTest, GetHspAceModuleBuildTest)
     {
         std::string fileContent = R"({"aceModuleBuild":"abc"})";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         std::string ret = OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild(testFile);
         EXPECT_EQ(ret, "abc");
 
@@ -110,12 +151,12 @@ namespace {
         EXPECT_EQ(ret, "");
 
         fileContent = "";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         ret = OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild(testFile);
         EXPECT_EQ(ret, "");
 
         fileContent = R"({"aceModuleBuild11":"abc"})";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         ret = OHOS::Ide::StageContext::GetInstance().GetHspAceModuleBuild(testFile);
         EXPECT_EQ(ret, "");
     }
@@ -136,7 +177,7 @@ namespace {
         EXPECT_EQ(retMap.size(), 0);
 
         std::string fileContent = "";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         retMap = OHOS::Ide::StageContext::GetInstance().ParseMockJsonFile(testFile);
         EXPECT_EQ(retMap.size(), 0);
 
@@ -145,7 +186,7 @@ namespace {
                 "source": 123
             }
         })";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         retMap = OHOS::Ide::StageContext::GetInstance().ParseMockJsonFile(testFile);
         EXPECT_EQ(retMap.size(), 0);
 
@@ -154,7 +195,7 @@ namespace {
                 "source": "src/mock/Libentry.mock.ets"
             }
         })";
-        WriteFile(fileContent);
+        WriteFile(testFile, fileContent);
         retMap = OHOS::Ide::StageContext::GetInstance().ParseMockJsonFile(testFile);
         EXPECT_EQ(retMap["libentry.so"], "src/mock/Libentry.mock.ets");
     }
@@ -176,9 +217,15 @@ namespace {
         ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
         EXPECT_TRUE(ret == nullptr);
 
-        OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = "TestlibraryPath";
-        ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
-        EXPECT_TRUE(ret == nullptr);
+        char buffer[FILENAME_MAX];
+        if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+            testDir = std::string(buffer);
+            std::string testlibrary = testDir + "/ets";
+            OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = testlibrary;
+            ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
+            OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+            EXPECT_FALSE(ret == nullptr);
+        }
     }
 
     TEST_F(StageContextTest, GetLocalModuleBufferTest)
@@ -243,6 +290,12 @@ namespace {
         EXPECT_EQ(ret, "/ccc");
     }
 
+    TEST_F(StageContextTest, GetActualCloudHspDirTest)
+    {
+        std::string ret = OHOS::Ide::StageContext::GetInstance().GetActualCloudHspDir("ddd");
+        EXPECT_TRUE(ret == "");
+    }
+
     TEST_F(StageContextTest, SplitHspVersionTest)
     {
         std::vector<int> vec = OHOS::Ide::StageContext::GetInstance().StageContext::SplitHspVersion("10.1.2");
@@ -270,4 +323,23 @@ namespace {
         EXPECT_EQ(pos, 8); // 8 is expect pos value
     }
 
+    TEST_F(StageContextTest, GetCloudModuleBufferTest)
+    {
+        std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetCloudModuleBuffer("aa");
+        EXPECT_TRUE(ret == nullptr);
+    }
+
+    TEST_F(StageContextTest, GetModuleBufferFromHspTest)
+    {
+        std::string path = "/aaa/bbb/ccc/ddd/eee/fff.json";
+        std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetModuleBufferFromHsp(path, "aa");
+        EXPECT_TRUE(ret == nullptr);
+    }
+    
+    TEST_F(StageContextTest, GetSystemModuleBufferTest)
+    {
+        std::string path = "/aaa/bbb/ccc/ddd/eee/fff.json";
+        std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetSystemModuleBuffer(path, "aa");
+        EXPECT_TRUE(ret == nullptr);
+    }
 }
