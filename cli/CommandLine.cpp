@@ -1456,7 +1456,7 @@ void PointEventCommand::RunAction()
     int type = 9;
     EventParams param;
     if (args.IsMember("pressedButtons") && args["pressedButtons"].IsArray()) {
-        Json2::Value pressedCodes = args["pressedCodes"];
+        Json2::Value pressedCodes = args["pressedButtons"];
         for (unsigned int i = 0; i < pressedCodes.GetArraySize(); i++) {
             Json2::Value val = pressedCodes.GetArrayItem(i);
             if (!val.IsInt() || val.AsInt() < -1) {

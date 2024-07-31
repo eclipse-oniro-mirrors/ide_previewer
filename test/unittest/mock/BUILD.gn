@@ -35,7 +35,6 @@ ide_unittest("mock_rich_test") {
     "$ide_previewer_path/mock/LanguageManager.cpp",
     "$ide_previewer_path/mock/MouseInput.cpp",
     "$ide_previewer_path/mock/MouseWheel.cpp",
-    "$ide_previewer_path/mock/SystemCapability.cpp",
     "$ide_previewer_path/mock/VirtualMessage.cpp",
     "$ide_previewer_path/mock/VirtualScreen.cpp",
     "$ide_previewer_path/mock/rich/KeyInputImpl.cpp",

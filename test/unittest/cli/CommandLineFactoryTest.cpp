@@ -20,6 +20,13 @@
 using namespace std;
 
 namespace {
+    TEST(CommandLineFactoryTest, DefaultConstructorBehaviorTest)
+    {
+        CommandLineFactory factory;
+        factory.InitCommandMap();
+        EXPECT_TRUE(factory.typeMap.size() > 0);
+    }
+
     TEST(CommandLineFactoryTest, InitCommandMapTest)
     {
         string deviceType = "phone";
@@ -34,6 +41,7 @@ namespace {
         std::string jsonStr = R"({"ColorMode":"dark"})";
         Json2::Value jsonData = JsonReader::ParseJsonData2(jsonStr);
         std::unique_ptr<LocalSocket> socket = std::make_unique<LocalSocket>();
+        
         CommandLine::CommandType commandType = CommandLine::CommandType::SET;
         std::string commandNameNull = "ColorMode1";
         std::unique_ptr<CommandLine> commandLineNull =
