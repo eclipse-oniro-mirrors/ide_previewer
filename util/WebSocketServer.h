@@ -46,7 +46,7 @@ private:
     const char* serverHostname = "127.0.0.1";
     int websocketMaxConn = 1024;
     static lws* webSocket;
-    static bool interrupted;
+    static volatile sig_atomic_t interrupted;
     static int8_t* receivedMessage;
     static const int MAX_PAYLOAD_SIZE = 6400000;
     static const int WEBSOCKET_SERVER_TIMEOUT = 1000;

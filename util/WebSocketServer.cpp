@@ -20,7 +20,7 @@
 using namespace std;
 
 lws* WebSocketServer::webSocket = nullptr;
-bool WebSocketServer::interrupted = false;
+volatile sig_atomic_t WebSocketServer::interrupted = 0;
 WebSocketServer::WebSocketState WebSocketServer::webSocketWritable = WebSocketState::INIT;
 uint8_t* WebSocketServer::firstImageBuffer = nullptr;
 uint64_t WebSocketServer::firstImagebufferSize = 0;
@@ -86,7 +86,7 @@ int WebSocketServer::ProtocolCallback(struct lws* wsi,
 
 void WebSocketServer::SignalHandler(int sig)
 {
-    interrupted = true;
+    interrupted = 1;
 }
 
 void WebSocketServer::StartWebsocketListening()
@@ -108,9 +108,9 @@ void WebSocketServer::StartWebsocketListening()
         ELOG("WebSocketServer::StartWebsocketListening context memory allocation failed");
         return;
     }
-    while (!interrupted) {
+    while (interrupted == 0) {
         if (lws_service(context, WEBSOCKET_SERVER_TIMEOUT)) {
-            interrupted = true;
+            interrupted = 1;
         }
     }
     lws_context_destroy(context);
