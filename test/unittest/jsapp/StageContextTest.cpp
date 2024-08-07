@@ -15,6 +15,7 @@
 
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include "FileSystem.h"
 #include "gtest/gtest.h"
 #define private public
@@ -59,7 +60,8 @@ namespace {
                     FileSystem::MakeDir(testDir + "/MyApplication32");
                     FileSystem::MakeDir(testDir + "/MyApplication32/oh_modules");
                     FileSystem::MakeDir(testDir + "/MyApplication32/oh_modules/.hsp");
-                    
+                    FileSystem::MakeDir(testDir + "/MyApplication32/oh_modules/.hsp/example@1.0.0");
+
                     testFileHsp = hspDir + "/example.hsp";
                     WriteFile(testFileHsp, "example.hsp");
                 }
@@ -67,12 +69,7 @@ namespace {
                 if (!FileSystem::IsDirectoryExists("ets")) {
                     FileSystem::MakeDir(testDir + "/ets");
                 }
-                WriteFile(testDir + "/ets/buildConfig.json", "{\"aceModuleBuild\":\""+testDir + "/ets"+ "\"}");
-
-                const int defaultLength = 1000;
-                const std::string defaultString = "aaaa";
-                std::string strVal = "bbb";
-                MockFile::CreateHspFile("testHspFile", strVal);   //写ets/modules.abc
+                WriteFile(testDir + "/ets/buildConfig.json", "{\"aceModuleBuild\":\"" + testDir + "/ets" + "\"}");
             } else {
                 printf("error: getcwd failed\n");
             }
@@ -82,6 +79,16 @@ namespace {
         {
             if (std::remove(testFile.c_str()) != 0) {
                 printf("Error deleting file!\n");
+            }
+
+            // 最后删除ets文件夹
+            char buffer[FILENAME_MAX];
+            if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+                testDir = std::string(buffer);
+                std::string etsDir = testDir + "/ets";
+                if (FileSystem::IsDirectoryExists(etsDir)) {
+                    std::filesystem::remove_all(etsDir);
+                }
             }
         }
         static std::string testDir;
@@ -98,7 +105,7 @@ namespace {
     std::string StageContextTest::testfileErrorMember = "";
     std::string StageContextTest::testLoadJsonContent =
         R"({"modulePathMap":{"entry":"entry","lib1":"lib1"}, "compileMode":"esmodule",
-            "projectRootPath":"MyApplication32", "nodeModulesPath":"node_modules", "moduleName":"entry",
+            "projectRootPath":"./MyApplication32", "nodeModulesPath":"node_modules", "moduleName":"entry",
             "harNameOhmMap":{"lib1":"lib1"}, "hspNameOhmMap":{"lib1":"lib1"}, "buildConfigPath":"buildConfig.json",
             "packageManagerType":"ohpm", "compileEntry":[], "dynamicImportLibInfo":{}, "routerMap":[],
             "anBuildOutPut":"arm64-v8a", "anBuildMode":"type"})";
@@ -137,7 +144,7 @@ namespace {
         OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
         EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().modulePathMap.size(), 2);
         EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().hspNameOhmMap.size(), 1);
-        EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().projectRootPath, "MyApplication32");
+        EXPECT_EQ(OHOS::Ide::StageContext::GetInstance().projectRootPath, "./MyApplication32");
     }
 
     TEST_F(StageContextTest, GetHspAceModuleBuildTest)
@@ -206,15 +213,28 @@ namespace {
             OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundleTestlibrary");
         EXPECT_TRUE(ret == nullptr);
 
-        OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("/Testlibrary");
+        ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("/Testlibrary");
         EXPECT_TRUE(ret == nullptr);
 
         OHOS::Ide::StageContext::GetInstance().modulePathMap.clear();
         ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle1/Testlibrary");
         EXPECT_TRUE(ret == nullptr);
 
-        OHOS::Ide::StageContext::GetInstance().modulePathMap.clear();
+        OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = "TestlibraryPathX";
+        ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/TestlibraryX");
+        EXPECT_TRUE(ret == nullptr);
+
+        OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = "TestlibraryPath";
         ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
+        EXPECT_TRUE(ret == nullptr);
+
+        OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = "/tmp/../";
+        ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
+        EXPECT_TRUE(ret == nullptr);
+
+        OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = "/tmp/../";
+        OHOS::Ide::StageContext::GetInstance().hspNameOhmMap["TestlibraryM"] ="@bundle:aaa.bbb.ccc/TestlibraryM/Index";
+        ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/TestlibraryM");
         EXPECT_TRUE(ret == nullptr);
 
         char buffer[FILENAME_MAX];
@@ -223,8 +243,22 @@ namespace {
             std::string testlibrary = testDir + "/ets";
             OHOS::Ide::StageContext::GetInstance().modulePathMap["Testlibrary"] = testlibrary;
             ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
-            OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
-            EXPECT_FALSE(ret == nullptr);
+            EXPECT_TRUE(ret == nullptr);
+            if (FileSystem::IsDirectoryExists(testlibrary)) {
+                std::filesystem::remove(testlibrary + "/modules.abc");
+                ret = OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
+                EXPECT_TRUE(ret == nullptr);
+
+                const int defaultLength = 1000;
+                const std::string defaultString = "aaaa";
+                std::string strVal = "bbb";
+                MockFile::CreateHspFile("testHspFile", strVal);
+
+                std::vector<uint8_t>* ret2 =
+                    OHOS::Ide::StageContext::GetInstance().GetModuleBuffer("bundle/Testlibrary");
+                OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+                EXPECT_FALSE(ret2 == nullptr);
+            }
         }
     }
 
@@ -314,6 +348,12 @@ namespace {
 
         ret = OHOS::Ide::StageContext::GetInstance().CompareHspVersion("10.1.2", "10.1.2");
         EXPECT_EQ(ret, 0);
+
+        ret = OHOS::Ide::StageContext::GetInstance().CompareHspVersion("10.1", "10.1.2");
+        EXPECT_EQ(ret, -1);
+
+        ret = OHOS::Ide::StageContext::GetInstance().CompareHspVersion("10.1.2.3", "10.1.2");
+        EXPECT_EQ(ret, 1);
     }
 
     TEST_F(StageContextTest, GetUpwardDirIndexTest)
@@ -321,12 +361,42 @@ namespace {
         std::string path = "/aaa/bbb/ccc/ddd/eee/fff.json";
         int pos = OHOS::Ide::StageContext::GetInstance().GetUpwardDirIndex(path, 3);
         EXPECT_EQ(pos, 8); // 8 is expect pos value
+
+        std::string path0 = "fff.json";
+        int pos0 = OHOS::Ide::StageContext::GetInstance().GetUpwardDirIndex(path0, 3);
+        EXPECT_EQ(pos0, -1);
     }
 
     TEST_F(StageContextTest, GetCloudModuleBufferTest)
     {
         std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetCloudModuleBuffer("aa");
         EXPECT_TRUE(ret == nullptr);
+
+        char buffer[FILENAME_MAX];
+        if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+            testDir = std::string(buffer);
+            std::string hspDir = testDir + "/cloudHspDir";
+            if (!FileSystem::IsDirectoryExists(hspDir)) {
+                FileSystem::MakeDir(testDir + "/cloudHspDir");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/a");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/a/b");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/a/b/c");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/a/b/c/d");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/a/b/c/d/e");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/oh_modules");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/oh_modules/.hsp");
+                FileSystem::MakeDir(testDir + "/cloudHspDir/oh_modules/.hsp/example@1.0.0");
+            }
+            std::string loderJsonPath = testDir + "/cloudHspDir/a/b/c/d/e/f.json";
+            WriteFile(loderJsonPath, "test");
+            std::string cloudHspPath = testDir + "/cloudHspDir/oh_modules/.hsp/example@1.0.0/example.hsp";
+            WriteFile(cloudHspPath, "cloudHsp");
+            OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(loderJsonPath);
+
+            OHOS::Ide::StageContext::GetInstance().hspNameOhmMap["example"] ="@bundle:aaa.bbb.ccc/example/Index";
+            std::vector<uint8_t>* ret1 = OHOS::Ide::StageContext::GetInstance().GetCloudModuleBuffer("example");
+            EXPECT_TRUE(ret1 == nullptr);
+        }
     }
 
     TEST_F(StageContextTest, GetModuleBufferFromHspTest)
@@ -334,6 +404,16 @@ namespace {
         std::string path = "/aaa/bbb/ccc/ddd/eee/fff.json";
         std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetModuleBufferFromHsp(path, "aa");
         EXPECT_TRUE(ret == nullptr);
+        std::string newFileName = MockFile::CreateHspFile("testHspFile", "abc");
+        char buffer[FILENAME_MAX];
+        if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+            testDir = std::string(buffer);
+            std::string hspDir = testDir + "/testHspFile.hsp";
+            std::vector<uint8_t>* buf1 =
+                OHOS::Ide::StageContext::GetInstance().GetModuleBufferFromHsp(hspDir, "ets/modules.abc");
+            OHOS::Ide::StageContext::GetInstance().ReleaseHspBuffers();
+            EXPECT_FALSE(buf1 == nullptr);
+        }
     }
     
     TEST_F(StageContextTest, GetSystemModuleBufferTest)
@@ -341,5 +421,22 @@ namespace {
         std::string path = "/aaa/bbb/ccc/ddd/eee/fff.json";
         std::vector<uint8_t>* ret = OHOS::Ide::StageContext::GetInstance().GetSystemModuleBuffer(path, "aa");
         EXPECT_TRUE(ret == nullptr);
+
+        char buffer[FILENAME_MAX];
+        if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+            testDir = std::string(buffer);
+            std::string path1= "/data/data/com.huaweim.example/files";
+            if (!FileSystem::IsDirectoryExists("/systemHspm")) {
+                FileSystem::MakeDir(testDir + "/systemHspm");
+                FileSystem::MakeDir(testDir + "/systemHspm/com.huaweim.example");
+                FileSystem::MakeDir(testDir + "/systemHspm/com.huaweim.example/files");
+            }
+            std::string loderHspPath = testDir + "/systemHspm/example.hsp";
+            WriteFile(loderHspPath, "test");
+
+            OHOS::Ide::StageContext::GetInstance().SetHosSdkPath(testDir);
+            std::vector<uint8_t>* ret1 = OHOS::Ide::StageContext::GetInstance().GetSystemModuleBuffer(path1, "example");
+            EXPECT_TRUE(ret1 == nullptr);
+        }
     }
 }
