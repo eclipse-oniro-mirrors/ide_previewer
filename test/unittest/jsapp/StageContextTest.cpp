@@ -425,13 +425,14 @@ namespace {
         char buffer[FILENAME_MAX];
         if (getcwd(buffer, FILENAME_MAX) != nullptr) {
             testDir = std::string(buffer);
-            std::string path1= "/data/data/com.huaweim.example/files";
-            if (!FileSystem::IsDirectoryExists("/systemHspm")) {
-                FileSystem::MakeDir(testDir + "/systemHspm");
-                FileSystem::MakeDir(testDir + "/systemHspm/com.huaweim.example");
-                FileSystem::MakeDir(testDir + "/systemHspm/com.huaweim.example/files");
+            std::string packageName = "com.huawei.example";
+            std::string path1 = "bundle/" + packageName + "/moduleName";
+            if (!FileSystem::IsDirectoryExists("/systemHsp")) {
+                FileSystem::MakeDir(testDir + "/systemHsp");
+                FileSystem::MakeDir(testDir + "/systemHsp/" + packageName);
+                FileSystem::MakeDir(testDir + "/systemHsp/" + packageName + "/files");
             }
-            std::string loderHspPath = testDir + "/systemHspm/example.hsp";
+            std::string loderHspPath = testDir + "/systemHsp/example.hsp";
             WriteFile(loderHspPath, "test");
 
             OHOS::Ide::StageContext::GetInstance().SetHosSdkPath(testDir);
