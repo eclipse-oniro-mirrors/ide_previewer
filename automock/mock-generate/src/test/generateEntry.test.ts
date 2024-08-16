@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateEntry } from '../generate/generateEntry';
 
 describe('generateEntry.ts file test', (): void => {
-  it('Test the generateEntry function', (): void => {
+  test('Test the generateEntry function', (): void => {
     const result = generateEntry();
     const expectedResult = `import { mockSystemPlugin } from './index';
 
   mockSystemPlugin()`;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

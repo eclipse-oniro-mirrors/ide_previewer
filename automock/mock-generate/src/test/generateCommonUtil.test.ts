@@ -15,8 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import {
   checkIsGenericSymbol,
@@ -34,16 +33,16 @@ import {
 } from '../generate/generateCommonUtil';
 
 describe('generateCommonUtil.ts file test', (): void => {
-  it('Test the getWarnConsole function', (): void => {
+  test('Test the getWarnConsole function', (): void => {
     const interfaceNameOrClassName = 'setInterval';
     const functionNameOrPropertyName = 'setInterval';
     const result = getWarnConsole(interfaceNameOrClassName, functionNameOrPropertyName);
     const expectedResult = `console.warn('The setInterval.setInterval interface in the Previewer is a mocked implementation and may behave differently than on a real device.');
 `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 
-  it('Test the getReturnStatement function', (): void => {
+  test('Test the getReturnStatement function', (): void => {
     const filePath = path.join(__dirname, './api/global.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -52,43 +51,43 @@ describe('generateCommonUtil.ts file test', (): void => {
       returnKindName: 'number'
     };
     const result = getReturnStatement(returnType, sourceFile);
-    expect(result).to.equal('return 0;');
+    expect(result).toBe('return 0;');
   });
 
-  it('Test the propertyTypeWhiteList function', (): void => {
+  test('Test the propertyTypeWhiteList function', (): void => {
     const propertyTypeName = 'formBindingData.FormBindingData';
     const result = propertyTypeWhiteList(propertyTypeName);
-    expect(result).to.equal('formBindingData.FormBindingData');
+    expect(result).toBe('formBindingData.FormBindingData');
   });
 
-  it('Test the getBaseReturnValue function', (): void => {
+  test('Test the getBaseReturnValue function', (): void => {
     const value = 'rpc.RemoteObject';
     const result = getBaseReturnValue(value);
-    expect(result).to.equal('rpc.RemoteObject');
+    expect(result).toBe('rpc.RemoteObject');
   });
 
-  it('Test the getTheRealReferenceFromImport function', (): void => {
+  test('Test the getTheRealReferenceFromImport function', (): void => {
     const filePath = path.join(__dirname, './api/lifecycle.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const typeName = 'formBindingData.FormBindingData';
     const result = getTheRealReferenceFromImport(sourceFile, typeName);
-    expect(result).to.equal('mockFormBindingData().FormBindingData');
+    expect(result).toBe('mockFormBindingData().FormBindingData');
   });
 
-  it('Test the checkIsGenericSymbol function', (): void => {
+  test('Test the checkIsGenericSymbol function', (): void => {
     const type = 'formBindingData.FormBindingData';
     const result = checkIsGenericSymbol(type);
-    expect(result).to.equal(false);
+    expect(result).toBe(false);
   });
 
-  it('Test the generateGenericTypeToMockValue function', (): void => {
+  test('Test the generateGenericTypeToMockValue function', (): void => {
     const kindName = 'Array<AccessibilityAbilityInfo>';
     const result = generateGenericTypeToMockValue(kindName);
-    expect(result).to.equal('');
+    expect(result).toBe('');
   });
 
-  it('Test the getCallbackStatement function', (): void => {
+  test('Test the getCallbackStatement function', (): void => {
     const mockApi = 'import { mockWant } from \'../../ohos_app_ability_Want\''
       + 'import { ResultSet } from \'../../data/rdb/resultSet\''
       + 'import { AbilityInfo } from \'../../bundle/abilityInfo\''
@@ -107,10 +106,10 @@ describe('generateCommonUtil.ts file test', (): void => {
     const expectedResult = `if (args && typeof args[args.length - 1] === 'function') {
     args[args.length - 1].call(this, {'code': '','data': '','name': '','message': '','stack': ''}, 0);
 }`;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 
-  it('Test the getOverloadedFunctionCallbackStatement function', (): void => {
+  test('Test the getOverloadedFunctionCallbackStatement function', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.account.appAccount.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -178,10 +177,10 @@ if (args && typeof args[args.length - 1] === 'function') {
 }
 }
 `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 
-  it('Test the generateSymbolIterator function', (): void => {
+  test('Test the generateSymbolIterator function', (): void => {
     const methodEntity = {
       args: [],
       functionName: {
@@ -214,10 +213,10 @@ if (args && typeof args[args.length - 1] === 'function') {
       }
     };
     return IteratorMock;`;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 
-  it('Test the getReturnData function', (): void => {
+  test('Test the getReturnData function', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.account.appAccount.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -229,15 +228,15 @@ if (args && typeof args[args.length - 1] === 'function') {
       + 'import { mockWant } from \'./ohos_app_ability_Want\''
       + 'import { mockRpc } from \'./ohos_rpc\'';
     const result = getReturnData(true, false, returnType, sourceFile, mockApi);
-    expect(result).to.equal(`return '[PC Preview] unknown type'`);
+    expect(result).toBe(`return '[PC Preview] unknown type'`);
   });
 
-  it('Test the hasExportDefaultKeyword function', (): void => {
+  test('Test the hasExportDefaultKeyword function', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.ability.errorCode.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const mockName = 'errorCode';
     const result = hasExportDefaultKeyword(mockName, sourceFile);
-    expect(result).to.equal(true);
+    expect(result).toBe(true);
   });
 });

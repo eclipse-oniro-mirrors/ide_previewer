@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateVariableStatementDelcatation } from '../generate/generateVariableStatementDeclaration';
 
 describe('generateVariableStatementDeclaration.ts file test', () => {
-  it('Test statementEntity.typeKind is SyntaxKind.TypeReference', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.TypeReference', () => {
     const statementEntity = {
       statementName: 'daltonizationState',
       typeName: 'Config<boolean>',
@@ -27,10 +26,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('daltonizationState: Config,');
+    expect(result).toBe('daltonizationState: Config,');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.NumberKeyword', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.NumberKeyword', () => {
     const statementEntity = {
       statementName: 'batteryTemperature',
       typeName: 'number',
@@ -39,10 +38,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('batteryTemperature: 0,');
+    expect(result).toBe('batteryTemperature: 0,');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.StringKeyword', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.StringKeyword', () => {
     const statementEntity = {
       statementName: 'technology',
       typeName: 'string',
@@ -51,10 +50,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('technology: \'\',');
+    expect(result).toBe('technology: \'\',');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.BooleanKeyword', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.BooleanKeyword', () => {
     const statementEntity = {
       statementName: 'isBatteryPresent',
       typeName: 'boolean',
@@ -63,10 +62,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('isBatteryPresent: true,');
+    expect(result).toBe('isBatteryPresent: true,');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.StringLiteral', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.StringLiteral', () => {
     const statementEntity = {
       statementName: 'DATA_CHANGE_EVENT_ID',
       typeName: '',
@@ -75,10 +74,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('DATA_CHANGE_EVENT_ID: cloud_data_change,');
+    expect(result).toBe('DATA_CHANGE_EVENT_ID: cloud_data_change,');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.NumericLiteral', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.NumericLiteral', () => {
     const statementEntity = {
       statementName: 'MAX_KEY_LENGTH',
       typeName: '',
@@ -87,10 +86,10 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('MAX_KEY_LENGTH: 1024,');
+    expect(result).toBe('MAX_KEY_LENGTH: 1024,');
   });
 
-  it('Test statementEntity.typeKind is SyntaxKind.LiteralType', () => {
+  test('Test statementEntity.typeKind is SyntaxKind.LiteralType', () => {
     const statementEntity = {
       statementName: 'MAX_KEY_LENGTH',
       typeName: '80',
@@ -99,6 +98,6 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
     }
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
-    expect(result).to.equal('MAX_KEY_LENGTH: 80,');
+    expect(result).toBe('MAX_KEY_LENGTH: 80,');
   });
 });

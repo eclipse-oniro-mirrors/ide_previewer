@@ -15,26 +15,26 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { getSourceFileAssembly } from '../declaration-node/sourceFileElementsAssemply';
 import { generateCommonFunction } from '../generate/generateCommonFunction';
 
 describe('generateCommonFunction.ts file test', (): void => {
-  it('Test the generateCommonFunction function', (): void => {
+  test('Test the generateCommonFunction function', (): void => {
     const filePath = path.join(__dirname, './api/global.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const sourceFileEntity = getSourceFileAssembly(sourceFile, 'global');
     const mockApi = 'import { TouchObject, KeyEvent, MouseEvent } from "../component/ets/common"';
-    const result = generateCommonFunction('setInterval', sourceFileEntity.functionDeclarations.get('setInterval'), sourceFile, mockApi, true);
+    const functionArray = sourceFileEntity.functionDeclarations.get('setInterval') ?? [];
+    const result = generateCommonFunction('setInterval', functionArray, sourceFile, mockApi, true);
     const expectedResult = `const setInterval = function(...args) {console.warn('The setInterval.setInterval interface in the Previewer is a mocked implementation and may behave differently than on a real device.');
 return 0;};
       if (!global.setInterval) {
         global.setInterval = setInterval;
       }
     `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

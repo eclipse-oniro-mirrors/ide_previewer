@@ -15,14 +15,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateClassDeclaration } from '../generate/generateClassDeclaration';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { getDefaultExportClassDeclaration } from '../declaration-node/sourceFileElementsAssemply';
 
 describe('generateClassDeclaration.ts file test', (): void => {
-  it('Test the generateClassDeclaration function', (): void => {
+  test('Test the generateClassDeclaration function', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.accessibility.GesturePath.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -39,6 +38,6 @@ this.durationTime = 0;
 
       }
     `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });
