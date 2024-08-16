@@ -45,11 +45,18 @@ namespace {
     
     TEST(CppTimerTest, SetShotTimesTest)
     {
+        // same thread
         int addNum = 3;
         CppTimer timer(Double, std::ref(addNum));
         int newShotTime = 3;
         timer.SetShotTimes(newShotTime);
         EXPECT_EQ(timer.GetShotTimes(), newShotTime);
+        // not same thread
+        std::thread commandThead([&timer, &newShotTime]() {
+            timer.SetShotTimes(newShotTime);
+            EXPECT_EQ(timer.GetShotTimes(), newShotTime);
+        });
+        commandThead.detach();
     }
 
     TEST(CppTimerTest, IsRunningTest)
@@ -59,6 +66,7 @@ namespace {
         CppTimer timer(Double, std::ref(addNum));
         CallbackQueue queue;
         int interval = 100;
+        // normal
         timer.Start(interval);
         this_thread::sleep_for(chrono::milliseconds(200));
         EXPECT_EQ(timer.interval, interval);
@@ -67,6 +75,35 @@ namespace {
         EXPECT_TRUE(queue.callBackList.size() > 0);
         queue.ConsumingCallback();
         EXPECT_EQ(addNum, sum);
+        timer.Stop();
+        EXPECT_FALSE(timer.IsRunning());
+    }
+
+    TEST(CppTimerTest, IsRunningTest2)
+    {
+        int addNum = 3;
+        CppTimer timer(Double, std::ref(addNum));
+        CallbackQueue queue;
+        int interval = 100;
+        // not same thread
+        std::thread commandThead([&timer, &queue, &interval]() {
+            timer.Start(interval);
+            timer.RunTimerTick(queue);
+            timer.Stop();
+            EXPECT_FALSE(timer.IsRunning());
+        });
+        commandThead.detach();
+    }
+
+    TEST(CppTimerTest, IsRunningTest3)
+    {
+        int addNum = 3;
+        CppTimer timer(Double, std::ref(addNum));
+        CallbackQueue queue;
+        int interval = 0;
+        // interval is 0
+        timer.Start(interval);
+        timer.RunTimerTick(queue);
         timer.Stop();
         EXPECT_FALSE(timer.IsRunning());
     }

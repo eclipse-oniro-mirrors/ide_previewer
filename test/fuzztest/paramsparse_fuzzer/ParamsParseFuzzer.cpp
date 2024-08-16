@@ -63,7 +63,9 @@ void ParamsParse::SetTestArgs(vector<string>& args)
     }
 }
 
+namespace {
 TEST_F(ParamsParseFuzzTest, test_params)
 {
     parse.ParamsParseFuzzTest();
+}
 }

@@ -32,6 +32,7 @@ public:
     const std::optional<std::vector<uint8_t>> ReadFileContents(const std::string& filePath) const;
     // for Previewer
     void SetLoaderJsonPath(const std::string& assetPath);
+    void SetHosSdkPath(const std::string& hosSdkPathValue);
     void GetModulePathMapFromLoaderJson();
     std::string GetHspAceModuleBuild(const std::string& hspConfigPath);
     void ReleaseHspBuffers();
@@ -40,8 +41,10 @@ public:
     std::vector<uint8_t>* GetModuleBuffer(const std::string& inputPath);
     std::vector<uint8_t>* GetLocalModuleBuffer(const std::string& moduleName);
     std::vector<uint8_t>* GetCloudModuleBuffer(const std::string& moduleName);
-    std::vector<uint8_t>* GetModuleBufferFromHsp(const std::string& hspFilePath,
-        const std::string& fileName);
+    std::vector<uint8_t>* GetSystemModuleBuffer(const std::string& inputPath, const std::string& moduleName);
+    std::vector<uint8_t>* GetModuleBufferFromHsp(const std::string& hspFilePath, const std::string& fileName);
+    void SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
+        std::map<std::string, std::string>& packageNameList);
 private:
     StageContext() = default;
     ~StageContext() = default;
@@ -58,11 +61,13 @@ private:
     int CompareHspVersion(const std::string& version1, const std::string& version2);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
-    std::map<std::string, std::string> harNameOhmMap;
+    std::map<std::string, std::string> hspNameOhmMap;
     std::string projectRootPath;
+    std::string buildConfigPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
     int GetUpwardDirIndex(const std::string& path, const int upwardLevel) const;
     std::string localBundleName = "bundle";
+    std::string hosSdkPath = "";
 };
 }
 #endif // STAGE_CONTEXT_H

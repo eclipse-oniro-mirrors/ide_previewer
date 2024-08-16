@@ -88,6 +88,7 @@ ide_fuzztest("RichCommandParseFuzzTest") {
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
   sources += [
+    "../ChangeJsonUtil.cpp",
     "../main.cpp",
     "CommandParse.cpp",
     "RichCommandParseFuzzer.cpp",
@@ -166,6 +167,7 @@ ide_fuzztest("LiteCommandParseFuzzTest") {
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
   sources += [
+    "../ChangeJsonUtil.cpp",
     "../main.cpp",
     "CommandParse.cpp",
     "LiteCommandParseFuzzer.cpp",
@@ -244,6 +246,7 @@ ide_fuzztest("CommonCommandParseFuzzTest") {
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
   sources += [
+    "../ChangeJsonUtil.cpp",
     "../main.cpp",
     "CommandParse.cpp",
     "CommonCommandParseFuzzer.cpp",

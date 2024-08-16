@@ -44,8 +44,10 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::Ace;
 
+namespace {
 ScreenInfo screenInfo;
 CommandInfo commandInfo;
+}
 
 class PreviewerListener : public OHOS::Rosen::IWindowSystemBarEnableListener {
 public:
@@ -57,7 +59,9 @@ public:
     }
 };
 
+namespace {
 OHOS::sptr<PreviewerListener> listener = nullptr;
+}
 
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 {
@@ -197,6 +201,7 @@ void JsAppImpl::RunJsApp()
                                  screenInfo.compressionResolutionWidth, screenInfo.compressionResolutionHeight);
     SetJsAppArgs(aceRunArgs);
     OHOS::Ide::StageContext::GetInstance().SetLoaderJsonPath(commandInfo.loaderJsonPath);
+    OHOS::Ide::StageContext::GetInstance().SetHosSdkPath(commandInfo.containerSdkPath);
     OHOS::Ide::StageContext::GetInstance().GetModulePathMapFromLoaderJson();
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(screenInfo.foldable);
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(screenInfo.foldStatus));
@@ -246,8 +251,8 @@ void JsAppImpl::RunNormalAbility()
     window->SetContentInfoCallback(std::move(VirtualScreenImpl::LoadContentCallback));
     window->CreateSurfaceNode("preview_surface", std::move(VirtualScreenImpl::Callback));
     ability->SetWindow(window);
-    ability->InitEnv();
     InitAvoidAreas(window);
+    ability->InitEnv();
 }
 
 #if defined(__APPLE__) || defined(_WIN32)
@@ -542,6 +547,7 @@ void JsAppImpl::SetSystemResourcesPath(Platform::AceRunArgs& args) const
 {
     string sep = FileSystem::GetSeparator();
     string rPath = FileSystem::GetApplicationPath();
+    rPath = FileSystem::NormalizePath(rPath);
     int idx = rPath.find_last_of(sep);
     rPath = rPath.substr(0, idx + 1) + "resources";
     args.systemResourcesPath = rPath;
@@ -897,35 +903,8 @@ void JsAppImpl::SetMockJsonInfo()
 
 void JsAppImpl::SetPkgContextInfo()
 {
-    const string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
-    string moduleJsonStr = JsonReader::ReadFile(path);
-    if (moduleJsonStr.empty()) {
-        ELOG("Get module.json content empty.");
-    }
-    Json2::Value rootJson1 = JsonReader::ParseJsonData2(moduleJsonStr);
-    if (rootJson1.IsNull() || !rootJson1.IsValid() || !rootJson1.IsMember("module")) {
-        ELOG("Get module.json content failed.");
-        return;
-    }
-    if (!rootJson1["module"].IsMember("name") || !rootJson1["module"]["name"].IsString()) {
-        return;
-    }
-    string moduleName = rootJson1["module"]["name"].AsString();
-    if (rootJson1["module"].IsMember("packageName") && rootJson1["module"]["packageName"].IsString()) {
-        string pkgName = rootJson1["module"]["packageName"].AsString();
-        aceRunArgs.packageNameList = {{moduleName, pkgName}};
-    }
-    std::string loaderJsonPath = commandInfo.loaderJsonPath;
-    std::string flag = "loader.json";
-    int idx = loaderJsonPath.find_last_of(flag);
-    std::string dirPath = loaderJsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
-    std::string ctxPath = dirPath + "pkgContextInfo.json";
-    string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
-    if (ctxInfoJsonStr.empty()) {
-        ELOG("Get pkgContextInfo.json content empty.");
-        return;
-    }
-    aceRunArgs.pkgContextInfoJsonStringMap = {{moduleName, ctxInfoJsonStr}};
+    Ide::StageContext::GetInstance().SetPkgContextInfo(aceRunArgs.pkgContextInfoJsonStringMap,
+        aceRunArgs.packageNameList);
 }
 
 void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height)

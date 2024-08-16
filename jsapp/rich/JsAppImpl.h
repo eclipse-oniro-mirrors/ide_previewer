@@ -154,7 +154,7 @@ private:
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
 #if defined(__APPLE__) || defined(_WIN32)
-    std::unique_ptr<OHOS::AbilityRuntime::Simulator> simulator;
+    std::shared_ptr<OHOS::AbilityRuntime::Simulator> simulator;
     int64_t debugAbilityId = -1;
     void SetSimulatorParams(OHOS::AbilityRuntime::Options& options);
     void SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options);

@@ -47,6 +47,7 @@ import {
   MockFunctionElementEntity,
   ReturnDataParams
 } from './generateCommonUtil';
+import { handleImportKit } from '../common/kitUtils';
 
 /**
  * generate mock file string
@@ -132,6 +133,9 @@ function importDeclarationsGenerate(
   }
   if (fileName === 'ohos_arkui_observer') {
     mockData += 'const NavigationOperation = { PUSH: 1, POP: 2, REPLACE: 3 }\n';
+  }
+  if (fileName === 'navigation') {
+    mockData += 'const TextModifier = {}\n';
   }
   return mockData;
 }
@@ -402,6 +406,13 @@ export function generateImportDeclaration(
   currentFilePath: string,
   dependsSourceFileList: SourceFile[]
 ): string {
+  const importEntities = handleImportKit(importEntity);
+  if (importEntities.length) {
+    return importEntities.map(
+      entity => generateImportDeclaration(entity, sourceFileName, heritageClausesArray, currentFilePath, dependsSourceFileList)
+    ).join('\n');
+  }
+  
   const importDeclaration = referenctImport2ModuleImport(importEntity, currentFilePath, dependsSourceFileList);
   if (importDeclaration) {
     return importDeclaration;
@@ -430,9 +441,11 @@ export function generateImportDeclaration(
     importPath = `'.${importPath.replace(/'/g, '')}'`;
   }
 
-  if (sourceFileName === 'AbilityContext' && tmpImportPath === '../ohos_application_Ability' ||
-    sourceFileName === 'Context' && tmpImportPath === './ApplicationContext') {
+  if (sourceFileName === 'AbilityContext' && tmpImportPath === '../ohos_application_Ability') {
     return '';
+  }
+  if (sourceFileName === 'Context' && tmpImportPath === './ApplicationContext') {
+    return 'import { mockEnvironmentCallback } from \'../ohos_app_ability_EnvironmentCallback\'\n';
   }
   if (!importElements.includes('{') && !importElements.includes('}') && needToAddBrace.includes(importElements)) {
     importElements = `{ ${importElements} }`;

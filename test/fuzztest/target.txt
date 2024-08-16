@@ -2,6 +2,7 @@ CommandParser::ProcessingCommand
 CommandParser::IsCommandValid
 
 CommandLineInterface::ProcessCommandMessage
+CommandLineInterface::ReadAndApplyConfig
 CommandLine::CheckAndRun
 
 BackClickedCommand::RunAction
@@ -86,3 +87,10 @@ PointEventCommand::IsArgsValid
 AvoidAreaCommand::RunSet
 AvoidAreaCommand::IsSetArgValid
 AvoidAreaCommand::IsObjectValid
+
+StageContext::SetPkgContextInfo
+StageContext::ReadFileContents
+StageContext::GetModulePathMapFromLoaderJson
+StageContext::GetHspAceModuleBuild
+StageContext::GetModuleBufferFromHsp
+StageContext::ParseMockJsonFile

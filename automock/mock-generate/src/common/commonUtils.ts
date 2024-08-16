@@ -24,6 +24,7 @@ import {
 import fs from 'fs';
 import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
+import { collectAllKitFiles } from './kitUtils';
 
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
@@ -382,3 +383,31 @@ export const specialFiles = [
   '@internal/component/ets/text_common.d.ts',
   '@internal/component/ets/styled_string.d.ts'
 ];
+
+export const specialType = [
+  'Storage',
+  'File',
+  'ChildProcess',
+  'Cipher',
+  'Sensor',
+  'Authenticator'
+];
+
+export const specialClassName = [
+  'Want',
+  'Configuration',
+  'InputMethodExtensionContext'
+];
+
+/**
+ * get add kit file map
+ * @param apiInputPath api input path
+ * @returns
+ */
+export function generateKitMap(apiInputPath: string): void {
+  const kitPath = path.join(apiInputPath, '../', 'kits');
+  if (!fs.existsSync(kitPath)) {
+    throw new Error(`${kitPath} does not exist.`);
+  }
+  collectAllKitFiles(kitPath);
+}

@@ -20,6 +20,7 @@
 #include "FileSystem.h"
 #include "TraceTool.h"
 #include "PreviewerEngineLog.h"
+#include "CommandParser.h"
 #include "zlib.h"
 #include "contrib/minizip/unzip.h"
 using namespace std;
@@ -55,12 +56,17 @@ const std::optional<std::vector<uint8_t>> StageContext::ReadFileContents(const s
 
 void StageContext::SetLoaderJsonPath(const std::string& assetPath)
 {
-    loaderJsonPath = assetPath;
+    loaderJsonPath = FileSystem::NormalizePath(assetPath);
     if (loaderJsonPath.empty() || !FileSystem::IsFileExists(loaderJsonPath)) {
         ELOG("the loaderJsonPath %s is not exist.", loaderJsonPath.c_str());
         return;
     }
     ILOG("set loaderJsonPath: %s successed.", loaderJsonPath.c_str());
+}
+
+void StageContext::SetHosSdkPath(const std::string& hosSdkPathValue)
+{
+    this->hosSdkPath = hosSdkPathValue;
 }
 
 void StageContext::GetModulePathMapFromLoaderJson()
@@ -75,8 +81,9 @@ void StageContext::GetModulePathMapFromLoaderJson()
         ELOG("Get loader.json content failed.");
         return;
     }
-    if (!rootJson.IsMember("modulePathMap")) {
-        ELOG("Don't find modulePathMap node in loader.json.");
+    if (!rootJson.IsMember("modulePathMap") || !rootJson.IsMember("harNameOhmMap") ||
+        !rootJson.IsMember("projectRootPath")) {
+        ELOG("Don't find some necessary node in loader.json.");
         return;
     }
     Json2::Value jsonObj = rootJson["modulePathMap"];
@@ -84,10 +91,19 @@ void StageContext::GetModulePathMapFromLoaderJson()
         modulePathMap[key] = jsonObj[key].AsString();
     }
     Json2::Value jsonObjOhm = rootJson["harNameOhmMap"];
+    if (rootJson.IsMember("hspNameOhmMap")) {
+        if (!rootJson["hspNameOhmMap"].IsNull() && rootJson["hspNameOhmMap"].IsValid()) {
+            ILOG("hspNameOhmMap is valid");
+            jsonObjOhm = rootJson["hspNameOhmMap"];
+        }
+    }
     for (const auto& key : jsonObjOhm.GetMemberNames()) {
-        harNameOhmMap[key] = jsonObjOhm[key].AsString();
+        hspNameOhmMap[key] = jsonObjOhm[key].AsString();
     }
     projectRootPath = rootJson["projectRootPath"].AsString();
+    if (rootJson.IsMember("buildConfigPath")) {
+        buildConfigPath = rootJson["buildConfigPath"].AsString();
+    }
 }
 
 std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
@@ -152,8 +168,16 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
             ILOG("cloud hsp bundleName is same as the local project.");
             return GetCloudModuleBuffer(moduleName);
         }
-    } else { // cloud hsp
-        return GetCloudModuleBuffer(moduleName);
+    } else {
+        // 先找三方hsp，再找系统hsp
+        std::vector<uint8_t>* buf = GetCloudModuleBuffer(moduleName);
+        if (buf) { // cloud hsp
+            return buf;
+        } else { // system hsp
+            std::vector<uint8_t>* buf = GetSystemModuleBuffer(inputPath, moduleName);
+            ILOG("system hsp buf size is %d", buf->size());
+            return buf;
+        }
     }
 }
 
@@ -177,6 +201,10 @@ std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& modu
     // 读取hsp的.preview/config/buildConfig.json获取aceModuleBuild值就是hsp的modules.abc所在文件夹
     std::string hspConfigPath = modulePath + separator + ".preview" + separator + "config" +
         separator + "buildConfig.json";
+    if (!buildConfigPath.empty()) {
+        ILOG("buildConfigPath is not empty.");
+        hspConfigPath = modulePath + separator + buildConfigPath;
+    }
     std::string abcDir = GetHspAceModuleBuild(hspConfigPath);
     if (!FileSystem::IsDirectoryExists(abcDir)) {
         ELOG("the abcDir:%s is not exist.", abcDir.c_str());
@@ -442,7 +470,7 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 {
     int num = 0;
     string flag = "/" + input + "/";
-    for (const auto& pair : harNameOhmMap) {
+    for (const auto& pair : hspNameOhmMap) {
         if (pair.second.find(flag) != std::string::npos) {
             if (num == 0) {
                 ret = pair.first;
@@ -452,5 +480,68 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
         }
     }
     return num;
+}
+
+std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inputPath,
+    const std::string& moduleName)
+{
+    string head = "com.huawei";
+    string tail = moduleName;
+    size_t pos1 = inputPath.find(head) + head.size();
+    size_t pos2 = inputPath.find(tail);
+    std::string relativePath = inputPath.substr(pos1, pos2 - pos1);
+    size_t found = relativePath.find(".");
+    int len = 1;
+    while (found != std::string::npos) {
+        relativePath.replace(found, len, "/");
+        found = relativePath.find(".", found + len);
+    }
+    std::string moduleHspFile = hosSdkPath + "/systemHsp" + relativePath + moduleName + ".hsp";
+    ILOG("get system moduleHspFile:%s.", moduleHspFile.c_str());
+    if (!FileSystem::IsFileExists(moduleHspFile)) {
+        ELOG("the system moduleHspFile:%s is not exist.", moduleHspFile.c_str());
+        return nullptr;
+    }
+    // unzip and get ets/moudles.abc buffer
+    std::vector<uint8_t>* buf = GetModuleBufferFromHsp(moduleHspFile, "ets/modules.abc");
+    if (!buf) {
+        ELOG("read modules.abc buffer failed.");
+    }
+    return buf;
+}
+
+void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
+    std::map<std::string, std::string>& packageNameList)
+{
+    const string path = CommandParser::GetInstance().GetAppResourcePath() +
+        FileSystem::GetSeparator() + "module.json";
+    string moduleJsonStr = JsonReader::ReadFile(path);
+    if (moduleJsonStr.empty()) {
+        ELOG("Get module.json content empty.");
+    }
+    Json2::Value rootJson1 = JsonReader::ParseJsonData2(moduleJsonStr);
+    if (rootJson1.IsNull() || !rootJson1.IsValid() || !rootJson1.IsMember("module")) {
+        ELOG("Get module.json content failed.");
+        return;
+    }
+    if (!rootJson1["module"].IsMember("name") || !rootJson1["module"]["name"].IsString()) {
+        return;
+    }
+    string moduleName = rootJson1["module"]["name"].AsString();
+    if (rootJson1["module"].IsMember("packageName") && rootJson1["module"]["packageName"].IsString()) {
+        string pkgName = rootJson1["module"]["packageName"].AsString();
+        packageNameList = {{moduleName, pkgName}};
+    }
+    std::string jsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
+    std::string flag = "loader.json";
+    int idx = jsonPath.find_last_of(flag);
+    std::string dirPath = jsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
+    std::string ctxPath = dirPath + "pkgContextInfo.json";
+    string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
+    if (ctxInfoJsonStr.empty()) {
+        ELOG("Get pkgContextInfo.json content empty.");
+        return;
+    }
+    pkgContextInfoJsonStringMap = {{moduleName, ctxInfoJsonStr}};
 }
 }

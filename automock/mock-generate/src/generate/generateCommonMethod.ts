@@ -85,7 +85,7 @@ export function generateCommonMethod(
     }
     if (methodEntity.returnType.returnKind !== SyntaxKind.VoidKeyword) {
       if (methodEntity.functionName.name === 'getApplicationContext') {
-        methodBody += 'return new Context();';
+        methodBody += getApplicationContextValue(methodEntity.functionName.name);
       } else {
         methodBody += getReturnStatement(methodEntity.returnType, sourceFile);
       }
@@ -96,6 +96,43 @@ export function generateCommonMethod(
   }
   methodBody += '};\n';
   return methodBody;
+}
+
+function getApplicationContextValue(name: string): string {
+  return `
+const mockData = {
+  on: function (...args) {
+    console.warn(
+      'The ${name}.on interface in the Previewer is a mocked implementation and may behave differently than on a real device.'
+    );
+    if (args && ['environment'].includes(args[0])) {
+      if (args && typeof args[args.length - 1] === 'function') {
+        const EnvironmentCallback = mockEnvironmentCallback();
+        args[args.length - 1].call(this, new EnvironmentCallback());
+      }
+    }
+    return 0;
+  },
+  off: function (...args) {
+    console.warn(
+      'The ${name}.off interface in the Previewer is a mocked implementation and may behave differently than on a real device.'
+    );
+    if (args && ['environment'].includes(args[0])) {
+      if (args && typeof args[args.length - 1] === 'function') {
+        args[args.length - 1].call(
+          this,
+          { 'code': '', 'data': '', 'name': '', 'message': '', 'stack': '' },
+          '[PC Preview] unknown type'
+        );
+      }
+    } 
+    return new Promise((resolve, reject) => {
+        resolve('[PC Preview] unknown type');
+    });
+  }
+};
+return mockData;
+  `;
 }
 
 /**

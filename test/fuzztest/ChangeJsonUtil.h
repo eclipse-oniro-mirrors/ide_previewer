@@ -13,24 +13,23 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
-#define private public
-#include "TraceTool.h"
-using namespace std;
+#ifndef CHANGE_JSON_UTIL_H
+#define CHANGE_JSON_UTIL_H
 
-namespace {
-    TEST(TraceToolTest, HandleTraceTest)
-    {
-        TraceTool::GetInstance().InitPipe();
-        TraceTool::GetInstance().HandleTrace("sendmsg");
-        EXPECT_TRUE(TraceTool::GetInstance().isReady);
-    }
+#include <string>
+#include <vector>
+#include <map>
 
-    TEST(TraceToolTest, HandleTraceTest_NoReady)
-    {
-        TraceTool::GetInstance().InitPipe();
-        TraceTool::GetInstance().isReady = false;
-        TraceTool::GetInstance().HandleTrace("sendmsg");
-        EXPECT_FALSE(TraceTool::GetInstance().isReady);
-    }
+struct cJSON;
+
+namespace fuzztest {
+    class ChangeJsonUtil {
+    public:
+        static void ModifyObject(cJSON *object, uint64_t& idx);
+        static void ModifyObject4ChangeType(cJSON *object, uint64_t& idx);
+        static void WriteFile(std::string filePath, cJSON *object);
+        static void WriteFile(std::string filePath, std::string str);
+    };
 }
+
+#endif  // CHANGE_JSON_UTIL_H

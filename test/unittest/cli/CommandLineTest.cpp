@@ -169,6 +169,16 @@ namespace {
         command3.CheckAndRun();
         EXPECT_NE(JsAppImpl::GetInstance().width, 1080);
         EXPECT_NE(JsAppImpl::GetInstance().height, 2340);
+
+        JsAppImpl::GetInstance().width = 0;
+        JsAppImpl::GetInstance().height = 0;
+        string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+            "height" : 2340, "screenDensity" : 480, "reason" : 333})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(jsonStr1);
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        command1.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().width, 0);
+        EXPECT_EQ(JsAppImpl::GetInstance().height, 0);
     }
 
     // 参数范围异常
@@ -184,6 +194,36 @@ namespace {
         command3.CheckAndRun();
         EXPECT_NE(JsAppImpl::GetInstance().width, 1080);
         EXPECT_NE(JsAppImpl::GetInstance().height, 2340);
+
+        JsAppImpl::GetInstance().width = 0;
+        JsAppImpl::GetInstance().height = 0;
+        string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+            "height" : 2340, "screenDensity" : 480, "reason" : "aaa"})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(jsonStr1);
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        command1.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().width, 0);
+        EXPECT_EQ(JsAppImpl::GetInstance().height, 0);
+
+        JsAppImpl::GetInstance().width = 0;
+        JsAppImpl::GetInstance().height = 0;
+        string jsonStr4 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+            "height" : 2340, "screenDensity" : 100, "reason" : "resize"})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(jsonStr4);
+        ResolutionSwitchCommand command4(type, args4, *socket);
+        command4.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().width, 0);
+        EXPECT_EQ(JsAppImpl::GetInstance().height, 0);
+
+        JsAppImpl::GetInstance().width = 0;
+        JsAppImpl::GetInstance().height = 0;
+        string jsonStr5 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+            "height" : 2340, "screenDensity" : 700, "reason" : "resize"})";
+        Json2::Value args5 = JsonReader::ParseJsonData2(jsonStr5);
+        ResolutionSwitchCommand command5(type, args5, *socket);
+        command5.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().width, 0);
+        EXPECT_EQ(JsAppImpl::GetInstance().height, 0);
     }
 
     // 参数正常
@@ -192,8 +232,8 @@ namespace {
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        string jsonStr = R"({"originWidth":1080,"originHeight":2340,"width":1080,
-            "height":2340,"screenDensity":480})";
+        string jsonStr = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+            "height" : 2340, "screenDensity" : 480, "reason" : "resize"})";
         Json2::Value args2 = JsonReader::ParseJsonData2(jsonStr);
         ResolutionSwitchCommand command3(type, args2, *socket);
         command3.CheckAndRun();
@@ -220,19 +260,76 @@ namespace {
         g_reloadRuntimePage = false;
         command.CheckAndRun();
         EXPECT_TRUE(g_reloadRuntimePage);
+
+        std::string msg2 = "{\"ReloadRuntimePage\" : 222}";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg2);
+        ReloadRuntimePageCommand command3(type, args3, *socket);
+        g_reloadRuntimePage = false;
+        command3.CheckAndRun();
+        EXPECT_FALSE(g_reloadRuntimePage);
+    }
+
+    TEST_F(CommandLineTest, ToUint8Test)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_EQ(command1.ToUint8("256"), 0);
+    }
+ 
+    TEST_F(CommandLineTest, IsBoolTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsBoolType("true"));
+        EXPECT_FALSE(command1.IsBoolType("XX"));
+    }
+ 
+    TEST_F(CommandLineTest, IsIntTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsIntType("123"));
+    }
+ 
+    TEST_F(CommandLineTest, IsOneDigitFloatTypeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ResolutionSwitchCommand command1(type, args1, *socket);
+        EXPECT_TRUE(command1.IsOneDigitFloatType("-6", true));
+        EXPECT_TRUE(command1.IsOneDigitFloatType("3", false));
+    }
+
+    TEST_F(CommandLineTest, IsSetArgValidTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        // null
+        Json2::Value args1 = JsonReader::CreateNull();
+        ColorModeCommand command1(type, args1, *socket);
+        command1.RunSet();
+        EXPECT_FALSE(command1.IsSetArgValid());
     }
 
     TEST_F(CommandLineTest, FontSelectCommandTest)
     {
-        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
         Json2::Value args1 = JsonReader::CreateNull();
         FontSelectCommand command1(type, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
+        command1.RunSet();
+        EXPECT_FALSE(command1.IsSetArgValid());
         EXPECT_TRUE(g_output);
         std::string msg = "{\"FontSelect\":true}";
         Json2::Value args2 = JsonReader::ParseJsonData2(msg);
-        FontSelectCommand command3(type, args1, *socket);
+        FontSelectCommand command3(type, args2, *socket);
         g_output = false;
         command3.CheckAndRun();
         EXPECT_TRUE(g_output);
@@ -280,9 +377,9 @@ namespace {
     TEST_F(CommandLineTest, LoadDocumentCommandArgsNumRangeTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        std::string msg = R"({"url":"pages/Index","className":"Index","previewParam":{"width":1080,
-            "height":"2340","locale":"zh_CN","colorMode":"light","orientation":"portrait",
-            "deviceType":"phone","dpi":720}})";
+        std::string msg = R"({"url" : "pages/Index", "className" : "Index", "previewParam" : {"width" : 1080,
+            "height" : 2340, "locale" : "zh_CN" , "colorMode" : "light", "orientation" : "portrait",
+            "deviceType" : "phone", "dpi" : 720}})";
         Json2::Value args2 = JsonReader::ParseJsonData2(msg);
         LoadDocumentCommand command(type, args2, *socket);
         g_loadDocument = false;
@@ -292,36 +389,43 @@ namespace {
 
     TEST_F(CommandLineTest, LoadDocumentCommandArgsStrRangeTest)
     {
+        CommandParser::GetInstance().deviceType = "phone";
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        std::string msg = R"({"url":"pages/Index","className":"Index","previewParam":{"width":1080,
-            "height":"2340","locale":"aa_PP","colorMode":"light","orientation":"portrait",
-            "deviceType":"phone","dpi":480}})";
-        Json2::Value args2 = JsonReader::ParseJsonData2(msg);
+        std::string msg = R"({"url" : "pages/Index", "className" : "Index", "previewParam" : {"width" : 1080,
+            "height" : 2340, "locale" : "aa_PP", "colorMode" : "light", "orientation" : "portrait",
+            "deviceType" : "phone", "dpi" : 480}})";
+        Json2::Value args = JsonReader::ParseJsonData2(msg);
         // locale error
-        LoadDocumentCommand command(type, args2, *socket);
+        LoadDocumentCommand command(type, args, *socket);
         g_loadDocument = false;
         command.CheckAndRun();
         EXPECT_FALSE(g_loadDocument);
         // colorMode error
-        args2.Replace("locale", "zh_CN");
-        args2.Replace("colorMode", "bbbb");
+        std::string msg1 = R"({"url" : "pages/Index", "className" : "Index", "previewParam" : {"width" : 1080,
+            "height" : 2340, "locale" : "zh_CN", "colorMode" : "aaa", "orientation" : "portrait",
+            "deviceType" : "phone", "dpi" : 480}})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
+        LoadDocumentCommand command1(type, args1, *socket);
+        g_loadDocument = false;
+        command1.CheckAndRun();
+        EXPECT_FALSE(g_loadDocument);
+        // colorMode error
+        std::string msg2 = R"({"url" : "pages/Index", "className" : "Index", "previewParam" : {"width" : 1080,
+            "height" : 2340, "locale" : "zh_CN", "colorMode" : "dark", "orientation" : "aaa",
+            "deviceType" : "phone", "dpi" : 480}})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
         LoadDocumentCommand command2(type, args2, *socket);
         g_loadDocument = false;
         command2.CheckAndRun();
         EXPECT_FALSE(g_loadDocument);
-        // colorMode error
-        args2.Replace("colorMode", "dark");
-        args2.Replace("orientation", "bbbb");
-        LoadDocumentCommand command3(type, args2, *socket);
+        // deviceType error
+        std::string msg3 = R"({"url" : "pages/Index", "className" : "Index", "previewParam" : {"width" : 1080,
+            "height" : 2340, "locale" : "zh_CN", "colorMode" : "dark", "orientation" : "landscape",
+            "deviceType" : "liteWearable", "dpi" : 480}})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        LoadDocumentCommand command3(type, args3, *socket);
         g_loadDocument = false;
         command3.CheckAndRun();
-        EXPECT_FALSE(g_loadDocument);
-        // deviceType error
-        args2.Replace("orientation", "landscape");
-        args2.Replace("deviceType", "liteWearable");
-        LoadDocumentCommand command4(type, args2, *socket);
-        g_loadDocument = false;
-        command4.CheckAndRun();
         EXPECT_FALSE(g_loadDocument);
     }
 
@@ -353,21 +457,45 @@ namespace {
     {
         CommandLine::CommandType type = CommandLine::CommandType::GET;
         Json2::Value args2 = JsonReader::CreateNull();
-        LoadDocumentCommand command2(type, args2, *socket);
+        FastPreviewMsgCommand command2(type, args2, *socket);
         g_getFastPreviewMsg = false;
         command2.CheckAndRun();
-        EXPECT_FALSE(g_getFastPreviewMsg);
+        EXPECT_TRUE(g_getFastPreviewMsg);
+    }
+
+    TEST_F(CommandLineTest, LoadContentCommandTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        Json2::Value args2 = JsonReader::CreateNull();
+        LoadContentCommand command2(type, args2, *socket);
+        g_getAbilityCurrentRouter = false;
+        command2.CheckAndRun();
+        EXPECT_TRUE(g_getAbilityCurrentRouter);
     }
 
     TEST_F(CommandLineTest, DropFrameCommandTest)
     {
         VirtualScreenImpl::GetInstance().dropFrameFrequency = 0;
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        std::string msg = R"({"frequency":1000})";
+        std::string msg = R"({"frequency" : 1000})";
         Json2::Value args1 = JsonReader::ParseJsonData2(msg);
         DropFrameCommand command1(type, args1, *socket);
         command1.CheckAndRun();
         EXPECT_EQ(VirtualScreenImpl::GetInstance().dropFrameFrequency, 1000); // set value is 1000
+
+        VirtualScreenImpl::GetInstance().dropFrameFrequency = 0;
+        std::string msg2 = R"({"frequency" : "aaaa"})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        DropFrameCommand command2(type, args2, *socket);
+        command2.CheckAndRun();
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().dropFrameFrequency, 0);
+
+        VirtualScreenImpl::GetInstance().dropFrameFrequency = 0;
+        std::string msg3 = R"({"frequency" : -100})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        DropFrameCommand command3(type, args3, *socket);
+        command3.CheckAndRun();
+        EXPECT_EQ(VirtualScreenImpl::GetInstance().dropFrameFrequency, 0);
     }
 
     TEST_F(CommandLineTest, KeyPressCommandImeTest)
@@ -424,8 +552,8 @@ namespace {
     {
         CommandLine::CommandType type = CommandLine::CommandType::ACTION;
         // keyAction error
-        std::string msg = R"({"isInputMethod":false,"keyCode":2033,"keyAction":3,"keyString":123,
-            "pressedCodes":[2033]})";
+        std::string msg = R"({"isInputMethod" : false, "keyCode" : 2033, "keyAction" : 3, "keyString" : "123",
+            "pressedCodes" : [2033]})";
         Json2::Value args1 = JsonReader::ParseJsonData2(msg);
         KeyPressCommand command1(type, args1, *socket);
         g_dispatchOsKeyEvent = false;
@@ -439,8 +567,10 @@ namespace {
         command2.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsKeyEvent);
         // pressedCodes error
-        msg = R"({"isInputMethod":false,"keyCode":2033,"keyAction":3,"keyString":123,"pressedCodes":[1900]})";
-        KeyPressCommand command3(type, args1, *socket);
+        msg = R"({"isInputMethod" : false, "keyCode" : 2033, "keyAction" : 1, "keyString" : "123",
+            "pressedCodes" : [1900]})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg);
+        KeyPressCommand command3(type, args2, *socket);
         g_dispatchOsKeyEvent = false;
         command3.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsKeyEvent);
@@ -537,13 +667,21 @@ namespace {
         command3.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsTouchEvent);
         // axisValues error
-        msg1 = R"({"x":2000,"y":1071,"duration":"","button":1,"action": 2,"axisValues":["0",0,0,0],
-            "sourceType":1,"sourceTool": 7,"pressedButtons":[0,1]})";
+        msg1 = R"({"x" : 300, "y" : 1071, "duration" : "", "button" : 1, "action" : 2,
+            "axisValues" : ["0", 0, 0, 0], "sourceType" : 1, "sourceTool" : 7, "pressedButtons" : [0, 1]})";
         Json2::Value args2 = JsonReader::ParseJsonData2(msg1);
         PointEventCommand command4(type, args2, *socket);
         g_dispatchOsTouchEvent = false;
         command4.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsTouchEvent);
+        // pressedButtons errors
+        msg1 = R"({"x" : 300, "y" : 1071, "duration" : "", "button" : 1, "action" : 2,
+            "axisValues" : [0, 0, 0, 0], "sourceType" : 1, "sourceTool" : 7, "pressedButtons" : [-2, 0, 1]})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg1);
+        PointEventCommand command5(type, args3, *socket);
+        g_dispatchOsTouchEvent = false;
+        command5.CheckAndRun();
+        EXPECT_TRUE(g_dispatchOsTouchEvent);
     }
 
     TEST_F(CommandLineTest, PointEventCommandArgCorrectTest)
@@ -678,16 +816,17 @@ namespace {
         std::string msg1 = R"({"Volume":90})";
         CommandLine::CommandType type1 = CommandLine::CommandType::SET;
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
-        PowerCommand command1(type1, args1, *socket);
+        VolumeCommand command1(type1, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
         EXPECT_TRUE(g_output);
 
         CommandLine::CommandType type2 = CommandLine::CommandType::GET;
         Json2::Value args2 = JsonReader::CreateNull();
-        PowerCommand command2(type2, args2, *socket);
+        VolumeCommand command2(type2, args2, *socket);
         g_output = false;
         command2.CheckAndRun();
+        command2.RunGet();
         EXPECT_TRUE(g_output);
     }
 
@@ -1166,6 +1305,26 @@ namespace {
         g_sendVirtualMessage = false;
         command3.CheckAndRun();
         EXPECT_TRUE(g_sendVirtualMessage);
+
+        std::string msg4 = R"({"DeviceId" : "68-05-CA-90-9A-66", "bundleName" : "abc",
+            "abilityName" : "hello", "message" : ""})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(msg4);
+        DistributedCommunicationsCommand command4(type, args4, *socket);
+        g_sendVirtualMessage = false;
+        command4.CheckAndRun();
+        EXPECT_FALSE(g_sendVirtualMessage);
+    }
+
+    TEST_F(CommandLineTest, DistributedCommunicationsCommandTest2)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::ACTION;
+        std::string msg = R"({"DeviceId" : "68-05-CA-90-9A-66", "bundleName" : "abc",
+            "abilityName" : "hello", "message" : "{ action : 'GET_WEATHER', city : 'HangZhou' }"})";
+        Json2::Value args = JsonReader::ParseJsonData2(msg);
+        DistributedCommunicationsCommand command(type, args, *socket);
+        std::vector<char> vec = command.StringToCharVector("123");
+        int size = 4;
+        EXPECT_EQ(vec.size(), size);
     }
 
     TEST_F(CommandLineTest, MouseWheelCommandTest)
@@ -1206,11 +1365,32 @@ namespace {
     TEST_F(CommandLineTest, TouchPressCommandArgsRangeTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::ACTION;
-        std::string msg1 = R"({"x":365,"y":5000,"duration":""})";
+        std::string msg1 = R"({"x":365,"y":15000,"duration":""})";
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
         TouchPressCommand command1(type, args1, *socket);
         g_dispatchOsTouchEvent = false;
         command1.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg2 = R"({"x":-1,"y":15000,"duration":""})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        TouchPressCommand command2(type, args2, *socket);
+        g_dispatchOsTouchEvent = false;
+        command2.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg3 = R"({"x":15000,"y":365,"duration":""})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        TouchPressCommand command3(type, args3, *socket);
+        g_dispatchOsTouchEvent = false;
+        command3.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg4 = R"({"x":15000,"y":-1,"duration":""})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(msg4);
+        TouchPressCommand command4(type, args4, *socket);
+        g_dispatchOsTouchEvent = false;
+        command4.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsTouchEvent);
     }
 
@@ -1246,11 +1426,32 @@ namespace {
     TEST_F(CommandLineTest, TouchReleaseCommandArgsRangeTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::ACTION;
-        std::string msg1 = R"({"x":365,"y":5000})";
+        std::string msg1 = R"({"x":365,"y":15000})";
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
         TouchReleaseCommand command1(type, args1, *socket);
         g_dispatchOsTouchEvent = false;
         command1.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg2 = R"({"x":-1,"y":15000})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        TouchReleaseCommand command2(type, args2, *socket);
+        g_dispatchOsTouchEvent = false;
+        command2.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg3 = R"({"x":15000,"y":365})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        TouchReleaseCommand command3(type, args3, *socket);
+        g_dispatchOsTouchEvent = false;
+        command3.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg4 = R"({"x":15000,"y":-1})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(msg4);
+        TouchReleaseCommand command4(type, args4, *socket);
+        g_dispatchOsTouchEvent = false;
+        command4.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsTouchEvent);
     }
 
@@ -1286,11 +1487,32 @@ namespace {
     TEST_F(CommandLineTest, TouchMoveCommandArgsRangeTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::ACTION;
-        std::string msg1 = R"({"x":365,"y":5000})";
+        std::string msg1 = R"({"x":365,"y":15000})";
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
         TouchMoveCommand command1(type, args1, *socket);
         g_dispatchOsTouchEvent = false;
         command1.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg2 = R"({"x":-1,"y":15000})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        TouchMoveCommand command2(type, args2, *socket);
+        g_dispatchOsTouchEvent = false;
+        command2.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg3 = R"({"x":15000,"y":365})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        TouchMoveCommand command3(type, args3, *socket);
+        g_dispatchOsTouchEvent = false;
+        command3.CheckAndRun();
+        EXPECT_FALSE(g_dispatchOsTouchEvent);
+
+        std::string msg4 = R"({"x":15000,"y":-1})";
+        Json2::Value args4 = JsonReader::ParseJsonData2(msg4);
+        TouchMoveCommand command4(type, args4, *socket);
+        g_dispatchOsTouchEvent = false;
+        command4.CheckAndRun();
         EXPECT_FALSE(g_dispatchOsTouchEvent);
     }
 
@@ -1399,6 +1621,14 @@ namespace {
         EXPECT_TRUE(g_output);
     }
 
+    TEST_F(CommandLineTest, RestartCommandTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        Json2::Value args2 = JsonReader::CreateNull();
+        RestartCommand command2(type, args2, *socket);
+        command2.RunAction();
+    }
+
     TEST_F(CommandLineTest, ResolutionCommandTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::SET;
@@ -1428,6 +1658,7 @@ namespace {
         AvoidAreaCommand command1(type, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
+        command1.RunSet();
         EXPECT_TRUE(g_output);
         std::string msg2 = R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"bottomRect":
             0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},"rightRect":0})";
@@ -1470,6 +1701,41 @@ namespace {
         EXPECT_TRUE(g_output);
     }
 
+    TEST_F(CommandLineTest, AvoidAreaCommandArgsRangeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        std::string msg1 = R"({"topRect" : {"posX"  :0, "posY" : 0, "width" : 2340, "height" : 117},
+            "bottomRect" : {"posX" : 0, "posY" : 0, "width" : 0, "height" : 0}, "leftRect" : {"posX" : 0,
+            "posY" : 0, "width" : 0, "height" : 0}, "rightRect" : {"posX" : 0, "posY" : 0, "width" : 2340,
+            "height" : "84"}})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
+        AvoidAreaCommand command1(type, args1, *socket);
+        g_output = false;
+        command1.CheckAndRun();
+        EXPECT_TRUE(g_output);
+
+        std::string msg2 = R"({"topRect" : {"posX"  :0, "posY" : 0, "width" : 2340, "height" : 117},
+            "bottomRect" : {"posX" : 0, "posY" : 0, "width" : 0, "height" : 0}, "leftRect" : {"posX" : 0,
+            "posY" : 0, "width" : 0, "height" : 0}, "rightRect" : {"posX" : 0, "posY" : -2, "width" : 2340,
+            "height" : 84}})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        AvoidAreaCommand command2(type, args2, *socket);
+        g_output = false;
+        command2.CheckAndRun();
+        EXPECT_TRUE(g_output);
+
+
+        std::string msg3 = R"({"topRect" : {"posX"  :0, "posY" : 0, "width" : 2340, "height" : 117},
+            "bottomRect" : {"posX" : 0, "posY" : 0, "width" : 0, "height" : 0}, "leftRect" : {"posX" : 0,
+            "posY" : 0, "width" : 0, "height" : 0}, "rightRect" : {"posX" : 0, "posY" : 0, "width" : 2340,
+            "height" : 84}})";
+        Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
+        AvoidAreaCommand command3(type, args3, *socket);
+        g_output = false;
+        command3.CheckAndRun();
+        EXPECT_TRUE(g_output);
+    }
+
     TEST_F(CommandLineTest, AvoidAreaChangedCommandTest)
     {
         CommandLine::CommandType type = CommandLine::CommandType::GET;
@@ -1478,5 +1744,60 @@ namespace {
         g_output = false;
         command2.CheckAndRun();
         EXPECT_TRUE(g_output);
+    }
+
+    TEST_F(CommandLineTest, IsArgValidTest_Err)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::GET;
+        Json2::Value args1 = JsonReader::CreateObject();
+        CurrentRouterCommand command2(type, args1, *socket);
+        command2.type = CommandLine::CommandType::INVALID;
+        EXPECT_TRUE(command2.IsArgValid());
+    }
+
+    TEST_F(CommandLineTest, ColorModeCommandArgsCorrectTest)
+    {
+        JsAppImpl::GetInstance().colorMode = "light";
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        std::string msg = R"({"ColorMode" : "dark"})";
+        Json2::Value args = JsonReader::ParseJsonData2(msg);
+        ColorModeCommand command(type, args, *socket);
+        command.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().colorMode, "dark");
+    }
+
+    TEST_F(CommandLineTest, ColorModeCommandArgsTypeTest)
+    {
+        JsAppImpl::GetInstance().colorMode = "light";
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        Json2::Value args = JsonReader::CreateNull();
+        ColorModeCommand command(type, args, *socket);
+        command.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().colorMode, "light");
+
+        JsAppImpl::GetInstance().colorMode = "light";
+        std::string msg1 = R"({"aaa" : "dark"})";
+        Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
+        ColorModeCommand command1(type, args1, *socket);
+        command1.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().colorMode, "light");
+
+        JsAppImpl::GetInstance().colorMode = "light";
+        std::string msg2 = R"({"ColorMode" : 123})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        ColorModeCommand command2(type, args2, *socket);
+        command2.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().colorMode, "light");
+    }
+
+    TEST_F(CommandLineTest, ColorModeCommandArgsRangeTest)
+    {
+        CommandLine::CommandType type = CommandLine::CommandType::SET;
+        JsAppImpl::GetInstance().colorMode = "light";
+        std::string msg2 = R"({"ColorMode" : "aaa"})";
+        Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
+        ColorModeCommand command2(type, args2, *socket);
+        command2.CheckAndRun();
+        EXPECT_EQ(JsAppImpl::GetInstance().colorMode, "light");
     }
 }

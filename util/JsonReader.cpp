@@ -626,7 +626,7 @@ namespace Json2 {
 }
 
 
-string JsonReader::ReadFile(const string path)
+string JsonReader::ReadFile(const string& path)
 {
     ifstream inFile(path);
     if (!inFile.is_open()) {
@@ -638,7 +638,7 @@ string JsonReader::ReadFile(const string path)
     return jsonStr;
 }
 
-Json2::Value JsonReader::ParseJsonData2(const std::string jsonStr)
+Json2::Value JsonReader::ParseJsonData2(const std::string& jsonStr)
 {
     return Json2::Value(cJSON_Parse(jsonStr.c_str()));
 }
@@ -667,7 +667,7 @@ Json2::Value JsonReader::CreateBool(const bool value)
     return Json2::Value(cJSON_CreateBool(value));
 }
 
-Json2::Value JsonReader::CreateString(const std::string value)
+Json2::Value JsonReader::CreateString(const std::string& value)
 {
     return Json2::Value(cJSON_CreateString(value.c_str()));
 }

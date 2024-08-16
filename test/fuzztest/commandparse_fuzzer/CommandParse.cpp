@@ -19,95 +19,9 @@
 #include "cJSON.h"
 #include "securec.h"
 #include "CommandLineInterface.h"
+#include "ChangeJsonUtil.h"
 using namespace std;
 using namespace fuzztest;
-
-const int DEFAULT_LENGTH = 1000;
-const int DEFAULT_INT = 1000;
-const std::string DEFAULT_STRING = "aaaa";
-
-void modifyObject(cJSON *object, uint64_t& idx)
-{
-    if (!object) {
-        return;
-    }
-    cJSON *item = nullptr;
-    cJSON_ArrayForEach(item, object) {
-        if (item->type == cJSON_String) {
-            std::string strVal = DT_SetGetString(&g_Element[idx], strlen(item->valuestring) + 1, DEFAULT_LENGTH,
-                (char*)item->valuestring);
-            idx++;
-            cJSON_free(item->valuestring); // 释放原字符串内存
-            item->valuestring = nullptr;
-            int length = strVal.length() + 1;
-            item->valuestring = (char*)malloc(length * sizeof(char)); // 分配内存
-            errno_t ret1 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
-            if (ret1 != EOK) {
-                printf("strcpy_s in modifyObject copy error");
-            }
-        } else if (item->type == cJSON_Number) {
-            int intVal = *(s32 *)DT_SetGetS32(&g_Element[idx], item->valueint);
-            idx++;
-            item->valueint = intVal;
-        } else if (item->type == cJSON_True || item->type == cJSON_False) {
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::bernoulli_distribution distribution(0.5); // 0.5 is probability to generate true or false
-            bool ret = distribution(gen);
-            item->type = ret ? cJSON_True : cJSON_False;
-        } else if (item->type == cJSON_Object) {
-            cJSON *arrayItem = nullptr;
-            cJSON_ArrayForEach(arrayItem, item) {
-                modifyObject(arrayItem, idx);
-            }
-        } else if (item->type == cJSON_Array) {
-            cJSON *objItem = nullptr;
-            cJSON_ArrayForEach(objItem, item) {
-                modifyObject(objItem, idx);
-            }
-        }
-    }
-}
-
-void modifyObject4ChangeType(cJSON *object, uint64_t& idx)
-{
-    if (!object) {
-        return;
-    }
-    cJSON *item = nullptr;
-    cJSON_ArrayForEach(item, object) {
-        if (item->type == cJSON_String) {
-            int32_t intValue = *(s32 *)DT_SetGetS32(&g_Element[idx], DEFAULT_INT);
-            idx++;
-            item->type = cJSON_Number;
-            item->valuedouble = (double)intValue;
-            item->valueint = intValue;
-            cJSON_free(item->valuestring); // 释放原字符串内存
-            item->valuestring = nullptr;
-        } else if (item->type == cJSON_Number || item->type == cJSON_True || item->type == cJSON_False) {
-            std::string strVal = DT_SetGetString(&g_Element[idx], DEFAULT_STRING.size() + 1, DEFAULT_LENGTH,
-                (char*)DEFAULT_STRING.c_str());
-            idx++;
-            item->type = cJSON_String;
-            int length = strVal.length() + 1;
-            item->valuestring = (char*)malloc(length * sizeof(char)); // 分配内存
-            errno_t ret2 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
-            if (ret2 != EOK) {
-                printf("strcpy_s in modifyObject4ChangeType copy error");
-            }
-        } else if (item->type == cJSON_Object) {
-            cJSON *arrayItem = nullptr;
-            cJSON_ArrayForEach(arrayItem, item) {
-                modifyObject4ChangeType(arrayItem, idx);
-            }
-        } else if (item->type == cJSON_Array) {
-            cJSON *objItem = nullptr;
-            cJSON_ArrayForEach(objItem, item) {
-                modifyObject4ChangeType(objItem, idx);
-            }
-        }
-    }
-}
 
 void CommandParse::Execute(std::string& commond, std::string& jsonArgsStr,
     int& typeIndex, uint64_t& index, bool changeType)
@@ -123,9 +37,9 @@ void CommandParse::Execute(std::string& commond, std::string& jsonArgsStr,
     if (!jsonArgsStr.empty()) {
         cJSON* jsonArgs = cJSON_Parse(jsonArgsStr.c_str());
         if (!changeType) {
-            modifyObject(jsonArgs, index);
+            ChangeJsonUtil::ModifyObject(jsonArgs, index);
         } else {
-            modifyObject4ChangeType(jsonArgs, index);
+            ChangeJsonUtil::ModifyObject4ChangeType(jsonArgs, index);
         }
         cJSON_AddItemToObject(jsonData, "args", jsonArgs);
     }

@@ -127,7 +127,8 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsProjectModelValid() && IsPagesValid() && IsContainerSdkPathValid();
     partRet = partRet && IsComponentModeValid() && IsAbilityPathValid() && IsStaticCardValid();
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
-    partRet = partRet && IsAbilityNameValid();
+    partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
+    partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
     if (partRet) {
         return true;
     }
@@ -701,7 +702,9 @@ bool CommandParser::IsLocalSocketNameValid()
         return true;
     }
     string socketName = Value("s");
-    if (CheckParamInvalidity(socketName, false)) {
+    std::string regexStr = "^(?:[a-zA-Z0-9-_./\\s*]+)$";
+    regex reg(regexStr);
+    if (!regex_match(socketName.cbegin(), socketName.cend(), reg)) {
         errorInfo = "Launch -s parameters is not match regex.";
         return false;
     }
@@ -1008,7 +1011,7 @@ int CommandParser::ParseArgs(int argc, char* argv[])
     return defaultReturnVal;
 }
 
-void CommandParser::GetCommandInfo(CommandInfo& info)
+void CommandParser::GetCommandInfo(CommandInfo& info) const
 {
     info.deviceType = GetDeviceType();
     info.pages = GetPages();
@@ -1027,7 +1030,7 @@ void CommandParser::GetCommandInfo(CommandInfo& info)
     info.compressionResolutionHeight = GetCompressionResolutionHeight();
 }
 
-void CommandParser::GetFoldInfo(FoldInfo& info)
+void CommandParser::GetFoldInfo(FoldInfo& info) const
 {
     info.foldable = IsFoldable();
     info.foldStatus = GetFoldStatus();

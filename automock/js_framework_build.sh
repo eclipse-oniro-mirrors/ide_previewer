@@ -34,18 +34,18 @@ fi
 # $2 => node $3 => node_modules
 cp -f $4 $7
 
-# if [ -d "$prebuilts_path" ]; then
-#   echo "copy node_modules..."
-#   if [ "${9}" == 'true' ];then
-#     cp -R $3 $7
-#   else
-#     cp -r $3 $7
-#   fi
-# else
-#   echo "download node_modules..."
-#   npm install
-#   cp -r ./node_modules ../../tools_previewer/automock/mock-generate
-# fi
+if [ -d "$prebuilts_path" ]; then
+  echo "copy node_modules..."
+  if [ "${9}" == 'true' ];then
+    cp -R $3 $7
+  else
+    cp -r $3 $7
+  fi
+else
+  echo "download node_modules..."
+  npm install
+  cp -r ./node_modules ../../tools_previewer/automock/mock-generate
+fi
 
 cp -f $5 $7
 cp -f $6 $7
@@ -58,9 +58,6 @@ if [ -d "$prebuilts_path" ]; then
   link_path=$(realpath $2)
   ln -s $link_path "$7/current"
   cd $7
-  echo "download node_modules..."
-  npm install
-  echo "download node_modules finally"
   if [ "${8}" == 'true' ];then
     if [ "${12}" == 'true' ];then
       ./current/bin/node ./mock-generate/build.js ${10}
