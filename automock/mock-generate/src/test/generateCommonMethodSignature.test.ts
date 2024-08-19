@@ -15,13 +15,12 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateCommonMethodSignature } from '../generate/generateCommonMethodSignature';
 
 describe('generateCommonMethodSignature.ts file test', (): void => {
-  it('Test the generateCommonMethodSignature function', (): void => {
+  test('Test the generateCommonMethodSignature function', (): void => {
     const filePath = path.join(__dirname, './api/lifecycle.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -58,6 +57,6 @@ describe('generateCommonMethodSignature.ts file test', (): void => {
     const expectedResult = `onCreate: function(...args) {console.warn('The LifecycleForm.onCreate interface in the Previewer is a mocked implementation and may behave differently than on a real device.');
 return mockFormBindingData().FormBindingData},
 `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

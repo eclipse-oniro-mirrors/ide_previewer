@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateIndex } from '../generate/generateIndex';
 
 describe('generateIndex.ts file test', (): void => {
-  it('Test the generateIndex function', (): void => {
+  test('Test the generateIndex function', (): void => {
     const result = generateIndex();
     const expectedResult = `import * as etsglobal from './@internal/ets/global';
 export function mockRequireNapiFun() {
@@ -33,6 +32,6 @@ export function mockRequireNapiFun() {
       }
           }
         }`;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

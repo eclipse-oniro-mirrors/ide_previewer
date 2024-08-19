@@ -14,3 +14,4 @@ automock/dist/
 automock/package.json
 automock/runtime/
 automock/tsconfig.json
+automock/mock-generate/src/test/report

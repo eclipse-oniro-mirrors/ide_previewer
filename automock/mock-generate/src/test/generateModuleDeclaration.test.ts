@@ -15,8 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateModuleDeclaration } from '../generate/generateModuleDeclaration';
 
@@ -25,7 +24,7 @@ const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
 describe('generateModuleDeclaration.ts file test', () => {
-  it('Test the generateModuleDeclaration function', () => {
+  test('Test the generateModuleDeclaration function', () => {
     const moduleEntity = {
       typeAliasDeclarations: [
         {
@@ -178,6 +177,6 @@ describe('generateModuleDeclaration.ts file test', () => {
       + 'const AbilityResult = _AbilityResult;\nconst ConnectOptions = _ConnectOptions;\n'
       + 'const StartAbilityParameter = _StartAbilityParameter;\n';
     const result = generateModuleDeclaration(moduleEntity, sourceFile, filename, mockApi, extraImport, importDeclarations);
-    expect(result).to.equal(data);
+    expect(result).toBe(data);
   });
 });
