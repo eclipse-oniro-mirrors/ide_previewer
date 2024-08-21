@@ -22,7 +22,9 @@ import {
   dtsFileList,
   getOhosInterfacesDir,
   specialFiles,
-  generateKitMap
+  generateKitMap,
+  generateDependJsonFile,
+  generateMyComponent
 } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
 import { generateEntry } from './generate/generateEntry';
@@ -188,6 +190,8 @@ function main(apiInputPath): void {
   if (!fs.existsSync(path.join(outMockJsFileDir, 'napi'))) {
     mkdirsSync(path.join(outMockJsFileDir, 'napi'));
   }
+  generateDependJsonFile();
+  generateMyComponent(outMockJsFileDir);
   fs.writeFileSync(path.join(outMockJsFileDir, 'napi', 'index.js'), generateIndex());
   fs.writeFileSync(path.join(outMockJsFileDir, 'index.js'), generateSystemIndex());
   fs.writeFileSync(path.join(outMockJsFileDir, 'entry.js'), generateEntry());
