@@ -14,6 +14,7 @@
  */
 
 import type { FunctionDeclaration, Node, SourceFile } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { getFunctionAndMethodReturnInfo, getParameter } from '../common/commonUtils';
 import type { ParameterEntity, ReturnTypeEntity } from '../common/commonUtils';
 
@@ -27,21 +28,29 @@ export function getFunctionDeclaration(node: Node, sourceFile: SourceFile): Func
   const funcNode = node as FunctionDeclaration;
   let functionName = '';
   const args: Array<ParameterEntity> = [];
+  let isExport = false;
   const returnType = getFunctionAndMethodReturnInfo(funcNode, sourceFile);
   functionName = funcNode.name?.escapedText === undefined ? 'undefind' : funcNode.name.escapedText.toString();
   funcNode.parameters.forEach(value => {
     args.push(getParameter(value, sourceFile));
   });
+  node.modifiers?.forEach(modify => {
+    if (modify.kind === SyntaxKind.ExportKeyword) {
+      isExport = true;
+    }
+  });
 
   return {
     functionName: functionName,
     returnType: returnType,
-    args: args
+    args: args,
+    isExport: isExport
   };
 }
 
 export interface FunctionEntity {
   functionName: string,
   returnType: ReturnTypeEntity,
-  args: Array<ParameterEntity>
+  args: Array<ParameterEntity>,
+  isExport: boolean
 }
