@@ -37,7 +37,7 @@ import { generateSystemIndex } from './generate/generateSystemIndex';
  * @param dir
  * @returns
  */
-function getAllDtsFile(dir: string): Array<string> {
+function getAllDtsFile(dir: string): void {
   const arr = fs.readdirSync(dir);
   if (!dir.toString().includes('node_modules') && !dir.toString().includes(path.join('@internal', 'component'))) {
     arr.forEach(value => {
@@ -50,7 +50,6 @@ function getAllDtsFile(dir: string): Array<string> {
       }
     });
   }
-  return dtsFileList;
 }
 
 /**

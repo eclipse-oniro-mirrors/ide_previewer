@@ -14,7 +14,7 @@
  */
 
 import {
-  isCallSignatureDeclaration, isConstructSignatureDeclaration, isHeritageClause, isIndexSignatureDeclaration,
+  isCallSignatureDeclaration, isConstructorDeclaration, isHeritageClause, isIndexSignatureDeclaration,
   isMethodSignature, isPropertySignature, isTypeParameterDeclaration
 } from 'typescript';
 import type { InterfaceDeclaration, SourceFile } from 'typescript';
@@ -121,7 +121,7 @@ function substepGetInterface(substepGetClassparam: SubstepGetClassparam): Subste
       }
     } else if (isHeritageClause(value)) {
       heritageClauses.push(getHeritageClauseDeclaration(value, sourceFile));
-    } else if (isConstructSignatureDeclaration(value)) {
+    } else if (isConstructorDeclaration(value)) {
       interfaceConstructors.push(getConstructorDeclaration(value, sourceFile));
     } else if (isCallSignatureDeclaration(value)) {
       callSignature.push(getCallSignatureDeclaration(value, sourceFile));

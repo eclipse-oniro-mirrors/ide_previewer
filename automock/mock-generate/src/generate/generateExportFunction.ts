@@ -36,7 +36,7 @@ export function generateExportFunction(functionEntity: FunctionEntity, sourceFil
 
   const args = functionEntity.args;
   const len = args.length;
-  if (args.length > 0 && args[len - 1].paramName.toLowerCase().includes('callback')) {
+  if (len && args[len - 1].paramName.toLowerCase().includes('callback')) {
     functionBody += getCallbackStatement(mockApi);
   }
   if (functionEntity.returnType.returnKind !== SyntaxKind.VoidKeyword) {

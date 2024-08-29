@@ -30,14 +30,15 @@ export function getPropertySignatureDeclaration(node: PropertySignature, sourceF
   propertyName = getPropertyName(node.name, sourceFile);
   const propertyType = node.type;
   const modifiers: Array<string> = [];
+  const fileText = sourceFile.getFullText();
   if (node.modifiers !== undefined) {
     node.modifiers.forEach(value => {
-      modifiers.push(sourceFile.text.substring(value.pos, value.end));
+      modifiers.push(fileText.slice(value.pos, value.end));
     });
   }
 
   if (propertyType !== undefined) {
-    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
+    propertyTypeName = fileText.slice(propertyType.pos, propertyType.end).trim();
     kind = propertyType.kind;
   }
 

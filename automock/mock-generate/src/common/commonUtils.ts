@@ -38,7 +38,7 @@ export const dtsFileList: Array<string> = [];
  * @returns
  */
 export function getAllLegalImports(): Set<string> {
-  return allLegalImports;
+  return new Set<string>(allLegalImports);
 }
 
 /**
@@ -54,7 +54,7 @@ export function collectAllLegalImports(element: string): void {
  * @returns
  */
 export function getAllFileNameList(): Set<string> {
-  return fileNameList;
+  return new Set<string>(fileNameList);
 }
 
 /**
@@ -83,7 +83,7 @@ export function collectAllFileName(filePath: string): void {
  * @returns
  */
 export function getClassNameSet(): Set<string> {
-  return allClassSet;
+  return new Set<string>(allClassSet);
 }
 
 /**
@@ -140,14 +140,15 @@ export function getModifiers(modifiers: ModifiersArray): Array<number> {
  */
 export function getPropertyName(node: PropertyName, sourceFile: SourceFile): string {
   let propertyName = '';
+  const fileText = sourceFile.getFullText();
   if (isIdentifier(node) || isPrivateIdentifier(node)) {
     const newNameNode = node as Identifier;
     propertyName = newNameNode.escapedText.toString();
   } else if (isComputedPropertyName(node)) {
     const newNameNode = node as ComputedPropertyName;
-    propertyName = sourceFile.text.substring(newNameNode.expression.pos, newNameNode.expression.end).trim();
+    propertyName = fileText.slice(newNameNode.expression.pos, newNameNode.expression.end).trim();
   } else {
-    propertyName = sourceFile.text.substring(node.pos, node.end).trim();
+    propertyName = fileText.slice(node.pos, node.end).trim();
   }
   return propertyName;
 }
@@ -162,17 +163,18 @@ export function getParameter(parameter: ParameterDeclaration, sourceFile: Source
   let paramName = '';
   let paramTypeString = '';
   const paramTypeKind = parameter.type?.kind === undefined ? -1 : parameter.type.kind;
+  const fileText = sourceFile.getFullText();
   if (isIdentifier(parameter.name)) {
     paramName = parameter.name.escapedText === undefined ? '' : parameter.name.escapedText.toString();
   } else {
     const start = parameter.name.pos === undefined ? 0 : parameter.name.pos;
     const end = parameter.name.end === undefined ? 0 : parameter.name.end;
-    paramName = sourceFile.text.substring(start, end).trim();
+    paramName = fileText.slice(start, end).trim();
   }
 
   const start = parameter.type?.pos === undefined ? 0 : parameter.type.pos;
   const end = parameter.type?.end === undefined ? 0 : parameter.type.end;
-  paramTypeString = sourceFile.text.substring(start, end).trim();
+  paramTypeString = fileText.slice(start, end).trim();
   return {
     paramName: paramName,
     paramTypeString: paramTypeString,

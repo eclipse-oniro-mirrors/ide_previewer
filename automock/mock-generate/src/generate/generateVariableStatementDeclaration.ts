@@ -43,8 +43,6 @@ export function generateVariableStatementDelcatation(statementEntity: StatementE
     statementValue = judgmentStatementEntityTypeName(statementEntity, statementValue);
   } else if (statementEntity.typeKind === SyntaxKind.BooleanKeyword) {
     statementValue = 'true';
-  } else if (statementEntity.initializer !== '') {
-    statementValue = statementEntity.initializer.endsWith('n').toString();
   } else {
     statementValue = `'[PC Preivew] unknown ${statementEntity.statementName}'`;
   }
