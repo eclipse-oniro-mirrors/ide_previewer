@@ -26,21 +26,29 @@ std::string StringHelper::StringToUtf8(const std::string& str)
         ELOG("MultiByteToWideChar failed.");
         return str;
     }
-    wchar_t* pwBuf = new wchar_t[nwLen + 1];
+    wchar_t* pwBuf = new(std::nothrow) wchar_t[nwLen + 1];
+    if (!pwBuf) {
+        ELOG("Memory allocation failed : pwBuf.");
+        return str;
+    }
     ZeroMemory(pwBuf, (nwLen + 1) * doubles);
     ::MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.length(), pwBuf, nwLen);
     int nLen = ::WideCharToMultiByte(CP_UTF8, 0, pwBuf, -1, NULL, NULL, NULL, NULL);
     if (nLen < 1) {
-        delete[]pwBuf;
+        delete[] pwBuf;
         ELOG("WideCharToMultiByte failed.");
         return str;
     }
-    char* pBuf = new char[nLen + 1];
+    char* pBuf = new(std::nothrow) char[nLen + 1];
+    if (!pBuf) {
+        ELOG("Memory allocation failed : pBuf.");
+        return str;
+    }
     ZeroMemory(pBuf, nLen + 1);
     ::WideCharToMultiByte(CP_UTF8, 0, pwBuf, nwLen, pBuf, nLen, NULL, NULL);
     std::string retStr(pBuf);
-    delete[]pwBuf;
-    delete[]pBuf;
+    delete[] pwBuf;
+    delete[] pBuf;
     pwBuf = NULL;
     pBuf = NULL;
     return retStr;
@@ -54,7 +62,11 @@ std::string StringHelper::Utf8ToString(const std::string& str)
     if (wLenAdd <= 1) {
         return str;
     }
-    wchar_t* pwBuf = new wchar_t[wLenAdd];
+    wchar_t* pwBuf = new(std::nothrow) wchar_t[wLenAdd];
+    if (!pwBuf) {
+        ELOG("Memory allocation failed : pwBuf.");
+        return str;
+    }
     int doubleLen = wLenAdd * doubles;
     if (EOK != memset_s(pwBuf, sizeof(*pwBuf) * doubles, 0, doubleLen)) {
         delete []pwBuf;
@@ -68,7 +80,11 @@ std::string StringHelper::Utf8ToString(const std::string& str)
         delete []pwBuf;
         return str;
     }
-    char* pBuf = new char[lenAdd];
+    char* pBuf = new(std::nothrow) char[lenAdd];
+    if (!pBuf) {
+        ELOG("Memory allocation failed : pBuf.");
+        return str;
+    }
     if (EOK != memset_s(pBuf, lenAdd, 0, lenAdd)) {
         delete []pBuf;
         ELOG("pBuf memset_s failed.");

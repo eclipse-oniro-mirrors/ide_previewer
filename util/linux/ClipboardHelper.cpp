@@ -16,15 +16,13 @@
 #include "ClipboardHelper.h"
 #include "ClipboardX11.h"
 
-using namespace std;
-
 void ClipboardHelper::SetClipboardData(const std::string& data)
 {
     ClipboardX11 clipboard;
     clipboard.SetClipboardData(data);
 }
 
-const string ClipboardHelper::GetClipboardData()
+const std::string ClipboardHelper::GetClipboardData()
 {
     ClipboardX11 clipboard;
     return clipboard.GetClipboardData();

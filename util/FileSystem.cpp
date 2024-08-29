@@ -20,11 +20,10 @@
 
 #include "PreviewerEngineLog.h"
 #include "NativeFileSystem.h"
-using namespace std;
 
-vector<string> FileSystem::pathList = {"file_system", "app", "ace", "data"};
-string FileSystem::bundleName = "";
-string FileSystem::fileSystemPath = "";
+std::vector<std::string> FileSystem::pathList = {"file_system", "app", "ace", "data"};
+std::string FileSystem::bundleName = "";
+std::string FileSystem::fileSystemPath = "";
 
 #ifdef _WIN32
 std::string FileSystem::separator = "\\";
@@ -32,40 +31,40 @@ std::string FileSystem::separator = "\\";
 std::string FileSystem::separator = "/";
 #endif
 
-bool FileSystem::IsFileExists(string path)
+bool FileSystem::IsFileExists(std::string path)
 {
     return S_ISREG(GetFileMode(path));
 }
 
-bool FileSystem::IsDirectoryExists(string path)
+bool FileSystem::IsDirectoryExists(std::string path)
 {
     return S_ISDIR(GetFileMode(path));
 }
 
-string FileSystem::GetApplicationPath()
+std::string FileSystem::GetApplicationPath()
 {
     char appPath[MAX_PATH_LEN];
     if (getcwd(appPath, MAX_PATH_LEN) == nullptr) {
         ELOG("Get current path failed.");
-        return string();
+        return std::string();
     }
-    string path(appPath);
+    std::string path(appPath);
     return path;
 }
 
-const string& FileSystem::GetVirtualFileSystemPath()
+const std::string& FileSystem::GetVirtualFileSystemPath()
 {
     return fileSystemPath;
 }
 
 void FileSystem::MakeVirtualFileSystemPath()
 {
-    string dirToMake = GetApplicationPath();
+    std::string dirToMake = GetApplicationPath();
     if (!IsDirectoryExists(dirToMake)) {
         ELOG("Application path is not exists.");
         return;
     }
-    for (string path : pathList) {
+    for (std::string path : pathList) {
         dirToMake += separator;
         dirToMake += path;
         MakeDir(dirToMake.data());
@@ -76,7 +75,7 @@ void FileSystem::MakeVirtualFileSystemPath()
     fileSystemPath = dirToMake;
 }
 
-int FileSystem::MakeDir(string path)
+int FileSystem::MakeDir(std::string path)
 {
     int result = 0;
 #ifdef _WIN32
@@ -87,12 +86,12 @@ int FileSystem::MakeDir(string path)
     return result;
 }
 
-void FileSystem::SetBundleName(string name)
+void FileSystem::SetBundleName(std::string name)
 {
     bundleName = name;
 }
 
-unsigned short FileSystem::GetFileMode(string path)
+unsigned short FileSystem::GetFileMode(std::string path)
 {
     struct stat info {};
     if (stat(path.data(), &info) != 0) {
@@ -101,7 +100,7 @@ unsigned short FileSystem::GetFileMode(string path)
     return info.st_mode;
 }
 
-string FileSystem::GetSeparator()
+std::string FileSystem::GetSeparator()
 {
     return separator;
 }

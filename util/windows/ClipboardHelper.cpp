@@ -17,11 +17,10 @@
 #include <string>
 #include <windows.h>
 #include "StringHelper.h"
-using namespace std;
 
 void ClipboardHelper::SetClipboardData(const std::string& data)
 {
-    string newData = StringHelper::Utf8ToString(data);
+    std::string newData = StringHelper::Utf8ToString(data);
     OpenClipboard(NULL);
     EmptyClipboard();
     HANDLE hHandle = GlobalAlloc(GMEM_FIXED, newData.size() + 1);
@@ -34,14 +33,14 @@ void ClipboardHelper::SetClipboardData(const std::string& data)
 
 const std::string ClipboardHelper::GetClipboardData()
 {
-    string data;
+    std::string data;
     if (!IsClipboardFormatAvailable(CF_TEXT)) {
         return data;
     }
     OpenClipboard(NULL);
     HANDLE h = ::GetClipboardData(CF_TEXT);
     char* p = (char*)GlobalLock(h);
-    string str(p);
+    std::string str(p);
     data = str;
     GlobalUnlock(h);
     CloseClipboard();

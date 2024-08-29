@@ -21,7 +21,6 @@
 #include "KeyboardHelper.h"
 #include "JsAppImpl.h"
 
-using namespace std;
 using namespace OHOS::MMI;
 
 KeyInputImpl::KeyInputImpl() : KeyInput(), pressedCodes(0)
@@ -45,7 +44,7 @@ void KeyInputImpl::DispatchOsKeyEvent() const
     keyEvent->code = KeyCode(keyCode);
     keyEvent->action = KeyAction(keyAction);
     keyEvent->pressedCodes = pressedCodes;
-    keyEvent->timeStamp = chrono::high_resolution_clock::now();
+    keyEvent->timeStamp = std::chrono::high_resolution_clock::now();
     keyEvent->key = keyString.c_str();
     keyEvent->enableCapsLock_ = KeyboardHelper::GetKeyStateByKeyName("CapsLock");
     keyEvent->enableNumLock_ = KeyboardHelper::GetKeyStateByKeyName("NumLock");
@@ -53,7 +52,7 @@ void KeyInputImpl::DispatchOsKeyEvent() const
 }
 
 void KeyInputImpl::SetKeyEvent(const int32_t keyCodeVal, const int32_t keyActionVal,
-                               const vector<int32_t> pressedCodesVal, const string keyStrVal)
+    const std::vector<int32_t> pressedCodesVal, const std::string keyStrVal)
 {
     keyCode = keyCodeVal;
     keyAction = keyActionVal;

@@ -20,7 +20,7 @@
 
 class KeyboardObjc {
 public:
-    static short GetKeyStateByKeyName(const std::string keyName);
+    static short GetKeyStateByKeyName(const std::string& keyName);
 };
 
 #endif

@@ -15,7 +15,6 @@
 
 #include "ClipboardHelper.h"
 #include "ClipboardObjc.h"
-using namespace std;
 
 void ClipboardHelper::SetClipboardData(const std::string& data)
 {

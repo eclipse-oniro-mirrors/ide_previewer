@@ -13,18 +13,17 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <thread>
 #include "CommandLineInterface.h"
 #include "PreviewerEngineLog.h"
 #include "WebSocketServer.h"
-using namespace std;
 
 lws* WebSocketServer::webSocket = nullptr;
-volatile sig_atomic_t WebSocketServer::interrupted = 0;
+std::atomic<bool> WebSocketServer::interrupted = false;
 WebSocketServer::WebSocketState WebSocketServer::webSocketWritable = WebSocketState::INIT;
 uint8_t* WebSocketServer::firstImageBuffer = nullptr;
 uint64_t WebSocketServer::firstImagebufferSize = 0;
-int8_t* WebSocketServer::receivedMessage = nullptr;
 
 WebSocketServer::WebSocketServer() : serverThread(nullptr), serverPort(0)
 {
@@ -86,7 +85,7 @@ int WebSocketServer::ProtocolCallback(struct lws* wsi,
 
 void WebSocketServer::SignalHandler(int sig)
 {
-    interrupted = 1;
+    interrupted = true;
 }
 
 void WebSocketServer::StartWebsocketListening()
@@ -108,9 +107,9 @@ void WebSocketServer::StartWebsocketListening()
         ELOG("WebSocketServer::StartWebsocketListening context memory allocation failed");
         return;
     }
-    while (interrupted == 0) {
+    while (!interrupted) {
         if (lws_service(context, WEBSOCKET_SERVER_TIMEOUT)) {
-            interrupted = 1;
+            interrupted = true;
         }
     }
     lws_context_destroy(context);
@@ -130,7 +129,7 @@ void WebSocketServer::Run()
 size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
 {
     while (webSocketWritable != WebSocketState::WRITEABLE) {
-        this_thread::sleep_for(chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (webSocket != nullptr && webSocketWritable == WebSocketState::WRITEABLE) {
         return lws_write(webSocket, data, length, LWS_WRITE_BINARY);

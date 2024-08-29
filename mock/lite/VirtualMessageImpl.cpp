@@ -16,7 +16,6 @@
 #include "VirtualMessageImpl.h"
 #include "PreviewerEngineLog.h"
 
-using namespace std;
 VirtualMessageImpl& VirtualMessageImpl::GetInstance()
 {
     static VirtualMessageImpl instance;
@@ -26,21 +25,21 @@ VirtualMessageImpl& VirtualMessageImpl::GetInstance()
 void VirtualMessageImpl::RegistBundle(const char* bundleAppName, SuccessCallback success, FailCallback fail)
 {
     mutex.lock();
-    string buildeName(bundleAppName);
-    callBacks[buildeName] = make_pair(success, fail);
+    std::string buildeName(bundleAppName);
+    callBacks[buildeName] = std::make_pair(success, fail);
     mutex.unlock();
 }
 
 void VirtualMessageImpl::UnregistBundle(const char* bundleAppName)
 {
     mutex.lock();
-    callBacks.erase(string(bundleAppName));
+    callBacks.erase(std::string(bundleAppName));
     mutex.unlock();
 }
 
-std::vector<char> VirtualMessageImpl::StringToCharVector(string str) const
+std::vector<char> VirtualMessageImpl::StringToCharVector(std::string str) const
 {
-    vector<char> vec(str.begin(), str.end());
+    std::vector<char> vec(str.begin(), str.end());
     vec.push_back('\0');
     return vec;
 }
@@ -48,10 +47,10 @@ std::vector<char> VirtualMessageImpl::StringToCharVector(string str) const
 void VirtualMessageImpl::SendVirtualMessage(MessageInfo info)
 {
     OHOS::FeatureAbilityDataInfo osInfo;
-    vector<char> deviceId = StringToCharVector(info.deviceID);
-    vector<char> bundleName = StringToCharVector(info.bundleName);
-    vector<char> abilityName = StringToCharVector(info.abilityName);
-    vector<char> message = StringToCharVector(info.message);
+    std::vector<char> deviceId = StringToCharVector(info.deviceID);
+    std::vector<char> bundleName = StringToCharVector(info.bundleName);
+    std::vector<char> abilityName = StringToCharVector(info.abilityName);
+    std::vector<char> message = StringToCharVector(info.message);
     osInfo.deviceID = &deviceId[0];
     osInfo.bundleName = &bundleName[0];
     osInfo.abilityName = &abilityName[0];

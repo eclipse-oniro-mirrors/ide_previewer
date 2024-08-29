@@ -17,14 +17,13 @@
 
 #include "PreviewerEngineLog.h"
 
-using namespace std;
 LocalSocket::LocalSocket() : pipeHandle(nullptr) {}
 
 LocalSocket::~LocalSocket() {}
 
-bool LocalSocket::ConnectToServer(string name, LocalSocket::OpenMode openMode, TransMode transMode)
+bool LocalSocket::ConnectToServer(std::string name, LocalSocket::OpenMode openMode, TransMode transMode)
 {
-    wstring tempName = wstring(name.begin(), name.end());
+    std::wstring tempName = std::wstring(name.begin(), name.end());
 
     DWORD openModeWin = GetWinOpenMode(openMode);
     pipeHandle = CreateFileW(tempName.c_str(), openModeWin, 0, nullptr, OPEN_EXISTING, 0, NULL);
@@ -42,19 +41,19 @@ bool LocalSocket::ConnectToServer(string name, LocalSocket::OpenMode openMode, T
     return true;
 }
 
-string LocalSocket::GetTracePipeName(string baseName) const
+std::string LocalSocket::GetTracePipeName(std::string baseName) const
 {
-    return string("\\\\.\\pipe\\") + baseName;
+    return std::string("\\\\.\\pipe\\") + baseName;
 }
 
-string LocalSocket::GetCommandPipeName(string baseName) const
+std::string LocalSocket::GetCommandPipeName(std::string baseName) const
 {
-    return string("\\\\.\\pipe\\") + baseName + "_commandPipe";
+    return std::string("\\\\.\\pipe\\") + baseName + "_commandPipe";
 }
 
-string LocalSocket::GetImagePipeName(string baseName) const
+std::string LocalSocket::GetImagePipeName(std::string baseName) const
 {
-    return string("\\\\.\\pipe\\") + baseName + "_imagePipe";
+    return std::string("\\\\.\\pipe\\") + baseName + "_imagePipe";
 }
 
 void LocalSocket::DisconnectFromServer()
@@ -102,13 +101,13 @@ size_t LocalSocket::WriteData(const void* data, size_t length) const
     return writeSize;
 }
 
-const LocalSocket& LocalSocket::operator<<(const string data) const
+const LocalSocket& LocalSocket::operator<<(const std::string data) const
 {
     WriteData(data.c_str(), data.length() + 1);
     return *this;
 }
 
-const LocalSocket& LocalSocket::operator>>(string& data) const
+const LocalSocket& LocalSocket::operator>>(std::string& data) const
 {
     char c = '\255';
     while (c != '\0' && ReadData(&c, 1) > 0) {

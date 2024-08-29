@@ -16,7 +16,7 @@
 #include "KeyboardObjc.h"
 #import <Carbon/Carbon.h>
 
-short KeyboardObjc::GetKeyStateByKeyName(const std::string keyName)
+short KeyboardObjc::GetKeyStateByKeyName(const std::string& keyName)
 {
     NSString *dataStr = [NSString stringWithCString:keyName.c_str() encoding:NSUTF8StringEncoding];
     if ([dataStr isEqualToString:@"CapsLock"]) {

@@ -40,7 +40,6 @@
 #endif
 #include <fstream>
 
-using namespace std;
 using namespace OHOS;
 using namespace OHOS::Ace;
 
@@ -177,8 +176,8 @@ void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
     SetOrientation(args, orientation);
     SetAceVersionArgs(args, aceVersion);
     SetDeviceScreenDensity(atoi(screenDensity.c_str()), commandInfo.deviceType);
-    SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
-    SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
+    SetLanguage(args, SharedData<std::string>::GetData(SharedDataType::LAN));
+    SetRegion(args, SharedData<std::string>::GetData(SharedDataType::REGION));
     SetScript(args, "");
     SetSystemResourcesPath(args);
     SetAppResourcesPath(args, commandInfo.appResourcePath);
@@ -211,7 +210,11 @@ void JsAppImpl::RunJsApp()
         SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfSetClipboardData(ClipboardHelper::SetClipboardData);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfGetClipboardData(ClipboardHelper::GetClipboardData);
-    listener = new PreviewerListener();
+    listener = new(std::nothrow) PreviewerListener();
+    if (!listener) {
+        ELOG("Memory allocation failed: listener.");
+        return;
+    }
     if (isDebug && debugServerPort >= 0) {
         RunDebugAbility(); // for debug preview
     } else {
@@ -310,7 +313,7 @@ void JsAppImpl::RunDebugAbility()
 
 void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
 {
-    const string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
+    const std::string path = commandInfo.appResourcePath + FileSystem::GetSeparator() + "module.json";
     if (!FileSystem::IsFileExists(path)) {
         ELOG("The module.json file is not exist.");
         return;
@@ -354,7 +357,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
     deviceCfg.colorMode = SetColorMode<OHOS::AbilityRuntime::ColorMode>(aceRunArgs.deviceConfig.colorMode);
     deviceCfg.density = aceRunArgs.deviceConfig.density;
     options.deviceConfig = deviceCfg;
-    string fPath = commandInfo.configPath;
+    std::string fPath = commandInfo.configPath;
     options.configuration = UpdateConfiguration(aceRunArgs);
     std::size_t pos = fPath.find(".idea");
     if (pos == std::string::npos) {
@@ -368,20 +371,20 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
 
 std::shared_ptr<AppExecFwk::Configuration> JsAppImpl::UpdateConfiguration(OHOS::Ace::Platform::AceRunArgs& args)
 {
-    std::shared_ptr<AppExecFwk::Configuration> configuration = make_shared<AppExecFwk::Configuration>();
+    std::shared_ptr<AppExecFwk::Configuration> configuration = std::make_shared<AppExecFwk::Configuration>();
     configuration->AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE,
-        SharedData<string>::GetData(SharedDataType::LANGUAGE));
-    string colorMode = "light";
+        SharedData<std::string>::GetData(SharedDataType::LANGUAGE));
+    std::string colorMode = "light";
     if (aceRunArgs.deviceConfig.colorMode == ColorMode::DARK) {
         colorMode = "dark";
     }
     configuration->AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE, colorMode);
-    string direction = "portrait";
+    std::string direction = "portrait";
     if (aceRunArgs.deviceConfig.orientation == DeviceOrientation::LANDSCAPE) {
         orientation = "landscape";
     }
     configuration->AddItem(OHOS::AppExecFwk::ConfigurationInner::APPLICATION_DIRECTION, direction);
-    string density = std::to_string(aceRunArgs.deviceConfig.density);
+    std::string density = std::to_string(aceRunArgs.deviceConfig.density);
     configuration->AddItem(OHOS::AppExecFwk::ConfigurationInner::APPLICATION_DENSITYDPI, density);
     return configuration;
 }
@@ -545,8 +548,8 @@ void JsAppImpl::SetScript(Platform::AceRunArgs& args, const std::string script) 
 
 void JsAppImpl::SetSystemResourcesPath(Platform::AceRunArgs& args) const
 {
-    string sep = FileSystem::GetSeparator();
-    string rPath = FileSystem::GetApplicationPath();
+    std::string sep = FileSystem::GetSeparator();
+    std::string rPath = FileSystem::GetApplicationPath();
     rPath = FileSystem::NormalizePath(rPath);
     int idx = rPath.find_last_of(sep);
     rPath = rPath.substr(0, idx + 1) + "resources";
@@ -595,7 +598,7 @@ void JsAppImpl::AssignValueForWidthAndHeight(const int32_t origWidth,
     ILOG("AssignValueForWidthAndHeight: %d %d %d %d", orignalWidth, orignalHeight, width, height);
 }
 
-void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, string reason)
+void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason)
 {
     SetResolutionParams(param.orignalWidth, param.orignalHeight, param.compressionWidth,
         param.compressionHeight, screenDensity);
@@ -664,17 +667,17 @@ void JsAppImpl::SetResolutionParams(int32_t changedOriginWidth, int32_t changedO
          aceRunArgs.deviceHeight, aceRunArgs.deviceConfig.density);
 }
 
-void JsAppImpl::SetArgsColorMode(const string& value)
+void JsAppImpl::SetArgsColorMode(const std::string& value)
 {
     colorMode = value;
 }
 
-void JsAppImpl::SetArgsAceVersion(const string& value)
+void JsAppImpl::SetArgsAceVersion(const std::string& value)
 {
     aceVersion = value;
 }
 
-void JsAppImpl::SetDeviceOrentation(const string& value)
+void JsAppImpl::SetDeviceOrentation(const std::string& value)
 {
     orientation = value;
 }
@@ -757,8 +760,8 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
         SetOrientation(args, orientation);
         SetDeviceScreenDensity(atoi(screenDensity.c_str()), commandInfo.deviceType);
         AdaptDeviceType(args, commandInfo.deviceType, aceRunArgs.deviceWidth);
-        SetLanguage(args, SharedData<string>::GetData(SharedDataType::LAN));
-        SetRegion(args, SharedData<string>::GetData(SharedDataType::REGION));
+        SetLanguage(args, SharedData<std::string>::GetData(SharedDataType::LAN));
+        SetRegion(args, SharedData<std::string>::GetData(SharedDataType::REGION));
     } else {
         SetDeviceWidth(args, paramObj["width"].AsInt());
         SetDeviceHeight(args, paramObj["height"].AsInt());
@@ -766,10 +769,10 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
                                      args.deviceWidth, args.deviceHeight);
         SetColorMode(args, paramObj["colorMode"].AsString());
         SetOrientation(args, paramObj["orientation"].AsString());
-        string deviceType = paramObj["deviceType"].AsString();
+        std::string deviceType = paramObj["deviceType"].AsString();
         SetDeviceScreenDensity(atoi(screenDensity.c_str()), deviceType);
         AdaptDeviceType(args, deviceType, args.deviceWidth, paramObj["dpi"].AsDouble());
-        string lanInfo = paramObj["locale"].AsString();
+        std::string lanInfo = paramObj["locale"].AsString();
         SetLanguage(args, lanInfo.substr(0, lanInfo.find("_")));
         SetRegion(args, lanInfo.substr(lanInfo.find("_") + 1, lanInfo.length() - 1));
     }
@@ -859,7 +862,7 @@ void JsAppImpl::DispatchInputMethodEvent(const unsigned int codePoint) const
     ability->OnInputMethodEvent(codePoint);
 }
 
-string JsAppImpl::GetDeviceTypeName(const OHOS::Ace::DeviceType type) const
+std::string JsAppImpl::GetDeviceTypeName(const OHOS::Ace::DeviceType type) const
 {
     switch (type) {
         case DeviceType::WATCH:
@@ -891,7 +894,7 @@ void JsAppImpl::InitGlfwEnv()
 
 void JsAppImpl::SetMockJsonInfo()
 {
-    string filePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "mock-config.json";
+    std::string filePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "mock-config.json";
     if (isDebug && debugServerPort >= 0) {
 #if defined(__APPLE__) || defined(_WIN32)
         simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
@@ -909,7 +912,7 @@ void JsAppImpl::SetPkgContextInfo()
 
 void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height)
 {
-    string reason = "resize";
+    std::string reason = "resize";
     ILOG("FoldStatusChanged commandFoldStatus:%s", commandFoldStatus.c_str());
     VirtualScreenImpl::GetInstance().SetFoldStatus(commandFoldStatus);
     OHOS::Rosen::FoldStatus status = ConvertFoldStatus(commandFoldStatus);
@@ -954,7 +957,11 @@ void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
         ELOG("GetWindow failed");
         return;
     }
-    sptr<OHOS::Rosen::AvoidArea> statusArea(new OHOS::Rosen::AvoidArea());
+    sptr<OHOS::Rosen::AvoidArea> statusArea(new(std::nothrow) OHOS::Rosen::AvoidArea());
+    if (!statusArea) {
+        ELOG("new OHOS::Rosen::AvoidArea failed");
+        return;
+    }
     if (OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR == type) {
         if (property.enable_) {
             statusArea->topRect_ = {0, 0, deviceWidth, avoidInitialAreas.topRect.height};

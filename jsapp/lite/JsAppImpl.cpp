@@ -46,11 +46,10 @@
 
 using namespace OHOS;
 using namespace ACELite;
-using namespace std;
 
 static uint8_t g_fontPsramBaseAddr[MIN_FONT_PSRAM_LENGTH];
 
-static void InitVectorFont(UIFont* font, const string fontPath)
+static void InitVectorFont(UIFont* font, const std::string fontPath)
 {
     ProductAdapter::SetDefaultFontStyle("SourceHanSansSC-Regular.otf", JsAppImpl::FONT_SIZE_DEFAULT);
     BaseFont* currentFont = new UIFontVector();
@@ -82,7 +81,7 @@ static void InitFontEngine()
     InitVectorFont(font, fontPath);
 
     int32_t fp = 0;
-    string fileName = fontPath + "line_cj.brk";
+    std::string fileName = fontPath + "line_cj.brk";
 #ifdef _WIN32
     fp = open(fileName.c_str(), O_RDONLY | O_BINARY);
 #else
@@ -156,14 +155,14 @@ void JsAppImpl::Interrupt()
 void JsAppImpl::ThreadCallBack()
 {
     OHOS::GraphicStartUp::Init();
-    GLOBAL_ConfigLanguage(SharedData<string>::GetData(SharedDataType::LANGUAGE).data());
+    GLOBAL_ConfigLanguage(SharedData<std::string>::GetData(SharedDataType::LANGUAGE).data());
     InitHalScreen();
     InitFontEngine();
     VirtualScreenImpl::GetInstance().InitAll(pipeName, pipePort);
     StartJsApp();
     InitTimer();
 
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
 #if defined(LITEWEARABLE_SUPPORTED) && LITEWEARABLE_SUPPORTED
     SharedData<uint8_t>::AppendNotify(SharedDataType::HEARTBEAT_VALUE, TimerTaskHandler::CheckHeartRateChanged,
         curThreadId, 50); // Duration:50 x 100 ms
@@ -174,19 +173,19 @@ void JsAppImpl::ThreadCallBack()
     SharedData<bool>::AppendNotify(SharedDataType::WEARING_STATE, TimerTaskHandler::CheckOnBodyStateChanged,
         curThreadId);
 #endif
-    SharedData<string>::AppendNotify(SharedDataType::LANGUAGE, TimerTaskHandler::CheckLanguageChanged,
+    SharedData<std::string>::AppendNotify(SharedDataType::LANGUAGE, TimerTaskHandler::CheckLanguageChanged,
         curThreadId);
 
     CppTimerManager& manager = CppTimerManager::GetTimerManager();
     while (!isInterrupt) {
-        this_thread::sleep_for(chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         manager.RunTimerTick();
     }
 }
 
 void JsAppImpl::InitTimer()
 {
-    taskHandleTimer = make_unique<CppTimer>(TimerTaskHandler::TaskHandle);
+    taskHandleTimer = std::make_unique<CppTimer>(TimerTaskHandler::TaskHandle);
     if (taskHandleTimer == nullptr) {
         ELOG("JsApp::InitTimer taskHandleTimer memory allocation failed.");
         return;
@@ -194,7 +193,7 @@ void JsAppImpl::InitTimer()
     CppTimerManager::GetTimerManager().AddCppTimer(*taskHandleTimer);
     taskHandleTimer->Start(TASK_HANDLE_TIMER_INTERVAL);
 
-    deviceCheckTimer = make_unique<CppTimer>(TimerTaskHandler::CheckDevice);
+    deviceCheckTimer = std::make_unique<CppTimer>(TimerTaskHandler::CheckDevice);
     if (deviceCheckTimer == nullptr) {
         ELOG("JsApp::InitTimer deviceCheckTimer memory allocation failed.");
         return;
@@ -202,7 +201,7 @@ void JsAppImpl::InitTimer()
     CppTimerManager::GetTimerManager().AddCppTimer(*deviceCheckTimer);
     deviceCheckTimer->Start(DEVICE_CHECK_TIMER_INTERVAL);
 
-    jsCheckTimer = make_unique<CppTimer>(TimerTaskHandler::CheckJsRunning);
+    jsCheckTimer = std::make_unique<CppTimer>(TimerTaskHandler::CheckJsRunning);
     if (jsCheckTimer == nullptr) {
         ELOG("JsApp::InitTimer jsCheckTimer memory allocation failed.");
         return;
@@ -218,7 +217,7 @@ void JsAppImpl::StartJsApp()
         return;
     }
 
-    jsAbility = make_unique<OHOS::ACELite::JSAbility>();
+    jsAbility = std::make_unique<OHOS::ACELite::JSAbility>();
     if (jsAbility == nullptr) {
         FLOG("JsApp::StartJsApp jsAbility memory allocation failed");
         return;
@@ -247,7 +246,7 @@ void JsAppImpl::StartJsApp()
     }
     Json2::Value val = JsonReader::CreateObject();
     val.Add("uri", urlPath.c_str());
-    string routerInfo = val.ToStyledString();
+    std::string routerInfo = val.ToStyledString();
     jsAbility->Launch(jsAppPath.c_str(), bundleName.c_str(), 0, routerInfo.data());
     jsAbility->Show();
     ILOG("JsApp::StartJsApp launch with single page mode finished.");

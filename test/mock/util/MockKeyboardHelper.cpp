@@ -15,7 +15,7 @@
 
 #include "KeyboardHelper.h"
 
-short KeyboardHelper::GetKeyStateByKeyName(const std::string keyName)
+short KeyboardHelper::GetKeyStateByKeyName(const std::string& keyName)
 {
     return 0;
 }

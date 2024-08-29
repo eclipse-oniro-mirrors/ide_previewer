@@ -22,7 +22,6 @@
 
 #include "PreviewerEngineLog.h"
 
-using namespace std;
 LocalSocket::LocalSocket() : socketHandle(-1) {}
 
 LocalSocket::~LocalSocket()
@@ -30,7 +29,7 @@ LocalSocket::~LocalSocket()
     DisconnectFromServer();
 }
 
-bool LocalSocket::ConnectToServer(string name, OpenMode openMode, TransMode transMode)
+bool LocalSocket::ConnectToServer(std::string name, OpenMode openMode, TransMode transMode)
 {
     (void)openMode;
     (void)transMode;
@@ -52,19 +51,19 @@ bool LocalSocket::ConnectToServer(string name, OpenMode openMode, TransMode tran
     return true;
 }
 
-string LocalSocket::GetTracePipeName(string baseName) const
+std::string LocalSocket::GetTracePipeName(std::string baseName) const
 {
-    return string("/tmp/") + baseName;
+    return std::string("/tmp/") + baseName;
 }
 
-string LocalSocket::GetCommandPipeName(string baseName) const
+std::string LocalSocket::GetCommandPipeName(std::string baseName) const
 {
-    return string("/tmp/") + baseName + "_commandPipe";
+    return std::string("/tmp/") + baseName + "_commandPipe";
 }
 
-string LocalSocket::GetImagePipeName(string baseName) const
+std::string LocalSocket::GetImagePipeName(std::string baseName) const
 {
-    return string("/tmp/") + baseName + "_imagePipe";
+    return std::string("/tmp/") + baseName + "_imagePipe";
 }
 
 void LocalSocket::DisconnectFromServer()
@@ -104,7 +103,7 @@ size_t LocalSocket::WriteData(const void* data, size_t length) const
         ELOG("LocalSocket::WriteData length must < %d", UINT32_MAX);
         return 0;
     }
-    string str((const char*)data);
+    std::string str((const char*)data);
     ssize_t writeSize = send(socketHandle, str.c_str(), length, 0);
     if (writeSize == 0) {
         ELOG("LocalSocket::WriteData Server is shut down");
@@ -117,7 +116,7 @@ size_t LocalSocket::WriteData(const void* data, size_t length) const
     return writeSize;
 }
 
-const LocalSocket& LocalSocket::operator>>(string& data) const
+const LocalSocket& LocalSocket::operator>>(std::string& data) const
 {
     char c = '\255';
     while (c != '\0' && ReadData(&c, 1) > 0) {
@@ -126,7 +125,7 @@ const LocalSocket& LocalSocket::operator>>(string& data) const
     return *this;
 }
 
-const LocalSocket& LocalSocket::operator<<(const string data) const
+const LocalSocket& LocalSocket::operator<<(const std::string data) const
 {
     WriteData(data.c_str(), data.length() + 1);
     return *this;

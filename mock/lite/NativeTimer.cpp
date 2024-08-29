@@ -19,8 +19,6 @@
 #include "CppTimerManager.h"
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
 const static int RES_OK = 0;
 const static int RES_ERROR = -1;
 
@@ -45,9 +43,9 @@ int StartTimerTask(bool isPeriodic, const unsigned int delay, void* userCallback
         return RES_ERROR;
     }
 
-    CppTimer* timer = new CppTimer(reinterpret_cast<TimerCallBack>(userCallback), userContext);
+    CppTimer* timer = new(std::nothrow) CppTimer(reinterpret_cast<TimerCallBack>(userCallback), userContext);
     if (timer == nullptr) {
-        ELOG("TimerNew timer memory allocation failed");
+        ELOG("Memory allocation failed: timer.");
         *timerHandle = timer;
         return RES_ERROR;
     }

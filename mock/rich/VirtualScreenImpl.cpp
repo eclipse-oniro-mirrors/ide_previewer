@@ -26,8 +26,6 @@
 #include "TraceTool.h"
 #include <sstream>
 
-using namespace std;
-
 VirtualScreenImpl& VirtualScreenImpl::GetInstance()
 {
     static VirtualScreenImpl virtualScreen;
@@ -48,7 +46,11 @@ void VirtualScreenImpl::SendBufferOnTimer()
             delete [] GetInstance().loadDocCopyBuffer;
             GetInstance().loadDocCopyBuffer = nullptr;
         }
-        GetInstance().loadDocCopyBuffer = new uint8_t[GetInstance().lengthTemp];
+        GetInstance().loadDocCopyBuffer = new(std::nothrow) uint8_t[GetInstance().lengthTemp];
+        if (!GetInstance().loadDocCopyBuffer) {
+            ELOG("Memory allocation failed : loadDocCopyBuffer.");
+            return;
+        }
         std::copy(GetInstance().loadDocTempBuffer,
             GetInstance().loadDocTempBuffer + GetInstance().lengthTemp,
             GetInstance().loadDocCopyBuffer);
@@ -56,7 +58,11 @@ void VirtualScreenImpl::SendBufferOnTimer()
     VirtualScreenImpl::GetInstance().protocolVersion =
         static_cast<uint16_t>(VirtualScreen::ProtocolVersion::LOADDOC);
     GetInstance().bufferSize = GetInstance().lengthTemp + GetInstance().headSize;
-    GetInstance().wholeBuffer = new uint8_t[LWS_PRE + GetInstance().bufferSize];
+    GetInstance().wholeBuffer = new(std::nothrow) uint8_t[LWS_PRE + GetInstance().bufferSize];
+    if (!GetInstance().wholeBuffer) {
+        ELOG("Memory allocation failed : wholeBuffer.");
+        return;
+    }
     GetInstance().screenBuffer = GetInstance().wholeBuffer + LWS_PRE;
     GetInstance().SendPixmap(GetInstance().loadDocCopyBuffer, GetInstance().lengthTemp,
         GetInstance().widthTemp, GetInstance().heightTemp);
@@ -80,7 +86,7 @@ bool VirtualScreenImpl::FlushEmptyFunc(std::chrono::system_clock::time_point end
         }
     } else {
         // flushEmpty后没有继续出图，计时100ms，如果仍没有onRender，发送上一次的的onRender buffer
-        int64_t timePassed2 = chrono::duration_cast<chrono::milliseconds>(endTime -
+        int64_t timePassed2 = std::chrono::duration_cast<std::chrono::milliseconds>(endTime -
             GetInstance().flushEmptyTime).count();
         if (timePassed2 > TIMEOUT_ONRENDER_DURATION_MS) {
             if (GetInstance().timeStampTemp < GetInstance().flushEmptyTimeStamp) {
@@ -118,7 +124,7 @@ void VirtualScreenImpl::StartTimer()
 {
     while (true) {
         auto endTime = std::chrono::system_clock::now();
-        int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
+        int64_t timePassed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime -
                                 VirtualScreenImpl::GetInstance().startTime).count();
         bool ret = false;
         if (GetInstance().isFlushEmpty) {
@@ -152,7 +158,11 @@ bool VirtualScreenImpl::LoadDocCallback(const void* data, const size_t length, c
             if (length <= 0) {
                 return false;
             }
-            GetInstance().loadDocTempBuffer = new uint8_t[length];
+            GetInstance().loadDocTempBuffer = new(std::nothrow) uint8_t[length];
+            if (!GetInstance().loadDocTempBuffer) {
+                ELOG("Memory allocation failed : loadDocTempBuffer.");
+                return false;
+            }
             uint8_t*  dataPtr = reinterpret_cast<uint8_t*>(const_cast<void*>(data));
             std::copy(dataPtr, dataPtr + length, GetInstance().loadDocTempBuffer);
             GetInstance().onRenderTime = std::chrono::system_clock::now();
@@ -160,7 +170,7 @@ bool VirtualScreenImpl::LoadDocCallback(const void* data, const size_t length, c
         if (VirtualScreen::isStartCount) {
             VirtualScreen::isStartCount = false;
             VirtualScreen::startTime = std::chrono::system_clock::now();
-            thread timerThread(std::ref(VirtualScreenImpl::StartTimer));
+            std::thread timerThread(std::ref(VirtualScreenImpl::StartTimer));
             timerThread.detach();
         }
         return false;
@@ -190,7 +200,11 @@ bool VirtualScreenImpl::Callback(const void* data, const size_t length,
     }
 
     GetInstance().bufferSize = length + GetInstance().headSize;
-    GetInstance().wholeBuffer = new uint8_t[LWS_PRE + GetInstance().bufferSize];
+    GetInstance().wholeBuffer = new(std::nothrow) uint8_t[LWS_PRE + GetInstance().bufferSize];
+    if (!GetInstance().wholeBuffer) {
+        ELOG("Memory allocation failed : wholeBuffer.");
+        return false;
+    }
     GetInstance().screenBuffer = GetInstance().wholeBuffer + LWS_PRE;
 
     return GetInstance().SendPixmap(data, length, width, height);
@@ -247,7 +261,7 @@ void VirtualScreenImpl::FastPreviewCallback(const std::string& jsonStr)
     CommandLineInterface::GetInstance().CreatCommandToSendData("FastPreviewMsg", val, "get");
 }
 
-void VirtualScreenImpl::InitAll(string pipeName, string pipePort)
+void VirtualScreenImpl::InitAll(std::string pipeName, std::string pipePort)
 {
     VirtualScreen::InitPipe(pipeName, pipePort);
 }
@@ -291,7 +305,11 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
         FLOG("VirtualScreenImpl::RgbToJpg the retWidth or height is invalid value");
         return;
     }
-    unsigned char* dataTemp = new unsigned char[retWidth * retHeight * jpgPix];
+    unsigned char* dataTemp = new(std::nothrow) unsigned char[retWidth * retHeight * jpgPix];
+    if (!dataTemp) {
+        ELOG("Memory allocation failed : dataTemp.");
+        return;
+    }
     for (int i = 0; i < retHeight; i++) {
         for (int j = 0; j < retWidth; j++) {
             int inputBasePos = i * retWidth * pixelSize + j * pixelSize;
@@ -315,7 +333,11 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
         delete [] WebSocketServer::GetInstance().firstImageBuffer;
         WebSocketServer::GetInstance().firstImageBuffer = nullptr;
     }
-    WebSocketServer::GetInstance().firstImageBuffer = new uint8_t[LWS_PRE + bufferSize];
+    WebSocketServer::GetInstance().firstImageBuffer = new(std::nothrow) uint8_t[LWS_PRE + bufferSize];
+    if (!WebSocketServer::GetInstance().firstImageBuffer) {
+        ELOG("Memory allocation failed : firstImageBuffer.");
+        return;
+    }
     WebSocketServer::GetInstance().firstImagebufferSize = headSize + jpgBufferSize;
     std::copy(screenBuffer,
               screenBuffer + headSize + jpgBufferSize,

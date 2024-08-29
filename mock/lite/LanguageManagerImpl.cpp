@@ -22,8 +22,6 @@
 
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
 LanguageManagerImpl& LanguageManagerImpl::GetInstance()
 {
     static LanguageManagerImpl manager; // NOLINT

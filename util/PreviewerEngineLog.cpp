@@ -27,13 +27,10 @@
 #include "TimeTool.h"
 #include "securec.h"
 
-using namespace std;
-
-
 void PrintLog(const char* level, const char* file, const char* func, int line, const char* fmt, ...)
 {
 #ifdef NDEBUG
-    string levelStr(level);
+    std::string levelStr(level);
     if (levelStr == "DEBUG") {
         return;
     }
@@ -41,12 +38,12 @@ void PrintLog(const char* level, const char* file, const char* func, int line, c
     static char output[1024] = { 0 };
     va_list argsList;
     va_start(argsList, fmt);
-    string fileStr(file);
+    std::string fileStr(file);
     int idx = fileStr.find_last_of("/");
     fileStr = fileStr.substr(idx + 1);
     int ret = vsnprintf_s(output, sizeof(output), sizeof(output), fmt, argsList);
     if (ret == -1) {
-        cout << "PrintLog function error";
+        std::cout << "PrintLog function error";
         return;
     }
     if (stdout != nullptr) {

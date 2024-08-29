@@ -16,7 +16,6 @@
 #include "ClipboardObjc.h"
 #include <iostream>
 #import <Cocoa/Cocoa.h>
-using namespace std;
 
 void ClipboardObjc::SetClipboardData(const std::string& data)
 {
@@ -43,5 +42,5 @@ const std::string ClipboardObjc::GetClipboardData()
     if (dataStr == nil || dataStr.length == 0) {
       return "";
     }
-    return string([dataStr UTF8String]);
+    return std::string([dataStr UTF8String]);
 }

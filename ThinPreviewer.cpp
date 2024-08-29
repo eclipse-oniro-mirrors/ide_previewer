@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <vector>
-
+#include <new>
 #include "CommandLineFactory.h"
 #include "CommandLineInterface.h"
 #include "CommandParser.h"
@@ -34,7 +34,6 @@
 #include "VirtualScreenImpl.h"
 #include "jsi.h"
 
-using namespace std;
 static const int NOTIFY_INTERVAL_TIME = 1000; // Unit millisecond
 
 static void InitSettings()
@@ -47,7 +46,7 @@ static void InitSettings()
 
 static void ApplyConfig()
 {
-    string liteConfigArgs = CommandParser::GetInstance().GetConfigPath();
+    std::string liteConfigArgs = CommandParser::GetInstance().GetConfigPath();
     if (liteConfigArgs.empty()) {
         ELOG("No persistent properties path found.");
     }
@@ -79,11 +78,16 @@ static void InitSharedData()
     // The atmospheric pressure ranges from 0 to 999900. The default value is 101325.
     SharedData<uint32_t>(SharedDataType::PRESSURE_VALUE, 101325, 0, 999900);
     SharedData<bool>(SharedDataType::WEARING_STATE, true);
-    SharedData<string>(SharedDataType::LANGUAGE, "zh-CN");
+    SharedData<std::string>(SharedDataType::LANGUAGE, "zh-CN");
     // The value ranges from 180 to 180. The default value is 0.
     SharedData<double>(SharedDataType::LONGITUDE, 0, -180, 180);
     // The value ranges from -90 to 90. The default value is 0.
     SharedData<double>(SharedDataType::LATITUDE, 0, -90, 90);
+}
+
+static void NewHandler()
+{
+    ELOG("Custom new handler: memory allocation failed.");
 }
 
 static void SendJsHeapData()
@@ -96,12 +100,9 @@ static void SendJsHeapData()
 int main(int argc, char* argv[])
 {
     ILOG("ThinPreviewer enter the main function.");
+    std::set_new_handler(NewHandler);
     // thin device global exception handler
     auto thinCrashHandler = std::make_unique<CrashHandler>();
-    if (thinCrashHandler == nullptr) {
-        ELOG("ThinPreviewer crashHandler new fail.");
-        return 0;
-    }
     thinCrashHandler->InitExceptionHandler();
     // Creating a Main Thread Timer Manager
     CppTimerManager& manager = CppTimerManager::GetTimerManager();
@@ -128,15 +129,15 @@ int main(int argc, char* argv[])
         jsHeapSendTimer.Start(NOTIFY_INTERVAL_TIME); // 1000ms Timer polling period
     }
     // Registering and monitoring the changes of the brightness and volume
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     SharedData<uint8_t>::AppendNotify(SharedDataType::BRIGHTNESS_VALUE,
                                       TimerTaskHandler::CheckBrightnessValueChanged, curThreadId);
     while (!Interrupter::IsInterrupt()) {
         CommandLineInterface::GetInstance().ProcessCommand();
         manager.RunTimerTick();
-        this_thread::sleep_for(chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     JsAppImpl::GetInstance().Stop();
-    this_thread::sleep_for(chrono::milliseconds(500)); // sleep 500 ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // sleep 500 ms
     return 0;
 }

@@ -89,9 +89,9 @@ VirtualLocation::~VirtualLocation()
 
 void VirtualLocation::InitMockPointer()
 {
-    mockPointer = new int8_t;
+    mockPointer = new(std::nothrow) int8_t;
     if (mockPointer == nullptr) {
-        FLOG("VirtualLocation::InitMockPointer mockPointer memory allocation failed");
+        ELOG("Memory allocation failed: mockPointer.");
     }
 }
 

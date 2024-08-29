@@ -22,8 +22,6 @@
 #include "PreviewerEngineLog.h"
 #include "cJSON.h"
 
-using namespace std;
-
 namespace Json2 {
     Value::Value(cJSON* object) : jsonPtr(object), rootNode(true) {}
 
@@ -621,19 +619,19 @@ namespace Json2 {
         if (key) {
             return std::string(key);
         }
-        return string();
+        return std::string();
     }
 }
 
 
-string JsonReader::ReadFile(const string& path)
+std::string JsonReader::ReadFile(const std::string& path)
 {
-    ifstream inFile(path);
+    std::ifstream inFile(path);
     if (!inFile.is_open()) {
         ELOG("JsonReader: Open json file failed.");
-        return string();
+        return std::string();
     }
-    string jsonStr((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
+    std::string jsonStr((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
     inFile.close();
     return jsonStr;
 }
@@ -649,7 +647,7 @@ std::string JsonReader::GetErrorPtr()
     if (err) {
         return std::string(err);
     }
-    return string();
+    return std::string();
 }
 
 Json2::Value JsonReader::CreateObject()

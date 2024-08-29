@@ -38,7 +38,6 @@
 #include "VirtualScreenImpl.h"
 
 using namespace OHOS::ACELite;
-using namespace std;
 
 void TimerTaskHandler::TaskHandle()
 {

@@ -19,8 +19,6 @@
 #include "SharedData.h"
 #include "VirtualLocation.h"
 
-using namespace std;
-
 static const int32_t RES_OK = 0;
 static const int32_t RES_ERROR = -1;
 

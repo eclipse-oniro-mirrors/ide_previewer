@@ -22,8 +22,6 @@
 
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
 using namespace OHOS::MMI;
 
 MouseInputImpl::MouseInputImpl() noexcept
@@ -74,14 +72,14 @@ void MouseInputImpl::DispatchOsTouchEvent() const
         sourceTool:%d pressedButtonsSize:%d axisValuesArr:%s", pointerEvent->x, pointerEvent->y,
         pointerEvent->type, pointerEvent->buttonId_, pointerEvent->pointerAction_, pointerEvent->sourceType,
         pointerEvent->sourceTool, pointerEvent->pressedButtons_.size(), ss.str().c_str());
-    ILOG("current thread: %d", this_thread::get_id());
+    ILOG("current thread: %d", std::this_thread::get_id());
     JsAppImpl::GetInstance().DispatchPointerEvent(pointerEvent);
 }
 
 void MouseInputImpl::DispatchOsBackEvent() const
 {
     ILOG("DispatchBackPressedEvent run.");
-    ILOG("current thread: %d", this_thread::get_id());
+    ILOG("current thread: %d", std::this_thread::get_id());
     JsAppImpl::GetInstance().DispatchBackPressedEvent();
 }
 

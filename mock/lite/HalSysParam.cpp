@@ -21,8 +21,6 @@
 #include "ModelManager.h"
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
