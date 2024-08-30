@@ -22,7 +22,6 @@
 #include "PreviewerEngineLog.h"
 #include "JsonReader.h"
 
-using namespace std;
 SystemCapability& SystemCapability::GetInstance()
 {
     static SystemCapability instance;
@@ -31,7 +30,7 @@ SystemCapability& SystemCapability::GetInstance()
 
 bool SystemCapability::HasSystemCapability(const char* sysCapName)
 {
-    string capName = sysCapName;
+    std::string capName = sysCapName;
     if (capabilities.find(sysCapName) == capabilities.end()) {
         return false;
     }
@@ -48,16 +47,16 @@ void SystemCapability::ReadCapability()
     std::string separator = FileSystem::GetSeparator();
     std::string filePath = FileSystem::GetApplicationPath() + separator + ".." + separator + "config" + separator +
                            "system_capability.json";
-    ifstream inFile(filePath);
+    std::ifstream inFile(filePath);
     if (!inFile.is_open()) {
         ELOG("Open capability file failed.");
     }
-    string jsonStr((istreambuf_iterator<char>(inFile)), istreambuf_iterator<char>());
+    std::string jsonStr((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
     inFile.close();
 
     Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
     if (val.IsNull()) {
-        string message = JsonReader::GetErrorPtr();
+        std::string message = JsonReader::GetErrorPtr();
         ELOG("Failed to parse the capability, errors: %s", message.c_str());
     }
     if (val["systemCapability"].IsNull() || !val["systemCapability"].IsArray()) {

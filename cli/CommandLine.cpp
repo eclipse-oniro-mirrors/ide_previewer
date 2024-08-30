@@ -36,8 +36,6 @@
 #include "VirtualMessageImpl.h"
 #include "VirtualScreenImpl.h"
 
-using namespace std;
-
 CommandLine::CommandLine(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
     : args(arg), cliSocket(socket), type(commandType), commandName("")
 {
@@ -140,26 +138,26 @@ void CommandLine::Run()
 
 bool CommandLine::IsBoolType(std::string arg) const
 {
-    regex tofrx("^(true)|(false)$");
+    std::regex tofrx("^(true)|(false)$");
     if (regex_match(arg, tofrx)) {
         return true;
     }
     return false;
 }
 
-bool CommandLine::IsIntType(string arg) const
+bool CommandLine::IsIntType(std::string arg) const
 {
-    regex isInt("^\\d+$");
+    std::regex isInt("^\\d+$");
     return regex_match(arg, isInt);
 }
 
-bool CommandLine::IsOneDigitFloatType(string arg, bool allowNegativeNumber) const
+bool CommandLine::IsOneDigitFloatType(std::string arg, bool allowNegativeNumber) const
 {
     if (allowNegativeNumber) {
-        regex isFloat("^-?\\d+(\\.\\d+)?$");
+        std::regex isFloat("^-?\\d+(\\.\\d+)?$");
         return regex_match(arg, isFloat);
     } else {
-        regex isFloat("^\\d(\\.\\d+)?$");
+        std::regex isFloat("^\\d(\\.\\d+)?$");
         return regex_match(arg, isFloat);
     }
 }
@@ -452,7 +450,7 @@ bool ResolutionSwitchCommand::IsSetArgValid() const
         if (!args["reason"].IsString()) {
             return false;
         }
-        string reason = args["reason"].AsString();
+        std::string reason = args["reason"].AsString();
         if (reason != "rotation" && reason != "resize" && reason != "undefined") {
             ELOG("Invalid value of reason!");
             return false;
@@ -484,7 +482,7 @@ void ResolutionSwitchCommand::RunSet()
     int32_t width = args["width"].AsInt();
     int32_t height = args["height"].AsInt();
     int32_t screenDensity = args["screenDensity"].AsInt();
-    string reason = "undefined";
+    std::string reason = "undefined";
     if (args.IsMember("reason")) {
         reason = args["reason"].AsString();
     }
@@ -633,7 +631,7 @@ bool LoadDocumentCommand::IsIntValValid(const Json2::Value& previewParam) const
 
 bool LoadDocumentCommand::IsStrValVailid(const Json2::Value& previewParam) const
 {
-    string locale = previewParam["locale"].AsString();
+    std::string locale = previewParam["locale"].AsString();
     bool isLiteDevice = JsApp::IsLiteDevice(CommandParser::GetInstance().GetDeviceType());
     if (isLiteDevice) {
         if (std::find(liteSupportedLanguages.begin(), liteSupportedLanguages.end(), locale) ==
@@ -738,7 +736,7 @@ bool LanguageCommand::IsSetArgValid() const
     }
 
     CommandParser& cmdParser = CommandParser::GetInstance();
-    string deviceType = cmdParser.GetDeviceType();
+    std::string deviceType = cmdParser.GetDeviceType();
     bool isLiteDevice = JsApp::IsLiteDevice(deviceType);
     if (isLiteDevice) {
         if (std::find(liteSupportedLanguages.begin(), liteSupportedLanguages.end(), args["Language"].AsString()) ==
@@ -758,7 +756,7 @@ bool LanguageCommand::IsSetArgValid() const
 
 void LanguageCommand::RunGet()
 {
-    std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+    std::string language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
     Json2::Value resultContent = JsonReader::CreateObject();
     resultContent.Add("Language", language.c_str());
     SetCommandResult("result", resultContent);
@@ -767,8 +765,8 @@ void LanguageCommand::RunGet()
 
 void LanguageCommand::RunSet()
 {
-    string language(args["Language"].AsString());
-    SharedData<string>::SetData(SharedDataType::LANGUAGE, language);
+    std::string language(args["Language"].AsString());
+    SharedData<std::string>::SetData(SharedDataType::LANGUAGE, language);
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set language run finished, language is: %s", language.c_str());
 }
@@ -784,7 +782,7 @@ void SupportedLanguagesCommand::RunGet()
 {
     Json2::Value resultContent = JsonReader::CreateObject();
     Json2::Value languageList = JsonReader::CreateArray();
-    string deviceType = CommandParser::GetInstance().GetDeviceType();
+    std::string deviceType = CommandParser::GetInstance().GetDeviceType();
     bool isLiteDevice = JsApp::IsLiteDevice(deviceType);
     if (!deviceType.empty() && !isLiteDevice) {
         for (auto iter = richSupportedLanguages.begin(); iter != richSupportedLanguages.end(); iter++) {
@@ -811,9 +809,9 @@ bool LocationCommand::IsSetArgValid() const
         ELOG("Invalid number of arguments!");
         return false;
     }
-    string latitude(args["latitude"].AsString());
-    string longitude(args["longitude"].AsString());
-    regex isDob("^([\\-]*[0-9]{1,}[\\.][0-9]*)$");
+    std::string latitude(args["latitude"].AsString());
+    std::string longitude(args["longitude"].AsString());
+    std::regex isDob("^([\\-]*[0-9]{1,}[\\.][0-9]*)$");
     if (!regex_match(latitude, isDob) || !regex_match(longitude, isDob)) {
         ELOG("Invalid arguments!");
         return false;
@@ -844,8 +842,8 @@ void LocationCommand::RunGet()
 
 void LocationCommand::RunSet()
 {
-    string latitude(args["latitude"].AsString());
-    string longitude(args["longitude"].AsString());
+    std::string latitude(args["latitude"].AsString());
+    std::string longitude(args["longitude"].AsString());
     SharedData<double>::SetData(SharedDataType::LONGITUDE, atof(longitude.data()));
     SharedData<double>::SetData(SharedDataType::LATITUDE, atof(latitude.data()));
     Json2::Value resultContent = JsonReader::CreateBool(true);
@@ -888,9 +886,9 @@ bool DistributedCommunicationsCommand::IsActionArgValid() const
     return true;
 }
 
-std::vector<char> DistributedCommunicationsCommand::StringToCharVector(string str) const
+std::vector<char> DistributedCommunicationsCommand::StringToCharVector(std::string str) const
 {
-    vector<char> vec(str.begin(), str.end());
+    std::vector<char> vec(str.begin(), str.end());
     vec.push_back('\0');
     return vec;
 }
@@ -1376,11 +1374,11 @@ void KeyPressCommand::RunAction()
         int32_t keyCode = args["keyCode"].AsInt();
         int32_t keyAction = args["keyAction"].AsInt();
         Json2::Value pressedCodes = args["pressedCodes"];
-        vector<int32_t> pressedCodesVec;
+        std::vector<int32_t> pressedCodesVec;
         for (unsigned int i = 0; i < pressedCodes.GetArraySize(); i++) {
             pressedCodesVec.push_back(pressedCodes.GetArrayItem(i).AsInt());
         }
-        string keyString = "";
+        std::string keyString = "";
         if (args.IsMember("keyString") && args["keyString"].IsString()) {
             keyString = args["keyString"].AsString();
         }
@@ -1465,7 +1463,7 @@ void PointEventCommand::RunAction()
             param.pressedBtnsVec.insert(val.AsInt());
         }
     }
-    vector<double> axisVec; // 13 is array size
+    std::vector<double> axisVec; // 13 is array size
     Json2::Value axisCodes = args["axisValues"];
     for (unsigned int i = 0; i < axisCodes.GetArraySize(); i++) {
         param.axisVec.push_back(axisCodes.GetArrayItem(i).AsDouble());

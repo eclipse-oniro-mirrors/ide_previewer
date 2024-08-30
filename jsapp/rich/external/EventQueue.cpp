@@ -14,7 +14,6 @@
  */
 
 #include "EventQueue.h"
-using namespace std;
 
 namespace OHOS::AppExecFwk {
 EventTask::EventTask(size_t order, Callback task, std::chrono::steady_clock::time_point targetTime)

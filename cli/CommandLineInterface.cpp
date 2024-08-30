@@ -26,16 +26,14 @@
 #include "VirtualScreen.h"
 #include "CommandParser.h"
 
-using namespace std;
-
-const string CommandLineInterface::COMMAND_VERSION = "1.0.1";
+const std::string CommandLineInterface::COMMAND_VERSION = "1.0.1";
 bool CommandLineInterface::isFirstWsSend = true;
 bool CommandLineInterface::isPipeConnected = false;
 CommandLineInterface::CommandLineInterface() : socket(nullptr) {}
 
 CommandLineInterface::~CommandLineInterface() {}
 
-void CommandLineInterface::InitPipe(const string name)
+void CommandLineInterface::InitPipe(const std::string name)
 {
     if (socket != nullptr) {
         socket.reset();
@@ -93,7 +91,7 @@ void CommandLineInterface::SendWebsocketStartupSignal() const
 
 void CommandLineInterface::ProcessCommand() const
 {
-    string message; /* NOLINT */
+    std::string message; /* NOLINT */
     if (socket == nullptr) {
         ELOG("CommandLineInterface::ProcessCommand socket is null");
         return;
@@ -129,7 +127,7 @@ void CommandLineInterface::ProcessCommandMessage(std::string message) const
         return;
     }
 
-    string command = jsonData["command"].AsString();
+    std::string command = jsonData["command"].AsString();
     if (CommandParser::GetInstance().IsStaticCard() && IsStaticIgnoreCmd(command)) {
         return;
     }
@@ -162,14 +160,15 @@ bool CommandLineInterface::ProcessCommandValidate(bool parsingSuccessful,
         return false;
     }
 
-    if (!regex_match(jsonData["version"].AsString(), regex("(([0-9]|([1-9]([0-9]*))).){2}([0-9]|([1-9]([0-9]*)))"))) {
+    if (!regex_match(jsonData["version"].AsString(),
+        std::regex("(([0-9]|([1-9]([0-9]*))).){2}([0-9]|([1-9]([0-9]*)))"))) {
         ELOG("Invalid command version!");
         return false;
     }
     return true;
 }
 
-CommandLine::CommandType CommandLineInterface::GetCommandType(string name) const
+CommandLine::CommandType CommandLineInterface::GetCommandType(std::string name) const
 {
     CommandLine::CommandType type = CommandLine::CommandType::INVALID;
     if (name == "set") {
@@ -186,7 +185,7 @@ CommandLine::CommandType CommandLineInterface::GetCommandType(string name) const
 
 void CommandLineInterface::ApplyConfig(const Json2::Value& val) const
 {
-    const string set("setting");
+    const std::string set("setting");
     if (val.IsMember(set.c_str())) {
         Json2::Value versionMembers = val[set];
         if (!versionMembers.IsObject()) {
@@ -196,7 +195,7 @@ void CommandLineInterface::ApplyConfig(const Json2::Value& val) const
         Json2::Value::Members versions = versionMembers.GetMemberNames();
 
         for (Json2::Value::Members::iterator viter = versions.begin(); viter != versions.end(); viter++) {
-            string version = *viter;
+            std::string version = *viter;
             Json2::Value commands = versionMembers[version];
             if (!commands.IsObject()) {
                 continue;
@@ -212,7 +211,7 @@ void CommandLineInterface::ApplyConfigMembers(const Json2::Value& commands,
                                               const Json2::Value::Members& members) const
 {
     for (Json2::Value::Members::const_iterator iter = members.begin(); iter != members.end(); iter++)  {
-        string key = *iter;
+        std::string key = *iter;
         if (!commands[key].IsObject() || !commands[key].IsMember("args") || !commands[key]["args"].IsObject()) {
             ELOG("Invalid JSON: %s", commands[key].AsString().c_str());
             continue;
@@ -224,8 +223,8 @@ void CommandLineInterface::ApplyConfigMembers(const Json2::Value& commands,
     }
 }
 
-void CommandLineInterface::ApplyConfigCommands(const string& key,
-                                               const unique_ptr<CommandLine>& command) const
+void CommandLineInterface::ApplyConfigCommands(const std::string& key,
+                                               const std::unique_ptr<CommandLine>& command) const
 {
     if (command == nullptr) {
         ELOG("Unsupported configuration: %s", key.c_str());
@@ -237,25 +236,25 @@ void CommandLineInterface::ApplyConfigCommands(const string& key,
     }
 }
 
-void CommandLineInterface::Init(string pipeBaseName)
+void CommandLineInterface::Init(std::string pipeBaseName)
 {
     CommandLineFactory::InitCommandMap();
     InitPipe(pipeBaseName);
 }
 
-void CommandLineInterface::ReadAndApplyConfig(string path) const
+void CommandLineInterface::ReadAndApplyConfig(std::string path) const
 {
     if (path.empty()) {
         return;
     }
-    string jsonStr = JsonReader::ReadFile(path);
+    std::string jsonStr = JsonReader::ReadFile(path);
     Json2::Value val = JsonReader::ParseJsonData2(jsonStr);
     ApplyConfig(val);
 }
 
-void CommandLineInterface::CreatCommandToSendData(const string commandName,
+void CommandLineInterface::CreatCommandToSendData(const std::string commandName,
                                                   const Json2::Value& jsonData,
-                                                  const string type) const
+                                                  const std::string type) const
 {
     CommandLine::CommandType commandType = GetCommandType(type);
     std::unique_ptr<CommandLine> commandLine =
@@ -267,7 +266,7 @@ void CommandLineInterface::CreatCommandToSendData(const string commandName,
     commandLine->RunAndSendResultToManager();
 }
 
-bool CommandLineInterface::IsStaticIgnoreCmd(const string cmd) const
+bool CommandLineInterface::IsStaticIgnoreCmd(const std::string cmd) const
 {
     auto it = std::find(staticIgnoreCmd.begin(), staticIgnoreCmd.end(), cmd);
     if (it != staticIgnoreCmd.end()) {

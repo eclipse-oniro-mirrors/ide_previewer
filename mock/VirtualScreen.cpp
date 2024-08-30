@@ -23,8 +23,6 @@
 #include "jpeglib.h"
 #undef boolean
 
-using namespace std;
-
 uint32_t VirtualScreen::validFrameCountPerMinute = 0;
 uint32_t VirtualScreen::invalidFrameCountPerMinute = 0;
 uint32_t VirtualScreen::sendFrameCountPerMinute = 0;
@@ -122,7 +120,7 @@ void VirtualScreen::SetCompressionHeight(const int32_t& value)
     compressionResolutionHeight = value;
 }
 
-void VirtualScreen::InitPipe(string pipeName, string pipePort)
+void VirtualScreen::InitPipe(std::string pipeName, std::string pipePort)
 {
     webSocketPort = pipePort;
     isWebSocketConfiged = true;
@@ -169,7 +167,7 @@ void VirtualScreen::InitFrameCountTimer()
         return;
     }
 
-    frameCountTimer = make_unique<CppTimer>(VirtualScreen::PrintFrameCount);
+    frameCountTimer = std::make_unique<CppTimer>(VirtualScreen::PrintFrameCount);
     if (frameCountTimer == nullptr) {
         ELOG("JsApp::InitTimer taskHandleTimer memory allocation failed.");
         return;
@@ -244,7 +242,7 @@ bool VirtualScreen::JudgeAndDropFrame()
         return false;
     }
     auto endTime = std::chrono::system_clock::now();
-    int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
+    int64_t timePassed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime -
                         startDropFrameTime).count();
     if (timePassed >= dropFrameFrequency) {
         startDropFrameTime = std::chrono::system_clock::now();
@@ -263,7 +261,7 @@ bool VirtualScreen::JudgeStaticImage(const int duration)
             VirtualScreen::startTime = std::chrono::system_clock::now();
         }
         auto endTime = std::chrono::system_clock::now();
-        int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
+        int64_t timePassed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime -
                              VirtualScreen::startTime).count();
         if (timePassed > duration) {
             VirtualScreen::isOutOfSeconds = true;
@@ -282,7 +280,7 @@ bool VirtualScreen::StopSendStaticCardImage(const int duration)
             VirtualScreen::staticCardStartTime = std::chrono::system_clock::now();
         }
         auto endTime = std::chrono::system_clock::now();
-        int64_t timePassed = chrono::duration_cast<chrono::milliseconds>(endTime -
+        int64_t timePassed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime -
             VirtualScreen::staticCardStartTime).count();
         if (timePassed > duration) {
             return true;

@@ -18,31 +18,29 @@
 #include "Interrupter.h"
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
-vector<ModelConfig> ModelManager::configList = { // NOLINT
+std::vector<ModelConfig> ModelManager::configList = { // NOLINT
     {"liteWearable", "***", "***", "***", "***", 2},
     {"smartVision", "***", "***", "***", "***", 2},
 };
 
-string ModelManager::currentDevice;
+std::string ModelManager::currentDevice;
 
-string ModelManager::GetCurrentModel()
+std::string ModelManager::GetCurrentModel()
 {
     return currentDevice;
 }
 
-string ModelManager::GetAllModelName()
+std::string ModelManager::GetAllModelName()
 {
-    string allNames;
+    std::string allNames;
     for (ModelConfig const& config : configList) {
-        allNames += string(config.modelName);
+        allNames += std::string(config.modelName);
         allNames += " ";
     }
     return allNames;
 }
 
-void ModelManager::SetCurrentDevice(const string& value)
+void ModelManager::SetCurrentDevice(const std::string& value)
 {
     currentDevice = value;
     ILOG("Start Simulator: %s", GetConfig().modelName.c_str());
@@ -51,7 +49,7 @@ void ModelManager::SetCurrentDevice(const string& value)
 /*
  * Get the model configuration based on the model name.
  */
-const ModelConfig& ModelManager::GetConfig(string device)
+const ModelConfig& ModelManager::GetConfig(std::string device)
 {
     for (ModelConfig const& config : configList) {
         if (config.deviceType == device) {

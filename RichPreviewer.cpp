@@ -16,7 +16,7 @@
 #include <chrono>
 #include <thread>
 #include <vector>
-
+#include <new>
 #include "CommandLineInterface.h"
 #include "CommandParser.h"
 #include "CppTimer.h"
@@ -29,12 +29,11 @@
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
 
-using namespace std;
 static const int NOTIFY_INTERVAL_TIME = 1000; // Unit millisecond
 
 static void ApplyConfig()
 {
-    string richConfigArgs = CommandParser::GetInstance().GetConfigPath();
+    std::string richConfigArgs = CommandParser::GetInstance().GetConfigPath();
     if (richConfigArgs.empty()) {
         ELOG("No persistent properties path found.");
     }
@@ -75,7 +74,7 @@ static void ProcessCommand()
     while (!Interrupter::IsInterrupt()) {
         CommandLineInterface::GetInstance().ProcessCommand();
         CppTimerManager::GetTimerManager().RunTimerTick();
-        this_thread::sleep_for(chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     JsAppImpl::GetInstance().Stop();
 }
@@ -84,24 +83,26 @@ static void InitSharedData()
 {
     CommandParser& parser = CommandParser::GetInstance();
     if (parser.IsSet("l")) {
-        SharedData<string>(SharedDataType::LANGUAGE, parser.Value("l"));
+        SharedData<std::string>(SharedDataType::LANGUAGE, parser.Value("l"));
     } else {
-        SharedData<string>(SharedDataType::LANGUAGE, "zh_CN");
+        SharedData<std::string>(SharedDataType::LANGUAGE, "zh_CN");
     }
-    string lanInfo = SharedData<string>::GetData(SharedDataType::LANGUAGE);
-    SharedData<string>(SharedDataType::LAN, lanInfo.substr(0, lanInfo.find("_")));
-    SharedData<string>(SharedDataType::REGION, lanInfo.substr(lanInfo.find("_") + 1, lanInfo.length() - 1));
-    ILOG("Start language is : %s", SharedData<string>::GetData(SharedDataType::LANGUAGE).c_str());
+    std::string lanInfo = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
+    SharedData<std::string>(SharedDataType::LAN, lanInfo.substr(0, lanInfo.find("_")));
+    SharedData<std::string>(SharedDataType::REGION, lanInfo.substr(lanInfo.find("_") + 1, lanInfo.length() - 1));
+    ILOG("Start language is : %s", SharedData<std::string>::GetData(SharedDataType::LANGUAGE).c_str());
+}
+
+static void NewHandler()
+{
+    ELOG("Custom new handler: memory allocation failed.");
 }
 
 int main(int argc, char* argv[])
 {
     ILOG("RichPreviewer enter the main function.");
+    std::set_new_handler(NewHandler); // 设置全局new处理函数
     auto richCrashHandler = std::make_unique<CrashHandler>();
-    if (richCrashHandler == nullptr) {
-        ELOG("RichPreviewer crashHandler new fail.");
-        return 0;
-    }
     // init exception handler
     richCrashHandler->InitExceptionHandler();
     // Parsing User Commands
@@ -122,6 +123,6 @@ int main(int argc, char* argv[])
     VirtualScreenImpl::GetInstance().InitResolution();
     ApplyConfig();
     JsAppImpl::GetInstance().InitJsApp();
-    this_thread::sleep_for(chrono::milliseconds(500)); // sleep 500 ms
+    std::this_thread::sleep_for(std::chrono::milliseconds(500)); // sleep 500 ms
     return 0;
 }

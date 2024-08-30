@@ -17,9 +17,8 @@
 #include <iostream>
 #include <cstring>
 #include <X11/Xlib.h>
-using namespace std;
 
-void ClipboardX11::SetClipboardData(const string& str)
+void ClipboardX11::SetClipboardData(const std::string& str)
 {
     display = XOpenDisplay(0);
     int ret = DefaultScreen(display);
@@ -33,20 +32,20 @@ void ClipboardX11::SetClipboardData(const string& str)
     SetCopyData(selection, str, strlen(str.c_str()));
 }
 
-const string ClipboardX11::GetClipboardData()
+const std::string ClipboardX11::GetClipboardData()
 {
     display = XOpenDisplay(0);
     int ret = DefaultScreen(display);
     window = XCreateSimpleWindow(display, RootWindow(display, ret), 0, 0, 1, 1, 0,
                                  BlackPixel(display, ret), WhitePixel(display, ret));
-    string retStr; // NOLINT
+    std::string retStr; // NOLINT
     UTF8 = XInternAtom(display, "UTF8_STRING", True);
     if (UTF8 != None) retStr = GetPasteType(UTF8);
     if (retStr.empty()) retStr = GetPasteType(XA_STRING);
     return retStr;
 }
 
-void ClipboardX11::SetCopyData(const Atom& selection, const string& text, const int size)
+void ClipboardX11::SetCopyData(const Atom& selection, const std::string& text, const int size)
 {
     XEvent event;
     XSetSelectionOwner (display, selection, window, 0);
@@ -85,13 +84,13 @@ void ClipboardX11::SetCopyData(const Atom& selection, const string& text, const 
     }
 }
 
-string ClipboardX11::GetPasteType(const Atom& atom)
+std::string ClipboardX11::GetPasteType(const Atom& atom)
 {
     XEvent event;
     int format;
     unsigned long num, size;
     char* data = nullptr;
-    string retStr;
+    std::string retStr;
     Atom target, CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0), XSEL_DATA = XInternAtom(display, "XSEL_DATA", 0);
     XConvertSelection(display, CLIPBOARD, atom, XSEL_DATA, window, CurrentTime);
     XSync(display, 0);
@@ -104,7 +103,7 @@ string ClipboardX11::GetPasteType(const Atom& atom)
             XGetWindowProperty(event.xselection.display, event.xselection.requestor, event.xselection.property, 0L,
                                (~0L), 0, AnyPropertyType, &target, &format, &size, &num, (unsigned char**)&data);
             if (target == UTF8 || target == XA_STRING) {
-                string str(data);
+                std::string str(data);
                 retStr = str;
             }
             XFree(data);

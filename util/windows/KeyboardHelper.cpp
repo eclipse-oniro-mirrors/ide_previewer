@@ -16,7 +16,7 @@
 #include "KeyboardHelper.h"
 #include <windows.h>
 
-short KeyboardHelper::GetKeyStateByKeyName(const std::string keyName)
+short KeyboardHelper::GetKeyStateByKeyName(const std::string& keyName)
 {
     if (keyName == "CapsLock") {
         return GetKeyState(VK_CAPITAL);

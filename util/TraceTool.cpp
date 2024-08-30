@@ -20,8 +20,6 @@
 #include "TimeTool.h"
 #include "LocalSocket.h"
 
-using namespace std;
-
 void TraceTool::InitPipe()
 {
     if (socket != nullptr) {
@@ -33,7 +31,7 @@ void TraceTool::InitPipe()
     if (socket == nullptr) {
         FLOG("TraceTool::Connect socket memory allocation failed!");
     }
-    string name = GetTracePipeName();
+    std::string name = GetTracePipeName();
     if (!socket->ConnectToServer(socket->GetTracePipeName(name), LocalSocket::READ_WRITE)) {
         ELOG("TraceTool::pipe connect failed");
         return;
@@ -53,7 +51,7 @@ void TraceTool::SendTraceData(const Json2::Value& value)
     *(GetInstance().socket) << value.ToString();
 }
 
-void TraceTool::HandleTrace(const string msg) const
+void TraceTool::HandleTrace(const std::string msg) const
 {
     if (!isReady) {
         ILOG("Trace pipe is not prepared");
@@ -83,7 +81,7 @@ TraceTool::~TraceTool()
     }
 }
 
-string TraceTool::GetTracePipeName() const
+std::string TraceTool::GetTracePipeName() const
 {
     return CommandParser::GetInstance().Value("ts");
 }

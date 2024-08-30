@@ -20,8 +20,6 @@
 #include "FileSystem.h"
 #include "PreviewerEngineLog.h"
 
-using namespace std;
-
 static std::vector<std::string> liteDevice = {"liteWearable", "smartVision"};
 
 JsApp::JsApp()
@@ -49,9 +47,9 @@ void JsApp::Stop()
     auto start = std::chrono::system_clock::now();
     while (!isFinished) {
         Interrupt();
-        this_thread::sleep_for(chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         auto end = std::chrono::system_clock::now();
-        auto passedSecond = chrono::duration_cast<chrono::seconds>(end - start).count();
+        auto passedSecond = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
         if (passedSecond > 10) { // The restart timeout interval is 10 seconds.
             ILOG("Restart js app time out!");
             return;
@@ -81,7 +79,7 @@ void JsApp::SetPipePort(const std::string& port)
     pipePort = port;
 }
 
-void JsApp::SetJsAppPath(const string& value)
+void JsApp::SetJsAppPath(const std::string& value)
 {
     jsAppPath = value;
 }
@@ -96,12 +94,12 @@ void JsApp::SetConfigChanges(const std::string value)
     configChanges = value;
 }
 
-void JsApp::SetUrlPath(const string& value)
+void JsApp::SetUrlPath(const std::string& value)
 {
     urlPath = value;
 }
 
-void JsApp::SetBundleName(const string& name)
+void JsApp::SetBundleName(const std::string& name)
 {
     bundleName = name;
     FileSystem::SetBundleName(name);
@@ -133,22 +131,22 @@ void JsApp::SetJSHeapSize(uint32_t size)
     jsHeapSize = size;
 }
 
-string JsApp::GetJSONTree()
+std::string JsApp::GetJSONTree()
 {
     return "";
 }
 
-string JsApp::GetDefaultJSONTree()
+std::string JsApp::GetDefaultJSONTree()
 {
     return "";
 }
 
-void JsApp::SetArgsColorMode(const string& value)
+void JsApp::SetArgsColorMode(const std::string& value)
 {
     colorMode = value;
 }
 
-void JsApp::SetArgsAceVersion(const string& value)
+void JsApp::SetArgsAceVersion(const std::string& value)
 {
     aceVersion = value;
 }

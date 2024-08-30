@@ -23,7 +23,6 @@
 #include "CommandParser.h"
 #include "zlib.h"
 #include "contrib/minizip/unzip.h"
-using namespace std;
 
 namespace OHOS::Ide {
 StageContext& StageContext::GetInstance()
@@ -75,7 +74,7 @@ void StageContext::GetModulePathMapFromLoaderJson()
         ELOG("the loaderJsonPath is not exist.");
         return;
     }
-    string jsonStr = JsonReader::ReadFile(loaderJsonPath);
+    std::string jsonStr = JsonReader::ReadFile(loaderJsonPath);
     Json2::Value rootJson = JsonReader::ParseJsonData2(jsonStr);
     if (rootJson.IsNull() || !rootJson.IsValid()) {
         ELOG("Get loader.json content failed.");
@@ -112,7 +111,7 @@ std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
         ELOG("hspConfigPath: %s is not exist.", hspConfigPath.c_str());
         return "";
     }
-    string jsonStr = JsonReader::ReadFile(hspConfigPath);
+    std::string jsonStr = JsonReader::ReadFile(hspConfigPath);
     Json2::Value rootJson = JsonReader::ParseJsonData2(jsonStr);
     if (rootJson.IsNull() || !rootJson.IsValid()) {
         ELOG("Get hsp buildConfig.json content failed.");
@@ -128,7 +127,9 @@ std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
 void StageContext::ReleaseHspBuffers()
 {
     for (std::vector<uint8_t>* ptr : hspBufferPtrsVec) {
-        delete ptr;
+        if (ptr) {
+            delete ptr;
+        }
     }
     hspBufferPtrsVec.clear();
     ILOG("ReleaseHspBuffers finished.");
@@ -221,14 +222,17 @@ std::vector<uint8_t>* StageContext::GetLocalModuleBuffer(const std::string& modu
         ELOG("read modules.abc buffer failed.");
         return nullptr;
     }
-    std::vector<uint8_t> *buf = new std::vector<uint8_t>(opt.value());
+    std::vector<uint8_t> *buf = new(std::nothrow) std::vector<uint8_t>(opt.value());
+    if (!buf) {
+        ELOG("Memory allocation failed: buf.");
+    }
     hspBufferPtrsVec.push_back(buf);
     return buf;
 }
 
 std::string StageContext::GetCloudHspVersion(const std::string& hspPath, const std::string& actualName)
 {
-    string flag = "@";
+    std::string flag = "@";
     std::string spliter = actualName + flag;
     // 以partName字符串拆分出版本号
     size_t pos = hspPath.rfind(spliter);
@@ -276,8 +280,8 @@ int StageContext::CompareHspVersion(const std::string& version1, const std::stri
 
 std::string StageContext::GetActualCloudHspDir(const std::string& actualName)
 {
-    string moduleHspPath = GetCloudModuleHspPath(actualName);
-    string projectHspPath = GetCloudProjectHspPath(actualName);
+    std::string moduleHspPath = GetCloudModuleHspPath(actualName);
+    std::string projectHspPath = GetCloudProjectHspPath(actualName);
     ILOG("moduleHspPath:%s, projectHspPath:%s", moduleHspPath.c_str(), projectHspPath.c_str());
     if (moduleHspPath.empty() || !FileSystem::IsDirectoryExists(moduleHspPath)) {
         return projectHspPath; // 模块级不存在，加载项目级
@@ -286,8 +290,8 @@ std::string StageContext::GetActualCloudHspDir(const std::string& actualName)
         return moduleHspPath; // 模块级存在，项目级不存在，加载模块级
     }
     // 模块级和项目级都存在，加载版本号高的
-    string moduleHspVersion = GetCloudHspVersion(moduleHspPath, actualName);
-    string projectHspVersion = GetCloudHspVersion(projectHspPath, actualName);
+    std::string moduleHspVersion = GetCloudHspVersion(moduleHspPath, actualName);
+    std::string projectHspVersion = GetCloudHspVersion(projectHspPath, actualName);
     if (moduleHspVersion.empty()) {
         return projectHspPath; // 模块级版本号不存在，加载项目级
     }
@@ -364,7 +368,7 @@ std::vector<uint8_t>* StageContext::GetCloudModuleBuffer(const std::string& modu
 
 std::string StageContext::GetCloudHspPath(const std::string& hspDir, const std::string& moduleName)
 {
-    string flag = "@";
+    std::string flag = "@";
     std::string partName = moduleName + flag;
     return FileSystem::FindSubfolderByName(hspDir, partName);
 }
@@ -399,7 +403,11 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
 
     char buffer[1024];
     int bytesRead;
-    std::vector<uint8_t>* fileContent = new std::vector<uint8_t>();
+    std::vector<uint8_t>* fileContent = new(std::nothrow) std::vector<uint8_t>();
+    if (!fileContent) {
+        ELOG("Memory allocation failed: fileContent.");
+        return fileContent;
+    }
     while ((bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer))) > 0) {
         fileContent->insert(fileContent->end(), buffer, buffer + bytesRead);
     }
@@ -418,9 +426,9 @@ bool StageContext::ContainsRelativePath(const std::string& path) const
     return (path.find(flg1) != std::string::npos || path.find(flg2) != std::string::npos);
 }
 
-std::map<string, string> StageContext::ParseMockJsonFile(const std::string& mockJsonFilePath)
+std::map<std::string, std::string> StageContext::ParseMockJsonFile(const std::string& mockJsonFilePath)
 {
-    std::map<string, string> mapInfo;
+    std::map<std::string, std::string> mapInfo;
     if (!FileSystem::IsFileExists(mockJsonFilePath)) {
         ELOG("the mockJsonFilePath:%s is not exist.", mockJsonFilePath.c_str());
         return mapInfo;
@@ -469,7 +477,7 @@ std::string StageContext::ReplaceLastStr(const std::string& str, const std::stri
 int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 {
     int num = 0;
-    string flag = "/" + input + "/";
+    std::string flag = "/" + input + "/";
     for (const auto& pair : hspNameOhmMap) {
         if (pair.second.find(flag) != std::string::npos) {
             if (num == 0) {
@@ -485,8 +493,8 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inputPath,
     const std::string& moduleName)
 {
-    string head = "com.huawei";
-    string tail = moduleName;
+    std::string head = "com.huawei";
+    std::string tail = moduleName;
     size_t pos1 = inputPath.find(head) + head.size();
     size_t pos2 = inputPath.find(tail);
     std::string relativePath = inputPath.substr(pos1, pos2 - pos1);
@@ -513,9 +521,9 @@ std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inp
 void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
     std::map<std::string, std::string>& packageNameList)
 {
-    const string path = CommandParser::GetInstance().GetAppResourcePath() +
+    const std::string path = CommandParser::GetInstance().GetAppResourcePath() +
         FileSystem::GetSeparator() + "module.json";
-    string moduleJsonStr = JsonReader::ReadFile(path);
+    std::string moduleJsonStr = JsonReader::ReadFile(path);
     if (moduleJsonStr.empty()) {
         ELOG("Get module.json content empty.");
     }
@@ -527,9 +535,9 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
     if (!rootJson1["module"].IsMember("name") || !rootJson1["module"]["name"].IsString()) {
         return;
     }
-    string moduleName = rootJson1["module"]["name"].AsString();
+    std::string moduleName = rootJson1["module"]["name"].AsString();
     if (rootJson1["module"].IsMember("packageName") && rootJson1["module"]["packageName"].IsString()) {
-        string pkgName = rootJson1["module"]["packageName"].AsString();
+        std::string pkgName = rootJson1["module"]["packageName"].AsString();
         packageNameList = {{moduleName, pkgName}};
     }
     std::string jsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
@@ -537,7 +545,7 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
     int idx = jsonPath.find_last_of(flag);
     std::string dirPath = jsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string ctxPath = dirPath + "pkgContextInfo.json";
-    string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
+    std::string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
     if (ctxInfoJsonStr.empty()) {
         ELOG("Get pkgContextInfo.json content empty.");
         return;

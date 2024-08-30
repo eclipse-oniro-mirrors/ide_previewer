@@ -53,9 +53,9 @@ public:
     Options option_;
 };
 
-std::unique_ptr<Simulator> Simulator::Create(const Options &options)
+std::shared_ptr<Simulator> Simulator::Create(const Options &options)
 {
-    auto simulator = std::make_unique<MockSimulator>();
+    auto simulator = std::make_shared<MockSimulator>();
     if (simulator) {
         simulator->option_ = options;
         return simulator;

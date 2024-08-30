@@ -22,7 +22,6 @@
 #include "PreviewerEngineLog.h"
 #include "TraceTool.h"
 
-using namespace std;
 CommandParser* CommandParser::example = nullptr;
 CommandParser::CommandParser()
     : isSendJSHeap(true),
@@ -138,33 +137,33 @@ bool CommandParser::IsCommandValid()
     return false;
 }
 
-bool CommandParser::IsSet(string key)
+bool CommandParser::IsSet(std::string key)
 {
-    if (argsMap.find(string("-") + key) == argsMap.end()) {
+    if (argsMap.find(std::string("-") + key) == argsMap.end()) {
         return false;
     }
     return true;
 }
 
-string CommandParser::Value(string key)
+std::string CommandParser::Value(std::string key)
 {
-    auto args = argsMap[string("-") + key];
+    auto args = argsMap[std::string("-") + key];
     if (args.size() > 0) {
         return args[0];
     }
-    return string();
+    return std::string();
 }
 
-vector<string> CommandParser::Values(string key)
+std::vector<std::string> CommandParser::Values(std::string key)
 {
     if (argsMap.find(key) == argsMap.end()) {
-        return vector<string>();
+        return std::vector<std::string>();
     }
-    vector<string> args = argsMap[key];
+    std::vector<std::string> args = argsMap[key];
     return args;
 }
 
-void CommandParser::Register(string key, uint32_t argc, string help)
+void CommandParser::Register(std::string key, uint32_t argc, std::string help)
 {
     regsArgsCountMap[key] = argc;
     regsHelpMap[key] = help;
@@ -178,7 +177,7 @@ bool CommandParser::IsResolutionValid(int32_t resolution) const
     return false;
 }
 
-string CommandParser::GetDeviceType() const
+std::string CommandParser::GetDeviceType() const
 {
     return deviceType;
 }
@@ -193,37 +192,37 @@ bool CommandParser::IsCardDisplay() const
     return isCardDisplay;
 }
 
-string CommandParser::GetConfigPath() const
+std::string CommandParser::GetConfigPath() const
 {
     return configPath;
 }
 
-string CommandParser::GetProjectID() const
+std::string CommandParser::GetProjectID() const
 {
     return projectID;
 }
 
-string CommandParser::GetAppResourcePath() const
+std::string CommandParser::GetAppResourcePath() const
 {
     return appResourcePath;
 }
 
-string CommandParser::GetScreenShape() const
+std::string CommandParser::GetScreenShape() const
 {
     return screenShape;
 }
 
-string CommandParser::GetProjectModel() const
+std::string CommandParser::GetProjectModel() const
 {
     return projectModel;
 }
 
-string CommandParser::GetPages() const
+std::string CommandParser::GetPages() const
 {
     return pages;
 }
 
-string CommandParser::GetContainerSdkPath() const
+std::string CommandParser::GetContainerSdkPath() const
 {
     return containerSdkPath;
 }
@@ -233,7 +232,7 @@ CommandParser::ScreenMode CommandParser::GetScreenMode() const
     return screenMode;
 }
 
-string CommandParser::GetConfigChanges() const
+std::string CommandParser::GetConfigChanges() const
 {
     return configChanges;
 }
@@ -263,7 +262,7 @@ uint32_t CommandParser::GetJsHeapSize() const
     return jsHeapSize;
 }
 
-string CommandParser::GetAppName() const
+std::string CommandParser::GetAppName() const
 {
     return appName;
 }
@@ -278,12 +277,12 @@ bool CommandParser::IsComponentMode() const
     return isComponentMode;
 }
 
-string CommandParser::GetAbilityPath() const
+std::string CommandParser::GetAbilityPath() const
 {
     return abilityPath;
 }
 
-string CommandParser::GetAbilityName() const
+std::string CommandParser::GetAbilityName() const
 {
     return abilityName;
 }
@@ -303,7 +302,8 @@ bool CommandParser::IsDebugPortValid()
         int port = atoi(Value("p").c_str());
         if (port < MIN_PORT || port > MAX_PORT) {
             errorInfo =
-                string("Debug server port out of range: " + to_string(MIN_PORT) + "-" + to_string(MAX_PORT) + ".");
+                std::string("Debug server port out of range: " + std::to_string(MIN_PORT) + "-" +
+                std::to_string(MAX_PORT) + ".");
             ELOG("Launch -p parameters abnormal!");
             return false;
         }
@@ -315,13 +315,13 @@ bool CommandParser::IsDebugPortValid()
 bool CommandParser::IsAppPathValid()
 {
     if (!IsSet("j")) {
-        errorInfo = string("No app path specified.");
+        errorInfo = std::string("No app path specified.");
         ELOG("Launch -j parameters abnormal!");
         return false;
     }
-    string path = Value("j");
+    std::string path = Value("j");
     if (!FileSystem::IsDirectoryExists(path)) {
-        errorInfo = string("Js app path not exist.");
+        errorInfo = std::string("Js app path not exist.");
         ELOG("Launch -j parameters abnormal!");
         return false;
     }
@@ -338,7 +338,7 @@ bool CommandParser::IsAppNameValid()
         }
         size_t size = Value("n").size();
         if (size > MAX_NAME_LENGTH) {
-            errorInfo = string("Js app name it too long, max: " + to_string(MAX_NAME_LENGTH) + ".");
+            errorInfo = std::string("Js app name it too long, max: " + std::to_string(MAX_NAME_LENGTH) + ".");
             return false;
         }
         appName = Value("n");
@@ -350,7 +350,7 @@ bool CommandParser::IsAppNameValid()
 bool CommandParser::IsResolutionValid()
 {
     if (IsSet("or") && IsSet("cr")) {
-        if (IsResolutionArgValid(string("-or")) && IsResolutionArgValid(string("-cr"))) {
+        if (IsResolutionArgValid(std::string("-or")) && IsResolutionArgValid(std::string("-cr"))) {
             orignalResolutionWidth = atoi(Values("-or")[0].c_str());
             orignalResolutionHeight = atoi(Values("-or")[1].c_str());
             compressionResolutionWidth = atoi(Values("-cr")[0].c_str());
@@ -363,7 +363,7 @@ bool CommandParser::IsResolutionValid()
         return false;
     }
     ELOG("Launch -cr/-or parameters abnormal!");
-    errorInfo = string("Origin resolution and compress resolution must be setted.");
+    errorInfo = std::string("Origin resolution and compress resolution must be setted.");
     return false;
 }
 
@@ -376,8 +376,8 @@ bool CommandParser::IsJsHeapValid()
         }
         int size = atoi(Value("hs").c_str());
         if (size < MIN_JSHEAPSIZE || size > MAX_JSHEAPSIZE) {
-            errorInfo = string("JS heap size out of range: " + to_string(MIN_JSHEAPSIZE) + "-" +
-                               to_string(MAX_JSHEAPSIZE) + ".");
+            errorInfo = std::string("JS heap size out of range: " + std::to_string(MIN_JSHEAPSIZE) + "-" +
+                std::to_string(MAX_JSHEAPSIZE) + ".");
             ELOG("Launch -hs parameters abnormal!");
             return false;
         }
@@ -390,9 +390,9 @@ bool CommandParser::IsJsHeapValid()
 bool CommandParser::IsJsHeapFlagValid()
 {
     if (IsSet("hf")) {
-        string flag = Value("hf");
+        std::string flag = Value("hf");
         if (flag != "true" && flag != "false") {
-            errorInfo = string("JS heap flag suported: true or false");
+            errorInfo = std::string("JS heap flag suported: true or false");
             ELOG("Launch -hs parameters abnormal!");
             return false;
         }
@@ -405,9 +405,9 @@ bool CommandParser::IsJsHeapFlagValid()
 bool CommandParser::IsScreenShapeValid()
 {
     if (IsSet("shape")) {
-        string shape = Value("shape");
+        std::string shape = Value("shape");
         if (shape != "rect" && shape != "circle") {
-            errorInfo = string("Screen shape suported: rect or circle");
+            errorInfo = std::string("Screen shape suported: rect or circle");
             ELOG("The current device does not support, please upgrade the SDK!");
             return false;
         }
@@ -422,7 +422,7 @@ bool CommandParser::IsDeviceValid()
     if (IsSet("device")) {
         auto iter = find(supportedDevices.begin(), supportedDevices.end(), Value("device"));
         if (iter == supportedDevices.end()) {
-            errorInfo += string("Device type unsupport, please upgrade the Previewer SDK!");
+            errorInfo += std::string("Device type unsupport, please upgrade the Previewer SDK!");
             ELOG("Device type unsupport!");
             return false;
         }
@@ -449,9 +449,9 @@ bool CommandParser::IsConfigPathValid()
         return true;
     }
 
-    string path = Value("f");
+    std::string path = Value("f");
     if (!FileSystem::IsFileExists(path)) {
-        errorInfo = string("The configuration file path does not exist.");
+        errorInfo = std::string("The configuration file path does not exist.");
         ELOG("Launch -f parameters abnormal!");
         return false;
     }
@@ -465,9 +465,9 @@ bool CommandParser::IsAppResourcePathValid()
         return true;
     }
 
-    string path = Value("arp");
+    std::string path = Value("arp");
     if (!FileSystem::IsDirectoryExists(path)) {
-        errorInfo = string("The configuration appResource path does not exist.");
+        errorInfo = std::string("The configuration appResource path does not exist.");
         ELOG("Launch -arp parameters abnormal!");
         return false;
     }
@@ -481,10 +481,10 @@ bool CommandParser::IsProjectModelValid()
         return true;
     }
 
-    string projectModelStr = Value("pm");
+    std::string projectModelStr = Value("pm");
     auto iter = find(projectModels.begin(), projectModels.end(), projectModelStr);
     if (iter == projectModels.end()) {
-        errorInfo = string("The project model does not exist.");
+        errorInfo = std::string("The project model does not exist.");
         ELOG("Launch -pm parameters abnormal!");
         return false;
     }
@@ -508,12 +508,12 @@ bool CommandParser::IsPagesValid()
     return true;
 }
 
-bool CommandParser::IsResolutionArgValid(string command)
+bool CommandParser::IsResolutionArgValid(std::string command)
 {
-    vector<string> value = Values(command);
+    std::vector<std::string> value = Values(command);
     uint32_t size = regsArgsCountMap[command];
     if (value.size() != size) {
-        errorInfo = string("Invalid argument's count.");
+        errorInfo = std::string("Invalid argument's count.");
         return false;
     }
     if (IsResolutionRangeValid(value[0]) && IsResolutionRangeValid(value[1])) {
@@ -522,7 +522,7 @@ bool CommandParser::IsResolutionArgValid(string command)
     return false;
 }
 
-bool CommandParser::IsResolutionRangeValid(string value)
+bool CommandParser::IsResolutionRangeValid(std::string value)
 {
     if (CheckParamInvalidity(value, true)) {
         errorInfo = "Launch -or/-cr or -fr parameters is not match regex.";
@@ -530,7 +530,8 @@ bool CommandParser::IsResolutionRangeValid(string value)
     }
     int32_t temp = atoi(value.c_str());
     if (!IsResolutionValid(temp)) {
-        errorInfo = string("Resolution range " + to_string(MIN_RESOLUTION) + "-" + to_string(MAX_RESOLUTION) + ".");
+        errorInfo = std::string("Resolution range " + std::to_string(MIN_RESOLUTION) + "-" +
+            std::to_string(MAX_RESOLUTION) + ".");
         return false;
     }
     return true;
@@ -542,9 +543,9 @@ bool CommandParser::IsRefreshValid()
         return true;
     }
 
-    string refresh = Value("refresh");
+    std::string refresh = Value("refresh");
     if (refresh != "region" && refresh != "full") {
-        errorInfo = string("The refresh argument unsupported.");
+        errorInfo = std::string("The refresh argument unsupported.");
         ELOG("Launch -refresh parameters abnormal!");
         return false;
     }
@@ -560,9 +561,9 @@ bool CommandParser::IsCardValid()
         return true;
     }
 
-    string card = Value("card");
+    std::string card = Value("card");
     if (card != "true" && card != "false") {
-        errorInfo = string("The card argument unsupported.");
+        errorInfo = std::string("The card argument unsupported.");
         ELOG("Launch -card parameters abnormal!");
         return false;
     }
@@ -593,9 +594,9 @@ bool CommandParser::IsColorModeValid()
         return true;
     }
 
-    string colorMode = Value("cm");
+    std::string colorMode = Value("cm");
     if (colorMode != "dark" && colorMode != "light") {
-        errorInfo = string("The colormode argument unsupported.");
+        errorInfo = std::string("The colormode argument unsupported.");
         ELOG("Launch -cm parameters abnormal!");
         return false;
     }
@@ -608,9 +609,9 @@ bool CommandParser::IsAceVersionValid()
         return true;
     }
 
-    string aceVersion = Value("av");
+    std::string aceVersion = Value("av");
     if (aceVersion != "ACE_1_0" && aceVersion != "ACE_2_0") {
-        errorInfo = string("The aceVersion argument unsupported.");
+        errorInfo = std::string("The aceVersion argument unsupported.");
         ELOG("Launch -av parameters abnormal!");
         return false;
     }
@@ -623,9 +624,9 @@ bool CommandParser::IsOrientationValid()
         return true;
     }
 
-    string orientation = Value("o");
+    std::string orientation = Value("o");
     if (orientation != "portrait" && orientation != "landscape") {
-        errorInfo = string("The orientation argument unsupported.");
+        errorInfo = std::string("The orientation argument unsupported.");
         ELOG("Launch -o parameters abnormal!");
         return false;
     }
@@ -641,8 +642,8 @@ bool CommandParser::IsWebSocketPortValid()
         }
         int port = atoi(Value("lws").c_str());
         if (port < MIN_PORT || port > MAX_PORT) {
-            errorInfo = string("WebSocket listening port out of range: " + to_string(MIN_PORT) + "-" +
-                               to_string(MAX_PORT) + ".");
+            errorInfo = std::string("WebSocket listening port out of range: " + std::to_string(MIN_PORT) + "-" +
+                std::to_string(MAX_PORT) + ".");
             ELOG("Launch -lws parameters abnormal!");
             return false;
         }
@@ -653,11 +654,11 @@ bool CommandParser::IsWebSocketPortValid()
 
 bool CommandParser::IsScreenModeValid()
 {
-    string mode("dynamic");
+    std::string mode("dynamic");
     if (IsSet("sm")) {
         mode = Value("sm");
         if (mode != "dynamic" && mode != "static") {
-            errorInfo = string("Screen picture transport mode suported: dynamic or static");
+            errorInfo = std::string("Screen picture transport mode suported: dynamic or static");
             ELOG("Launch -sm parameters abnormal!");
             return false;
         }
@@ -673,7 +674,7 @@ bool CommandParser::IsLanguageValid()
     if (!IsSet("l")) {
         return true;
     }
-    string lan = Value("l");
+    std::string lan = Value("l");
     if (CheckParamInvalidity(lan, false)) {
         errorInfo = "Launch -l parameters is not match regex.";
         return false;
@@ -687,7 +688,7 @@ bool CommandParser::IsTracePipeNameValid()
     if (!IsSet("ts")) {
         return true;
     }
-    string tsName = Value("ts");
+    std::string tsName = Value("ts");
     if (CheckParamInvalidity(tsName, false)) {
         errorInfo = "Launch -ts parameters is not match regex.";
         return false;
@@ -701,10 +702,10 @@ bool CommandParser::IsLocalSocketNameValid()
     if (!IsSet("s")) {
         return true;
     }
-    string socketName = Value("s");
+    std::string socketName = Value("s");
     std::string regexStr = "^(?:[a-zA-Z0-9-_./\\s*]+)$";
-    regex reg(regexStr);
-    if (!regex_match(socketName.cbegin(), socketName.cend(), reg)) {
+    std::regex reg(regexStr);
+    if (!std::regex_match(socketName.cbegin(), socketName.cend(), reg)) {
         errorInfo = "Launch -s parameters is not match regex.";
         return false;
     }
@@ -717,7 +718,7 @@ bool CommandParser::IsConfigChangesValid()
     if (!IsSet("cc")) {
         return true;
     }
-    string configChange = Value("cc");
+    std::string configChange = Value("cc");
     if (CheckParamInvalidity(configChange, false)) {
         ELOG("Launch -cc parameters is not match regex.");
         return false;
@@ -731,7 +732,7 @@ bool CommandParser::IsScreenDensityValid()
     if (!IsSet("sd")) {
         return true;
     }
-    string density = Value("sd");
+    std::string density = Value("sd");
     if (CheckParamInvalidity(density, true)) {
         errorInfo = "Launch -sd parameters is not match regex.";
         return false;
@@ -746,9 +747,9 @@ bool CommandParser::IsContainerSdkPathValid()
         return true;
     }
 
-    string path = Value("hsp");
+    std::string path = Value("hsp");
     if (!FileSystem::IsDirectoryExists(path)) {
-        errorInfo = string("The container sdk path does not exist.");
+        errorInfo = std::string("The container sdk path does not exist.");
         ELOG("Launch -hsp parameters abnormal!");
         return false;
     }
@@ -756,9 +757,9 @@ bool CommandParser::IsContainerSdkPathValid()
     return true;
 }
 
-string CommandParser::HelpText()
+std::string CommandParser::HelpText()
 {
-    string helpText = "Usage:\n";
+    std::string helpText = "Usage:\n";
     for (auto index = regsHelpMap.begin(); index != regsHelpMap.end(); index++) {
         helpText += "-" + index->first + " ";
         helpText += index->second + "\n";
@@ -766,16 +767,16 @@ string CommandParser::HelpText()
     return helpText;
 }
 
-void CommandParser::ProcessingCommand(const std::vector<string>& strs)
+void CommandParser::ProcessingCommand(const std::vector<std::string>& strs)
 {
     for (unsigned int i = 0; i < strs.size(); ++i) {
-        string index = strs[i];
+        std::string index = strs[i];
         auto regInfo = regsArgsCountMap.find(strs[i]);
         if (regInfo == regsArgsCountMap.end()) {
             continue;
         }
 
-        vector<string> args;
+        std::vector<std::string> args;
         for (uint32_t j = 0; j < regInfo->second; ++j) {
             if (i == strs.size() - 1  || strs[i + 1][0] == '-') {
                 args.push_back("");
@@ -795,7 +796,7 @@ int CommandParser::GetProjectModelEnumValue() const
     return idxVal;
 }
 
-string CommandParser::GetProjectModelEnumName(int enumValue) const
+std::string CommandParser::GetProjectModelEnumName(int enumValue) const
 {
     if (enumValue < 0 || enumValue >= projectModels.size()) {
         enumValue = 0;
@@ -803,10 +804,10 @@ string CommandParser::GetProjectModelEnumName(int enumValue) const
     return projectModels[enumValue];
 }
 
-bool CommandParser::CheckParamInvalidity(string param, bool isNum = false)
+bool CommandParser::CheckParamInvalidity(std::string param, bool isNum = false)
 {
-    regex reg(isNum ? regex4Num : regex4Str);
-    return !regex_match(param.cbegin(), param.cend(), reg);
+    std::regex reg(isNum ? regex4Num : regex4Str);
+    return !std::regex_match(param.cbegin(), param.cend(), reg);
 }
 
 bool CommandParser::IsComponentModeValid()
@@ -815,9 +816,9 @@ bool CommandParser::IsComponentModeValid()
         return true;
     }
 
-    string cpm = Value("cpm");
+    std::string cpm = Value("cpm");
     if (cpm != "true" && cpm != "false") {
-        errorInfo = string("The component mode argument unsupported.");
+        errorInfo = std::string("The component mode argument unsupported.");
         ELOG("Launch -cpm parameters abnormal!");
         return false;
     }
@@ -838,9 +839,9 @@ bool CommandParser::IsAbilityPathValid()
         errorInfo = "Launch -d parameters without -abp parameters.";
         return false;
     }
-    string path = Value("abp");
+    std::string path = Value("abp");
     if (path.empty()) {
-        errorInfo = string("The ability path is empty.");
+        errorInfo = std::string("The ability path is empty.");
         ELOG("Launch -abp parameters abnormal!");
         return false;
     }
@@ -860,9 +861,9 @@ bool CommandParser::IsAbilityNameValid()
         ELOG("Launch -d parameters without -abn parameters.");
         return true; // 兼容老版本IDE（沒有abn参数）
     }
-    string name = Value("abn");
+    std::string name = Value("abn");
     if (name.empty()) {
-        errorInfo = string("The ability name is empty.");
+        errorInfo = std::string("The ability name is empty.");
         ELOG("Launch -abn parameters abnormal!");
         return false;
     }
@@ -875,9 +876,9 @@ bool CommandParser::IsStaticCardValid()
     if (!IsSet("staticCard")) {
         return true;
     }
-    string val = Value("staticCard");
+    std::string val = Value("staticCard");
     if (val != "true" && val != "false") {
-        errorInfo = string("The staticCard argument unsupported.");
+        errorInfo = std::string("The staticCard argument unsupported.");
         ELOG("Launch -staticCard parameters abnormal!");
         return false;
     }
@@ -902,9 +903,9 @@ bool CommandParser::IsFoldableValid()
     if (!IsSet("foldable")) {
         return true;
     }
-    string val = Value("foldable");
+    std::string val = Value("foldable");
     if (val != "true" && val != "false") {
-        errorInfo = string("The foldable argument unsupported.");
+        errorInfo = std::string("The foldable argument unsupported.");
         ELOG("Launch -foldable parameters abnormal!");
         return false;
     }
@@ -936,7 +937,7 @@ bool CommandParser::IsFoldResolutionValid()
         return true;
     }
     if (IsSet("fr")) {
-        if (IsResolutionArgValid(string("-fr"))) {
+        if (IsResolutionArgValid(std::string("-fr"))) {
             foldResolutionWidth = atoi(Values("-fr")[0].c_str());
             foldResolutionHeight = atoi(Values("-fr")[1].c_str());
             ILOG("CommandParser fold resolution: %d %d", foldResolutionWidth, foldResolutionHeight);
@@ -946,7 +947,7 @@ bool CommandParser::IsFoldResolutionValid()
         return false;
     }
     ELOG("Launch -fr parameters abnormal!");
-    errorInfo = string("Fold resolution must be setted.");
+    errorInfo = std::string("Fold resolution must be setted.");
     return false;
 }
 
@@ -970,7 +971,7 @@ int32_t CommandParser::GetFoldResolutionHeight() const
     return foldResolutionHeight;
 }
 
-string CommandParser::GetLoaderJsonPath() const
+std::string CommandParser::GetLoaderJsonPath() const
 {
     return loaderJsonPath;
 }
@@ -980,9 +981,9 @@ bool CommandParser::IsLoaderJsonPathValid()
     if (!IsSet("ljPath")) {
         return true;
     }
-    string path = Value("ljPath");
+    std::string path = Value("ljPath");
     if (!FileSystem::IsFileExists(path)) {
-        errorInfo = string("The configuration loader.json path does not exist.");
+        errorInfo = std::string("The configuration loader.json path does not exist.");
         ELOG("Launch -ljPath parameters abnormal!");
         return false;
     }
@@ -994,7 +995,7 @@ int CommandParser::ParseArgs(int argc, char* argv[])
 {
     int startParamInvalidCode = 11;
     int defaultReturnVal = -1;
-    vector<string> strs;
+    std::vector<std::string> strs;
     for (int i = 1; i < argc; ++i) {
         if (IsMainArgLengthInvalid(argv[i])) {
             return startParamInvalidCode;

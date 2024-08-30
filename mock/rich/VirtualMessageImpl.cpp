@@ -15,8 +15,6 @@
 
 #include "VirtualMessageImpl.h"
 
-using namespace std;
-
 VirtualMessageImpl& VirtualMessageImpl::GetInstance()
 {
     static VirtualMessageImpl instance;

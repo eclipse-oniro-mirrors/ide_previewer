@@ -28,9 +28,6 @@
 #include "PreviewerEngineLog.h"
 #include "TraceTool.h"
 
-using namespace std;
-using namespace std::chrono;
-
 void VirtualScreenImpl::InitAll(std::string pipeName, std::string pipePort)
 {
     OHOS::ImageDecodeAbility& ability = OHOS::ImageDecodeAbility::GetInstance();
@@ -48,11 +45,23 @@ void VirtualScreenImpl::InitAll(std::string pipeName, std::string pipePort)
     }
 
     bufferSize = orignalResolutionWidth * orignalResolutionHeight * pixelSize + headSize;
-    wholeBuffer = new uint8_t[LWS_PRE + bufferSize];
-    regionWholeBuffer = new uint8_t[LWS_PRE + bufferSize];
+    wholeBuffer = new(std::nothrow) uint8_t[LWS_PRE + bufferSize];
+    if (!wholeBuffer) {
+        ELOG("Memory allocation failed : wholeBuffer.");
+        return;
+    }
+    regionWholeBuffer = new(std::nothrow) uint8_t[LWS_PRE + bufferSize];
+    if (!regionWholeBuffer) {
+        ELOG("Memory allocation failed: regionWholeBuffer.");
+        return;
+    }
     screenBuffer = wholeBuffer + LWS_PRE;
     regionBuffer = regionWholeBuffer + LWS_PRE;
-    osBuffer = new uint8_t[bufferSize];
+    osBuffer = new(std::nothrow) uint8_t[bufferSize];
+    if (!osBuffer) {
+        ELOG("Memory allocation failed: osBuffer.");
+        return;
+    }
     if (screenBuffer == nullptr) {
         ELOG("VirtualScreen::InitAll wholeBuffer memory allocation failed");
         return;
@@ -131,7 +140,11 @@ void VirtualScreenImpl::ScheduleBufferSend()
     {
         std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
         if (!WebSocketServer::GetInstance().firstImageBuffer) {
-            WebSocketServer::GetInstance().firstImageBuffer = new uint8_t[LWS_PRE + bufferSize];
+            WebSocketServer::GetInstance().firstImageBuffer = new(std::nothrow) uint8_t[LWS_PRE + bufferSize];
+            if (!WebSocketServer::GetInstance().firstImageBuffer) {
+                ELOG("Memory allocation failed: firstImageBuffer.");
+                return;
+            }
             WebSocketServer::GetInstance().firstImagebufferSize = headSize + jpgBufferSize;
         }
         std::copy(regionBuffer,
@@ -264,9 +277,14 @@ void VirtualScreenImpl::Flush(const OHOS::Rect& flushRect)
 OHOS::BufferInfo* VirtualScreenImpl::GetFBBufferInfo()
 {
     if (bufferInfo == nullptr) {
-        bufferInfo = new OHOS::BufferInfo;
+        bufferInfo = new(std::nothrow) OHOS::BufferInfo;
+        if (!bufferInfo) {
+            ELOG("Memory allocation failed: osBuffer.");
+            return bufferInfo;
+        }
         bufferInfo->rect = {0, 0, compressionResolutionWidth - 1, compressionResolutionHeight - 1};
         bufferInfo->mode = OHOS::ARGB8888;
+
         bufferInfo->color = 0x44;
         bufferInfo->phyAddr = bufferInfo->virAddr = osBuffer + headSize;
         // 3: Shift right 3 bits

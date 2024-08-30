@@ -16,7 +16,7 @@
 #include "KeyboardHelper.h"
 #include <X11/XKBlib.h>
 
-short KeyboardHelper::GetKeyStateByKeyName(const std::string keyName)
+short KeyboardHelper::GetKeyStateByKeyName(const std::string& keyName)
 {
     std::string name;
     if (keyName == "CapsLock") {

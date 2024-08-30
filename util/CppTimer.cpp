@@ -15,12 +15,9 @@
 
 #include "CppTimer.h"
 
-using namespace std;
-using namespace std::chrono;
-
 CppTimer::~CppTimer()
 {
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     if (curThreadId != threadId) {
         ILOG("CppTimer can not deleted by other thread!");
     }
@@ -28,7 +25,7 @@ CppTimer::~CppTimer()
 
 void CppTimer::Start(int64_t value)
 {
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     if (curThreadId != threadId) {
         ILOG("CppTimer can not started by other thread!");
     }
@@ -40,7 +37,7 @@ void CppTimer::Start(int64_t value)
 
 void CppTimer::Stop()
 {
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     if (curThreadId != threadId) {
         ILOG("CppTimer can not stoped by other thread!");
     }
@@ -57,7 +54,7 @@ void CppTimer::RunTimerTick(CallbackQueue& queue)
         return;
     }
 
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     auto endTime = std::chrono::system_clock::now();
 
     if (curThreadId != threadId) {
@@ -65,7 +62,7 @@ void CppTimer::RunTimerTick(CallbackQueue& queue)
         return;
     }
 
-    int64_t timePassed = duration_cast<chrono::milliseconds>(endTime - startTime).count();
+    int64_t timePassed = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     if (timePassed < interval) {
         return;
     }

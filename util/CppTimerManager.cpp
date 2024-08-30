@@ -17,15 +17,14 @@
 
 #include <thread>
 
-using namespace std;
-std::map<std::thread::id, unique_ptr<CppTimerManager>> CppTimerManager::managers;
+std::map<std::thread::id, std::unique_ptr<CppTimerManager>> CppTimerManager::managers;
 
 // Non-threaded security
 CppTimerManager& CppTimerManager::GetTimerManager()
 {
-    thread::id curThreadId = this_thread::get_id();
+    std::thread::id curThreadId = std::this_thread::get_id();
     if (managers.find(curThreadId) == managers.end()) {
-        managers[curThreadId] = make_unique<CppTimerManager>();
+        managers[curThreadId] = std::make_unique<CppTimerManager>();
     }
     return *managers[curThreadId];
 }

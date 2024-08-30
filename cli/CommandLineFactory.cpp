@@ -24,12 +24,10 @@
 CommandLineFactory::CommandTypeMap CommandLineFactory::typeMap = CommandLineFactory::CommandTypeMap();
 CommandLineFactory::CommandLineFactory() {}
 
-using namespace std;
-
 void CommandLineFactory::InitCommandMap()
 {
     CommandParser& cmdParser = CommandParser::GetInstance();
-    string deviceType = cmdParser.GetDeviceType();
+    std::string deviceType = cmdParser.GetDeviceType();
     bool isLiteDevice = JsApp::IsLiteDevice(deviceType);
     if (!isLiteDevice) {
         typeMap["BackClicked"] = &CommandLineFactory::CreateObject<BackClickedCommand>;
@@ -76,10 +74,8 @@ void CommandLineFactory::InitCommandMap()
     typeMap["PointEvent"] = &CommandLineFactory::CreateObject<PointEventCommand>;
 }
 
-unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
-                                                              CommandLine::CommandType type,
-                                                              const Json2::Value& val,
-                                                              const LocalSocket& socket)
+std::unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(std::string command,
+    CommandLine::CommandType type, const Json2::Value& val, const LocalSocket& socket)
 {
     if (typeMap.find(command) == typeMap.end()) {
         Json2::Value commandResult = JsonReader::CreateObject();
@@ -95,7 +91,7 @@ unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
         ELOG("CommandLineFactory::CreateCommandLine:typeMap is null");
     }
     ILOG("Create Command: %s", command.c_str());
-    unique_ptr<CommandLine> cmdLine = typeMap[command](type, val, socket);
+    std::unique_ptr<CommandLine> cmdLine = typeMap[command](type, val, socket);
     if (cmdLine == nullptr) {
         ELOG("CommandLineFactory::CreateCommandLine:cmdLine is null");
     }
@@ -104,8 +100,8 @@ unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(string command,
 }
 
 template <typename T>
-unique_ptr<CommandLine> CommandLineFactory::CreateObject(CommandLine::CommandType type,
-                                                         const Json2::Value& args, const LocalSocket& socket)
+std::unique_ptr<CommandLine> CommandLineFactory::CreateObject(CommandLine::CommandType type,
+    const Json2::Value& args, const LocalSocket& socket)
 {
-    return make_unique<T>(type, args, socket);
+    return std::make_unique<T>(type, args, socket);
 }

@@ -24,8 +24,6 @@
 #include "PreviewerEngineLog.h"
 #include "PublicMethods.h"
 
-using namespace std;
-
 void CrashHandler::InitExceptionHandler()
 {
     if (signal(SIGSEGV, ApplicationCrashHandler) == SIG_ERR) {
