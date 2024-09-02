@@ -26,9 +26,10 @@ export function getHeritageClauseDeclaration(node: Node, sourceFile: SourceFile)
   const heritageClauseNode = node as HeritageClause;
   const clauseToken = heritageClauseNode.token === SyntaxKind.ExtendsKeyword ? 'extends' : 'implements';
   const types: Array<string> = [];
+  const fileText = sourceFile.getFullText();
 
   heritageClauseNode.types.forEach(value => {
-    types.push(sourceFile.text.substring(value.pos, value.end).trim());
+    types.push(fileText.slice(value.pos, value.end).trim());
   });
 
   return {

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import type { ConstructorDeclaration, Node, SourceFile } from 'typescript';
+import type { ConstructorDeclaration, SourceFile } from 'typescript';
 import { isIdentifier } from 'typescript';
 
 /**
@@ -22,9 +22,12 @@ import { isIdentifier } from 'typescript';
  * @param sourceFile
  * @returns
  */
-export function getConstructorDeclaration(node: Node, sourceFile: SourceFile): Array<ConstructorEntity> {
-  const constructorNode = node as ConstructorDeclaration;
+export function getConstructorDeclaration(
+  constructorNode: ConstructorDeclaration,
+  sourceFile: SourceFile
+): Array<ConstructorEntity> {
   const constructors: Array<ConstructorEntity> = [];
+  const fileText = sourceFile.getFullText();
   constructorNode.parameters.forEach(value => {
     const paramElement = value.name;
     let name = '';
@@ -33,12 +36,12 @@ export function getConstructorDeclaration(node: Node, sourceFile: SourceFile): A
     if (isIdentifier(paramElement)) {
       name = paramElement.escapedText.toString();
     } else {
-      name = sourceFile.text.substring(paramElement.pos, paramElement.end).trim();
+      name = fileText.slice(paramElement.pos, paramElement.end).trim();
     }
 
     const paramTypeElement = value.type;
     if (paramTypeElement !== undefined) {
-      typeName = sourceFile.text.substring(paramTypeElement.pos, paramTypeElement.end).trim();
+      typeName = fileText.slice(paramTypeElement.pos, paramTypeElement.end).trim();
       typeKind = paramTypeElement.kind;
     }
 

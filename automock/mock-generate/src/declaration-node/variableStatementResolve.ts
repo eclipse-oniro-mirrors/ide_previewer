@@ -27,6 +27,7 @@ export function getVariableStatementDeclaration(
   sourceFile: SourceFile
 ): Array<StatementEntity> {
   const statementsArray: Array<StatementEntity> = [];
+  const fileText = sourceFile.getFullText();
   variableStatement.declarationList.declarations.forEach(value => {
     let statementName = '';
     let initializer = '';
@@ -36,14 +37,14 @@ export function getVariableStatementDeclaration(
     if (isIdentifier(value.name)) {
       statementName = value.name.escapedText.toString();
     } else {
-      statementName = sourceFile.text.substring(value.pos, value.end).trim();
+      statementName = fileText.slice(value.pos, value.end).trim();
     }
     if (value.initializer !== undefined) {
-      initializer = sourceFile.text.substring(value.initializer.pos, value.initializer.end);
+      initializer = fileText.slice(value.initializer.pos, value.initializer.end);
       typeKind = value.initializer.kind;
     }
     if (value.type !== undefined) {
-      typeName = sourceFile.text.substring(value.type.pos, value.type.end);
+      typeName = fileText.slice(value.type.pos, value.type.end);
       typeKind = value.type.kind;
     }
     statementsArray.push({

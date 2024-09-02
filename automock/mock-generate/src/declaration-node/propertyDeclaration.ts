@@ -29,21 +29,22 @@ export function getPropertyDeclaration(node: PropertyDeclaration, sourceFile: So
   let isInitializer = false;
   let initializer = '';
   const modifiers: Array<string> = [];
+  const fileText = sourceFile.getFullText();
   if (node.modifiers !== undefined) {
     node.modifiers.forEach(value => {
-      modifiers.push(sourceFile.text.substring(value.pos, value.end));
+      modifiers.push(fileText.slice(value.pos, value.end));
     });
   }
   if (node.initializer !== undefined) {
     isInitializer = true;
-    initializer = sourceFile.text.substring(node.initializer.pos, node.initializer.end).trim();
+    initializer = fileText.slice(node.initializer.pos, node.initializer.end).trim();
   }
 
   propertyName = getPropertyName(node.name, sourceFile);
 
   const propertyType = node.type;
   if (propertyType !== undefined) {
-    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
+    propertyTypeName = fileText.slice(propertyType.pos, propertyType.end).trim();
     kind = propertyType.kind;
   }
 
@@ -64,17 +65,18 @@ export function getGetDeclaration(node: GetAccessorDeclaration, sourceFile: Sour
   let propertyName = '';
   let propertyTypeName = '';
   const modifiers: Array<string> = [];
+  const fileText = sourceFile.getFullText();
 
   if (node.modifiers !== undefined) {
     node.modifiers.forEach(value => {
-      modifiers.push(sourceFile.text.substring(value.pos, value.end));
+      modifiers.push(fileText.slice(value.pos, value.end));
     });
   }
 
   propertyName = getPropertyName(node.name, sourceFile);
   const propertyType = node.type;
   if (propertyType !== undefined) {
-    propertyTypeName = sourceFile.text.substring(propertyType.pos, propertyType.end).trim();
+    propertyTypeName = fileText.slice(propertyType.pos, propertyType.end).trim();
     kind = propertyType.kind;
     kinds = node.kind;
   }

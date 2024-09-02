@@ -26,6 +26,7 @@ export function getEnumDeclaration(node: EnumDeclaration, sourceFile: SourceFile
   const enumName = node.name.escapedText.toString();
   const enumMembers: Array<MemberEntity> = [];
   let exportModifiers: Array<number> = [];
+  const fileText = sourceFile.getFullText();
 
   if (node.modifiers !== undefined) {
     exportModifiers = getExportKeyword(node.modifiers);
@@ -35,7 +36,7 @@ export function getEnumDeclaration(node: EnumDeclaration, sourceFile: SourceFile
     const enumValueName = getPropertyName(value.name, sourceFile);
     let enumValue = '';
     if (value.initializer !== undefined) {
-      enumValue = sourceFile.text.substring(value.initializer.pos, value.initializer.end).trim();
+      enumValue = fileText.slice(value.initializer.pos, value.initializer.end).trim();
     }
     const enumKind = value.initializer?.kind === undefined ? -1 : value.initializer?.kind;
     enumMembers.push({ enumValueName: enumValueName, enumValue: enumValue, enumKind: enumKind });

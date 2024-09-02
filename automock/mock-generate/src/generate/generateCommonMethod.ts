@@ -80,7 +80,7 @@ export function generateCommonMethod(
   if (methodArray.length === 1) {
     const args = methodEntity.args;
     const len = args.length;
-    if (args.length > 0 && args[len - 1].paramName.toLowerCase().includes('callback')) {
+    if (len && args[len - 1].paramName.toLowerCase().includes('callback')) {
       methodBody += getCallbackStatement(mockApi, args[len - 1]?.paramTypeString);
     }
     if (methodEntity.returnType.returnKind !== SyntaxKind.VoidKeyword) {
