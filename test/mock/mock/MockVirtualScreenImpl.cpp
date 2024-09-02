@@ -15,8 +15,6 @@
 
 #include "VirtualScreenImpl.h"
 
-using namespace std;
-
 VirtualScreenImpl::~VirtualScreenImpl() {}
 
 VirtualScreenImpl::VirtualScreenImpl() {}
@@ -32,7 +30,7 @@ void VirtualScreenImpl::InitFlushEmptyTime()
     // judge loadDocTimeStamp
 }
 
-void VirtualScreenImpl::InitAll(string pipeName, string pipePort) {}
+void VirtualScreenImpl::InitAll(std::string pipeName, std::string pipePort) {}
 
 bool VirtualScreenImpl::LoadContentCallback(const std::string currentRouterPath)
 {

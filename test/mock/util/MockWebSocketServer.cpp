@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include "WebSocketServer.h"
 #include "MockGlobalResult.h"
 using namespace std;
 
 lws* WebSocketServer::webSocket = nullptr;
-volatile sig_atomic_t WebSocketServer::interrupted = false;
+std::atomic<bool> WebSocketServer::interrupted = false;
 WebSocketServer::WebSocketState WebSocketServer::webSocketWritable = WebSocketState::INIT;
 uint8_t* WebSocketServer::firstImageBuffer = nullptr;
 uint64_t WebSocketServer::firstImagebufferSize = 0;
-int8_t* WebSocketServer::receivedMessage = nullptr;
 
 WebSocketServer::WebSocketServer() : serverThread(nullptr), serverPort(0) {}
 
@@ -50,7 +50,7 @@ int WebSocketServer::ProtocolCallback(struct lws* wsi,
 
 void WebSocketServer::SignalHandler(int sig)
 {
-    interrupted = 1;
+    interrupted = true;
 }
 
 void WebSocketServer::StartWebsocketListening() {}

@@ -40,10 +40,16 @@ void ChangeJsonUtil::ModifyObject(cJSON *object, uint64_t& idx)
             std::string strVal = DT_SetGetString(&g_Element[idx], strlen(item->valuestring) + 1, DEFAULT_LENGTH,
                 (char*)item->valuestring);
             idx++;
-            cJSON_free(item->valuestring); // 释放原字符串内存
+            if (item->valuestring != nullptr) {
+                cJSON_free(item->valuestring); // 释放原字符串内存
+            }
             item->valuestring = nullptr;
             int length = strVal.length() + 1;
-            item->valuestring = reinterpret_cast<char*>(malloc(length * sizeof(char))); // 分配内存
+
+            void* ptr = malloc(length * sizeof(char));
+            if (ptr != nullptr) {
+                item->valuestring = reinterpret_cast<char*>(ptr);
+            }
             errno_t ret1 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
             if (ret1 != EOK) {
                 printf("strcpy_s in modifyObject copy error");
@@ -85,7 +91,9 @@ void ChangeJsonUtil::ModifyObject4ChangeType(cJSON *object, uint64_t& idx)
             item->type = cJSON_Number;
             item->valuedouble = static_cast<double>(intValue);
             item->valueint = intValue;
-            cJSON_free(item->valuestring); // 释放原字符串内存
+            if (item->valuestring != nullptr) {
+                cJSON_free(item->valuestring); // 释放原字符串内存
+            }
             item->valuestring = nullptr;
         } else if (item->type == cJSON_Number || item->type == cJSON_True || item->type == cJSON_False) {
             std::string strVal = DT_SetGetString(&g_Element[idx], DEFAULT_STRING.size() + 1, DEFAULT_LENGTH,
@@ -93,7 +101,10 @@ void ChangeJsonUtil::ModifyObject4ChangeType(cJSON *object, uint64_t& idx)
             idx++;
             item->type = cJSON_String;
             int length = strVal.length() + 1;
-            item->valuestring = reinterpret_cast<char*>(malloc(length * sizeof(char))); // 分配内存
+            void* ptr = malloc(length * sizeof(char));
+            if (ptr != nullptr) {
+                item->valuestring = reinterpret_cast<char*>(ptr);
+            }
             errno_t ret2 = strcpy_s(item->valuestring, length, strVal.c_str()); // 复制字符串内容
             if (ret2 != EOK) {
                 printf("strcpy_s in modifyObject4ChangeType copy error");

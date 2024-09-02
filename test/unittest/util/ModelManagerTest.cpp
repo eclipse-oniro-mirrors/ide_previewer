@@ -15,7 +15,6 @@
 
 #include "gtest/gtest.h"
 #include "ModelManager.h"
-using namespace std;
 
 namespace {
     // 测试默认构造函数是否被删除
