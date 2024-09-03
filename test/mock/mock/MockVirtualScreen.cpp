@@ -16,8 +16,6 @@
 #include "VirtualScreen.h"
 #include "MockGlobalResult.h"
 
-using namespace std;
-
 VirtualScreen::VirtualScreen() {}
 VirtualScreen::~VirtualScreen() {}
 
@@ -26,7 +24,10 @@ uint32_t VirtualScreen::inputMethodCountPerMinute = 0;
 bool VirtualScreen::isWebSocketListening = false;
 std::string VirtualScreen::webSocketPort = "";
 
-void VirtualScreen::InitFlushEmptyTime() {}
+void VirtualScreen::InitFlushEmptyTime()
+{
+    //Only for mock test, no specific implementation
+}
 
 int32_t VirtualScreen::GetCurrentWidth() const
 {
@@ -87,7 +88,10 @@ void VirtualScreen::InitVirtualScreen()
     compressionResolutionHeight = 2340; // 2340 is default height
 }
 
-void VirtualScreen::InitPipe(string pipeName, string pipePort) {}
+void VirtualScreen::InitPipe(std::string pipeName, std::string pipePort)
+{
+    webSocketPort = pipePort;
+}
 
 void VirtualScreen::WidthAndHeightReverse()
 {

@@ -15,7 +15,6 @@
 #include "ClipboardHelper.h"
 #include <string>
 #include "gtest/gtest.h"
-using namespace std;
 
 namespace {
     TEST(ClipboardHelperTest, english)

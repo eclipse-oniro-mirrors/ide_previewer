@@ -18,8 +18,6 @@
 #include <iostream>
 #include <common.h>
 
-using namespace std;
-
 const char* __asan_default_options()
 {
     return "halt_on_error=0:log_path=./";
@@ -39,6 +37,6 @@ int main(int argc, char **argv)
     DT_Set_Running_Time_Second(TIMEOUT_SECOND);
     // //关闭内存泄露检测
     DT_Enable_Leak_Check(0, 0);
-    cout << DT_Get_Version() << endl;
+    std::cout << DT_Get_Version() << std::endl;
     return RUN_ALL_TESTS();
 }
