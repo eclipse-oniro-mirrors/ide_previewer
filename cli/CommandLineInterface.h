@@ -46,7 +46,7 @@ private:
     explicit CommandLineInterface();
     virtual ~CommandLineInterface();
     bool ProcessCommandValidate(bool parsingSuccessful, const Json2::Value& jsonData, const std::string& errors) const;
-    CommandLine::CommandType GetCommandType(std::string) const;
+    CommandLine::CommandType GetCommandType(std::string name) const;
     std::unique_ptr<LocalSocket> socket;
     const static uint32_t MAX_COMMAND_LENGTH = 128;
     static bool isFirstWsSend;
