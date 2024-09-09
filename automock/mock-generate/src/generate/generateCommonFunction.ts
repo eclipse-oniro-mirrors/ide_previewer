@@ -61,7 +61,7 @@ export function generateCommonFunction(
   let functionBody = '';
   const functionEntity = functionArray[0];
   if (isRoot) {
-    functionBody = `const ${functionEntity.functionName} = function(...args) {`;
+    functionBody = `${functionEntity.isExport ? 'export ' : ''}const ${functionEntity.functionName} = function(...args) {`;
   } else {
     functionBody = `${functionEntity.functionName}: function(...args) {`;
   }
