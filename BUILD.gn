@@ -117,7 +117,7 @@ previewer_executable("lite_previewer") {
     libs = [ "psapi" ]
   } else if (platform == "mac_arm64" || platform == "mac_x64") {
     libs = []
-  } else if (platform == "linux_x64" || platform == "linux_arm64") {
+  } else if (platform == "linux_x64") {
     libs = []
   }
 }
@@ -148,7 +148,7 @@ ohos_copy("copy_ide_library") {
     suffix = ".dll"
   } else if (platform == "mac_arm64" || platform == "mac_x64") {
     suffix = ".dylib"
-  } else if (platform == "linux_x64" || platform == "linux_arm64") {
+  } else if (platform == "linux_x64") {
     suffix = ".so"
   }
   deps = []

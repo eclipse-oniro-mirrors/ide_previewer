@@ -41,7 +41,6 @@ ide_unittest("jsapp_rich_test") {
     "$ide_previewer_path/mock/MouseInput.cpp",
     "$ide_previewer_path/mock/MouseWheel.cpp",
     "$ide_previewer_path/mock/VirtualMessage.cpp",
-    "$ide_previewer_path/test/mock/MockFile.cpp",
     "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
     "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
