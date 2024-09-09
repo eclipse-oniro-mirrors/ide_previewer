@@ -17,11 +17,11 @@ import { SyntaxKind } from 'typescript';
 import type { EnumEntity } from '../declaration-node/enumDeclaration';
 
 const colorSpaceSpecialData = {
-  'LINEAR_BT709': 24,
-  'DISPLAY_SRGB': 4,
-  'DISPLAY_P3_SRGB': 3,
-  'DISPLAY_P3_HLG': 11,
-  'DISPLAY_P3_PQ': 12
+  LINEAR_BT709: 24,
+  DISPLAY_SRGB: 4,
+  DISPLAY_P3_SRGB: 3,
+  DISPLAY_P3_HLG: 11,
+  DISPLAY_P3_PQ: 12
 };
 
 /**

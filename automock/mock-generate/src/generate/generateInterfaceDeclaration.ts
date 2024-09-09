@@ -112,8 +112,8 @@ function isNeedAddExtraImport(
       let temp = false;
       importDeclarations.forEach(element => {
         if (
-          element.importPath.startsWith('\'@ohos')
-          && element.importElements.match(new RegExp(`[\\s\n]*${value.propertyTypeName}[,\\s\n]*`))
+          element.importPath.startsWith('\'@ohos') &&
+            element.importElements.match(new RegExp(`[\\s\n]*${value.propertyTypeName}[,\\s\n]*`))
         ) {
           temp = true;
         }

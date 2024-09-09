@@ -117,6 +117,7 @@ function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
       if (isClassDeclaration(value) && value.name !== undefined) {
         allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
       }
+      return allClassSet;
     });
   }
 }
@@ -410,4 +411,62 @@ export function generateKitMap(apiInputPath: string): void {
     throw new Error(`${kitPath} does not exist.`);
   }
   collectAllKitFiles(kitPath);
+}
+
+export interface DependencyListParams {
+  dependency: Array<string>,
+  export: string
+}
+
+export interface DependencyParams {
+  [key: string]: DependencyListParams
+}
+
+// dependence on collecting files
+export const DEPENDENCY_LIST: DependencyParams = {};
+
+/**
+ * generated depend.json
+ */
+export function generateDependJsonFile(): void {
+  const dependInfoPath = path.join(__dirname, '../../../runtime/main/extend/systemplugin/depend.json');
+  fs.writeFileSync(dependInfoPath, JSON.stringify(DEPENDENCY_LIST, null, 2), 'utf-8');
+}
+
+/**
+ * generated MyComponent.js
+ * 
+ * @param outDir generated file root directory
+ */
+export function generateMyComponent(outDir: string): void {
+  fs.writeFileSync(
+    path.join(outDir, 'MyComponent.js'),
+    'class MyComponent {}\nexport { MyComponent };'
+  );
+}
+
+// initialize all variables in the file
+export let INITVARIABLE = '';
+
+/**
+ * set initialize variable
+ * 
+ * @param value variable name
+ */
+export function setInitVariable(value?: string): void {
+  if (value) {
+    if (!INITVARIABLE.includes(`let ${value} = {};`)) {
+      INITVARIABLE += `let ${value} = {};\n`;
+    }
+  } else {
+    INITVARIABLE = '';
+  }
+}
+
+/**
+ * get all initialize variable
+ * @returns string
+ */
+export function getInitVariable(): string {
+  return INITVARIABLE;
 }

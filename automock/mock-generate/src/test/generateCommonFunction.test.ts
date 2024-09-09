@@ -28,8 +28,9 @@ describe('generateCommonFunction.ts file test', (): void => {
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const sourceFileEntity = getSourceFileAssembly(sourceFile, 'global');
     const mockApi = 'import { TouchObject, KeyEvent, MouseEvent } from "../component/ets/common"';
-    const result = generateCommonFunction('setInterval', sourceFileEntity.functionDeclarations.get('setInterval'), sourceFile, mockApi, true);
-    const expectedResult = `const setInterval = function(...args) {console.warn('The setInterval.setInterval interface in the Previewer is a mocked implementation and may behave differently than on a real device.');
+    const functionArray = sourceFileEntity.functionDeclarations.get('setInterval') ?? [];
+    const result = generateCommonFunction('setInterval', functionArray, sourceFile, mockApi, true);
+    const expectedResult = `export const setInterval = function(...args) {console.warn('The setInterval.setInterval interface in the Previewer is a mocked implementation and may behave differently than on a real device.');
 return 0;};
       if (!global.setInterval) {
         global.setInterval = setInterval;
