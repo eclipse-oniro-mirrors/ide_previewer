@@ -218,7 +218,7 @@ function substepFunction(substepClassParams: SubstepFuntionParams): SubstepFunti
  * @param substepClassParams
  * @returns
  */
-function substepConsole(node: Node, fileName: string) {
+function substepConsole(node: Node, fileName: string): void {
   if (node.kind !== SyntaxKind.EndOfFileToken && !isFunctionDeclaration(node) && !isVariableStatement(node)) {
     console.log('--------------------------- uncaught sourceFile type start -----------------------');
     console.log('fileName: ' + fileName);
