@@ -18,7 +18,7 @@ if (platform == "mac_arm64") {
   mac_buildtool = "//build/toolchain/mac:clang_x64"
 }
 windows_buildtool = "//build/toolchain/mingw:mingw_x86_64"
-linux_buildtool = "//build/toolchain/linux:clang_${host_cpu}"
+linux_buildtool = "//build/toolchain/linux:clang_x64"
 ace_root = "//foundation/arkui/ace_engine"
 flutter_root = "//third_party/flutter"
 os_include_dirs = [

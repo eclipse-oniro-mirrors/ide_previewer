@@ -65,7 +65,7 @@ namespace Json2 {
         float GetFloat(const char* key, float defaultVal = 0.0) const;
         double GetDouble(const char* key, double defaultVal = 0.0) const;
         bool GetBool(const char* key, bool defaultVal = false) const;
-        std::string GetString(const char* key, const std::string defaultVal = "") const;
+        std::string GetString(const char* key, std::string defaultVal = "") const;
         Value GetValue(const char* key) const;
         int32_t AsInt() const;
         uint32_t AsUInt() const;
