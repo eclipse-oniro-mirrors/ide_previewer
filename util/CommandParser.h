@@ -95,6 +95,9 @@ public:
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info) const;
     void GetFoldInfo(FoldInfo& info) const;
+#ifdef COMPONENT_TEST_ENABLED
+    std::string GetComponentTestConfig() const;
+#endif // COMPONENT_TEST_ENABLED
 
 private:
     CommandParser();
@@ -149,6 +152,9 @@ private:
     bool isComponentMode;
     std::string abilityPath;
     std::string abilityName;
+#ifdef COMPONENT_TEST_ENABLED
+    std::string componentTestConfig;
+#endif // COMPONENT_TEST_ENABLED
     bool staticCard;
     const size_t maxMainArgLength = 1024;
     bool foldable;

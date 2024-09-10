@@ -189,6 +189,9 @@ void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args)
     SetOnError(args);
     SetComponentModeEnabled(args, commandInfo.isComponentMode);
     SetPkgContextInfo();
+#ifdef COMPONENT_TEST_ENABLED
+    SetComponentTestConfig(args, componentTestModeConfig);
+#endif // COMPONENT_TEST_ENABLED
     ILOG("start ability: %d %d %f", args.deviceWidth, args.deviceHeight, args.deviceConfig.density);
 }
 
@@ -1056,9 +1059,27 @@ void JsAppImpl::InitJsApp()
             SetDebugServerPort(static_cast<uint16_t>(atoi(parser.Value("p").c_str())));
         }
     }
+#ifdef COMPONENT_TEST_ENABLED
+    if (parser.IsSet("componentTest")) {
+        JsAppImpl::GetInstance().SetComponentTestModeConfig(parser.Value("componentTest"));
+    }
+#endif // COMPONENT_TEST_ENABLED
     VirtualScreenImpl::GetInstance().InitFoldParams();
     Start();
 }
+
+#ifdef COMPONENT_TEST_ENABLED
+void JsAppImpl::SetComponentTestConfig(Platform::AceRunArgs& args, const std::string componentTest) const
+{
+    args.componentTestConfig = componentTest;
+    args.isComponentTestMode = true;
+}
+
+void JsAppImpl::SetComponentTestModeConfig(const std::string value)
+{
+    componentTestModeConfig = value;
+}
+#endif // COMPONENT_TEST_ENABLED
 
 void JsAppImpl::StopAbility()
 {

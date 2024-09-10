@@ -45,6 +45,9 @@ CommandParser::CommandParser()
       containerSdkPath(""),
       isComponentMode(false),
       abilityPath(""),
+#ifdef COMPONENT_TEST_ENABLED
+      componentTestConfig(""),
+#endif // COMPONENT_TEST_ENABLED
       staticCard(false)
 {
     Register("-j", 1, "Launch the js app in <directory>.");
@@ -87,6 +90,9 @@ CommandParser::CommandParser()
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
     Register("-ljPath", 1, "Set loader.json path for Previewer");
+#ifdef COMPONENT_TEST_ENABLED
+    Register("-componentTest", 1, "Set component test config");
+#endif // COMPONENT_TEST_ENABLED
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -1038,3 +1044,10 @@ void CommandParser::GetFoldInfo(FoldInfo& info) const
     info.foldResolutionWidth = GetFoldResolutionWidth();
     info.foldResolutionHeight = GetFoldResolutionHeight();
 }
+
+#ifdef COMPONENT_TEST_ENABLED
+std::string CommandParser::GetComponentTestConfig() const
+{
+    return componentTestConfig;
+}
+#endif // COMPONENT_TEST_ENABLED
