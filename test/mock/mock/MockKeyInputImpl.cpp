@@ -16,8 +16,6 @@
 #include "KeyInputImpl.h"
 #include "MockGlobalResult.h"
 
-using namespace std;
-
 KeyInputImpl::KeyInputImpl() {}
 
 KeyInputImpl& KeyInputImpl::GetInstance()
@@ -37,7 +35,7 @@ void KeyInputImpl::DispatchOsKeyEvent() const
 }
 
 void KeyInputImpl::SetKeyEvent(const int32_t keyCodeVal, const int32_t keyActionVal,
-    const vector<int32_t> pressedCodesVal, const string keyStrVal)
+    const std::vector<int32_t> pressedCodesVal, const std::string keyStrVal)
 {
     keyCode = keyCodeVal;
     keyAction = keyActionVal;

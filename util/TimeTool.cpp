@@ -17,8 +17,12 @@
 
 #include <chrono>
 #include <iostream>
+#include <sstream>
 
 #include "LocalDate.h"
+
+const int BASE_YEAR = 1900;
+const int MILLISECOND_PERSECOND = 1000;
 
 std::string TimeTool::GetFormatTime()
 {
@@ -38,14 +42,24 @@ std::string TimeTool::FormateTimeNow()
     std::pair<tm, int64_t> timePair = GetCurrentTime();
     struct tm utcTime = timePair.first;
     int64_t msTime = timePair.second;
-    std::string now = FixedTime(utcTime.tm_year + 1900, 4)     // year need add 1900,year width is 4
-                 + "-" + FixedTime(utcTime.tm_mon + 1, 2) // month need add 1,month width is 2
-                 + "-" + FixedTime(utcTime.tm_mday, 2)    // day width is 2
-                 + "T" + FixedTime(utcTime.tm_hour, 2)    // hours width is 2
-                 + ":" + FixedTime(utcTime.tm_min, 2)     // mins width is 2
-                 + ":" + FixedTime(utcTime.tm_sec, 2)     // sec width is 2
-                 + "." + FixedTime(msTime % 1000, 3);     // ms width is 3;Moduloon 1000 is to get milliseconds.
-    return now;
+    const int fixedTimeWidth2 = 2;
+    const int fixedTimeWidth3 = 3;
+    const int fixedTimeWidth4 = 4;
+    std::ostringstream now;
+    now << FixedTime(utcTime.tm_year + BASE_YEAR, fixedTimeWidth4);
+    now << "-";
+    now << FixedTime(utcTime.tm_mon + 1, fixedTimeWidth2);
+    now << "-";
+    now << FixedTime(utcTime.tm_mday, fixedTimeWidth2);
+    now << "T";
+    now << FixedTime(utcTime.tm_hour, fixedTimeWidth2) ;
+    now << ":";
+    now << FixedTime(utcTime.tm_min, fixedTimeWidth2);
+    now << ":";
+    now << FixedTime(utcTime.tm_sec, fixedTimeWidth2);
+    now << ".";
+    now << FixedTime(msTime % MILLISECOND_PERSECOND, fixedTimeWidth3);
+    return now.str();
 }
 
 std::string TimeTool::FixedTime(int32_t time, int32_t width)

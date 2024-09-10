@@ -26,7 +26,6 @@
 #include "SharedData.h"
 #include "MockGlobalResult.h"
 #include "VirtualScreen.h"
-using namespace std;
 
 namespace {
     std::string g_configPath = R"(
@@ -257,7 +256,7 @@ namespace {
             SharedData<double>(SharedDataType::BATTERY_LEVEL, 1.0, 0.0, 1.0);
             // Heart rate range: 0 to 255. The default value is 80.
             SharedData<uint8_t>(SharedDataType::HEARTBEAT_VALUE, 80, 0, 255);
-            SharedData<string>(SharedDataType::LANGUAGE, "zh-CN");
+            SharedData<std::string>(SharedDataType::LANGUAGE, "zh-CN");
             // The value ranges from 180 to 180. The default value is 0.
             SharedData<double>(SharedDataType::LONGITUDE, 0, -180, 180);
             // The atmospheric pressure ranges from 0 to 999900. The default value is 101325.
@@ -266,15 +265,15 @@ namespace {
             // The value ranges from -90 to 90. The default value is 0.
             SharedData<double>(SharedDataType::LATITUDE, 0, -90, 90);
         } else {
-            SharedData<string>(SharedDataType::LANGUAGE, "zh_CN");
-            SharedData<string>(SharedDataType::LAN, "zh");
-            SharedData<string>(SharedDataType::REGION, "CN");
+            SharedData<std::string>(SharedDataType::LANGUAGE, "zh_CN");
+            SharedData<std::string>(SharedDataType::LAN, "zh");
+            SharedData<std::string>(SharedDataType::REGION, "CN");
         }
     }
 
     TEST(CommandLineInterfaceTest, ReadAndApplyConfigTest)
     {
-        string deviceType = "liteWearable";
+        std::string deviceType = "liteWearable";
         CommandParser::GetInstance().deviceType = deviceType;
         CommandLineInterface& instance = CommandLineInterface::GetInstance();
         // path is empty
@@ -347,7 +346,7 @@ namespace {
 
     TEST(CommandLineInterfaceTest, CreatCommandToSendDataTest)
     {
-        string deviceType = "phone";
+        std::string deviceType = "phone";
         CommandParser::GetInstance().deviceType = deviceType;
         CommandLineInterface::GetInstance().Init(deviceType);
         g_output = false;
@@ -359,7 +358,7 @@ namespace {
 
     TEST(CommandLineInterfaceTest, ApplyConfigMembersTest_Err)
     {
-        string deviceType = "liteWearable";
+        std::string deviceType = "liteWearable";
         CommandParser::GetInstance().deviceType = deviceType;
         CommandLineInterface::GetInstance().Init(deviceType);
         std::string jsonStr = R"({ "Language" : { "args" : { "Language" : "zh-CN" }},
@@ -369,7 +368,7 @@ namespace {
         Json2::Value::Members members= { "Language", "Language2", "Language3", "Language4" };
         Json2::Value commands = JsonReader::ParseJsonData2(jsonStr);
         CommandLineInterface::GetInstance().ApplyConfigMembers(commands, members);
-        std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        std::string language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_EQ(language, "zh-CN");
     }
 

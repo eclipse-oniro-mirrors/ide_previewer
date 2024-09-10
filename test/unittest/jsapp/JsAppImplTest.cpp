@@ -28,7 +28,6 @@
 #include "FileSystem.h"
 #include "ace_preview_helper.h"
 #include "window_model.h"
-using namespace std;
 
 namespace {
     class JsAppImplTest : public ::testing::Test {
@@ -81,9 +80,9 @@ namespace {
             JsAppImpl::GetInstance().Start();
         });
         thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         JsAppImpl::GetInstance().isStop = true;
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
     }
 
@@ -134,13 +133,13 @@ namespace {
             JsAppImpl::GetInstance().Start();
         });
         thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         int32_t originWidth = 222;
         int32_t originHeight = 333;
         int32_t width = 222;
         int32_t height = 333;
         int32_t screenDensity = 360;
-        string reason = "resize";
+        std::string reason = "resize";
         ResolutionParam param(originWidth, originHeight, width, height);
         g_surfaceChanged = false;
         JsAppImpl::GetInstance().ResolutionChanged(param, screenDensity, reason);
@@ -291,7 +290,7 @@ namespace {
             JsAppImpl::GetInstance().Start();
         });
         thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         int width = 200;
         int height = 300;
         g_execStatusChangedCallback = false;
@@ -428,9 +427,9 @@ namespace {
             JsAppImpl::GetInstance().Stop();
         });
         thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         JsAppImpl::GetInstance().isFinished = true;
-        this_thread::sleep_for(chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
         EXPECT_TRUE(JsAppImpl::GetInstance().isStop);
     }
 
@@ -517,8 +516,8 @@ namespace {
         CommandParser::GetInstance().appResourcePath = testDir;
         CommandParser::GetInstance().loaderJsonPath = testDir + "/loader.json";
         JsAppImpl::GetInstance().InitCommandInfo();
-        const string moduleJsonPath = testDir + FileSystem::GetSeparator() + "module.json";
-        const string pkgContextInfoJsonPath = testDir + FileSystem::GetSeparator() + "pkgContextInfo.json";
+        const std::string moduleJsonPath = testDir + FileSystem::GetSeparator() + "module.json";
+        const std::string pkgContextInfoJsonPath = testDir + FileSystem::GetSeparator() + "pkgContextInfo.json";
         // 直接调用
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
@@ -720,9 +719,9 @@ namespace {
             CommandParser::GetInstance().argsMap.clear();
         });
         thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         JsAppImpl::GetInstance().isStop = true;
-        this_thread::sleep_for(chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
     }
 }

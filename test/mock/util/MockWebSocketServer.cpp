@@ -16,7 +16,6 @@
 #include <atomic>
 #include "WebSocketServer.h"
 #include "MockGlobalResult.h"
-using namespace std;
 
 lws* WebSocketServer::webSocket = nullptr;
 std::atomic<bool> WebSocketServer::interrupted = false;

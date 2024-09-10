@@ -18,12 +18,11 @@
 #include "secodeFuzz.h"
 #include "CommandParser.h"
 
-using namespace std;
 using namespace fuzztest;
 
 const int DEFAULT_LENGTH = 1000;
 
-void ParamsParse::CallParamsParseFunc(const vector<string>& args)
+void ParamsParse::CallParamsParseFunc(const std::vector<std::string>& args)
 {
     CommandParser& parser = CommandParser::GetInstance();
     parser.ProcessCommand(args);
@@ -36,7 +35,7 @@ void ParamsParse::ParamsParseFuzzTest()
     printf("start ---- ParamsParseFuzzTest\r\n");
     DT_FUZZ_START(0, TEST_TIMES, (char*)"ParamsParseFuzzTest", 0)
     {
-        vector<string> args;
+        std::vector<std::string> args;
         SetTestArgs(args);
         CallParamsParseFunc(args);
     }
@@ -50,14 +49,14 @@ void ParamsParse::ParamsParseFuzzTest()
     }
 }
 
-void ParamsParse::SetTestArgs(vector<string>& args)
+void ParamsParse::SetTestArgs(std::vector<std::string>& args)
 {
     int index = -1;
     for (const Param& param : paramList) {
         args.push_back(param.name);
         for (const std::string& value : param.values) {
             index++;
-            std::string str = string(value);
+            std::string str = std::string(value);
             args.push_back(DT_SetGetString(&g_Element[index], str.size() + 1, DEFAULT_LENGTH, (char*)str.c_str()));
         }
     }

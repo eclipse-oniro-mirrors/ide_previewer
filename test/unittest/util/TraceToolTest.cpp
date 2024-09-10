@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 #define private public
 #include "TraceTool.h"
-using namespace std;
 
 namespace {
     TEST(TraceToolTest, HandleTraceTest)

@@ -16,8 +16,6 @@
 #include "JsAppImpl.h"
 #include "MockGlobalResult.h"
 
-using namespace std;
-
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false) {}
 
 JsAppImpl::~JsAppImpl() {}
@@ -28,7 +26,7 @@ JsAppImpl& JsAppImpl::GetInstance()
     return instance;
 }
 
-void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, string reason)
+void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason)
 {
     this->width = param.orignalWidth;
     this->height = param.orignalHeight;
@@ -51,7 +49,7 @@ std::string JsAppImpl::GetColorMode() const
     return colorMode;
 }
 
-void JsAppImpl::SetArgsColorMode(const string& value)
+void JsAppImpl::SetArgsColorMode(const std::string& value)
 {
     colorMode = value;
 }

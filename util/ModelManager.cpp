@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <sstream>
 #include "ModelManager.h"
 
 #include "Interrupter.h"
@@ -32,12 +33,12 @@ std::string ModelManager::GetCurrentModel()
 
 std::string ModelManager::GetAllModelName()
 {
-    std::string allNames;
+    std::ostringstream allNames;
     for (ModelConfig const& config : configList) {
-        allNames += std::string(config.modelName);
-        allNames += " ";
+        allNames << std::string(config.modelName);
+        allNames << " ";
     }
-    return allNames;
+    return allNames.str();
 }
 
 void ModelManager::SetCurrentDevice(const std::string& value)

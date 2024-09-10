@@ -22,7 +22,6 @@
 #include "CommandLineInterface.h"
 #define private public
 #include "CommandParser.h"
-using namespace std;
 using namespace fuzztest;
 
 namespace {

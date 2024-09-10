@@ -17,7 +17,6 @@
 #define private public
 #include "CppTimer.h"
 #include "CallbackQueue.h"
-using namespace std;
 
 namespace {
     static void Double(int& addNum)
@@ -68,7 +67,7 @@ namespace {
         int interval = 100;
         // normal
         timer.Start(interval);
-        this_thread::sleep_for(chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         EXPECT_EQ(timer.interval, interval);
         EXPECT_TRUE(timer.IsRunning());
         timer.RunTimerTick(queue);

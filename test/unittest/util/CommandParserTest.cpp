@@ -21,7 +21,6 @@
 #include "gtest/gtest.h"
 #define private public
 #include "CommandParser.h"
-using namespace std;
 
 namespace {
     class CommandParserTest : public ::testing::Test {
@@ -884,9 +883,9 @@ namespace {
 
     TEST_F(CommandParserTest, ValueTest)
     {
-        string str1 = "abcd";
-        string str2 = "rect";
-        string str3 = CommandParser::GetInstance().Value("shape");
+        std::string str1 = "abcd";
+        std::string str2 = "rect";
+        std::string str3 = CommandParser::GetInstance().Value("shape");
         EXPECT_EQ(str2, str3);
         EXPECT_NE(str1, str3);
     }
@@ -910,7 +909,7 @@ namespace {
         uint32_t count = 1;
         CommandParser::GetInstance().Register(key, count, "abcd");
         uint32_t num = CommandParser::GetInstance().regsArgsCountMap[key];
-        string helpStr = CommandParser::GetInstance().regsHelpMap[key];
+        std::string helpStr = CommandParser::GetInstance().regsHelpMap[key];
         EXPECT_EQ(num, count);
         EXPECT_EQ(helpStr, "abcd");
     }

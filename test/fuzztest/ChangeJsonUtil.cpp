@@ -20,7 +20,6 @@
 #include "secodeFuzz.h"
 #include "cJSON.h"
 #include "securec.h"
-using namespace std;
 using namespace fuzztest;
 
 namespace {

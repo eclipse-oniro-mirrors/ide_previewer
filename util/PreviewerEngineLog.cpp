@@ -37,6 +37,10 @@ void PrintLog(const char* level, const char* file, const char* func, int line, c
 #endif
     static char output[1024] = { 0 };
     va_list argsList;
+    if (fmt == nullptr || *fmt == '\0') {
+        std::cerr << "PrintLog error: Format string is null or empty" << std::endl;
+        return;
+    }
     va_start(argsList, fmt);
     std::string fileStr(file);
     int idx = fileStr.find_last_of("/");

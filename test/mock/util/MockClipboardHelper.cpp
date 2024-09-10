@@ -15,8 +15,6 @@
 
 #include "ClipboardHelper.h"
 
-using namespace std;
-
 std::string temp = "";
 
 void ClipboardHelper::SetClipboardData(const std::string& data)
@@ -24,7 +22,7 @@ void ClipboardHelper::SetClipboardData(const std::string& data)
     temp = data;
 }
 
-const string ClipboardHelper::GetClipboardData()
+const std::string ClipboardHelper::GetClipboardData()
 {
     return temp;
 }

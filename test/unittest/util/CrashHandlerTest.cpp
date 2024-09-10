@@ -15,7 +15,6 @@
 #include <string>
 #include "gtest/gtest.h"
 #include "CrashHandler.h"
-using namespace std;
 
 namespace {
     class CrashHandlerTest : public ::testing::Test {

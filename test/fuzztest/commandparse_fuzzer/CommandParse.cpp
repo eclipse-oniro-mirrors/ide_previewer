@@ -20,7 +20,6 @@
 #include "securec.h"
 #include "CommandLineInterface.h"
 #include "ChangeJsonUtil.h"
-using namespace std;
 using namespace fuzztest;
 
 void CommandParse::Execute(std::string& commond, std::string& jsonArgsStr,
@@ -55,7 +54,7 @@ void CommandParse::CreateAndExecuteCommand(std::map<std::string, std::string> da
 {
     CommandLineInterface::GetInstance().Init("pipeName");
     uint64_t index = 0;
-    for (map<string, string>::iterator iter = dataMap.begin(); iter != dataMap.end(); iter++) {
+    for (std::map<std::string, std::string>::iterator iter = dataMap.begin(); iter != dataMap.end(); iter++) {
         for (int j = 0; j < types.size(); j++) {
             std::string key = iter->first;
             std::string val = iter->second;

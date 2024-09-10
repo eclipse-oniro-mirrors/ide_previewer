@@ -27,7 +27,6 @@
 #include "SharedData.h"
 #include "MouseWheelImpl.h"
 #include "Interrupter.h"
-using namespace std;
 
 namespace {
     class CommandLineTest : public ::testing::Test {
@@ -54,7 +53,7 @@ namespace {
             SharedData<double>(SharedDataType::BATTERY_LEVEL, 1.0, 0.0, 1.0);
             // Heart rate range: 0 to 255. The default value is 80.
             SharedData<uint8_t>(SharedDataType::HEARTBEAT_VALUE, 80, 0, 255);
-            SharedData<string>(SharedDataType::LANGUAGE, "zh-CN");
+            SharedData<std::string>(SharedDataType::LANGUAGE, "zh-CN");
             // The value ranges from 180 to 180. The default value is 0.
             SharedData<double>(SharedDataType::LONGITUDE, 0, -180, 180);
             // The atmospheric pressure ranges from 0 to 999900. The default value is 101325.
@@ -148,7 +147,7 @@ namespace {
         EXPECT_EQ(JsAppImpl::GetInstance().width, 0);
         EXPECT_EQ(JsAppImpl::GetInstance().height, 0);
         // 缺失参数
-        string jsonStr = R"({"aaaaa":1080,"originHeight":2340,"width":1080,"height":2340,"screenDensity":480})";
+        std::string jsonStr = R"({"aaaaa":1080,"originHeight":2340,"width":1080,"height":2340,"screenDensity":480})";
         Json2::Value args2 = JsonReader::ParseJsonData2(jsonStr);
         ResolutionSwitchCommand command3(type, args2, *socket);
         command3.CheckAndRun();
@@ -162,7 +161,7 @@ namespace {
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        string jsonStr = R"({"originWidth":"1080","originHeight":2340,"width":1080,
+        std::string jsonStr = R"({"originWidth":"1080","originHeight":2340,"width":1080,
             "height":2340,"screenDensity":480})";
         Json2::Value args2 = JsonReader::ParseJsonData2(jsonStr);
         ResolutionSwitchCommand command3(type, args2, *socket);
@@ -172,7 +171,7 @@ namespace {
 
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
-        string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+        std::string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
             "height" : 2340, "screenDensity" : 480, "reason" : 333})";
         Json2::Value args1 = JsonReader::ParseJsonData2(jsonStr1);
         ResolutionSwitchCommand command1(type, args1, *socket);
@@ -187,7 +186,7 @@ namespace {
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        string jsonStr = R"({"originWidth":5000,"originHeight":2340,"width":1080,
+        std::string jsonStr = R"({"originWidth":5000,"originHeight":2340,"width":1080,
             "height":2340,"screenDensity":480})";
         Json2::Value args2 = JsonReader::ParseJsonData2(jsonStr);
         ResolutionSwitchCommand command3(type, args2, *socket);
@@ -197,7 +196,7 @@ namespace {
 
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
-        string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+        std::string jsonStr1 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
             "height" : 2340, "screenDensity" : 480, "reason" : "aaa"})";
         Json2::Value args1 = JsonReader::ParseJsonData2(jsonStr1);
         ResolutionSwitchCommand command1(type, args1, *socket);
@@ -207,7 +206,7 @@ namespace {
 
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
-        string jsonStr4 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+        std::string jsonStr4 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
             "height" : 2340, "screenDensity" : 100, "reason" : "resize"})";
         Json2::Value args4 = JsonReader::ParseJsonData2(jsonStr4);
         ResolutionSwitchCommand command4(type, args4, *socket);
@@ -217,7 +216,7 @@ namespace {
 
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
-        string jsonStr5 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+        std::string jsonStr5 = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
             "height" : 2340, "screenDensity" : 700, "reason" : "resize"})";
         Json2::Value args5 = JsonReader::ParseJsonData2(jsonStr5);
         ResolutionSwitchCommand command5(type, args5, *socket);
@@ -232,7 +231,7 @@ namespace {
         JsAppImpl::GetInstance().width = 0;
         JsAppImpl::GetInstance().height = 0;
         CommandLine::CommandType type = CommandLine::CommandType::SET;
-        string jsonStr = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
+        std::string jsonStr = R"({"originWidth" : 1080, "originHeight" : 2340, "width" : 1080,
             "height" : 2340, "screenDensity" : 480, "reason" : "resize"})";
         Json2::Value args2 = JsonReader::ParseJsonData2(jsonStr);
         ResolutionSwitchCommand command3(type, args2, *socket);
@@ -1541,7 +1540,7 @@ namespace {
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
         LanguageCommand command1(type, args1, *socket);
         command1.CheckAndRun();
-        std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        std::string language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_EQ(language, "zh-CN"); // zh-CN is default value
 
         CommandParser::GetInstance().deviceType = "liteWearable";
@@ -1549,7 +1548,7 @@ namespace {
         Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
         LanguageCommand command2(type, args2, *socket);
         command2.CheckAndRun();
-        language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_NE(language, "ar_AE");
 
         CommandParser::GetInstance().deviceType = "phone";
@@ -1557,7 +1556,7 @@ namespace {
         Json2::Value args3 = JsonReader::ParseJsonData2(msg3);
         LanguageCommand command3(type, args3, *socket);
         command3.CheckAndRun();
-        language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_NE(language, "aa_BB");
     }
 
@@ -1569,7 +1568,7 @@ namespace {
         Json2::Value args1 = JsonReader::ParseJsonData2(msg1);
         LanguageCommand command1(type, args1, *socket);
         command1.CheckAndRun();
-        std::string language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        std::string language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_EQ(language, "en-US");
 
         CommandParser::GetInstance().deviceType = "phone";
@@ -1577,7 +1576,7 @@ namespace {
         Json2::Value args2 = JsonReader::ParseJsonData2(msg2);
         LanguageCommand command2(type, args2, *socket);
         command2.CheckAndRun();
-        language = SharedData<string>::GetData(SharedDataType::LANGUAGE);
+        language = SharedData<std::string>::GetData(SharedDataType::LANGUAGE);
         EXPECT_EQ(language, "en_US");
     }
 
