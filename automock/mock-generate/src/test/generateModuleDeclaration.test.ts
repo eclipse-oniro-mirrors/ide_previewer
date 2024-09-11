@@ -15,11 +15,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateModuleDeclaration } from '../generate/generateModuleDeclaration';
 
-const filePath = path.join(__dirname, './api/@ohos.ability.ability.d.ts')
+const filePath = path.join(__dirname, './api/@ohos.ability.ability.d.ts');
 const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
@@ -33,12 +33,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_DataAbilityHelper',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'PacMap',
@@ -46,12 +44,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_PacMap',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'DataAbilityOperation',
@@ -59,12 +55,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_DataAbilityOperation',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'DataAbilityResult',
@@ -72,12 +66,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_DataAbilityResult',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'AbilityResult',
@@ -85,12 +77,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_AbilityResult',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'ConnectOptions',
@@ -98,12 +88,10 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_ConnectOptions',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
+          modifiers: [92]
         },
         {
           typeAliasName: 'StartAbilityParameter',
@@ -111,13 +99,11 @@ describe('generateModuleDeclaration.ts file test', () => {
           typeAliasTypeElements: [
             {
               typeName: '_StartAbilityParameter',
-              typeKind: 78,
-            },
+              typeKind: 78
+            }
           ],
-          modifiers: [
-            92,
-          ],
-        },
+          modifiers: [92]
+        }
       ],
       classDeclarations: [],
       interfaceDeclarations: [],
@@ -128,7 +114,7 @@ describe('generateModuleDeclaration.ts file test', () => {
       moduleImportEquaqls: [],
       exportDeclarations: [],
       exportModifiers: [133],
-      moduleName: 'ability',
+      moduleName: 'ability'
     };
     const filename = 'ohos_ability_ability';
     const mockApi = 'import { DataAbilityHelper as _DataAbilityHelper } from \'./ability/dataAbilityHelper\''
@@ -142,32 +128,32 @@ describe('generateModuleDeclaration.ts file test', () => {
     const importDeclarations = [
       {
         importPath: './ability/dataAbilityHelper',
-        importElements: '{ DataAbilityHelper as _DataAbilityHelper }',
+        importElements: '{ DataAbilityHelper as _DataAbilityHelper }'
       },
       {
         importPath: './ability/dataAbilityHelper',
-        importElements: '{ PacMap as _PacMap }',
+        importElements: '{ PacMap as _PacMap }'
       },
       {
         importPath: './ability/dataAbilityOperation',
-        importElements: '{ DataAbilityOperation as _DataAbilityOperation }',
+        importElements: '{ DataAbilityOperation as _DataAbilityOperation }'
       },
       {
         importPath: './ability/dataAbilityResult',
-        importElements: '{ DataAbilityResult as _DataAbilityResult }',
+        importElements: '{ DataAbilityResult as _DataAbilityResult }'
       },
       {
         importPath: './ability/abilityResult',
-        importElements: '{ AbilityResult as _AbilityResult }',
+        importElements: '{ AbilityResult as _AbilityResult }'
       },
       {
         importPath: './ability/connectOptions',
-        importElements: '{ ConnectOptions as _ConnectOptions }',
+        importElements: '{ ConnectOptions as _ConnectOptions }'
       },
       {
         importPath: './ability/startAbilityParameter',
-        importElements: '{ StartAbilityParameter as _StartAbilityParameter }',
-      },
+        importElements: '{ StartAbilityParameter as _StartAbilityParameter }'
+      }
     ];
     const data = 'export function mockAbility() {\n\tconst ability = {\n\n\n\tDataAbilityHelper: DataAbilityHelper,\n'
       + 'PacMap: PacMap,\nDataAbilityOperation: DataAbilityOperation,\nDataAbilityResult: DataAbilityResult,\n'
@@ -176,7 +162,14 @@ describe('generateModuleDeclaration.ts file test', () => {
       + 'const DataAbilityOperation = _DataAbilityOperation;\nconst DataAbilityResult = _DataAbilityResult;\n'
       + 'const AbilityResult = _AbilityResult;\nconst ConnectOptions = _ConnectOptions;\n'
       + 'const StartAbilityParameter = _StartAbilityParameter;\n';
-    const result = generateModuleDeclaration(moduleEntity, sourceFile, filename, mockApi, extraImport, importDeclarations);
+    const result = generateModuleDeclaration(
+      moduleEntity,
+      sourceFile,
+      filename,
+      mockApi,
+      extraImport,
+      importDeclarations
+    );
     expect(result).toBe(data);
   });
 });

@@ -52,12 +52,10 @@ export function getTypeAliasDeclaration(node: Node, sourceFile: SourceFile): Typ
         typeAliasTypeElements.push({ typeName: typeName, typeKind: typeKind });
       });
     } else {
-      typeAliasTypeElements.push(
-        {
-          typeName: sourceFile.text.substring(typeAliasTypeElementsNode.pos, typeAliasTypeElementsNode.end),
-          typeKind: typeAliasTypeElementsNode.kind
-        }
-      );
+      typeAliasTypeElements.push({
+        typeName: sourceFile.text.substring(typeAliasTypeElementsNode.pos, typeAliasTypeElementsNode.end),
+        typeKind: typeAliasTypeElementsNode.kind
+      });
     }
   }
   return {
@@ -69,13 +67,13 @@ export function getTypeAliasDeclaration(node: Node, sourceFile: SourceFile): Typ
 }
 
 export interface TypeAliasEntity {
-  typeAliasName: string,
-  typeAliasTypeKind: number,
-  typeAliasTypeElements: Array<TypeAliasTypeEntity>,
-  modifiers: Array<number>
+  typeAliasName: string;
+  typeAliasTypeKind: number;
+  typeAliasTypeElements: Array<TypeAliasTypeEntity>;
+  modifiers: Array<number>;
 }
 
 export interface TypeAliasTypeEntity {
-  typeName: string,
-  typeKind: number
+  typeName: string;
+  typeKind: number;
 }

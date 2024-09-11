@@ -83,6 +83,6 @@ export function generateIndex(): string {
 }
 
 interface IndexEntity {
-  fileName: string,
-  mockFunctionName: string
+  fileName: string;
+  mockFunctionName: string;
 }

@@ -44,7 +44,7 @@ export function getCallSignatureDeclaration(node: Node, sourceFile: SourceFile):
 }
 
 export interface CallSignatureEntity {
-  functionName: string,
-  returnType: ReturnTypeEntity,
-  args: Array<ParameterEntity>
+  functionName: string;
+  returnType: ReturnTypeEntity;
+  args: Array<ParameterEntity>;
 }

@@ -15,13 +15,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateTypeAliasDeclaration } from '../generate/generateTypeAlias';
 
 describe('generateTypeAliasDeclaration.ts file test', () => {
   test('Test the generateTypeAliasDeclaration function', () => {
-    const filePath = path.join(__dirname, './api/@ohos.ability.ability.d.ts')
+    const filePath = path.join(__dirname, './api/@ohos.ability.ability.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const typeAliasEntity = {
@@ -30,13 +30,11 @@ describe('generateTypeAliasDeclaration.ts file test', () => {
       typeAliasTypeElements: [
         {
           typeName: '_DataAbilityHelper',
-          typeKind: 78,
-        },
+          typeKind: 78
+        }
       ],
-      modifiers: [
-        92,
-      ],
-    }
+      modifiers: [92]
+    };
     const isInner = true;
     const extraImport = [];
     const mockApi = 'import { DataAbilityHelper as _DataAbilityHelper } from \'./ability/dataAbilityHelper\''

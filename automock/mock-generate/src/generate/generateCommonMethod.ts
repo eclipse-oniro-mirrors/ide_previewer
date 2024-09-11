@@ -29,26 +29,26 @@ import {
 } from './generateCommonUtil';
 
 interface MethodArrayProps {
-  methodArray: Array<MethodEntity>,
-  methodEntity: MethodEntity,
-  sourceFile: SourceFile,
-  mockApi: string,
-  methodBody: string
+  methodArray: Array<MethodEntity>;
+  methodEntity: MethodEntity;
+  sourceFile: SourceFile;
+  mockApi: string;
+  methodBody: string;
 }
 
 interface MethodArrayItemForEachProps {
-  returnSet: Set<string>,
-  value: MethodEntity | FunctionEntity | MethodSignatureEntity,
-  argSet: Set<string>,
-  isCallBack: boolean,
-  argParamsSet: string,
-  needOverloaded: boolean
+  returnSet: Set<string>;
+  value: MethodEntity | FunctionEntity | MethodSignatureEntity;
+  argSet: Set<string>;
+  isCallBack: boolean;
+  argParamsSet: string;
+  needOverloaded: boolean;
 }
 
 interface MethodArrayBack {
-  returnSet: Set<string>,
-  methodBody: string,
-  isCallBack: boolean
+  returnSet: Set<string>;
+  methodBody: string;
+  isCallBack: boolean;
 }
 
 /**
@@ -169,9 +169,7 @@ function methodArrayForEach(props: MethodArrayProps): MethodArrayBack {
  * @param props
  * @returns
  */
-export function methodArrayItemForEach(
-  props: MethodArrayItemForEachProps
-): MethodArrayItemForEachProps {
+export function methodArrayItemForEach(props: MethodArrayItemForEachProps): MethodArrayItemForEachProps {
   props.returnSet.add(props.value.returnType.returnKindName);
   props.value.args.forEach(arg => {
     props.argSet.add(arg.paramName);

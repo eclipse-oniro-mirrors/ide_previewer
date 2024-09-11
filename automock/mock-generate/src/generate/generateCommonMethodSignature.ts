@@ -27,18 +27,18 @@ import {
 import { methodArrayItemForEach } from './generateCommonMethod';
 
 interface MethodSignatureArrayProps {
-  methodSignatureArray: Array<MethodSignatureEntity>,
-  methodEntity: MethodSignatureEntity,
-  methodSignatureBody: string,
-  sourceFile: SourceFile,
-  mockApi: string
+  methodSignatureArray: Array<MethodSignatureEntity>;
+  methodEntity: MethodSignatureEntity;
+  methodSignatureBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
 }
 
 interface MethodSignatureArrayBack {
-  methodSignatureArray: Array<MethodSignatureEntity>,
-  returnSet: Set<string>,
-  isCallBack: boolean,
-  methodSignatureBody: string
+  methodSignatureArray: Array<MethodSignatureEntity>;
+  returnSet: Set<string>;
+  isCallBack: boolean;
+  methodSignatureBody: string;
 }
 
 /**
@@ -50,8 +50,7 @@ interface MethodSignatureArrayBack {
  */
 export function generateCommonMethodSignature(
   rootName: string,
-  methodSignatureArray:
-    Array<MethodSignatureEntity>,
+  methodSignatureArray: Array<MethodSignatureEntity>,
   sourceFile: SourceFile,
   mockApi: string
 ): string {

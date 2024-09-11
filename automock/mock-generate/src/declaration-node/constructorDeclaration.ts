@@ -45,19 +45,17 @@ export function getConstructorDeclaration(
       typeKind = paramTypeElement.kind;
     }
 
-    constructors.push(
-      {
-        name: name,
-        typeName: typeName,
-        typeKind: typeKind
-      }
-    );
+    constructors.push({
+      name: name,
+      typeName: typeName,
+      typeKind: typeKind
+    });
   });
   return constructors;
 }
 
 export interface ConstructorEntity {
-  name: string,
-  typeName: string,
-  typeKind: number
+  name: string;
+  typeName: string;
+  typeKind: number;
 }

@@ -15,11 +15,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generatePropertyDeclaration } from '../generate/generatePropertyDeclaration';
 
-const filePath = path.join(__dirname, './api/@ohos.accessibility.d.ts')
+const filePath = path.join(__dirname, './api/@ohos.accessibility.d.ts');
 const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
@@ -33,7 +33,7 @@ describe('generatePropertyDeclaration.ts file test', () => {
       kind: 173,
       kinds: -1,
       isInitializer: false,
-      initializer: '',
+      initializer: ''
     };
     const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
     expect(result).toBe('this.type = EventType;');
@@ -48,7 +48,7 @@ describe('generatePropertyDeclaration.ts file test', () => {
       kind: 147,
       kinds: -1,
       isInitializer: false,
-      initializer: '',
+      initializer: ''
     };
     const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
     expect(result).toBe('this.bundleName = \'\'');
@@ -63,7 +63,7 @@ describe('generatePropertyDeclaration.ts file test', () => {
       kind: 144,
       kinds: -1,
       isInitializer: false,
-      initializer: '',
+      initializer: ''
     };
     const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
     expect(result).toBe('this.pageId = 0;');

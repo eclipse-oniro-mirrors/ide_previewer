@@ -26,7 +26,11 @@ import { getCallbackStatement, getReturnStatement } from './generateCommonUtil';
  * @param mockApi
  * @returns
  */
-export function generateExportFunction(functionEntity: FunctionEntity, sourceFile: SourceFile, mockApi: string): string {
+export function generateExportFunction(
+  functionEntity: FunctionEntity,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let functionBody = '';
   functionBody = `const ${functionEntity.functionName} = function (...args) {`;
   if (mockApi.includes(functionBody)) {
@@ -50,4 +54,3 @@ export function generateExportFunction(functionEntity: FunctionEntity, sourceFil
   `;
   return functionBody;
 }
-

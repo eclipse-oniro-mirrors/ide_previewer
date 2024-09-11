@@ -73,26 +73,6 @@ function getAllComponentsFilePath(dir: string): Array<string> {
     }
   });
 }
-/**
- * delete the old mock file befor generate new mock file
- * @param outDir
- */
-function deleteOldMockJsFile(outDir: string): void {
-  const arr = fs.readdirSync(outDir);
-  arr.forEach(value => {
-    const currPath = path.join(outDir, value);
-    const stas = fs.statSync(currPath);
-    if (stas.isDirectory()) {
-      deleteOldMockJsFile(currPath);
-    } else {
-      fs.unlink(currPath, function (err) {
-        if (err) {
-          console.log(err);
-        }
-      });
-    }
-  });
-}
 
 /**
  * mkdir
@@ -160,7 +140,10 @@ function etsFileToMock(outMockJsFileDir: string): void {
     const sourceFileEntity = getSourceFileAssembly(sourceFile, fileName);
     const filePath = path.join(dirName, outputFileName + '.js');
     fs.writeFileSync(filePath, '');
-    fs.appendFileSync(path.join(filePath), generateSourceFileElements('', sourceFileEntity, sourceFile, outputFileName));
+    fs.appendFileSync(
+      path.join(filePath),
+      generateSourceFileElements('', sourceFileEntity, sourceFile, outputFileName)
+    );
   }
 }
 

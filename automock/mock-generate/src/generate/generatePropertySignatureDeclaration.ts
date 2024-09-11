@@ -17,8 +17,12 @@ import { SyntaxKind } from 'typescript';
 import type { SourceFile } from 'typescript';
 import type { PropertySignatureEntity } from '../declaration-node/propertySignatureDeclaration';
 import {
-  checkIsGenericSymbol, getCallbackStatement, getTheRealReferenceFromImport,
-  getWarnConsole, propertyTypeWhiteList, paramsTypeStart
+  checkIsGenericSymbol,
+  getCallbackStatement,
+  getTheRealReferenceFromImport,
+  getWarnConsole,
+  propertyTypeWhiteList,
+  paramsTypeStart
 } from './generateCommonUtil';
 
 /**
@@ -74,7 +78,10 @@ export function generatePropertySignatureDeclaration(
  * @param sourceFile
  * @returns
  */
-function generatePropertySignatureForTypeReference(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
+function generatePropertySignatureForTypeReference(
+  propertySignature: PropertySignatureEntity,
+  sourceFile: SourceFile
+): string {
   let propertySignatureBody = '';
   if (propertySignature.propertyTypeName.startsWith('Array')) {
     propertySignatureBody = `${propertySignature.propertyName}: [],`;
@@ -109,7 +116,10 @@ function generatePropertySignatureForTypeReference(propertySignature: PropertySi
  * @param sourceFile
  * @returns
  */
-function generatePropertySignatureForUnionType(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
+function generatePropertySignatureForUnionType(
+  propertySignature: PropertySignatureEntity,
+  sourceFile: SourceFile
+): string {
   let propertySignatureBody = '';
   let unionFirstElement = propertySignature.propertyTypeName.split('|')[0].trim();
   if (unionFirstElement.includes('[]') || unionFirstElement.startsWith('[') || unionFirstElement.endsWith(']')) {
@@ -149,7 +159,10 @@ function generatePropertySignatureForUnionType(propertySignature: PropertySignat
  */
 function handlepropertyTypeNameBody(propertySignature: PropertySignatureEntity, sourceFile: SourceFile): string {
   let propertySignatureBody = '';
-  if (propertySignature.propertyTypeName.startsWith('AsyncCallback') || propertySignature.propertyTypeName.startsWith('Callback')) {
+  if (
+    propertySignature.propertyTypeName.startsWith('AsyncCallback') ||
+    propertySignature.propertyTypeName.startsWith('Callback')
+  ) {
     propertySignatureBody = `${propertySignature.propertyName}: ()=>{},`;
   } else {
     const preSplit = propertySignature.propertyTypeName.split('<');
@@ -168,10 +181,15 @@ function handlepropertyTypeNameBody(propertySignature: PropertySignatureEntity, 
       let getPropertyTypeName = null;
       Object.keys(paramsTypeStart).forEach(key => {
         if (genericArg.startsWith(key)) {
-          getPropertyTypeName = paramsTypeStart[key] === '[PC Preview] unknown type' ? `'${paramsTypeStart[key]}'` : `${paramsTypeStart[key]}`;
+          getPropertyTypeName =
+            paramsTypeStart[key] === '[PC Preview] unknown type'
+              ? `'${paramsTypeStart[key]}'`
+              : `${paramsTypeStart[key]}`;
         }
       });
-      propertySignatureBody = `${propertySignature.propertyName}: ${getPropertyTypeName ?? '\'[PC Preview] unknown type\''},`;
+      propertySignatureBody = `${propertySignature.propertyName}: ${
+        getPropertyTypeName ?? '\'[PC Preview] unknown type\''
+      },`;
     }
   }
   return propertySignatureBody;

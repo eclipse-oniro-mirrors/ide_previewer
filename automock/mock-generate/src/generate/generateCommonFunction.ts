@@ -27,19 +27,19 @@ import {
 import { methodArrayItemForEach } from './generateCommonMethod';
 
 interface AssemblyFunctionProps {
-  functionArray: Array<FunctionEntity>,
-  functionEntity: FunctionEntity,
-  functionBody: string,
-  sourceFile: SourceFile,
-  mockApi: string
+  functionArray: Array<FunctionEntity>;
+  functionEntity: FunctionEntity;
+  functionBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
 }
 
 interface AssemblyFunctionBack {
-  isReturnPromise: boolean,
-  promiseReturnValue: string,
-  functionOtherReturnValue: string,
-  isCallBack: boolean,
-  functionBody: string
+  isReturnPromise: boolean;
+  promiseReturnValue: string;
+  functionOtherReturnValue: string;
+  isCallBack: boolean;
+  functionBody: string;
 }
 
 /**
@@ -61,7 +61,9 @@ export function generateCommonFunction(
   let functionBody = '';
   const functionEntity = functionArray[0];
   if (isRoot) {
-    functionBody = `${functionEntity.isExport ? 'export ' : ''}const ${functionEntity.functionName} = function(...args) {`;
+    functionBody = `${functionEntity.isExport ? 'export ' : ''}const ${
+      functionEntity.functionName
+    } = function(...args) {`;
   } else {
     functionBody = `${functionEntity.functionName}: function(...args) {`;
   }
@@ -148,7 +150,7 @@ function forEachFuntionArray(
   isCallBack: boolean,
   props: AssemblyFunctionProps,
   needOverloaded: boolean,
-  argParamsSet:string
+  argParamsSet: string
 ): string {
   if (isCallBack) {
     if (overloadedFunctionArr.includes(props.functionEntity.functionName) && needOverloaded) {
@@ -202,4 +204,3 @@ function assemblyFuntion(
   }
   return porps.functionBody;
 }
-

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { generateEnumDeclaration } from '../generate/generateEnumDeclaration';
 
 describe('generateEnumDeclaration.ts file test', (): void => {

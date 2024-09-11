@@ -26,17 +26,17 @@ import { ImportElementEntity } from '../declaration-node/importAndExportDeclarat
 import { HeritageClauseEntity } from '../declaration-node/heritageClauseDeclaration';
 
 interface AssemblyClassParams {
-  isSystem: boolean,
-  classEntity: ClassEntity,
-  classBody: string,
-  sourceFile: SourceFile,
-  mockApi: string,
-  isInnerMockFunction: boolean,
-  filename: string,
-  isExtend: boolean,
-  className: string,
-  extraImport?: string[],
-  importDeclarations?: ImportElementEntity[]
+  isSystem: boolean;
+  classEntity: ClassEntity;
+  classBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
+  isInnerMockFunction: boolean;
+  filename: string;
+  isExtend: boolean;
+  className: string;
+  extraImport?: string[];
+  importDeclarations?: ImportElementEntity[];
 }
 
 /**
@@ -68,9 +68,11 @@ export function generateClassDeclaration(
 
   const className = firstCharacterToUppercase(classEntity.className);
   let classBody = '';
-  if ((classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
-    classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
-    !isInnerMockFunction) {
+  if (
+    (classEntity.exportModifiers.includes(SyntaxKind.ExportKeyword) ||
+      classEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword)) &&
+    !isInnerMockFunction
+  ) {
     classBody += `export const ${className} = class ${className} `;
   } else {
     classBody += `const ${className} = class ${className} `;
@@ -117,8 +119,14 @@ function assemblyClassBody(porps: AssemblyClassParams): string {
   }
   if (porps.classEntity.classProperty.length > 0) {
     porps.classEntity.classProperty.forEach(value => {
-      porps.classBody += generatePropertyDeclaration(porps.className, value,
-        porps.sourceFile, porps.extraImport, porps.importDeclarations) + '\n';
+      porps.classBody +=
+        generatePropertyDeclaration(
+          porps.className,
+          value,
+          porps.sourceFile,
+          porps.extraImport,
+          porps.importDeclarations
+        ) + '\n';
     });
   }
 
@@ -177,7 +185,7 @@ function handleClassEntityHeritageClauses(
   classEntity: ClassEntity,
   mockApi: string,
   sourceFile: SourceFile
-): { isExtend: boolean, classBody: string } {
+): { isExtend: boolean; classBody: string } {
   let isExtend = false;
   let classBody = '';
   if (classEntity.heritageClauses.length > 0) {
@@ -227,8 +235,10 @@ function generateClassEntityHeritageClauses(
       classBody += `${extendClassName},`;
     } else if (val.includes('.')) {
       const name = val.split('.')[0];
-      if (mockApi.includes(`import { mock${firstCharacterToUppercase(name)} }`) &&
-            path.basename(sourceFile.fileName).startsWith('@ohos.')) {
+      if (
+        mockApi.includes(`import { mock${firstCharacterToUppercase(name)} }`) &&
+        path.basename(sourceFile.fileName).startsWith('@ohos.')
+      ) {
         classBody += val.replace(name, `mock${firstCharacterToUppercase(name)}()`);
       } else {
         classBody += `${extendClassName}`;
@@ -247,7 +257,7 @@ function generateClassEntityHeritageClauses(
  * @returns
  */
 function addCustomeClass(
-  heritageClausesData: {isExtend: boolean, classBody:string},
+  heritageClausesData: { isExtend: boolean; classBody: string },
   sourceFile: SourceFile,
   importDeclarations?: ImportElementEntity[]
 ): string {

@@ -95,15 +95,16 @@ function isNeedAddExtraImport(
   interfaceBody: string,
   interfaceName: string,
   mockApi: string,
-  sourceFile:SourceFile,
-  interfaceElementSet:Set<string>,
-  extraImport:string[],
-  importDeclarations:ImportElementEntity[]
-) : {interfaceBody: string, interfaceElementSet: Set<string>} {
+  sourceFile: SourceFile,
+  interfaceElementSet: Set<string>,
+  extraImport: string[],
+  importDeclarations: ImportElementEntity[]
+): { interfaceBody: string; interfaceElementSet: Set<string> } {
   interfaceEntity.interfacePropertySignatures.forEach(value => {
     interfaceBody += generatePropertySignatureDeclaration(interfaceName, value, sourceFile, mockApi) + '\n';
     interfaceElementSet.add(value.propertyName);
     if (!value.propertyTypeName.includes(' ')) {
+      // Find out whether the value.propertyTypeName was introduced through import.
       const regex = new RegExp(`import[\\s\n]*?{?[\\s\n]*?${value.propertyTypeName}[,\\s\n]*?`);
       const results = mockApi.match(regex);
       if (results) {
@@ -111,9 +112,10 @@ function isNeedAddExtraImport(
       }
       let temp = false;
       importDeclarations.forEach(element => {
+        // Determine whether the external variable introduced by import contains value.propertyTypeName.
         if (
           element.importPath.startsWith('\'@ohos') &&
-            element.importElements.match(new RegExp(`[\\s\n]*${value.propertyTypeName}[,\\s\n]*`))
+          element.importElements.match(new RegExp(`[\\s\n]*${value.propertyTypeName}[,\\s\n]*`))
         ) {
           temp = true;
         }
@@ -138,7 +140,7 @@ function assemblyInterface(
   interfaceElementSet: Set<string>,
   mockApi: string,
   interfaceName: string
-) :string {
+): string {
   if (interfaceEntity.heritageClauses.length > 0) {
     interfaceEntity.heritageClauses.forEach(value => {
       currentSourceInterfaceArray.forEach(currentInterface => {
@@ -159,7 +161,12 @@ function assemblyInterface(
   return interfaceBody;
 }
 
-function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile: SourceFile, elements: Set<string>, mockApi: string): string {
+function generateHeritageInterface(
+  interfaceEntity: InterfaceEntity,
+  sourceFile: SourceFile,
+  elements: Set<string>,
+  mockApi: string
+): string {
   const interfaceName = interfaceEntity.interfaceName;
   let interfaceBody = '';
   if (interfaceEntity.interfacePropertySignatures.length > 0) {
@@ -196,7 +203,10 @@ function generateHeritageInterface(interfaceEntity: InterfaceEntity, sourceFile:
  * @returns
  */
 export function addExtraImport(
-  extraImport: string[], importDeclarations: ImportElementEntity[], sourceFile: SourceFile, value: PropertySignatureEntity
+  extraImport: string[],
+  importDeclarations: ImportElementEntity[],
+  sourceFile: SourceFile,
+  value: PropertySignatureEntity
 ): void {
   if (extraImport && importDeclarations) {
     const propertyTypeName = value.propertyTypeName.split('.')[0].split('|')[0].split('&')[0].replace(/"'/g, '').trim();
@@ -206,7 +216,9 @@ export function addExtraImport(
     if (hasBeenImported(importDeclarations, propertyTypeName)) {
       return;
     }
-    const specialFilesList = [...specialFiles.map(specialFile => path.join(getApiInputPath(), ...specialFile.split('/')))];
+    const specialFilesList = [
+      ...specialFiles.map(specialFile => path.join(getApiInputPath(), ...specialFile.split('/')))
+    ];
     if (!specialFilesList.includes(sourceFile.fileName)) {
       specialFilesList.unshift(sourceFile.fileName);
     }
@@ -221,7 +233,12 @@ export function addExtraImport(
  * @param extraImport
  * @returns
  */
-function searchHasExtraImport(specialFilesList: string[], propertyTypeName: string, sourceFile: SourceFile, extraImport: string[]): void {
+function searchHasExtraImport(
+  specialFilesList: string[],
+  propertyTypeName: string,
+  sourceFile: SourceFile,
+  extraImport: string[]
+): void {
   for (let i = 0; i < specialFilesList.length; i++) {
     const specialFilePath = specialFilesList[i];
     if (!fs.existsSync(specialFilePath)) {
@@ -246,10 +263,9 @@ function searchHasExtraImport(specialFilesList: string[], propertyTypeName: stri
       dtsFileList.push(specialFilePath);
     }
     specialFileRelatePath = specialFileRelatePath.split(path.sep).join('/');
-    const importStr = `import { ${propertyTypeName} } from '${
-      specialFileRelatePath}${
-      specialFileRelatePath.endsWith('/') ? '' : '/'}${
-      path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;
+    const importStr = `import { ${propertyTypeName} } from '${specialFileRelatePath}${
+      specialFileRelatePath.endsWith('/') ? '' : '/'
+    }${path.basename(specialFilePath).replace('.d.ts', '').replace('.d.ets', '')}'\n`;
     if (extraImport.includes(importStr)) {
       return;
     }

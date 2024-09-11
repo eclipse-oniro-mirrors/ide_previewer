@@ -58,8 +58,8 @@ export function getVariableStatementDeclaration(
 }
 
 export interface StatementEntity {
-  statementName: string,
-  typeName: string,
-  typeKind: number,
-  initializer: string
+  statementName: string;
+  typeName: string;
+  typeKind: number;
+  initializer: string;
 }

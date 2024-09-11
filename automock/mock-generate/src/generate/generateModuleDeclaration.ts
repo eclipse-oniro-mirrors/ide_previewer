@@ -19,7 +19,8 @@ import type { SourceFile } from 'typescript';
 import { firstCharacterToUppercase } from '../common/commonUtils';
 import type { ModuleBlockEntity } from '../declaration-node/moduleDeclaration';
 import {
-  getDefaultExportClassDeclaration, getSourceFileFunctions,
+  getDefaultExportClassDeclaration,
+  getSourceFileFunctions,
   getSourceFileVariableStatements
 } from '../declaration-node/sourceFileElementsAssemply';
 import { generateClassDeclaration } from './generateClassDeclaration';
@@ -36,73 +37,73 @@ import type { ImportElementEntity } from '../declaration-node/importAndExportDec
 import { ClassEntity } from '../declaration-node/classDeclaration';
 
 interface ModuleExportEntity {
-  type: string,
-  name: string
+  type: string;
+  name: string;
 }
 
 interface DefaultExportClassProps {
-  moduleBody: string,
-  outBody: string,
-  filename: string,
-  sourceFile: SourceFile,
-  mockApi: string
+  moduleBody: string;
+  outBody: string;
+  filename: string;
+  sourceFile: SourceFile;
+  mockApi: string;
 }
 
 interface DefaultExportClassBack {
-  moduleBody: string,
-  outBody: string,
+  moduleBody: string;
+  outBody: string;
 }
 
 interface JudgmentModuleEntityProps {
-  moduleEntity: ModuleBlockEntity,
-  moduleBody: string,
-  outBody: string,
-  enumBody: string,
-  sourceFile: SourceFile,
-  mockApi: string,
-  extraImport: string[],
-  moduleName: string,
-  importDeclarations: ImportElementEntity[]
+  moduleEntity: ModuleBlockEntity;
+  moduleBody: string;
+  outBody: string;
+  enumBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
+  extraImport: string[];
+  moduleName: string;
+  importDeclarations: ImportElementEntity[];
 }
 
 interface JudgmentModuleEntityBack {
-  moduleBody: string,
-  outBody: string,
-  enumBody: string
+  moduleBody: string;
+  outBody: string;
+  enumBody: string;
 }
 
 interface ModuleEntityLoopProps {
-  moduleEntity: ModuleBlockEntity,
-  innerOutBody: string,
-  moduleBody: string,
-  sourceFile: SourceFile,
-  mockApi: string,
-  extraImport: string[],
-  innerModuleName: string,
-  importDeclarations: ImportElementEntity[]
+  moduleEntity: ModuleBlockEntity;
+  innerOutBody: string;
+  moduleBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
+  extraImport: string[];
+  innerModuleName: string;
+  importDeclarations: ImportElementEntity[];
 }
 
 interface ModuleEntityLoopBack {
-  innerOutBody: string,
-  moduleBody: string,
+  innerOutBody: string;
+  moduleBody: string;
 }
 
 interface ModuleEntityNextProps {
-  moduleEntity: ModuleBlockEntity,
-  innerFunctionBody: string,
-  innerModuleBody: string,
-  filename: string,
-  moduleBody: string,
-  sourceFile: SourceFile,
-  mockApi: string,
-  extraImport: string[],
-  innerModuleName: string,
-  importDeclarations: ImportElementEntity[]
+  moduleEntity: ModuleBlockEntity;
+  innerFunctionBody: string;
+  innerModuleBody: string;
+  filename: string;
+  moduleBody: string;
+  sourceFile: SourceFile;
+  mockApi: string;
+  extraImport: string[];
+  innerModuleName: string;
+  importDeclarations: ImportElementEntity[];
 }
 
 interface ModuleEntityNextBack {
-  innerModuleName: string,
-  moduleBody: string
+  innerModuleName: string;
+  moduleBody: string;
 }
 
 /**
@@ -113,14 +114,23 @@ interface ModuleEntityNextBack {
  * @param extraImport
  * @returns
  */
-export function generateModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
-  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
+export function generateModuleDeclaration(
+  moduleEntity: ModuleBlockEntity,
+  sourceFile: SourceFile,
+  filename: string,
+  mockApi: string,
+  extraImport: string[],
+  importDeclarations: ImportElementEntity[]
+): string {
   const innerModuleBody = '';
   const moduleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `export function mock${firstCharacterToUppercase(moduleName)}() {\n`;
   let enumBody = '';
-  if (!(moduleEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword) &&
-    (moduleEntity.moduleName.startsWith('"') || moduleEntity.moduleName.startsWith('\''))) &&
+  if (
+    !(
+      moduleEntity.exportModifiers.includes(SyntaxKind.DeclareKeyword) &&
+      (moduleEntity.moduleName.startsWith('"') || moduleEntity.moduleName.startsWith('\''))
+    ) &&
     path.basename(sourceFile.fileName).startsWith('@ohos')
   ) {
     addToIndexArray({ fileName: filename, mockFunctionName: `mock${firstCharacterToUppercase(moduleName)}` });
@@ -242,8 +252,8 @@ function handleExtraClassDeclarationBody(value: ClassEntity, fileName: string): 
 function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleEntityBack {
   if (props.moduleEntity.typeAliasDeclarations.length > 0) {
     props.moduleEntity.typeAliasDeclarations.forEach(value => {
-      props.outBody += generateTypeAliasDeclaration(value, true, props.sourceFile,
-        props.extraImport, props.mockApi) + '\n';
+      props.outBody +=
+        generateTypeAliasDeclaration(value, true, props.sourceFile, props.extraImport, props.mockApi) + '\n';
     });
   }
   if (props.moduleEntity.moduleImportEquaqls.length > 0) {
@@ -280,8 +290,8 @@ function judgmentModuleEntity(props: JudgmentModuleEntityProps): JudgmentModuleE
 function generateClassDeclarations(props: JudgmentModuleEntityProps): string {
   let extraOutBody = '';
   props.moduleEntity.classDeclarations.forEach(value => {
-    const body = generateClassDeclaration(props.moduleName, value, false, '', '',
-      props.sourceFile, false, props.mockApi) + '\n';
+    const body =
+      generateClassDeclaration(props.moduleName, value, false, '', '', props.sourceFile, false, props.mockApi) + '\n';
     if (handleExtraClassDeclarationBody(value, props.sourceFile.fileName)) {
       extraOutBody = body;
     } else {
@@ -302,8 +312,10 @@ function defaultExportClassForEach(props: DefaultExportClassProps): DefaultExpor
 
   if (defaultExportClass.length > 0) {
     defaultExportClass.forEach(value => {
-      if (value.exportModifiers.includes(SyntaxKind.DefaultKeyword) &&
-        value.exportModifiers.includes(SyntaxKind.ExportKeyword)) {
+      if (
+        value.exportModifiers.includes(SyntaxKind.DefaultKeyword) &&
+        value.exportModifiers.includes(SyntaxKind.ExportKeyword)
+      ) {
         const moduleBodyAndOutBodyBack = getModuleBodyAndOutBody(props, value);
         props.outBody = moduleBodyAndOutBodyBack.outBody;
         props.moduleBody = moduleBodyAndOutBodyBack.moduleBody;
@@ -341,8 +353,16 @@ function getModuleBodyAndOutBody(props: DefaultExportClassProps, value: ClassEnt
     }
     props.moduleBody += '}';
   } else {
-    props.outBody += generateClassDeclaration('', value, false, '', props.filename,
-      props.sourceFile, false, props.mockApi);
+    props.outBody += generateClassDeclaration(
+      '',
+      value,
+      false,
+      '',
+      props.filename,
+      props.sourceFile,
+      false,
+      props.mockApi
+    );
   }
   return {
     outBody: props.outBody,
@@ -350,8 +370,14 @@ function getModuleBodyAndOutBody(props: DefaultExportClassProps, value: ClassEnt
   };
 }
 
-function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile,
-  filename: string, mockApi: string, extraImport: string[], importDeclarations: ImportElementEntity[]): string {
+function generateInnerModuleDeclaration(
+  moduleEntity: ModuleBlockEntity,
+  sourceFile: SourceFile,
+  filename: string,
+  mockApi: string,
+  extraImport: string[],
+  importDeclarations: ImportElementEntity[]
+): string {
   const innerModuleBody = '';
   let innerModuleName = moduleEntity.moduleName.replace(/["']/g, '');
   let moduleBody = `function mock${innerModuleName}() {\n`;
@@ -370,8 +396,16 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
   innerOutBody = moduleEntityLoopBack.innerOutBody;
   moduleBody = moduleEntityLoopBack.moduleBody;
   const moduleEntityNextBack = moduleEntityNext({
-    moduleEntity, innerFunctionBody, innerModuleBody, filename,
-    moduleBody, sourceFile, mockApi, extraImport, innerModuleName, importDeclarations
+    moduleEntity,
+    innerFunctionBody,
+    innerModuleBody,
+    filename,
+    moduleBody,
+    sourceFile,
+    mockApi,
+    extraImport,
+    innerModuleName,
+    importDeclarations
   });
   innerModuleName = moduleEntityNextBack.innerModuleName;
   moduleBody = moduleEntityNextBack.moduleBody;
@@ -389,8 +423,8 @@ function generateInnerModuleDeclaration(moduleEntity: ModuleBlockEntity, sourceF
 function moduleEntityLoop(props: ModuleEntityLoopProps): ModuleEntityLoopBack {
   if (props.moduleEntity.typeAliasDeclarations.length) {
     props.moduleEntity.typeAliasDeclarations.forEach(value => {
-      props.innerOutBody += generateTypeAliasDeclaration(value, true, props.sourceFile,
-        props.extraImport, props.mockApi) + '\n';
+      props.innerOutBody +=
+        generateTypeAliasDeclaration(value, true, props.sourceFile, props.extraImport, props.mockApi) + '\n';
     });
   }
   if (props.moduleEntity.moduleImportEquaqls.length) {
@@ -511,7 +545,12 @@ function generateInnerDeclareModule(moduleEntity: ModuleBlockEntity): string {
  * @param extraImport
  * @returns
  */
-function generateInnerModule(moduleEntity: ModuleBlockEntity, sourceFile: SourceFile, extraImport: string[], mockApi: string): string {
+function generateInnerModule(
+  moduleEntity: ModuleBlockEntity,
+  sourceFile: SourceFile,
+  extraImport: string[],
+  mockApi: string
+): string {
   const moduleName = moduleEntity.moduleName;
   let innerModuleBody = `const ${moduleName} = (()=> {`;
 

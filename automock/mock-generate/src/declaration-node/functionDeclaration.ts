@@ -49,8 +49,8 @@ export function getFunctionDeclaration(node: Node, sourceFile: SourceFile): Func
 }
 
 export interface FunctionEntity {
-  functionName: string,
-  returnType: ReturnTypeEntity,
-  args: Array<ParameterEntity>,
-  isExport: boolean
+  functionName: string;
+  returnType: ReturnTypeEntity;
+  args: Array<ParameterEntity>;
+  isExport: boolean;
 }
