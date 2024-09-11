@@ -19,7 +19,6 @@
 #include <sys/types.h>
 #include "gtest/gtest.h"
 #include "NativeFileSystem.h"
-using namespace std;
 
 namespace {
     class NativeFileSystemTest : public ::testing::Test {

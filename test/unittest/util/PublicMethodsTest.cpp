@@ -15,7 +15,6 @@
 
 #include "gtest/gtest.h"
 #include "PublicMethods.h"
-using namespace std;
 
 namespace {
     // 测试拷贝构造函数是否被删除

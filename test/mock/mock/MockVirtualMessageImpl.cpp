@@ -16,7 +16,6 @@
 #include "VirtualMessageImpl.h"
 #include "MockGlobalResult.h"
 
-using namespace std;
 
 VirtualMessageImpl& VirtualMessageImpl::GetInstance()
 {

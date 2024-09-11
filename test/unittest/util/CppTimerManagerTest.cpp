@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 #define private public
 #include "CppTimerManager.h"
-using namespace std;
 
 namespace {
     static void Double(int& addNum)
@@ -40,7 +39,7 @@ namespace {
         int interval = 100;
         timer.Start(interval);
         value = num + num;
-        this_thread::sleep_for(chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         manager.RunTimerTick();
         EXPECT_EQ(num, value);
         value = 0;

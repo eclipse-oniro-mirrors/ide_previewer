@@ -18,7 +18,6 @@
 #include "gtest/gtest.h"
 #define private public
 #include "CallbackQueue.h"
-using namespace std;
 
 namespace {
     TEST(CallbackQueueTest, AddCallbackTest)

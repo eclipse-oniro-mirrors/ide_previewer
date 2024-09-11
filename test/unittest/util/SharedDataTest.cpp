@@ -17,7 +17,6 @@
 #define private public
 #include "SharedData.h"
 #include "SharedDataManager.h"
-using namespace std;
 
 namespace {
     int g_intValue = 80;
@@ -48,7 +47,7 @@ namespace {
     TEST(SharedDataTest, AppendNotifyTest)
     {
         SharedData<uint8_t>(SharedDataType::HEARTBEAT_VALUE, g_intValue, g_intMinValue, g_intMaxValue);
-        thread::id curThreadId = this_thread::get_id();
+        std::thread::id curThreadId = std::this_thread::get_id();
         uint8_t num = 3;
         std::function<void(uint8_t)> func = [&num](uint8_t val) { num += val; };
         SharedData<uint8_t>::AppendNotify(SharedDataType::HEARTBEAT_VALUE, func, curThreadId);

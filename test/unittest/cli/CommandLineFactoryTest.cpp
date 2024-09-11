@@ -17,7 +17,6 @@
 #define private public
 #include "CommandLineFactory.h"
 #include "CommandParser.h"
-using namespace std;
 
 namespace {
     TEST(CommandLineFactoryTest, DefaultConstructorBehaviorTest)
@@ -29,7 +28,7 @@ namespace {
 
     TEST(CommandLineFactoryTest, InitCommandMapTest)
     {
-        string deviceType = "phone";
+        std::string deviceType = "phone";
         CommandParser::GetInstance().deviceType = deviceType;
         CommandLineFactory::InitCommandMap();
         EXPECT_TRUE(CommandLineFactory::typeMap.size() > 0);

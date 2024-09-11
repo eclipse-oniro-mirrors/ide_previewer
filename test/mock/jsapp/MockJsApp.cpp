@@ -13,13 +13,19 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include "JsApp.h"
 
 JsApp::JsApp() {}
 
 bool JsApp::IsLiteDevice(std::string deviceType)
 {
-    return deviceType == "liteWearable" || deviceType == "smartVersion";
+    static std::vector<std::string> liteDevice = {"liteWearable", "smartVision"};
+    auto iter = find(liteDevice.begin(), liteDevice.end(), deviceType);
+    if (iter == liteDevice.end()) {
+        return false;
+    }
+    return true;
 }
 
 std::string JsApp::GetJSONTree() {

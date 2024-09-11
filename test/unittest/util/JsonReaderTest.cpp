@@ -16,26 +16,25 @@
 #include <fstream>
 #include "gtest/gtest.h"
 #include "JsonReader.h"
-using namespace std;
 
 namespace {
-    string g_name = "jin";
+    std::string g_name = "jin";
     bool g_isChild = true;
     int32_t g_age = 13;
     uint32_t g_code1 = 214748;
     int64_t g_code2 = 3333333333;
     double g_height = 165.3;
-    string g_schoolName = "abc";
-    string g_schoolAddr = "cba";
-    string g_newName = "li";
+    std::string g_schoolName = "abc";
+    std::string g_schoolAddr = "cba";
+    std::string g_newName = "li";
     bool g_newIsChild = false;
     int32_t g_newAge = 26;
     uint32_t g_newCode1 = 2147489;
     int64_t g_newCode2 = 3333333339;
     double g_newHeight = 185.3;
-    string g_obj = R"({"name":"jin","isChild":true,"age":13,"code1":214748,"code2":3333333333,
+    std::string g_obj = R"({"name":"jin","isChild":true,"age":13,"code1":214748,"code2":3333333333,
         "height":165.3,"school":{"schoolName":"abc","schoolAddr":"cba"}})";
-    string g_arr = "[\"jin\",true,13,214748,3333333333,165.3,{\"schoolName\":\"abc\",\"schoolAddr\":\"cba\"}]";
+    std::string g_arr = "[\"jin\",true,13,214748,3333333333,165.3,{\"schoolName\":\"abc\",\"schoolAddr\":\"cba\"}]";
 
     TEST(JsonReaderTest, ParseJsonData2Test)
     {

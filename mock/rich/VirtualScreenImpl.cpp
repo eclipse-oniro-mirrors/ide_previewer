@@ -181,7 +181,6 @@ bool VirtualScreenImpl::LoadDocCallback(const void* data, const size_t length, c
 bool VirtualScreenImpl::Callback(const void* data, const size_t length,
                                  const int32_t width, const int32_t height, const uint64_t timeStamp)
 {
-    ILOG("loadDoc: Callback timeStamp%" PRIu64 "", timeStamp);
     if (VirtualScreenImpl::GetInstance().StopSendStaticCardImage(STOP_SEND_CARD_DURATION_MS)) {
         return false; // 静态卡片
     }
