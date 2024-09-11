@@ -64,7 +64,7 @@ namespace {
         R"({"modulePathMap":{"entry":"entry","lib1":"lib1"},"compileMode":"esmodule",
             "projectRootPath":"MyApplication32", "nodeModulesPath":"node_modules","moduleName":"entry",
             "hspNameOhmMap":{"lib1":"lib1"},"packageManagerType":"ohpm", "compileEntry":[],
-            "dynamicImportLibInfo":{}, "routerMap":[], "anBuildOutPut":"arm64-v8a", "anBuildMode":"type"})";
+            "dynamicImportLibInfo":{},"routerMap":[],"anBuildOutPut":"arm64-v8a","anBuildMode":"type"})";
 
     TEST_F(StageContextTest, ReadFileContentsTest)
     {
