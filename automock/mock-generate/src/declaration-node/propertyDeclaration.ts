@@ -93,11 +93,11 @@ export function getGetDeclaration(node: GetAccessorDeclaration, sourceFile: Sour
 }
 
 export interface PropertyEntity {
-  modifiers: Array<string>,
-  propertyName: string,
-  propertyTypeName: string,
-  kind: number,
-  kinds: number,
-  isInitializer: boolean,
-  initializer: string
+  modifiers: Array<string>;
+  propertyName: string;
+  propertyTypeName: string;
+  kind: number;
+  kinds: number;
+  isInitializer: boolean;
+  initializer: string;
 }

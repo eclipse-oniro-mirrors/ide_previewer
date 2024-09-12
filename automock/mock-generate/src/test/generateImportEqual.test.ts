@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { generateImportEqual } from '../generate/generateImportEqual';
 
 describe('generateImportEqual.ts file test', (): void => {
@@ -22,7 +22,6 @@ describe('generateImportEqual.ts file test', (): void => {
       importEqualName: 'NetAddress',
       importEqualTypeKind: 157,
       importEqualTypeName: 'connection.NetAddress'
-
     };
     const result = generateImportEqual(importEqualEntity);
     expect(result).toBe(`const NetAddress = mockConnection().NetAddress`);

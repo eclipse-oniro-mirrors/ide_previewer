@@ -15,11 +15,25 @@
 
 import path from 'path';
 import type {
-  CallSignatureDeclaration, ComputedPropertyName, FunctionDeclaration, Identifier, MethodDeclaration,
-  MethodSignature, ModifiersArray, ModuleDeclaration, NodeArray, ParameterDeclaration, PropertyName, SourceFile
+  CallSignatureDeclaration,
+  ComputedPropertyName,
+  FunctionDeclaration,
+  Identifier,
+  MethodDeclaration,
+  MethodSignature,
+  ModifiersArray,
+  ModuleDeclaration,
+  ParameterDeclaration,
+  PropertyName,
+  SourceFile
 } from 'typescript';
 import {
-  isClassDeclaration, isComputedPropertyName, isIdentifier, isModuleBlock, isModuleDeclaration, isPrivateIdentifier
+  isClassDeclaration,
+  isComputedPropertyName,
+  isIdentifier,
+  isModuleBlock,
+  isModuleDeclaration,
+  isPrivateIdentifier
 } from 'typescript';
 import fs from 'fs';
 import ts from 'typescript';
@@ -100,7 +114,7 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
     } else if (isModuleDeclaration(node)) {
       const moduleDeclaration = node as ModuleDeclaration;
       const moduleBody = moduleDeclaration.body;
-      getIsModuleDeclaration(moduleBody);
+      parseModuleBody(moduleBody);
     }
   });
   return allClassSet;
@@ -111,7 +125,7 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
  * @param moduleBody
  * @returns
  */
-function getIsModuleDeclaration(moduleBody: ts.ModuleBody): void {
+function parseModuleBody(moduleBody: ts.ModuleBody): void {
   if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
     moduleBody.statements.forEach(value => {
       if (isClassDeclaration(value) && value.name !== undefined) {
@@ -228,17 +242,17 @@ export function firstCharacterToUppercase(str: string): string {
  * parameters entity
  */
 export interface ParameterEntity {
-  paramName: string,
-  paramTypeString: string,
-  paramTypeKind: number
+  paramName: string;
+  paramTypeString: string;
+  paramTypeKind: number;
 }
 
 /**
  * return type entity
  */
 export interface ReturnTypeEntity {
-  returnKindName: string,
-  returnKind: number
+  returnKindName: string;
+  returnKind: number;
 }
 
 /**
@@ -343,7 +357,7 @@ export function getJsSdkDir(): string {
  * Determine whether the object has been imported
  * @param importDeclarations imported Declaration list in current file
  * @param typeName Object being inspected
- * @returns 
+ * @returns
  */
 export function hasBeenImported(importDeclarations: ImportElementEntity[], typeName: string): boolean {
   if (!typeName.trim()) {
@@ -363,7 +377,7 @@ export function hasBeenImported(importDeclarations: ImportElementEntity[], typeN
 /**
  * Determine whether the first character in a string is a lowercase letter
  * @param str target string
- * @returns 
+ * @returns
  */
 function isFirstCharLowerCase(str: string): boolean {
   const lowerCaseFirstChar = str[0].toLowerCase();
@@ -386,20 +400,9 @@ export const specialFiles = [
   '@internal/component/ets/styled_string.d.ts'
 ];
 
-export const specialType = [
-  'Storage',
-  'File',
-  'ChildProcess',
-  'Cipher',
-  'Sensor',
-  'Authenticator'
-];
+export const specialType = ['Storage', 'File', 'ChildProcess', 'Cipher', 'Sensor', 'Authenticator'];
 
-export const specialClassName = [
-  'Want',
-  'Configuration',
-  'InputMethodExtensionContext'
-];
+export const specialClassName = ['Want', 'Configuration', 'InputMethodExtensionContext'];
 
 /**
  * get add kit file map
@@ -415,35 +418,35 @@ export function generateKitMap(apiInputPath: string): void {
 }
 
 export interface DependencyListParams {
-  dependency: Array<string>,
-  export: string
+  dependency: Array<string>;
+  export: string;
 }
 
 export interface DependencyParams {
-  [key: string]: DependencyListParams
+  [key: string]: DependencyListParams;
 }
 
 // dependence on collecting files
 export const DEPENDENCY_LIST: DependencyParams = {};
+
+// Json file indentation configuration
+export const JSON_FILE_INDENTATION = 2;
 
 /**
  * generated depend.json
  */
 export function generateDependJsonFile(): void {
   const dependInfoPath = path.join(__dirname, '../../../runtime/main/extend/systemplugin/depend.json');
-  fs.writeFileSync(dependInfoPath, JSON.stringify(DEPENDENCY_LIST, null, 2), 'utf-8');
+  fs.writeFileSync(dependInfoPath, JSON.stringify(DEPENDENCY_LIST, null, JSON_FILE_INDENTATION), 'utf-8');
 }
 
 /**
  * generated MyComponent.js
- * 
+ *
  * @param outDir generated file root directory
  */
 export function generateMyComponent(outDir: string): void {
-  fs.writeFileSync(
-    path.join(outDir, 'MyComponent.js'),
-    'class MyComponent {}\nexport { MyComponent };'
-  );
+  fs.writeFileSync(path.join(outDir, 'MyComponent.js'), 'class MyComponent {}\nexport { MyComponent };');
 }
 
 // initialize all variables in the file
@@ -451,7 +454,7 @@ export let INITVARIABLE = '';
 
 /**
  * set initialize variable
- * 
+ *
  * @param value variable name
  */
 export function setInitVariable(value?: string): void {

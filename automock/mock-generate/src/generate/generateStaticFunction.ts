@@ -26,14 +26,21 @@ import { generateSymbolIterator, getCallbackStatement, getReturnStatement, getWa
  * @param sourceFile
  * @returns
  */
-export function generateStaticFunction(staticMethod: StaticMethodEntity, isSystem: boolean, sourceFile: SourceFile, mockApi: string): string {
+export function generateStaticFunction(
+  staticMethod: StaticMethodEntity,
+  isSystem: boolean,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   let methodBody = '';
   const rootName = staticMethod.className;
   const methodEntity = staticMethod.methodEntity;
   if (isSystem) {
     methodBody += `${methodEntity.functionName.name}: function(...args) {`;
   } else {
-    methodBody += `${firstCharacterToUppercase(staticMethod.className)}.${methodEntity.functionName.name} = function(...args) {`;
+    methodBody += `${firstCharacterToUppercase(staticMethod.className)}.${
+      methodEntity.functionName.name
+    } = function(...args) {`;
   }
 
   methodBody += getWarnConsole(rootName, methodEntity.functionName.name);

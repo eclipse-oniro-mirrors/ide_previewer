@@ -22,7 +22,10 @@ import { getPropertyName } from '../common/commonUtils';
  * @param sourceFile
  * @returns
  */
-export function getPropertySignatureDeclaration(node: PropertySignature, sourceFile: SourceFile): PropertySignatureEntity {
+export function getPropertySignatureDeclaration(
+  node: PropertySignature,
+  sourceFile: SourceFile
+): PropertySignatureEntity {
   let propertyName = '';
   let propertyTypeName = '';
   let kind = -1;
@@ -51,9 +54,9 @@ export function getPropertySignatureDeclaration(node: PropertySignature, sourceF
 }
 
 export interface PropertySignatureEntity {
-  modifiers: Array<string>,
-  propertyName: string,
-  propertyTypeName: string,
-  kind: number,
-  kinds?: number
+  modifiers: Array<string>;
+  propertyName: string;
+  propertyTypeName: string;
+  kind: number;
+  kinds?: number;
 }

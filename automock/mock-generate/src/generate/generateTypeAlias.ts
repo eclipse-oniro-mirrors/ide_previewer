@@ -20,10 +20,10 @@ import fs from 'fs';
 import type { SourceFile } from 'typescript';
 
 interface SubstepParseProps {
-  importFileContent: string,
-  realImportPath: string,
-  extraImport: string[],
-  properties: string
+  importFileContent: string;
+  realImportPath: string;
+  extraImport: string[];
+  properties: string;
 }
 
 const interceptIndex = 2;
@@ -37,7 +37,11 @@ const interceptIndex = 2;
  * @returns
  */
 export function generateTypeAliasDeclaration(
-  typeAliasEntity: TypeAliasEntity, isInner: boolean, sourceFile: SourceFile, extraImport: string[], mockApi: string
+  typeAliasEntity: TypeAliasEntity,
+  isInner: boolean,
+  sourceFile: SourceFile,
+  extraImport: string[],
+  mockApi: string
 ): string {
   let typeAliasName = '';
   if (!isInner) {
@@ -49,7 +53,10 @@ export function generateTypeAliasDeclaration(
   let typeAliasValue = '';
 
   const typeAliasTypeElements = typeAliasEntity.typeAliasTypeElements;
-  if (sourceFile.fileName.endsWith('@ohos.abilityAccessCtrl.d.ts') && typeAliasEntity.typeAliasName === 'PermissionRequestResult') {
+  if (
+    sourceFile.fileName.endsWith('@ohos.abilityAccessCtrl.d.ts') &&
+    typeAliasEntity.typeAliasName === 'PermissionRequestResult'
+  ) {
     return typeAliasName + 'new _PermissionRequestResult();';
   }
 
@@ -68,7 +75,10 @@ function getImportFileFullPath(typeName: string): string {
   if (!importRelatePathTmp) {
     return '';
   }
-  const importRelatePath = importRelatePathTmp[0].substring(interceptIndex, importRelatePathTmp[0].length - interceptIndex);
+  const importRelatePath = importRelatePathTmp[0].substring(
+    interceptIndex,
+    importRelatePathTmp[0].length - interceptIndex
+  );
   const tmpRealPath = getOhosInterfacesDir() + importRelatePath.replace('../api', '').replace(/\//g, path.sep);
   if (fs.existsSync(tmpRealPath + '.d.ts')) {
     return tmpRealPath + '.d.ts';
@@ -86,7 +96,8 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
   const importFilePathSteps = importFilePath.replace(/.d.e?ts/, '').split(path.sep);
   const importFilePathStepsLength = importFilePathSteps.length;
   importFilePathSteps[importFilePathStepsLength - 1] = importFilePathSteps[importFilePathStepsLength - 1]
-    .replace('@', '').replace(/\./g, '_');
+    .replace('@', '')
+    .replace(/\./g, '_');
   let differStepIndex: number;
   for (differStepIndex = 0; differStepIndex < currentFilePathSteps.length; differStepIndex++) {
     if (currentFilePathSteps[differStepIndex] !== importFilePathSteps[differStepIndex]) {
@@ -95,7 +106,10 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
   }
   const currentFileDifferPathSteps = currentFilePathSteps.slice(differStepIndex);
   const importFileDifferPathSteps = importFilePathSteps.slice(differStepIndex);
-  if (currentFileDifferPathSteps.length === importFileDifferPathSteps.length && currentFileDifferPathSteps.length === 1) {
+  if (
+    currentFileDifferPathSteps.length === importFileDifferPathSteps.length &&
+    currentFileDifferPathSteps.length === 1
+  ) {
     return `./${path.basename(importFilePath)}`;
   } else {
     const steps = [];
@@ -108,7 +122,10 @@ function pathToImportPath(currentFilePath: string, importFilePath: string): stri
 }
 
 function parseImportExpression(
-  typeAliasTypeElements: TypeAliasTypeEntity[], sourceFile: SourceFile, extraImport: string[], mockApi: string
+  typeAliasTypeElements: TypeAliasTypeEntity[],
+  sourceFile: SourceFile,
+  extraImport: string[],
+  mockApi: string
 ): string {
   for (let i = 0; i < typeAliasTypeElements.length; i++) {
     const typeAliasTypeElement = typeAliasTypeElements[i];
@@ -121,8 +138,11 @@ function parseImportExpression(
       if (name.includes('.')) {
         name = name.trim().split('.')[0];
       }
-      if (mockApi.includes(`import { ${name} `) || mockApi.includes(` as ${name.trim()} `) ||
-        mockApi.includes(`import ${name} `)) {
+      if (
+        mockApi.includes(`import { ${name} `) ||
+        mockApi.includes(` as ${name.trim()} `) ||
+        mockApi.includes(`import ${name} `)
+      ) {
         return typeName.trim();
       }
       continue;
@@ -140,7 +160,7 @@ function parseImportExpression(
     }
     const importFileContent = fs.readFileSync(importPath, 'utf-8');
     if (properties.startsWith('.default')) {
-      const result = substepParseImportExpression({importFileContent, realImportPath, extraImport, properties});
+      const result = substepParseImportExpression({ importFileContent, realImportPath, extraImport, properties });
       if (result !== '') {
         return result;
       }
@@ -159,7 +179,7 @@ function parseImportExpression(
  * @param props
  * @returns
  */
-function substepParseImportExpression(props:SubstepParseProps): string {
+function substepParseImportExpression(props: SubstepParseProps): string {
   let result = props.importFileContent.match(/export\sdefault\sclass\s[a-zA-Z]+/);
   if (result) {
     const defaultModuleName = '_' + result[0].replace(/export\sdefault\sclass\s/, '');
@@ -177,4 +197,3 @@ function substepParseImportExpression(props:SubstepParseProps): string {
   }
   return '';
 }
-

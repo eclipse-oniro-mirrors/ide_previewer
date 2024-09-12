@@ -19,9 +19,9 @@ import ts from 'typescript';
 import { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 
 export interface KitImportInfo {
-  fromPath: string,
-  isExport: string[],
-  isDefaultExport: string
+  fromPath: string;
+  isExport: string[];
+  isDefaultExport: string;
 }
 
 // kit file map

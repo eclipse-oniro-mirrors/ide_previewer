@@ -21,7 +21,10 @@ import type { IndexSignatureDeclaration, SourceFile } from 'typescript';
  * @param sourceFile
  * @returns
  */
-export function getIndexSignatureDeclaration(indexSignature: IndexSignatureDeclaration, sourceFile: SourceFile): IndexSignatureEntity {
+export function getIndexSignatureDeclaration(
+  indexSignature: IndexSignatureDeclaration,
+  sourceFile: SourceFile
+): IndexSignatureEntity {
   return {
     indexSignatureKey: 'key',
     indexSignatureKind: indexSignature.type.kind,
@@ -30,7 +33,7 @@ export function getIndexSignatureDeclaration(indexSignature: IndexSignatureDecla
 }
 
 export interface IndexSignatureEntity {
-  indexSignatureKey: string,
-  indexSignatureKind: number,
-  indexSignatureTypeName: string
+  indexSignatureKey: string;
+  indexSignatureKind: number;
+  indexSignatureTypeName: string;
 }

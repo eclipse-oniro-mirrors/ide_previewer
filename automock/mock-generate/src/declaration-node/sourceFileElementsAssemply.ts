@@ -14,8 +14,16 @@
  */
 
 import {
-  isClassDeclaration, isEnumDeclaration, isExportAssignment, isExportDeclaration, isFunctionDeclaration,
-  isImportDeclaration, isInterfaceDeclaration, isModuleDeclaration, isTypeAliasDeclaration, isVariableStatement,
+  isClassDeclaration,
+  isEnumDeclaration,
+  isExportAssignment,
+  isExportDeclaration,
+  isFunctionDeclaration,
+  isImportDeclaration,
+  isInterfaceDeclaration,
+  isModuleDeclaration,
+  isTypeAliasDeclaration,
+  isVariableStatement,
   SyntaxKind
 } from 'typescript';
 import type { Node, SourceFile, ClassDeclaration, FunctionDeclaration } from 'typescript';
@@ -38,29 +46,29 @@ import { getVariableStatementDeclaration } from './variableStatementResolve';
 import type { StatementEntity } from './variableStatementResolve';
 
 interface SubstepClassParams {
-  node: ClassDeclaration,
-  sourceFile: SourceFile,
-  classDeclarations: Array<ClassEntity>,
-  staticMethods: Array<Array<StaticMethodEntity>>,
+  node: ClassDeclaration;
+  sourceFile: SourceFile;
+  classDeclarations: Array<ClassEntity>;
+  staticMethods: Array<Array<StaticMethodEntity>>;
 }
 
 interface SubstepFuntionParams {
-  node: FunctionDeclaration,
-  sourceFile: SourceFile,
-  functionDeclarations: Map<string, Array<FunctionEntity>>
+  node: FunctionDeclaration;
+  sourceFile: SourceFile;
+  functionDeclarations: Map<string, Array<FunctionEntity>>;
 }
 
 export interface SourceFileEntity {
-  importDeclarations: Array<ImportElementEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  enumDeclarations: Array<EnumEntity>,
-  exportAssignment: Array<string>,
-  staticMethods: Array<Array<StaticMethodEntity>>,
-  exportDeclarations: Array<string>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>
+  importDeclarations: Array<ImportElementEntity>;
+  moduleDeclarations: Array<ModuleBlockEntity>;
+  typeAliasDeclarations: Array<TypeAliasEntity>;
+  classDeclarations: Array<ClassEntity>;
+  interfaceDeclarations: Array<InterfaceEntity>;
+  enumDeclarations: Array<EnumEntity>;
+  exportAssignment: Array<string>;
+  staticMethods: Array<Array<StaticMethodEntity>>;
+  exportDeclarations: Array<string>;
+  functionDeclarations: Map<string, Array<FunctionEntity>>;
 }
 
 /**
@@ -98,7 +106,7 @@ export function getSourceFileAssembly(sourceFile: SourceFile, fileName: string):
     } else if (isEnumDeclaration(node)) {
       enumDeclarations.push(getEnumDeclaration(node, sourceFile));
     } else if (isExportDeclaration(node)) {
-      exportDeclarations.push(sourceFile.text.substring(node.pos, node.end).trimStart().trimEnd());
+      exportDeclarations.push(sourceFile.text.substring(node.pos, node.end).trim());
     } else if (isFunctionDeclaration(node)) {
       const classParams = substepFunction({ node, sourceFile, functionDeclarations });
       functionDeclarations = classParams.functionDeclarations;

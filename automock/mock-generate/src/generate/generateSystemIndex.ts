@@ -14,8 +14,14 @@
  */
 
 const systemIndexArray: Array<SystemIndexEntity> = [];
-const systemNoMockArray = ['system.app', 'system.configuration', 'system.device',
-  'system.mediaquery', 'system.prompt', 'system.router'];
+const systemNoMockArray = [
+  'system.app',
+  'system.configuration',
+  'system.device',
+  'system.mediaquery',
+  'system.prompt',
+  'system.router'
+];
 
 export function addToSystemIndexArray(systemIndexEntity: SystemIndexEntity): void {
   systemIndexArray.push(systemIndexEntity);
@@ -50,6 +56,6 @@ export function generateSystemIndex(): string {
 }
 
 export interface SystemIndexEntity {
-  filename: string,
-  mockFunctionName: string
+  filename: string;
+  mockFunctionName: string;
 }

@@ -15,33 +15,33 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
-import { 
+import { describe, expect, test } from '@jest/globals';
+import {
   getAllLegalImports,
   collectAllLegalImports,
   getAllFileNameList,
   collectAllFileName,
   getClassNameSet,
   getAllClassDeclaration,
-  firstCharacterToUppercase,
+  firstCharacterToUppercase
 } from '../common/commonUtils';
 import { createSourceFile, ScriptTarget } from 'typescript';
 
 function areSetsEqual(setA, setB) {
   if (setA.size !== setB.size) {
-      return false; // 大小不同，返回 false
+    return false; // 大小不同，返回 false
   }
-  for (let item of setA) {
-      if (!setB.has(item)) {
-          return false; // setB 中没有 setA 的某个元素，返回 false
-      }
+  for (const item of setA) {
+    if (!setB.has(item)) {
+      return false; // setB 中没有 setA 的某个元素，返回 false
+    }
   }
   return true; // 两个 set 相等
 }
 
 describe('commonUtils.ts file test', (): void => {
   test('Test the getAllLegalImports function', (): void => {
-    collectAllLegalImports('hello world')
+    collectAllLegalImports('hello world');
     const result = getAllLegalImports();
     const expectedResult = new Set<string>();
     expectedResult.add('hello world');
@@ -49,9 +49,9 @@ describe('commonUtils.ts file test', (): void => {
   });
 
   test('Test the getAllFileNameList function', (): void => {
-    collectAllFileName(path.join(__dirname, 'api/@ohos.ability.ability.d.ts'))
-    collectAllFileName(path.join(__dirname, 'api/@ohos.ability.errorCode.d.ts'))
-    collectAllFileName(path.join(__dirname, 'api/lifecycle.d.ts'))
+    collectAllFileName(path.join(__dirname, 'api/@ohos.ability.ability.d.ts'));
+    collectAllFileName(path.join(__dirname, 'api/@ohos.ability.errorCode.d.ts'));
+    collectAllFileName(path.join(__dirname, 'api/lifecycle.d.ts'));
     const result = getAllFileNameList();
     const expectedResult = new Set<string>();
     expectedResult.add('ohos_ability_ability');
@@ -64,7 +64,7 @@ describe('commonUtils.ts file test', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.accessibility.GesturePath.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
-    getAllClassDeclaration(sourceFile)
+    getAllClassDeclaration(sourceFile);
     const result = getClassNameSet();
     const expectedResult = new Set<string>();
     expectedResult.add('GesturePath');
@@ -75,7 +75,7 @@ describe('commonUtils.ts file test', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.accessibility.GesturePath.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
-    getAllClassDeclaration(sourceFile)
+    getAllClassDeclaration(sourceFile);
     const result = getClassNameSet();
     const expectedResult = new Set<string>();
     expectedResult.add('GesturePath');
@@ -86,7 +86,7 @@ describe('commonUtils.ts file test', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.account.appAccount.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
-    getAllClassDeclaration(sourceFile)
+    getAllClassDeclaration(sourceFile);
     const result = getClassNameSet();
     const expectedResult = new Set<string>();
     expectedResult.add('GesturePath');

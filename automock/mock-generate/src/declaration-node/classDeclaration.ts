@@ -35,23 +35,23 @@ import { getTypeParameterDeclaration } from './typeParameterDeclaration';
 import type { TypeParameterEntity } from './typeParameterDeclaration';
 
 interface SubstepClassEntity {
-  className: string,
-  typeParameters: Array<TypeParameterEntity>,
-  classConstructor: Array<Array<ConstructorEntity>>,
-  classMethod: Map<string, Array<MethodEntity>>,
-  classProperty: Array<PropertyEntity>,
-  staticMethods: Array<StaticMethodEntity>
+  className: string;
+  typeParameters: Array<TypeParameterEntity>;
+  classConstructor: Array<Array<ConstructorEntity>>;
+  classMethod: Map<string, Array<MethodEntity>>;
+  classProperty: Array<PropertyEntity>;
+  staticMethods: Array<StaticMethodEntity>;
 }
 
 export interface ClassEntity {
-  className: string,
-  typeParameters: Array<TypeParameterEntity>,
-  heritageClauses: Array<HeritageClauseEntity>,
-  classConstructor: Array<Array<ConstructorEntity>>,
-  classMethod: Map<string, Array<MethodEntity>>,
-  classProperty: Array<PropertyEntity>,
-  exportModifiers: Array<number>,
-  staticMethods: Array<StaticMethodEntity>
+  className: string;
+  typeParameters: Array<TypeParameterEntity>;
+  heritageClauses: Array<HeritageClauseEntity>;
+  classConstructor: Array<Array<ConstructorEntity>>;
+  classMethod: Map<string, Array<MethodEntity>>;
+  classProperty: Array<PropertyEntity>;
+  exportModifiers: Array<number>;
+  staticMethods: Array<StaticMethodEntity>;
 }
 
 /**

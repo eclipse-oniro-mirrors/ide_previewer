@@ -15,7 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { getSourceFileAssembly } from '../declaration-node/sourceFileElementsAssemply';
 import { generateCommonFunction } from '../generate/generateCommonFunction';

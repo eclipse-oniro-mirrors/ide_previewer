@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { generateVariableStatementDelcatation } from '../generate/generateVariableStatementDeclaration';
 
 describe('generateVariableStatementDeclaration.ts file test', () => {
@@ -22,8 +22,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'daltonizationState',
       typeName: 'Config<boolean>',
       typeKind: 173,
-      initializer: '',
-    }
+      initializer: ''
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('daltonizationState: Config,');
@@ -34,8 +34,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'batteryTemperature',
       typeName: 'number',
       typeKind: 144,
-      initializer: '',
-    }
+      initializer: ''
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('batteryTemperature: 0,');
@@ -46,8 +46,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'technology',
       typeName: 'string',
       typeKind: 147,
-      initializer: '',
-    }
+      initializer: ''
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('technology: \'\',');
@@ -58,8 +58,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'isBatteryPresent',
       typeName: 'boolean',
       typeKind: 131,
-      initializer: '',
-    }
+      initializer: ''
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('isBatteryPresent: true,');
@@ -70,8 +70,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'DATA_CHANGE_EVENT_ID',
       typeName: '',
       typeKind: 10,
-      initializer: 'cloud_data_change',
-    }
+      initializer: 'cloud_data_change'
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('DATA_CHANGE_EVENT_ID: cloud_data_change,');
@@ -82,8 +82,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'MAX_KEY_LENGTH',
       typeName: '',
       typeKind: 8,
-      initializer: '1024',
-    }
+      initializer: '1024'
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('MAX_KEY_LENGTH: 1024,');
@@ -94,8 +94,8 @@ describe('generateVariableStatementDeclaration.ts file test', () => {
       statementName: 'MAX_KEY_LENGTH',
       typeName: '80',
       typeKind: 191,
-      initializer: '',
-    }
+      initializer: ''
+    };
     const isInnerModule = false;
     const result = generateVariableStatementDelcatation(statementEntity, isInnerModule);
     expect(result).toBe('MAX_KEY_LENGTH: 80,');

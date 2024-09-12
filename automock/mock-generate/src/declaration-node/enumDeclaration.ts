@@ -50,13 +50,13 @@ export function getEnumDeclaration(node: EnumDeclaration, sourceFile: SourceFile
 }
 
 export interface EnumEntity {
-  enumName: string,
-  enumMembers: Array<MemberEntity>,
-  exportModifiers: Array<number>
+  enumName: string;
+  enumMembers: Array<MemberEntity>;
+  exportModifiers: Array<number>;
 }
 
 export interface MemberEntity {
-  enumValueName: string,
-  enumValue: string,
-  enumKind: number,
+  enumValueName: string;
+  enumValue: string;
+  enumKind: number;
 }

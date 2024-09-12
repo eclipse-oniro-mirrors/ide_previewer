@@ -39,6 +39,6 @@ export function getHeritageClauseDeclaration(node: Node, sourceFile: SourceFile)
 }
 
 export interface HeritageClauseEntity {
-  clauseToken: string,
-  types: Array<string>
+  clauseToken: string;
+  types: Array<string>;
 }

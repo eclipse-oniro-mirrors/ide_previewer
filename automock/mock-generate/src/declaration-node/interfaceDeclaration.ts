@@ -14,8 +14,13 @@
  */
 
 import {
-  isCallSignatureDeclaration, isConstructorDeclaration, isHeritageClause, isIndexSignatureDeclaration,
-  isMethodSignature, isPropertySignature, isTypeParameterDeclaration
+  isCallSignatureDeclaration,
+  isConstructorDeclaration,
+  isHeritageClause,
+  isIndexSignatureDeclaration,
+  isMethodSignature,
+  isPropertySignature,
+  isTypeParameterDeclaration
 } from 'typescript';
 import type { InterfaceDeclaration, SourceFile } from 'typescript';
 import { getExportKeyword } from '../common/commonUtils';
@@ -35,31 +40,31 @@ import { getTypeParameterDeclaration } from './typeParameterDeclaration';
 import type { TypeParameterEntity } from './typeParameterDeclaration';
 
 interface SubstepInterfaceEntity {
-  interfaceName: string,
-  heritageClauses: Array<HeritageClauseEntity>,
-  typeParameters: Array<TypeParameterEntity>,
-  interfaceConstructors: Array<Array<ConstructorEntity>>,
-  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>,
-  interfacePropertySignatures: Array<PropertySignatureEntity>,
-  callSignatures: Array<CallSignatureEntity>,
-  indexSignature: Array<IndexSignatureEntity>
+  interfaceName: string;
+  heritageClauses: Array<HeritageClauseEntity>;
+  typeParameters: Array<TypeParameterEntity>;
+  interfaceConstructors: Array<Array<ConstructorEntity>>;
+  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>;
+  interfacePropertySignatures: Array<PropertySignatureEntity>;
+  callSignatures: Array<CallSignatureEntity>;
+  indexSignature: Array<IndexSignatureEntity>;
 }
 
 interface SubstepGetClassparam {
-  interfaceNode: InterfaceDeclaration,
-  sourceFile: SourceFile,
-  heritageClauses: Array<HeritageClauseEntity>
+  interfaceNode: InterfaceDeclaration;
+  sourceFile: SourceFile;
+  heritageClauses: Array<HeritageClauseEntity>;
 }
 export interface InterfaceEntity {
-  interfaceName: string,
-  typeParameters: Array<TypeParameterEntity>,
-  heritageClauses: Array<HeritageClauseEntity>,
-  interfaceConstructors: Array<Array<ConstructorEntity>>,
-  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>,
-  interfacePropertySignatures: Array<PropertySignatureEntity>,
-  callSignatures: Array<CallSignatureEntity>,
-  exportModifiers: Array<number>,
-  indexSignature: Array<IndexSignatureEntity>
+  interfaceName: string;
+  typeParameters: Array<TypeParameterEntity>;
+  heritageClauses: Array<HeritageClauseEntity>;
+  interfaceConstructors: Array<Array<ConstructorEntity>>;
+  interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>>;
+  interfacePropertySignatures: Array<PropertySignatureEntity>;
+  callSignatures: Array<CallSignatureEntity>;
+  exportModifiers: Array<number>;
+  indexSignature: Array<IndexSignatureEntity>;
 }
 
 /**
@@ -102,7 +107,10 @@ function substepGetInterface(substepGetClassparam: SubstepGetClassparam): Subste
   const { interfaceNode, sourceFile, heritageClauses } = substepGetClassparam;
   const interfaceName = interfaceNode.name.escapedText.toString();
   const interfaceConstructors: Array<Array<ConstructorEntity>> = [];
-  const interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>> = new Map<string, Array<MethodSignatureEntity>>();
+  const interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>> = new Map<
+    string,
+    Array<MethodSignatureEntity>
+  >();
   const interfacePropertySignatures: Array<PropertySignatureEntity> = [];
   const callSignature: Array<CallSignatureEntity> = [];
   const typeParameters: Array<TypeParameterEntity> = [];

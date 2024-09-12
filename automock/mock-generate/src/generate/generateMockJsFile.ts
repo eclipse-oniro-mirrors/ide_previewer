@@ -15,11 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import {
-  ScriptTarget,
-  SyntaxKind,
-  createSourceFile
-} from 'typescript';
+import { ScriptTarget, SyntaxKind, createSourceFile } from 'typescript';
 import type { SourceFile } from 'typescript';
 import {
   collectAllLegalImports,
@@ -274,7 +270,15 @@ function moduleDeclarationsGenerate(
   let mockData = '';
   if (sourceFileEntity.moduleDeclarations.length > 0) {
     sourceFileEntity.moduleDeclarations.forEach(value => {
-      mockData += generateModuleDeclaration(value, sourceFile, fileName, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
+      mockData +=
+        generateModuleDeclaration(
+          value,
+          sourceFile,
+          fileName,
+          mockApi,
+          extraImport,
+          sourceFileEntity.importDeclarations
+        ) + '\n';
     });
   }
   return mockData;
@@ -328,7 +332,13 @@ function otherDeclarationsGenerate(
     sourceFileEntity.moduleDeclarations.length === 0 &&
     (fileName.startsWith('ohos_') || fileName.startsWith('system_') || fileName.startsWith('webgl'))
   ) {
-    const moduleDeclarationsData = handleModuleDeclarationsNotExist(rootName, fileName, sourceFile, mockApi, mockFunctionElements);
+    const moduleDeclarationsData = handleModuleDeclarationsNotExist(
+      rootName,
+      fileName,
+      sourceFile,
+      mockApi,
+      mockFunctionElements
+    );
     data.mockData = moduleDeclarationsData.mockData;
     data.mockFunctionElements = moduleDeclarationsData.mockFunctionElements;
   } else {
@@ -337,7 +347,19 @@ function otherDeclarationsGenerate(
       const mockNameArr = fileName.split('_');
       const mockName = mockNameArr[mockNameArr.length - 1];
       defaultExportClass.forEach(value => {
-        data.mockData += generateClassDeclaration(rootName, value, false, mockName, '', sourceFile, false, mockApi, extraImport, sourceFileEntity.importDeclarations) + '\n';
+        data.mockData +=
+          generateClassDeclaration(
+            rootName,
+            value,
+            false,
+            mockName,
+            '',
+            sourceFile,
+            false,
+            mockApi,
+            extraImport,
+            sourceFileEntity.importDeclarations
+          ) + '\n';
       });
     }
   }
@@ -408,11 +430,13 @@ export function generateImportDeclaration(
 ): string {
   const importEntities = handleImportKit(importEntity);
   if (importEntities.length) {
-    return importEntities.map(
-      entity => generateImportDeclaration(entity, sourceFileName, heritageClausesArray, currentFilePath, dependsSourceFileList)
-    ).join('\n');
+    return importEntities
+      .map(entity =>
+        generateImportDeclaration(entity, sourceFileName, heritageClausesArray, currentFilePath, dependsSourceFileList)
+      )
+      .join('\n');
   }
-  
+
   const importDeclaration = referenctImport2ModuleImport(importEntity, currentFilePath, dependsSourceFileList);
   if (importDeclaration) {
     return importDeclaration;
@@ -432,7 +456,7 @@ export function generateImportDeclaration(
     return '';
   }
 
-  const tmpImportPath = importPath.replace(/'/g, '').replace(/"/g, '');
+  const tmpImportPath = importPath.replace(/["']/g, '');
   if (!tmpImportPath.startsWith('./') && !tmpImportPath.startsWith('../')) {
     importPath = `'./${tmpImportPath}'`;
   }
@@ -464,7 +488,11 @@ export function generateImportDeclaration(
  * @returns ReturnDataParams
  */
 function handleModuleDeclarationsNotExist(
-  rootName: string, fileName: string, sourceFile: SourceFile, mockApi: string, mockFunctionElements: Array<MockFunctionElementEntity>
+  rootName: string,
+  fileName: string,
+  sourceFile: SourceFile,
+  mockApi: string,
+  mockFunctionElements: Array<MockFunctionElementEntity>
 ): ReturnDataParams {
   const data: ReturnDataParams = {
     mockData: '',
@@ -505,8 +533,9 @@ function handleModuleDeclarationsNotExist(
   data.mockData += '}\n';
   const isHaveExportDefault = hasExportDefaultKeyword(mockName, sourceFile);
   const mockNameUppercase = firstCharacterToUppercase(mockName);
-  data.mockData +=
-    isHaveExportDefault ? `return mockModule${mockNameUppercase}\n` : `return mockModule${mockNameUppercase}.${mockNameUppercase}\n`;
+  data.mockData += isHaveExportDefault
+    ? `return mockModule${mockNameUppercase}\n`
+    : `return mockModule${mockNameUppercase}.${mockNameUppercase}\n`;
   data.mockData += '}';
   return data;
 }
@@ -517,8 +546,16 @@ function handleModuleDeclarationsNotExist(
  * @returns boolean
  */
 function checIsDefaultExportClass(importName: string): boolean {
-  const defaultExportClass = ['Context', 'BaseContext', 'ExtensionContext', 'ApplicationContext',
-    'ExtensionAbility', 'Ability', 'UIExtensionAbility', 'UIExtensionContext'];
+  const defaultExportClass = [
+    'Context',
+    'BaseContext',
+    'ExtensionContext',
+    'ApplicationContext',
+    'ExtensionAbility',
+    'Ability',
+    'UIExtensionAbility',
+    'UIExtensionContext'
+  ];
   return defaultExportClass.includes(importName);
 }
 
@@ -559,21 +596,22 @@ function collectReferenceFiles(sourceFile: SourceFile): SourceFile[] {
   const text = sourceFile.text;
   const referenceElement = text.match(referenceElementTemplate);
 
-  referenceElement && referenceElement.forEach(element => {
-    const referenceRelatePath = element.split(/path=["']/g)[1];
-    const realReferenceFilePath = contentRelatePath2RealRelatePath(sourceFile.fileName, referenceRelatePath);
-    if (!realReferenceFilePath) {
-      return;
-    }
+  referenceElement &&
+    referenceElement.forEach(element => {
+      const referenceRelatePath = element.split(/path=["']/g)[1];
+      const realReferenceFilePath = contentRelatePath2RealRelatePath(sourceFile.fileName, referenceRelatePath);
+      if (!realReferenceFilePath) {
+        return;
+      }
 
-    if (!fs.existsSync(realReferenceFilePath)) {
-      console.error(`Can not resolve file: ${realReferenceFilePath}`);
-      return;
-    }
-    const code = fs.readFileSync(realReferenceFilePath);
-    referenceFiles.push(createSourceFile(realReferenceFilePath, code.toString(), ScriptTarget.Latest));
-    !dtsFileList.includes(realReferenceFilePath) && dtsFileList.push(realReferenceFilePath);
-  });
+      if (!fs.existsSync(realReferenceFilePath)) {
+        console.error(`Can not resolve file: ${realReferenceFilePath}`);
+        return;
+      }
+      const code = fs.readFileSync(realReferenceFilePath);
+      referenceFiles.push(createSourceFile(realReferenceFilePath, code.toString(), ScriptTarget.Latest));
+      !dtsFileList.includes(realReferenceFilePath) && dtsFileList.push(realReferenceFilePath);
+    });
   return referenceFiles;
 }
 
@@ -618,10 +656,11 @@ export function referenctImport2ModuleImport(
   if (dependsSourceFileList.length && !importEntity.importPath.includes('.')) {
     for (let i = 0; i < dependsSourceFileList.length; i++) {
       if (dependsSourceFileList[i].text.includes(`declare module ${importEntity.importPath.replace(/'/g, '"')}`)) {
-        let relatePath = path.relative(path.dirname(currentFilePath), dependsSourceFileList[i].fileName)
+        let relatePath = path
+          .relative(path.dirname(currentFilePath), dependsSourceFileList[i].fileName)
           .replace(/\\/g, '/')
           .replace(/.d.ts/g, '')
-          .replace(/.d.es/g, '');
+          .replace(/.d.ets/g, '');
         relatePath = (relatePath.startsWith('@internal/component') ? './' : '') + relatePath;
         return `import ${importEntity.importElements} from '${relatePath}'\n`;
       }

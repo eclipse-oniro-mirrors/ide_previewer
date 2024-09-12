@@ -15,11 +15,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generatePropertySignatureDeclaration } from '../generate/generatePropertySignatureDeclaration';
 
-const filePath = path.join(__dirname, './api/@ohos.abilityAccessCtrl.d.ts')
+const filePath = path.join(__dirname, './api/@ohos.abilityAccessCtrl.d.ts');
 const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
@@ -30,7 +30,7 @@ describe('generatePropertySignatureDeclaration.ts file test', () => {
       modifiers: [],
       propertyName: 'change',
       propertyTypeName: 'PermissionStateChangeType',
-      kind: 173,
+      kind: 173
     };
     const mockApi = 'import { AsyncCallback, Callback } from \'./ohos_base\''
       + 'import { Permissions } from \'./permissions\''
@@ -47,7 +47,7 @@ describe('generatePropertySignatureDeclaration.ts file test', () => {
       modifiers: [],
       propertyName: 'tokenID',
       propertyTypeName: 'number',
-      kind: 144,
+      kind: 144
     };
     const mockApi = 'import { AsyncCallback, Callback } from \'./ohos_base\''
       + 'import { Permissions } from \'./permissions\''

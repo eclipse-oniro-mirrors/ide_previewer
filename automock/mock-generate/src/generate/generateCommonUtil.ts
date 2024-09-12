@@ -140,7 +140,9 @@ function handleTypeReferenceReturnBody(returnType: ReturnTypeEntity, sourceFile:
     return substepResult;
   }
   if (returnType.returnKindName.includes('<')) {
-    return returnType.returnKindName.includes(',') ? 'return {};' : `return new ${returnType.returnKindName.split('<')[0]}()`;
+    return returnType.returnKindName.includes(',')
+      ? 'return {};'
+      : `return new ${returnType.returnKindName.split('<')[0]}()`;
   } else {
     return generateReturnType(returnType, sourceFile);
   }
@@ -154,7 +156,9 @@ function handleTypeReferenceReturnBody(returnType: ReturnTypeEntity, sourceFile:
  */
 function generateReturnType(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
   if (getClassNameSet().has(returnType.returnKindName) && !specialType.includes(returnType.returnKindName)) {
-    return returnType.returnKindName === 'Want' ? 'return mockWant().Want' : `return new ${returnType.returnKindName}()`;
+    return returnType.returnKindName === 'Want'
+      ? 'return mockWant().Want'
+      : `return new ${returnType.returnKindName}()`;
   } else if (getClassNameSet().has(returnType.returnKindName) && specialType.includes(returnType.returnKindName)) {
     return `return ${returnType.returnKindName}`;
   } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
@@ -221,13 +225,13 @@ function handleUnionTypeReturnBody(returnType: ReturnTypeEntity): string {
       break;
     }
   }
-  if (returnName.trimStart().trimEnd() === 'void') {
+  if (returnName.trim() === 'void') {
     return '';
   }
   if (getClassNameSet().has(returnName)) {
     return `return new ${returnName}()`;
   } else {
-    return `return ${getBaseReturnValue(returnName.trimStart().trimEnd())}`;
+    return `return ${getBaseReturnValue(returnName.trim())}`;
   }
 }
 
@@ -292,9 +296,9 @@ export function getTheRealReferenceFromImport(sourceFile: SourceFile, typeName: 
       if (value.importPath.includes('@ohos')) {
         isOhos = true;
       }
-      if (value.importElements.trimStart().trimEnd() === typeName.split('.')[0]) {
+      if (value.importElements.trim() === typeName.split('.')[0]) {
         const tmpArr = value.importPath.split('.');
-        mockMockName = tmpArr[tmpArr.length - 1].replace(/'/g, '').replace(/"/g, '');
+        mockMockName = tmpArr[tmpArr.length - 1].replace(/["']/g, '');
       }
     }
   });
@@ -323,7 +327,10 @@ export function getTheRealReferenceFromImport(sourceFile: SourceFile, typeName: 
  * @param typeName
  * @returns
  */
-function getImportTypeAliasNameFromImportElements(importElementEntity: ImportElementEntity[], typeName: string): string {
+function getImportTypeAliasNameFromImportElements(
+  importElementEntity: ImportElementEntity[],
+  typeName: string
+): string {
   for (let i = 0; i < importElementEntity.length; i++) {
     if (importElementEntity[i].importElements.includes('_')) {
       const importElements = importElementEntity[i].importElements.replace('{', '').replace('}', '').split(',');
@@ -348,7 +355,7 @@ function getImportTypeAliasNameFromImportElements(importElementEntity: ImportEle
  */
 function getTypeName(importElements: string[], typeName: string): string {
   for (let j = 0; j < importElements.length; j++) {
-    const element = importElements[j].trimStart().trimEnd();
+    const element = importElements[j].trim();
     if (!element) {
       continue;
     }
@@ -409,7 +416,7 @@ export const paramsTypeStart = {
   'unknown': '\'[PC Preview] unknown type\''
 };
 
-const removeCallback = (str: string): { type: string, value: string } => {
+const removeCallback = (str: string): { type: string; value: string } => {
   const callbackParams = {
     type: 'Callback',
     value: ''
@@ -464,7 +471,7 @@ const hasDotFirstWord = (str: string): string => {
   return str.includes('.') ? str.split('.')[0] : str;
 };
 
-function callbackHasNoImportType(callbackParams: { type: string, value: string }): string {
+function callbackHasNoImportType(callbackParams: { type: string; value: string }): string {
   let callbackData = '';
   let paramsTypeHasType = true;
   if (callbackParams.value.endsWith(']')) {
@@ -502,7 +509,7 @@ function callbackHasNoImportType(callbackParams: { type: string, value: string }
  * get callback parameters data
  * @returns data: parameters data: type: AsyncCallback or Callback
  */
-const setCallbackData = (mockApi: string, paramTypeString: string): { data: string, type: string } => {
+const setCallbackData = (mockApi: string, paramTypeString: string): { data: string; type: string } => {
   const callbackParams = removeCallback(paramTypeString);
   let callbackData = '';
   let importType = '';
@@ -548,7 +555,10 @@ export function getCallbackStatement(mockApi: string, paramTypeString?: string):
   if (callbackDataParams?.type === 'AsyncCallback') {
     outPut += ` ${callbackError},`;
   }
-  outPut += callbackDataParams.data === '[PC Preview] unknown type' ? ` '${callbackDataParams.data}');\n}` : ` ${callbackDataParams.data});\n}`;
+  outPut +=
+    callbackDataParams.data === '[PC Preview] unknown type'
+      ? ` '${callbackDataParams.data}');\n}`
+      : ` ${callbackDataParams.data});\n}`;
   return outPut;
 }
 
@@ -611,7 +621,10 @@ function getCallbackBody(mockApi: string, paramString: string): string {
   if (callbackDataParams?.type === 'AsyncCallback') {
     bodyInfo += ` ${callbackError},`;
   }
-  bodyInfo += callbackDataParams.data === '[PC Preview] unknown type' ? ` '${callbackDataParams.data}');\n` : ` ${callbackDataParams.data});\n`;
+  bodyInfo +=
+    callbackDataParams.data === '[PC Preview] unknown type'
+      ? ` '${callbackDataParams.data}');\n`
+      : ` ${callbackDataParams.data});\n`;
   bodyInfo += '}';
   return bodyInfo;
 }
@@ -709,7 +722,13 @@ function handleReturnDataNoImportType(returnPromiseParams: string, returnType: R
  * @param mockApi
  * @returns
  */
-export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, returnType: ReturnTypeEntity, sourceFile: SourceFile, mockApi: string): string {
+export function getReturnData(
+  isCallBack: boolean,
+  isReturnPromise: boolean,
+  returnType: ReturnTypeEntity,
+  sourceFile: SourceFile,
+  mockApi: string
+): string {
   // If the return value is an iterator IterableIterator, then iteratorEntriesMock is directly returned
   if (returnType.returnKindName.startsWith('IterableIterator')) {
     return returnType.returnKindName.includes(',') ? iteratorEntriesMock : iteratorStringMock;
@@ -752,7 +771,10 @@ export function getReturnData(isCallBack: boolean, isReturnPromise: boolean, ret
   } else {
     returnData = '"[PC Preview] unknown type"';
   }
-  const data = typeof returnData === 'string' && returnData.startsWith('[PC Preview] unknown') ? `'${returnData}'` : `${returnData}`;
+  const data =
+    typeof returnData === 'string' && returnData.startsWith('[PC Preview] unknown')
+      ? `'${returnData}'`
+      : `${returnData}`;
   if (isReturnPromise) {
     return `
         return new Promise((resolve, reject) => {
@@ -850,9 +872,9 @@ export const needToAddBrace = ['ViewData', 'AutoFillType'];
 
 export interface MockFunctionElementEntity {
   elementName: string;
-  type: string
+  type: string;
 }
 export interface ReturnDataParams {
   mockData: string;
-  mockFunctionElements: Array<MockFunctionElementEntity>
+  mockFunctionElements: Array<MockFunctionElementEntity>;
 }

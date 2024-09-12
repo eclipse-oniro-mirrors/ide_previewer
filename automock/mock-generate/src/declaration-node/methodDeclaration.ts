@@ -15,9 +15,7 @@
 
 import { isComputedPropertyName } from 'typescript';
 import type { MethodDeclaration, Node, SourceFile } from 'typescript';
-import {
-  getFunctionAndMethodReturnInfo, getModifiers, getParameter, getPropertyName
-} from '../common/commonUtils';
+import { getFunctionAndMethodReturnInfo, getModifiers, getParameter, getPropertyName } from '../common/commonUtils';
 import type { ParameterEntity, ReturnTypeEntity } from '../common/commonUtils';
 
 /**
@@ -62,19 +60,19 @@ export function getMethodDeclaration(node: Node, sourceFile: SourceFile): Method
 }
 
 export interface StaticMethodEntity {
-  className: string,
-  methodEntity: MethodEntity
+  className: string;
+  methodEntity: MethodEntity;
 }
 
 export interface MethodEntity {
-  modifiers: Array<number>,
-  functionName: FunctionNameEntity,
-  returnType: ReturnTypeEntity,
-  args: Array<ParameterEntity>
+  modifiers: Array<number>;
+  functionName: FunctionNameEntity;
+  returnType: ReturnTypeEntity;
+  args: Array<ParameterEntity>;
 }
 
 export interface FunctionNameEntity {
-  name: string,
-  expressionKind: number,
-  kind: number
+  name: string;
+  expressionKind: number;
+  kind: number;
 }

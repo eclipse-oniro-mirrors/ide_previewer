@@ -9,7 +9,9 @@
     "test:lint": "eslint -c .eslintrc --fix test/**/*.ts",
     "test:unit": "mocha --timeout 5000 -r ts-node/register test/lib.ts test/ut/**/*.ts test/ut/*.ts",
     "build:mock": "cd ./mock-generate && npm run build",
-    "build": "npm run build:mock && node build_jsmock_system_plugin.js && node build_strip_native_min.js"
+    "build": "npm run build:mock && node build_jsmock_system_plugin.js && node build_strip_native_min.js",
+    "lint": "eslint --ext .ts src",
+    "format": "prettier --write .\\src\\"
   },
   "keywords": [
     "javascript",

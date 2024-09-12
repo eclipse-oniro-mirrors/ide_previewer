@@ -28,8 +28,13 @@ import { addExtraImport } from './generateInterfaceDeclaration';
  * @param sourceFile
  * @returns
  */
-export function generatePropertyDeclaration(rootName: string, propertyDeclaration: PropertyEntity,
-  sourceFile: SourceFile, extraImport: string[], importDeclarations?: ImportElementEntity[]): string {
+export function generatePropertyDeclaration(
+  rootName: string,
+  propertyDeclaration: PropertyEntity,
+  sourceFile: SourceFile,
+  extraImport: string[],
+  importDeclarations?: ImportElementEntity[]
+): string {
   let propertyBody = '';
   if (propertyDeclaration.isInitializer) {
     propertyBody = `this.${propertyDeclaration.propertyName} = ${propertyDeclaration.initializer};`;
@@ -55,7 +60,10 @@ export function generatePropertyDeclaration(rootName: string, propertyDeclaratio
       propertyBody += '{key: {}};';
     } else if (propertyDeclaration.kind === SyntaxKind.TypeReference) {
       propertyBody = generateTypeReference(propertyDeclaration, sourceFile, propertyBody);
-    } else if (propertyDeclaration.kind === SyntaxKind.NumericLiteral || propertyDeclaration.kind === SyntaxKind.StringLiteral) {
+    } else if (
+      propertyDeclaration.kind === SyntaxKind.NumericLiteral ||
+      propertyDeclaration.kind === SyntaxKind.StringLiteral
+    ) {
       propertyBody += ` ${propertyDeclaration.propertyTypeName};`;
     } else {
       propertyBody += `'[PC Previwe] unknown ${propertyDeclaration.propertyName}';`;

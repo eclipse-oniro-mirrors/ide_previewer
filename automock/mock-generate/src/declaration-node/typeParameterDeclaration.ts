@@ -44,7 +44,7 @@ export function getTypeParameterDeclaration(node: Node, sourceFile: SourceFile):
 }
 
 export interface TypeParameterEntity {
-  typeParameterName: string,
-  constraitValue: string,
-  constraintDefaultValue: string
+  typeParameterName: string;
+  constraitValue: string;
+  constraintDefaultValue: string;
 }

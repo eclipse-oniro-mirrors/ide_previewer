@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { generateIndexSignature } from '../generate/generateIndexSignature';
 
 describe('generateIndexSignature.ts file test', () => {
@@ -21,7 +21,7 @@ describe('generateIndexSignature.ts file test', () => {
     const signatureEntity = {
       indexSignatureKey: 'key',
       indexSignatureKind: 182,
-      indexSignatureTypeName: 'number | boolean | string | undefined',
+      indexSignatureTypeName: 'number | boolean | string | undefined'
     };
     const result = generateIndexSignature(signatureEntity);
     expect(result).toBe('key: \'[PC Preview] unknown type\',\n');
@@ -31,7 +31,7 @@ describe('generateIndexSignature.ts file test', () => {
     const signatureEntity = {
       indexSignatureKey: 'key',
       indexSignatureKind: 173,
-      indexSignatureTypeName: 'BundleStateInfo',
+      indexSignatureTypeName: 'BundleStateInfo'
     };
     const result = generateIndexSignature(signatureEntity);
     expect(result).toBe('key: BundleStateInfo');

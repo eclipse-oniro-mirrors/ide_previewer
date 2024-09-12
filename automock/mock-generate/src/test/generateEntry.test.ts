@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { generateEntry } from '../generate/generateEntry';
 
 describe('generateEntry.ts file test', (): void => {

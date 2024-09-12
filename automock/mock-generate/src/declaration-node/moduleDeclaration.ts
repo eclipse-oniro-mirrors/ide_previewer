@@ -14,8 +14,16 @@
  */
 
 import {
-  isClassDeclaration, isEnumDeclaration, isExportDeclaration, isFunctionDeclaration, isIdentifier,
-  isImportEqualsDeclaration, isInterfaceDeclaration, isModuleBlock, isModuleDeclaration, isTypeAliasDeclaration,
+  isClassDeclaration,
+  isEnumDeclaration,
+  isExportDeclaration,
+  isFunctionDeclaration,
+  isIdentifier,
+  isImportEqualsDeclaration,
+  isInterfaceDeclaration,
+  isModuleBlock,
+  isModuleDeclaration,
+  isTypeAliasDeclaration,
   isVariableStatement
 } from 'typescript';
 import type { ModuleDeclaration, Node, SourceFile, ModuleBody } from 'typescript';
@@ -36,32 +44,32 @@ import { getVariableStatementDeclaration } from './variableStatementResolve';
 import type { StatementEntity } from './variableStatementResolve';
 
 interface SubstepGetModuleparam {
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>,
-  enumDeclarations: Array<EnumEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  variableStatements: Array<Array<StatementEntity>>,
-  moduleImportEquaqls: Array<ImportEuqalEntity>,
-  exportDeclarations: Array<string>,
-  sourceFile: SourceFile,
-  fileName: string,
-  moduleBody: ModuleBody
+  typeAliasDeclarations: Array<TypeAliasEntity>;
+  classDeclarations: Array<ClassEntity>;
+  interfaceDeclarations: Array<InterfaceEntity>;
+  functionDeclarations: Map<string, Array<FunctionEntity>>;
+  enumDeclarations: Array<EnumEntity>;
+  moduleDeclarations: Array<ModuleBlockEntity>;
+  variableStatements: Array<Array<StatementEntity>>;
+  moduleImportEquaqls: Array<ImportEuqalEntity>;
+  exportDeclarations: Array<string>;
+  sourceFile: SourceFile;
+  fileName: string;
+  moduleBody: ModuleBody;
 }
 
 export interface ModuleBlockEntity {
-  moduleName: string,
-  exportModifiers: Array<number>,
-  typeAliasDeclarations: Array<TypeAliasEntity>,
-  classDeclarations: Array<ClassEntity>,
-  interfaceDeclarations: Array<InterfaceEntity>,
-  functionDeclarations: Map<string, Array<FunctionEntity>>,
-  enumDeclarations: Array<EnumEntity>,
-  moduleDeclarations: Array<ModuleBlockEntity>,
-  variableStatements: Array<Array<StatementEntity>>,
-  moduleImportEquaqls: Array<ImportEuqalEntity>,
-  exportDeclarations: Array<string>
+  moduleName: string;
+  exportModifiers: Array<number>;
+  typeAliasDeclarations: Array<TypeAliasEntity>;
+  classDeclarations: Array<ClassEntity>;
+  interfaceDeclarations: Array<InterfaceEntity>;
+  functionDeclarations: Map<string, Array<FunctionEntity>>;
+  enumDeclarations: Array<EnumEntity>;
+  moduleDeclarations: Array<ModuleBlockEntity>;
+  variableStatements: Array<Array<StatementEntity>>;
+  moduleImportEquaqls: Array<ImportEuqalEntity>;
+  exportDeclarations: Array<string>;
 }
 
 /**

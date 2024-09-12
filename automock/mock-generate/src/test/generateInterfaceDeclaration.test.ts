@@ -15,13 +15,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import {describe, expect, test} from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateInterfaceDeclaration } from '../generate/generateInterfaceDeclaration';
 
 describe('generateInterfaceDeclaration.ts file test', () => {
   test('Test the generateInterfaceDeclaration function', () => {
-    const filePath = path.join(__dirname, './api/@ohos.abilityAccessCtrl.d.ts')
+    const filePath = path.join(__dirname, './api/@ohos.abilityAccessCtrl.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
     const interfaceEntity = {
@@ -33,7 +33,7 @@ describe('generateInterfaceDeclaration.ts file test', () => {
       interfacePropertySignatures: [],
       callSignatures: [],
       indexSignature: [],
-      exportModifiers: [],
+      exportModifiers: []
     };
     const isSourceFile = false;
     const mockApi = 'import { AsyncCallback, Callback } from \'./ohos_base\''
@@ -52,7 +52,7 @@ describe('generateInterfaceDeclaration.ts file test', () => {
         interfacePropertySignatures: [],
         callSignatures: [],
         indexSignature: [],
-        exportModifiers: [],
+        exportModifiers: []
       },
       {
         interfaceName: 'PermissionStateChangeInfo',
@@ -63,26 +63,26 @@ describe('generateInterfaceDeclaration.ts file test', () => {
         interfacePropertySignatures: [],
         callSignatures: [],
         indexSignature: [],
-        exportModifiers: [],
-      },
+        exportModifiers: []
+      }
     ];
     const importDeclarations = [
       {
         importPath: './@ohos.base',
-        importElements: '{ AsyncCallback, Callback }',
+        importElements: '{ AsyncCallback, Callback }'
       },
       {
         importPath: './permissions',
-        importElements: '{ Permissions }',
+        importElements: '{ Permissions }'
       },
       {
         importPath: './application/Context',
-        importElements: '_Context',
+        importElements: '_Context'
       },
       {
         importPath: './security/PermissionRequestResult',
-        importElements: '_PermissionRequestResult',
-      },
+        importElements: '_PermissionRequestResult'
+      }
     ];
     const extraImport = [];
     const result = generateInterfaceDeclaration(

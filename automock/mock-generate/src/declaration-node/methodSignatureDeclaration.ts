@@ -41,7 +41,7 @@ export function getMethodSignatureDeclaration(node: Node, sourceFile: SourceFile
 }
 
 export interface MethodSignatureEntity {
-  functionName: string,
-  returnType: ReturnTypeEntity,
-  args: Array<ParameterEntity>
+  functionName: string;
+  returnType: ReturnTypeEntity;
+  args: Array<ParameterEntity>;
 }
