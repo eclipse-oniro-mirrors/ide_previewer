@@ -477,8 +477,15 @@ std::string StageContext::ReplaceLastStr(const std::string& str, const std::stri
 int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 {
     int num = 0;
-    std::string flag = "/" + input + "/";
+    std::string flag = "";
+    std::string bundleFlag = "/" + input + "/";
+    std::string normalizedFlag = "N&" + input + "&";
     for (const auto& pair : hspNameOhmMap) {
+        if (pair.second.find("@normalized") == 0) {
+            flag = normalizedFlag;
+        } else {
+            flag = bundleFlag;
+        }
         if (pair.second.find(flag) != std::string::npos) {
             if (num == 0) {
                 ret = pair.first;
