@@ -16,6 +16,7 @@
 #include <sstream>
 #include <fstream>
 #include <cctype>
+#include <algorithm>
 #include "JsonReader.h"
 #include "FileSystem.h"
 #include "TraceTool.h"
@@ -487,11 +488,15 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
             flag = bundleFlag;
         }
         if (pair.second.find(flag) != std::string::npos) {
+            std::string actualName = pair.first;
+            if (actualName.find('/') != std::string::npos) { // 以组织名开头的包
+                std::replace(actualName.begin(), actualName.end(), '/', '+');
+            }
             if (num == 0) {
-                ret = pair.first;
+                ret = actualName;
             }
             num++;
-            WLOG("find hsp actual name:%s", pair.first.c_str());
+            WLOG("find hsp actual name:%s", actualName.c_str());
         }
     }
     return num;
