@@ -16,6 +16,7 @@
 #include <sstream>
 #include <fstream>
 #include <cctype>
+#include <algorithm>
 #include "JsonReader.h"
 #include "FileSystem.h"
 #include "TraceTool.h"
@@ -469,14 +470,25 @@ std::string StageContext::ReplaceLastStr(const std::string& str, const std::stri
 int StageContext::GetHspActualName(const std::string& input, std::string& ret)
 {
     int num = 0;
-    string flag = "/" + input + "/";
+    std::string flag = "";
+    std::string bundleFlag = "/" + input + "/";
+    std::string normalizedFlag = "N&" + input + "&";
     for (const auto& pair : hspNameOhmMap) {
+        if (pair.second.find("@normalized") == 0) {
+            flag = normalizedFlag;
+        } else {
+            flag = bundleFlag;
+        }
         if (pair.second.find(flag) != std::string::npos) {
+            std::string actualName = pair.first;
+            if (actualName.find('/') != std::string::npos) { // 以组织名开头的包
+                std::replace(actualName.begin(), actualName.end(), '/', '+');
+            }
             if (num == 0) {
-                ret = pair.first;
+                ret = actualName;
             }
             num++;
-            WLOG("find hsp actual name:%s", pair.first.c_str());
+            WLOG("find hsp actual name:%s", actualName.c_str());
         }
     }
     return num;
