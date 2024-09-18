@@ -155,8 +155,28 @@ export function generateModuleDeclaration(
   outBody = judgmentModuleEntityBack.outBody;
   enumBody = judgmentModuleEntityBack.enumBody;
   moduleBody = moduleEntityForEach(judgmentModuleEntityProps, innerModuleBody, filename);
-  const exports = getModuleExportElements(moduleEntity);
+
+  const exportString = getExportBody(moduleEntity);
+  if (exportString !== '') {
+    moduleBody += '\t' + exportString;
+  }
+
+  moduleBody += '\t};';
+  moduleBody += `\n\treturn ${moduleName};}\n`;
+  moduleBody += outBody;
+  moduleBody = enumBody + moduleBody;
+  return moduleBody;
+}
+
+/**
+ * Obtain the variables to be exported.
+ *
+ * @param moduleEntity ModuleBlockEntity
+ * @returns string
+ */
+function getExportBody(moduleEntity: ModuleBlockEntity): string {
   let exportString = '';
+  const exports = getModuleExportElements(moduleEntity);
   exports.forEach(value => {
     if (value.type === 'module' && !value.name.startsWith("'") && !value.name.startsWith('"')) {
       exportString += `${value.name}: mock${value.name}(),\n`;
@@ -164,14 +184,7 @@ export function generateModuleDeclaration(
       exportString += `${value.name}: ${value.name},\n`;
     }
   });
-  if (exportString !== '') {
-    moduleBody += '\t' + exportString;
-  }
-  moduleBody += '\t};';
-  moduleBody += `\n\treturn ${moduleName};}\n`;
-  moduleBody += outBody;
-  moduleBody = enumBody + moduleBody;
-  return moduleBody;
+  return exportString;
 }
 
 /**
