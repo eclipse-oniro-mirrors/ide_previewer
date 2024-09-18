@@ -108,8 +108,7 @@ function substepGetInterface(substepGetClassparam: SubstepGetClassparam): Subste
   const interfaceName = interfaceNode.name.escapedText.toString();
   const interfaceConstructors: Array<Array<ConstructorEntity>> = [];
   const interfaceMethodSignature: Map<string, Array<MethodSignatureEntity>> = new Map<
-    string,
-    Array<MethodSignatureEntity>
+    string, Array<MethodSignatureEntity>
   >();
   const interfacePropertySignatures: Array<PropertySignatureEntity> = [];
   const callSignature: Array<CallSignatureEntity> = [];

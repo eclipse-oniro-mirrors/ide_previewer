@@ -77,7 +77,7 @@ export function getImportDeclaration(node: Node, sourceFile: SourceFile): Import
   let importElements = '';
   const importNode = node as ImportDeclaration;
   const fileText = sourceFile.getFullText();
-  const moduleSpecifier = importNode.moduleSpecifier
+  const moduleSpecifier = importNode.moduleSpecifier;
   const importPath = fileText.substring(moduleSpecifier.pos, moduleSpecifier.end).trim();
   const importClause = importNode.importClause;
   if (importClause !== undefined) {
