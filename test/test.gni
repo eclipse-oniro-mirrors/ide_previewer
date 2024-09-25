@@ -55,6 +55,18 @@ graphic_2d_include_path = [
   "$graphic_2d_path/rosen/modules/platform/utils",
 ]
 
+ace_engine_lite_path = "//foundation/arkui/ace_engine_lite"
+ui_lite_path = "//foundation/arkui/ui_lite"
+ui_ext_lite_path = "//foundation/arkui/ui_ext_lite"
+graphic_utils_lite_path = "//foundation/graphic/graphic_utils_lite"
+ability_lite_path = "//foundation/ability/ability_lite"
+resource_management_lite_path = "//base/global/resource_management_lite"
+powermgr_lite_path = "//base/powermgr/powermgr_lite"
+geo_lite_path = "//base/location/interfaces/kits/geo_lite"
+sensorjs_lite_path = "//base/sensors/sensorjs_lite"
+startup_init_path = "//base/startup/init"
+utils_lite_path = "//commonlibrary/utils_lite"
+
 template("ide_test") {
   executable(target_name) {
     testonly = invoker.testonly
@@ -153,6 +165,9 @@ template("ide_unittest") {
     cflags = invoker.cflags
     cflags_cc = invoker.cflags_cc
     ldflags = invoker.ldflags
-    defines = [ "REPLACE_WINDOW_HEADER=1" ]
+    defines = [
+      "REPLACE_WINDOW_HEADER=1",
+      "ENABLE_ICU=1",
+    ]
   }
 }

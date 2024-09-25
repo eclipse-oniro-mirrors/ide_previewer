@@ -95,5 +95,32 @@ extern bool g_updateConfiguration;
 extern bool g_setAbilityMockList;
 extern bool g_setHostResolveBufferTracker;
 
+// MockJsAbility
+extern bool g_jsAbilityLaunch;
+extern bool g_jsAbilityShow;
+extern bool g_jsAbilityHide;
+extern bool g_jsAbilityTransferToDestroy;
+
+// MockUIFont
+extern bool g_uiFontSetFont;
+extern bool g_uiFontSetPsramMemory;
+
+// MockProductAdapter
+extern bool g_setDefaultFontStyle;
+
+// MockDebugger
+extern bool g_configEngineDebugger;
+
+// MockGraphicStartUp
+extern bool g_graphicStartUpInit;
+
+// MockInputDeviceManager
+extern bool g_inputDeviceManagerAdd;
+
+// MockTaskManager
+extern bool g_taskHandler;
+
+// MockGlobal
+extern bool g_globalConfigLanguage;
 
 #endif // GLOBAL_VARIABLES_H

@@ -1,0 +1,137 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../test.gni")
+
+module_output_path = "previewer/mock_lite"
+
+group("mock_lite_unittest") {
+  testonly = true
+  deps = [ ":mock_lite_test" ]
+}
+
+ide_unittest("mock_lite_test") {
+  testonly = true
+  part_name = "previewer"
+  subsystem_name = "ide"
+  module_out_path = module_output_path
+  output_name = "mock_lite"
+  sources = [
+    "$ide_previewer_path/mock/KeyInput.cpp",
+    "$ide_previewer_path/mock/LanguageManager.cpp",
+    "$ide_previewer_path/mock/MouseInput.cpp",
+    "$ide_previewer_path/mock/MouseWheel.cpp",
+    "$ide_previewer_path/mock/VirtualMessage.cpp",
+    "$ide_previewer_path/mock/VirtualScreen.cpp",
+    "$ide_previewer_path/mock/lite/AblityKit.cpp",
+    "$ide_previewer_path/mock/lite/AsyncWorkManager.cpp",
+    "$ide_previewer_path/mock/lite/BatteryModuleImpl.cpp",
+    "$ide_previewer_path/mock/lite/BrightnessModuleImpl.cpp",
+    "$ide_previewer_path/mock/lite/GeoLocation.cpp",
+    "$ide_previewer_path/mock/lite/HalSysParam.cpp",
+    "$ide_previewer_path/mock/lite/JsAsyncWork.cpp",
+    "$ide_previewer_path/mock/lite/KeyInputImpl.cpp",
+    "$ide_previewer_path/mock/lite/LanguageManagerImpl.cpp",
+    "$ide_previewer_path/mock/lite/MouseInputImpl.cpp",
+    "$ide_previewer_path/mock/lite/MouseWheelImpl.cpp",
+    "$ide_previewer_path/mock/lite/NativeTimer.cpp",
+    "$ide_previewer_path/mock/lite/SensorModuleImpl.cpp",
+    "$ide_previewer_path/mock/lite/VibratorModuleImpl.cpp",
+    "$ide_previewer_path/mock/lite/VirtualLocation.cpp",
+    "$ide_previewer_path/mock/lite/VirtualMessageImpl.cpp",
+    "$ide_previewer_path/mock/lite/VirtualScreenImpl.cpp",
+    "$ide_previewer_path/test/mock/MockGlobalResult.cpp",
+    "$ide_previewer_path/test/mock/util/MockLocalSocket.cpp",
+    "$ide_previewer_path/test/mock/util/MockWebSocketServer.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockBaseGfxEngine.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockDrawUtils.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockImageDecodeAbility.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockInputDeviceManager.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockPointerInputDevice.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockRotateInputDevice.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockSoftEngine.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockTask.cpp",
+    "$ide_previewer_path/test/mock_lite/ui_lite/MockTaskManager.cpp",
+    "$ide_previewer_path/util/CallbackQueue.cpp",
+    "$ide_previewer_path/util/CommandParser.cpp",
+    "$ide_previewer_path/util/CppTimer.cpp",
+    "$ide_previewer_path/util/CppTimerManager.cpp",
+    "$ide_previewer_path/util/EndianUtil.cpp",
+    "$ide_previewer_path/util/FileSystem.cpp",
+    "$ide_previewer_path/util/Interrupter.cpp",
+    "$ide_previewer_path/util/JsonReader.cpp",
+    "$ide_previewer_path/util/ModelManager.cpp",
+    "$ide_previewer_path/util/PreviewerEngineLog.cpp",
+    "$ide_previewer_path/util/SharedDataManager.cpp",
+    "$ide_previewer_path/util/TimeTool.cpp",
+    "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/unix/LocalDate.cpp",
+    "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
+    "AblityKitTest.cpp",
+    "AsyncWorkManagerTest.cpp",
+    "BatteryModuleImplTest.cpp",
+    "BrightnessModuleImplTest.cpp",
+    "GeoLocationTest.cpp",
+    "HalSysParamTest.cpp",
+    "JsAsyncWorkTest.cpp",
+    "KeyInputImplTest.cpp",
+    "LanguageManagerImplTest.cpp",
+    "MouseInputImplTest.cpp",
+    "MouseWheelImplTest.cpp",
+    "NativeTimerTest.cpp",
+    "SensorModuleImplTest.cpp",
+    "VibratorModuleImplTest.cpp",
+    "VirtualLocationTest.cpp",
+    "VirtualMessageImplTest.cpp",
+    "VirtualScreenImplTest.cpp",
+  ]
+  include_dirs = [
+    ".",
+    "$ide_previewer_path/mock",
+    "$ide_previewer_path/mock/lite",
+    "$ide_previewer_path/util",
+    "$ide_previewer_path/test/mock",
+    "$powermgr_lite_path/interfaces/kits/battery/js/builtin/include",
+    "$geo_lite_path/js/builtin/include",
+    "$sensorjs_lite_path/sensor_lite/interfaces/js/builtin/sensor/include",
+    "$sensorjs_lite_path/miscdevice_lite/interfaces/js/builtin/vibrate/include",
+    "$startup_init_path/interfaces/hals",
+    "$utils_lite_path/timer_task/include",
+    "$ace_engine_lite_path/interfaces/inner_api/builtin/base",
+    "$ace_engine_lite_path/interfaces/inner_api/builtin/async",
+    "$ace_engine_lite_path/interfaces/inner_api/builtin/jsi",
+    "$ui_lite_path/interfaces/kits",
+    "$ui_lite_path/interfaces/innerkits",
+    "$ui_lite_path/frameworks",
+    "$ui_lite_path/frameworks/dock",
+    "$ui_lite_path/interfaces/innerkits/dock",
+    "$ui_lite_path/interfaces/innerkits/common",
+    "$ui_lite_path/interfaces/innerkits/engines/gfx",
+    "$ui_lite_path/frameworks/draw",
+    "$ui_lite_path/interfaces/kits/common",
+    "$ui_ext_lite_path/tools/ide/brightness_lite/js/builtin/include",
+    "$graphic_utils_lite_path/interfaces/innerkits",
+    "$graphic_utils_lite_path/interfaces/kits",
+    "$ability_lite_path/frameworks/abilitymgr_lite/include",
+    "//third_party/libwebsockets/include",
+  ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/cJSON:cjson_static",
+    "//third_party/libjpeg-turbo:turbojpeg_static",
+  ]
+  libs = []
+  cflags = [ "-Wno-error=overflow" ]
+  cflags_cc = [ "-Wno-error=overflow" ]
+  ldflags = [ "-Wno-error=overflow" ]
+}

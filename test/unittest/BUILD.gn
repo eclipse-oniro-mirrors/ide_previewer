@@ -21,7 +21,9 @@ group("unittest") {
   deps = [
     "./cli:cli_unittest",
     "./jsapp:jsapp_unittest",
+    "./jsapp_lite:jsapp_lite_unittest",
     "./mock:mock_unittest",
+    "./mock_lite:mock_lite_unittest",
     "./util:util_unittest",
   ]
 }

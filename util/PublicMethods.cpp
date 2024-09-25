@@ -29,9 +29,6 @@ uint32_t PublicMethods::Ulltoa(uintptr_t value, int8_t (&rstStr)[MAX_ITOA_BIT])
         rstLength++;
         dividend = remainder % RADIX_HEXADECIMAL;
         remainder = remainder / RADIX_HEXADECIMAL;
-        if (remainder == 0) {
-            break;
-        }
         if (dividend < dividendLength) { // Converted to hexadecimal
             *curPoint++ = dividend + '0';
         } else {
