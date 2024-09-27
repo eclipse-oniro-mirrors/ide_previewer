@@ -131,7 +131,13 @@ ide_unittest("mock_lite_test") {
     "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
   libs = []
-  cflags = [ "-Wno-error=overflow" ]
-  cflags_cc = [ "-Wno-error=overflow" ]
+  cflags = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
+  cflags_cc = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
   ldflags = [ "-Wno-error=overflow" ]
 }

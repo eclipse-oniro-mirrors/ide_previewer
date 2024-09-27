@@ -103,7 +103,13 @@ ide_unittest("jsapp_rich_test") {
     "//third_party/zlib:libz",
   ]
   libs = [ "X11" ]
-  cflags = [ "-Wno-error=overflow" ]
-  cflags_cc = [ "-Wno-error=overflow" ]
+  cflags = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
+  cflags_cc = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
   ldflags = [ "-Wno-error=overflow" ]
 }
