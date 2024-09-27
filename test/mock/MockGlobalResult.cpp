@@ -93,3 +93,31 @@ bool g_terminateAbility = false;
 bool g_updateConfiguration = false;
 bool g_setAbilityMockList = false;
 bool g_setHostResolveBufferTracker = false;
+
+// MockJsAbility
+bool g_jsAbilityLaunch = false;
+bool g_jsAbilityShow = false;
+bool g_jsAbilityHide = false;
+bool g_jsAbilityTransferToDestroy = false;
+
+// MockUIFont
+bool g_uiFontSetFont = false;
+bool g_uiFontSetPsramMemory = false;
+
+// MockProductAdapter
+bool g_setDefaultFontStyle = false;
+
+// MockDebugger
+bool g_configEngineDebugger = false;
+
+// MockGraphicStartUp
+bool g_graphicStartUpInit = false;
+
+// MockInputDeviceManager
+bool g_inputDeviceManagerAdd = false;
+
+// MockTaskManager
+bool g_taskHandler = false;
+
+// MockGlobal
+bool g_globalConfigLanguage = false;
