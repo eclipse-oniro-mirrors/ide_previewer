@@ -34,20 +34,16 @@ namespace {
         static void CopyFileToDirectory(const std::filesystem::path& sourceFile,
             const std::filesystem::path& destDirectory)
         {
-            try {
-                // 确保目标目录存在
-                if (!std::filesystem::exists(destDirectory)) {
-                    std::filesystem::create_directories(destDirectory);
-                }
-                // 生成目标文件路径
-                std::filesystem::path destFile = destDirectory / sourceFile.filename();
-                // 复制文件
-                std::filesystem::copy_file(sourceFile, destFile,
-                    std::filesystem::copy_options::overwrite_existing);
-                std::cout << "File copied successfully to " << destFile << std::endl;
-            } catch (const std::filesystem::filesystem_error& e) {
-                std::cerr << "File copy failed: " << e.what() << std::endl;
+            // 确保目标目录存在
+            if (!std::filesystem::exists(destDirectory)) {
+                std::filesystem::create_directories(destDirectory);
             }
+            // 生成目标文件路径
+            std::filesystem::path destFile = destDirectory / sourceFile.filename();
+            // 复制文件
+            std::filesystem::copy_file(sourceFile, destFile,
+                std::filesystem::copy_options::overwrite_existing);
+            std::cout << "File copied successfully to " << destFile << std::endl;
         }
 
         static void SetUpTestCase()
@@ -56,13 +52,9 @@ namespace {
             TraceTool::GetInstance().InitPipe();
             testConfigPath = FileSystem::GetApplicationPath() + FileSystem::separator + ".." +
                 FileSystem::separator + "config" + FileSystem::separator;
-            std::string srcBrkPath = FileSystem::GetApplicationPath() + FileSystem::separator + ".." +
-                FileSystem::separator + ".." + FileSystem::separator + ".." + FileSystem::separator + ".." +
-                FileSystem::separator + ".." + FileSystem::separator +
+            std::string srcBrkPath = FileSystem::GetApplicationPath() + FileSystem::separator +
                 "foundation/arkui/ui_lite/tools/qt/simulator/font/line_cj.brk";
-            std::string srcFontPath = FileSystem::GetApplicationPath() + FileSystem::separator + ".." +
-                FileSystem::separator + ".." + FileSystem::separator + ".." + FileSystem::separator + ".." +
-                FileSystem::separator + ".." + FileSystem::separator +
+            std::string srcFontPath = FileSystem::GetApplicationPath() + FileSystem::separator +
                 "foundation/arkui/ui_lite/tools/qt/simulator/font/SourceHanSansSC-Regular.otf";
             CopyFileToDirectory(srcBrkPath, testConfigPath);
             CopyFileToDirectory(srcFontPath, testConfigPath);

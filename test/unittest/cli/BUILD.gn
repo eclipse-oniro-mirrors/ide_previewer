@@ -90,7 +90,13 @@ ide_unittest("cli_test") {
     "//third_party/cJSON:cjson_static",
   ]
   libs = []
-  cflags = [ "-Wno-error=overflow" ]
-  cflags_cc = [ "-Wno-error=overflow" ]
+  cflags = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
+  cflags_cc = [
+    "-Wno-error=overflow",
+    "-fno-exceptions",
+  ]
   ldflags = [ "-Wno-error=overflow" ]
 }

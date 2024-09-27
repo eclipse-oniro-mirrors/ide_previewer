@@ -74,7 +74,7 @@ ide_unittest("util_test") {
     "//third_party/cJSON:cjson_static",
   ]
   libs = []
-  cflags = []
-  cflags_cc = []
+  cflags = [ "-fno-exceptions" ]
+  cflags_cc = [ "-fno-exceptions" ]
   ldflags = []
 }
