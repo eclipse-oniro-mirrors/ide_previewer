@@ -26,6 +26,8 @@
 #include "window_model.h"
 #include "window_display.h"
 #include "FileSystem.h"
+#include "ace_preview_helper.h"
+#include "window_model.h"
 using namespace std;
 
 namespace {
@@ -77,19 +79,6 @@ namespace {
         JsAppImpl::GetInstance().isStop = false;
         std::thread thread1([]() {
             JsAppImpl::GetInstance().Start();
-        });
-        thread1.detach();
-        this_thread::sleep_for(chrono::milliseconds(10));
-        JsAppImpl::GetInstance().isStop = true;
-        this_thread::sleep_for(chrono::milliseconds(10));
-        EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
-    }
-
-    TEST_F(JsAppImplTest, InitJsAppTest)
-    {
-        JsAppImpl::GetInstance().isStop = false;
-        std::thread thread1([]() {
-            JsAppImpl::GetInstance().InitJsApp();
         });
         thread1.detach();
         this_thread::sleep_for(chrono::milliseconds(10));
@@ -235,11 +224,18 @@ namespace {
     {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
+        // light
         g_onConfigurationChanged = false;
         JsAppImpl::GetInstance().ColorModeChanged("light");
         EXPECT_TRUE(g_onConfigurationChanged);
         EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.colorMode,
             OHOS::Ace::ColorMode::LIGHT);
+        // dark
+        g_onConfigurationChanged = false;
+        JsAppImpl::GetInstance().ColorModeChanged("dark");
+        EXPECT_TRUE(g_onConfigurationChanged);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.colorMode,
+            OHOS::Ace::ColorMode::DARK);
     }
 
     TEST_F(JsAppImplTest, ReloadRuntimePageTest)
@@ -265,6 +261,12 @@ namespace {
 
     TEST_F(JsAppImplTest, MemoryRefreshTest)
     {
+        // ability is nullptr
+        JsAppImpl::GetInstance().ability = nullptr;
+        g_operateComponent = false;
+        JsAppImpl::GetInstance().MemoryRefresh("aaa");
+        EXPECT_FALSE(g_operateComponent);
+        // ability is not nullptr
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
         g_operateComponent = false;
@@ -374,7 +376,7 @@ namespace {
         EXPECT_TRUE(args.isComponentMode);
     }
 
-    TEST_F(JsAppImplTest, RunJsAppImplTest)
+    TEST_F(JsAppImplTest, RunJsAppTest)
     {
         JsAppImpl::GetInstance().isDebug = false;
         JsAppImpl::GetInstance().debugServerPort = 0;
@@ -383,10 +385,18 @@ namespace {
         g_setWindow = false;
         g_initEnv = false;
         JsAppImpl::GetInstance().RunJsApp();
+        auto ptr = OHOS::Ace::Platform::AcePreviewHelper::GetInstance()->GetCallbackOfHspBufferTracker();
+        EXPECT_TRUE(ptr != nullptr);
+        uint8_t* data = new uint8_t[1];
+        size_t size = 0;
+        std::string msg;
+        bool ret = ptr("aa", &data, &size, msg);
+        EXPECT_FALSE(ret);
         EXPECT_TRUE(g_setContentInfoCallback);
         EXPECT_TRUE(g_createSurfaceNode);
         EXPECT_TRUE(g_setWindow);
         EXPECT_TRUE(g_initEnv);
+        delete[] data;
 
         JsAppImpl::GetInstance().isDebug = true;
         JsAppImpl::GetInstance().debugServerPort = 8888;
@@ -583,5 +593,136 @@ namespace {
         g_getSystemBarPropertyByType = false;
         JsAppImpl::GetInstance().InitAvoidAreas(window);
         EXPECT_TRUE(g_getSystemBarPropertyByType);
+    }
+
+    TEST_F(JsAppImplTest, AdaptDeviceTypeTest)
+    {
+        int width = 300;
+        int height = 300;
+        std::string type = "wearable";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::WATCH);
+        type = "tv";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::TV);
+        type = "phone";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::PHONE);
+        type = "default";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::PHONE);
+        type = "2in1";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::TWO_IN_ONE);
+        type = "tablet";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::TABLET);
+        type = "car";
+        JsAppImpl::GetInstance().AdaptDeviceType(JsAppImpl::GetInstance().aceRunArgs, type, width, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.deviceType, OHOS::Ace::DeviceType::CAR);
+    }
+
+    TEST_F(JsAppImplTest, SetDeviceScreenDensityTest)
+    {
+        const int32_t screenDensity = 480;
+        std::string type = "wearable";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "tv";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "phone";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "default";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "2in1";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "tablet";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+        type = "car";
+        JsAppImpl::GetInstance().SetDeviceScreenDensity(screenDensity, type);
+        EXPECT_EQ(JsAppImpl::GetInstance().watchScreenDensity, screenDensity);
+    }
+
+    TEST_F(JsAppImplTest, ParseSystemParamsTest)
+    {
+        Json2::Value paramObj = JsonReader::CreateNull();
+        JsAppImpl::GetInstance().ParseSystemParams(JsAppImpl::GetInstance().aceRunArgs, paramObj);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.colorMode, OHOS::Ace::ColorMode::DARK);
+        
+        Json2::Value paramObj2 = JsonReader::CreateObject();
+        int width = 666;
+        int height = 333;
+        int density = 480;
+        paramObj2.Add("width", width);
+        paramObj2.Add("height", height);
+        paramObj2.Add("colorMode", "light");
+        paramObj2.Add("orientation", "");
+        paramObj2.Add("deviceType", "phone");
+        paramObj2.Add("dpi", density);
+        paramObj2.Add("locale", "zh_Hans_CN");
+        JsAppImpl::GetInstance().ParseSystemParams(JsAppImpl::GetInstance().aceRunArgs, paramObj2);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceWidth, width);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceHeight, height);
+        EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.colorMode, OHOS::Ace::ColorMode::LIGHT);
+    }
+
+    TEST_F(JsAppImplTest, GetDeviceTypeNameTest)
+    {
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::WATCH), "watch");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::TV), "tv");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::PHONE), "phone");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::TABLET), "tablet");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::CAR), "car");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::UNKNOWN), "");
+        EXPECT_EQ(JsAppImpl::GetInstance().GetDeviceTypeName(OHOS::Ace::DeviceType::WEARABLE), "");
+    }
+
+    TEST_F(JsAppImplTest, CalculateAvoidAreaByTypeTest)
+    {
+        OHOS::Rosen::SystemBarProperty property;
+        property.enable_ = true;
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR, property);
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR, property);
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::APP_MAIN_WINDOW_BASE, property);
+        property.enable_ = false;
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR, property);
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR, property);
+        JsAppImpl::GetInstance().CalculateAvoidAreaByType(
+            OHOS::Rosen::WindowType::APP_MAIN_WINDOW_BASE, property);
+    }
+
+    TEST_F(JsAppImplTest, InitJsAppTest)
+    {
+        JsAppImpl::GetInstance().isStop = false;
+        std::thread thread1([]() {
+            CommandParser::GetInstance().argsMap.clear();
+            CommandParser::GetInstance().argsMap["-j"] = { "" };
+            CommandParser::GetInstance().argsMap["-s"] = { "" };
+            CommandParser::GetInstance().argsMap["-url"] = { "" };
+            CommandParser::GetInstance().argsMap["-lws"] = { "" };
+            CommandParser::GetInstance().argsMap["-cm"] = { "" };
+            CommandParser::GetInstance().argsMap["-av"] = { "" };
+            CommandParser::GetInstance().argsMap["-sd"] = { "" };
+            CommandParser::GetInstance().argsMap["-cc"] = { "" };
+            CommandParser::GetInstance().argsMap["-d"] = { "" };
+            CommandParser::GetInstance().argsMap["-p"] = { "" };
+            JsAppImpl::GetInstance().InitJsApp();
+            CommandParser::GetInstance().argsMap.clear();
+        });
+        thread1.detach();
+        this_thread::sleep_for(chrono::milliseconds(10));
+        JsAppImpl::GetInstance().isStop = true;
+        this_thread::sleep_for(chrono::milliseconds(10));
+        EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
     }
 }
