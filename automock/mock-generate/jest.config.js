@@ -13,18 +13,13 @@
  * limitations under the License.
  */
 
-import {describe, expect, test} from '@jest/globals';
-import { generateImportEqual } from '../generate/generateImportEqual';
-
-describe('generateImportEqual.ts file test', (): void => {
-  test('Test the generateImportEqual function', (): void => {
-    const importEqualEntity = {
-      importEqualName: 'NetAddress',
-      importEqualTypeKind: 157,
-      importEqualTypeName: 'connection.NetAddress'
-
-    };
-    const result = generateImportEqual(importEqualEntity);
-    expect(result).toBe(`const NetAddress = mockConnection().NetAddress`);
-  });
-});
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  testRegex: './test/.+\\.test\\.ts$',
+  coverageDirectory: './src/test/report',
+  collectCoverage: true,
+  reporters: [
+    'default',
+  ],
+};

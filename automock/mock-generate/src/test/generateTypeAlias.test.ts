@@ -15,13 +15,12 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateTypeAliasDeclaration } from '../generate/generateTypeAlias';
 
 describe('generateTypeAliasDeclaration.ts file test', () => {
-  it('Test the generateTypeAliasDeclaration function', () => {
+  test('Test the generateTypeAliasDeclaration function', () => {
     const filePath = path.join(__dirname, './api/@ohos.ability.ability.d.ts')
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -48,6 +47,6 @@ describe('generateTypeAliasDeclaration.ts file test', () => {
       + 'import { ConnectOptions as _ConnectOptions } from \'./ability/connectOptions\''
       + 'import { StartAbilityParameter as _StartAbilityParameter } from \'./ability/startAbilityParameter\'';
     const result = generateTypeAliasDeclaration(typeAliasEntity, isInner, sourceFile, extraImport, mockApi);
-    expect(result).to.equal('const DataAbilityHelper = _DataAbilityHelper;');
+    expect(result).toBe('const DataAbilityHelper = _DataAbilityHelper;');
   });
 });

@@ -15,8 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generatePropertySignatureDeclaration } from '../generate/generatePropertySignatureDeclaration';
 
@@ -25,7 +24,7 @@ const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
 describe('generatePropertySignatureDeclaration.ts file test', () => {
-  it('Test propertySignature.kind is SyntaxKind.TypeReference', () => {
+  test('Test propertySignature.kind is SyntaxKind.TypeReference', () => {
     const rootName = 'PermissionStateChangeInfo';
     const propertySignature = {
       modifiers: [],
@@ -40,9 +39,9 @@ describe('generatePropertySignatureDeclaration.ts file test', () => {
       + 'export const PermissionRequestResult = new _PermissionRequestResult();'
       + 'export const Context = _Context;';
     const result = generatePropertySignatureDeclaration(rootName, propertySignature, sourceFile, mockApi);
-    expect(result).to.equal('change: PermissionStateChangeType,');
+    expect(result).toBe('change: PermissionStateChangeType,');
   });
-  it('Test propertySignature.kind is SyntaxKind.NumberKeyword', () => {
+  test('Test propertySignature.kind is SyntaxKind.NumberKeyword', () => {
     const rootName = 'PermissionStateChangeInfo';
     const propertySignature = {
       modifiers: [],
@@ -57,6 +56,6 @@ describe('generatePropertySignatureDeclaration.ts file test', () => {
       + 'export const PermissionRequestResult = new _PermissionRequestResult();'
       + 'export const Context = _Context;';
     const result = generatePropertySignatureDeclaration(rootName, propertySignature, sourceFile, mockApi);
-    expect(result).to.equal('tokenID: 0,');
+    expect(result).toBe('tokenID: 0,');
   });
 });

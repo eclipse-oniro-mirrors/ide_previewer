@@ -15,8 +15,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generatePropertyDeclaration } from '../generate/generatePropertyDeclaration';
 
@@ -25,45 +24,48 @@ const code = fs.readFileSync(filePath);
 const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
 
 describe('generatePropertyDeclaration.ts file test', () => {
-  it('Test propertyDeclaration.kind is SyntaxKind.TypeReference', () => {
+  test('Test propertyDeclaration.kind is SyntaxKind.TypeReference', () => {
     const rootName = 'EventInfo';
     const propertyDeclaration = {
       modifiers: [],
       propertyName: 'type',
       propertyTypeName: 'EventType',
       kind: 173,
+      kinds: -1,
       isInitializer: false,
       initializer: '',
     };
-    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile);
-    expect(result).to.equal('this.type = EventType;');
+    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
+    expect(result).toBe('this.type = EventType;');
   });
 
-  it('Test propertyDeclaration.kind is SyntaxKind.StringKeyword', () => {
+  test('Test propertyDeclaration.kind is SyntaxKind.StringKeyword', () => {
     const rootName = 'EventInfo';
     const propertyDeclaration = {
       modifiers: [],
       propertyName: 'bundleName',
       propertyTypeName: 'string',
       kind: 147,
+      kinds: -1,
       isInitializer: false,
       initializer: '',
     };
-    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile);
-    expect(result).to.equal('this.bundleName = \'\'');
+    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
+    expect(result).toBe('this.bundleName = \'\'');
   });
 
-  it('Test propertyDeclaration.kind is SyntaxKind.NumberKeyword', () => {
+  test('Test propertyDeclaration.kind is SyntaxKind.NumberKeyword', () => {
     const rootName = 'EventInfo';
     const propertyDeclaration = {
       modifiers: [],
       propertyName: 'pageId',
       propertyTypeName: 'number',
       kind: 144,
+      kinds: -1,
       isInitializer: false,
       initializer: '',
     };
-    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile);
-    expect(result).to.equal('this.pageId = 0;');
+    const result = generatePropertyDeclaration(rootName, propertyDeclaration, sourceFile, []);
+    expect(result).toBe('this.pageId = 0;');
   });
 });
