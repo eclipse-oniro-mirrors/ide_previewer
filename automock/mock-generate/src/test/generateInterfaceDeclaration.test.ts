@@ -15,13 +15,12 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateInterfaceDeclaration } from '../generate/generateInterfaceDeclaration';
 
 describe('generateInterfaceDeclaration.ts file test', () => {
-  it('Test the generateInterfaceDeclaration function', () => {
+  test('Test the generateInterfaceDeclaration function', () => {
     const filePath = path.join(__dirname, './api/@ohos.abilityAccessCtrl.d.ts')
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -95,6 +94,6 @@ describe('generateInterfaceDeclaration.ts file test', () => {
       importDeclarations,
       extraImport
     );
-    expect(result).to.equal('const AtManager = { \n}\n');
+    expect(result).toBe('const AtManager = { \n}\n');
   });
 });

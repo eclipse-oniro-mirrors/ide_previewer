@@ -15,13 +15,12 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { generateCommonMethod } from '../generate/generateCommonMethod';
 
 describe('generateCommonMethod.ts file test', (): void => {
-  it('Test the generateCommonMethod function', (): void => {
+  test('Test the generateCommonMethod function', (): void => {
     const filePath = path.join(__dirname, './api/@ohos.account.appAccount.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -70,6 +69,6 @@ if (args && typeof args[args.length - 1] === 'function') {
     args[args.length - 1].call(this, '[PC Preview] unknown type');
 }};
 `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

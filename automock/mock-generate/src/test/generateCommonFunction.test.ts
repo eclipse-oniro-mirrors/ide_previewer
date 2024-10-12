@@ -15,14 +15,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { createSourceFile, ScriptTarget } from 'typescript';
 import { getSourceFileAssembly } from '../declaration-node/sourceFileElementsAssemply';
 import { generateCommonFunction } from '../generate/generateCommonFunction';
 
 describe('generateCommonFunction.ts file test', (): void => {
-  it('Test the generateCommonFunction function', (): void => {
+  test('Test the generateCommonFunction function', (): void => {
     const filePath = path.join(__dirname, './api/global.d.ts');
     const code = fs.readFileSync(filePath);
     const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
@@ -36,6 +35,6 @@ return 0;};
         global.setInterval = setInterval;
       }
     `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

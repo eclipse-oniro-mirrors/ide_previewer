@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateEnumDeclaration } from '../generate/generateEnumDeclaration';
 
 describe('generateEnumDeclaration.ts file test', (): void => {
-  it('Test the generateEnumDeclaration function', (): void => {
+  test('Test the generateEnumDeclaration function', (): void => {
     const enumDeclaration = {
       enumName: 'ErrorCode',
       exportModifiers: [92],
@@ -53,6 +52,6 @@ INVALID_PARAMETER: -1,
 NO_ERROR: 0,
 }
 `;
-    expect(result).to.equal(expectedResult);
+    expect(result).toBe(expectedResult);
   });
 });

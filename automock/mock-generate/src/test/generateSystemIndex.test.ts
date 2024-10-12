@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import {describe, expect, test} from '@jest/globals';
 import { generateSystemIndex } from '../generate/generateSystemIndex';
 
 describe('generateSystemIndex.ts file test', () => {
-  it('Test the generateSystemIndex function', () => {
+  test('Test the generateSystemIndex function', () => {
     const data = `import regeneratorRuntime from 'babel-runtime/regenerator'
 import {mockRequireNapiFun} from './napi/index';
 ;(function mockSystemPlugin() {
@@ -28,6 +27,6 @@ import {mockRequireNapiFun} from './napi/index';
 mockRequireNapiFun();
 }());`;
     const result = generateSystemIndex();
-    expect(result).to.equal(data);
+    expect(result).toBe(data);
   });
 });
