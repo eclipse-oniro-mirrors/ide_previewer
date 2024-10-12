@@ -488,7 +488,7 @@ int StageContext::GetHspActualName(const std::string& input, std::string& ret)
                 ret = actualName;
             }
             num++;
-            WLOG("find hsp actual name:%s", actualName.c_str());
+            WLOG("find hsp actual name:%s", pair.first.c_str());
         }
     }
     return num;
