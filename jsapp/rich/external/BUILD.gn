@@ -28,12 +28,9 @@ ohos_shared_library("ide_extension") {
     include_dirs = [
       ".",
       "../../../util/",
-      "//third_party/zlib/",
     ]
-    deps = [
-      "../../../util:ide_util",
-      "//third_party/zlib:shared_libz",
-    ]
+    deps = [ "../../../util:ide_util" ]
+    external_deps = [ "zlib:shared_libz" ]
   }
   subsystem_name = "ide"
   part_name = "previewer"
