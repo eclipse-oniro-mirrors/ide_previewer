@@ -40,7 +40,6 @@ void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t curre
 void JsApp::SetAvoidArea(const AvoidAreas& areas) {}
 void JsApp::Stop() {}
 void JsApp::InitJsApp() {}
-
 const AvoidAreas JsApp::GetCurrentAvoidArea() const
 {
     AvoidAreas areas;
