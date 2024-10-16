@@ -79,7 +79,8 @@ public:
     void SetConfigChanges(const std::string value) override;
     bool MemoryRefresh(const std::string memoryRefreshArgs) const override;
     void LoadDocument(const std::string, const std::string, const Json2::Value&) override;
-    void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) override;
+    void FoldStatusChanged(const std::string commandFoldStatus,
+        int32_t currentWidth, int32_t currentHeight) override;
     void SetAvoidArea(const AvoidAreas& areas) override;
     void UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::Rect& value);
     OHOS::Rosen::Window* GetWindow() const;
