@@ -913,7 +913,7 @@ void JsAppImpl::SetPkgContextInfo()
         aceRunArgs.packageNameList);
 }
 
-void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height)
+void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t currentWidth, int32_t currentHeight)
 {
     std::string reason = "resize";
     ILOG("FoldStatusChanged commandFoldStatus:%s", commandFoldStatus.c_str());
@@ -926,7 +926,7 @@ void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t w
         return; // unknown status do nothing
     }
     // change resolution
-    ResolutionParam param(width, height, width, height);
+    ResolutionParam param(currentWidth, currentHeight, currentWidth, currentHeight);
     ResolutionChanged(param, atoi(screenDensity.c_str()), reason);
 }
 
