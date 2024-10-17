@@ -95,10 +95,10 @@ std::string JsAppImpl::GetDefaultJSONTree()
     return "";
 }
 
-void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height)
+void JsAppImpl::FoldStatusChanged(const std::string commandFoldStatus, int32_t currentWidth, int32_t currentHeight)
 {
-    this->width = width;
-    this->height = height;
+    this->width = currentWidth;
+    this->height = currentHeight;
 }
 
 void JsAppImpl::Start()
