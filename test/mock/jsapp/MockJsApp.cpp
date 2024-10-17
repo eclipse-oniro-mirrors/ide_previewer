@@ -70,7 +70,7 @@ bool JsApp::MemoryRefresh(const std::string) const {
 void JsApp::LoadDocument(const std::string, const std::string, const Json2::Value&) {
     //Only for mock test, no specific implementation
 }
-void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height) {
+void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t currentWidth, int32_t currentHeight) {
     //Only for mock test, no specific implementation
 }
 void JsApp::SetAvoidArea(const AvoidAreas& areas) {

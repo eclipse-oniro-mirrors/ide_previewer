@@ -132,7 +132,8 @@ public:
     virtual void SetConfigChanges(const std::string value);
     virtual bool MemoryRefresh(const std::string) const;
     virtual void LoadDocument(const std::string, const std::string, const Json2::Value&);
-    virtual void FoldStatusChanged(const std::string commandFoldStatus, int32_t width, int32_t height);
+    virtual void FoldStatusChanged(const std::string commandFoldStatus,
+        int32_t currentWidth, int32_t currentHeight);
     virtual void SetAvoidArea(const AvoidAreas& areas);
     virtual const AvoidAreas GetCurrentAvoidArea() const;
     virtual void InitJsApp();
