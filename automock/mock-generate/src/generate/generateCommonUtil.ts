@@ -765,7 +765,7 @@ export function getReturnData(
   } else if (importType === 'isImportMock') {
     returnData = `mock${firstLetterWord(returnPromiseParams)}()`;
   } else if (importType === 'isImport') {
-    returnData = returnPromiseParams;
+    returnData = handleReturnDataIsClass(returnPromiseParams);
   } else if (importType === 'noImport') {
     returnData = handleReturnDataNoImportType(returnPromiseParams, returnType);
   } else {
@@ -784,6 +784,18 @@ export function getReturnData(
   } else {
     return `return ${data}`;
   }
+}
+
+/**
+ * Handle the case where the return value is class.
+ * @param returnPromiseParams  return data
+ * @returns string
+ */
+function handleReturnDataIsClass(returnPromiseParams: string): string {
+  if (getClassNameSet().has(returnPromiseParams) && !specialType.includes(returnPromiseParams)) {
+    return `new ${returnPromiseParams}()`;
+  }
+  return returnPromiseParams;
 }
 
 /**
