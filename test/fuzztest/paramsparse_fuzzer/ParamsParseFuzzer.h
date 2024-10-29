@@ -75,7 +75,8 @@ namespace fuzztest {
             Param("-foldable", { "true" }),
             Param("-foldStatus", { "unfold" }),
             Param("-fr", { "1080", "2340" }),
-            Param("-ljPath", { g_currFile })
+            Param("-ljPath", { g_currFile }),
+            Param("-sid", { "abcdef1111" })
         };
     };
 
