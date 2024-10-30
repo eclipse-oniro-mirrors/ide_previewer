@@ -115,6 +115,7 @@ namespace {
         "-foldStatus half_fold "
         "-hs 100000 "
         "-hf true "
+        "-sid abcDef123"
         "-h";
 
     TEST_F(CommandParserTest, IsSetTest)
@@ -1173,5 +1174,27 @@ namespace {
         argv[3] = "-v";
         ret = CommandParser::GetInstance().ParseArgs(argc, argv);
         EXPECT_EQ(ret, 0); // 0 is expect return value
+    }
+
+    TEST_F(CommandParserTest, IsCommandValidTest_SidErr)
+    {
+        CommandParser::GetInstance().argsMap.clear();
+        auto it = std::find(validParamVec.begin(), validParamVec.end(), "-sid");
+        if (it != validParamVec.end()) {
+            *it = "aaasid";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *it = "-sid";
+            *std::next(it) = "abcdefg123";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_FALSE(CommandParser::GetInstance().IsCommandValid());
+        if (it != validParamVec.end() && std::next(it) != validParamVec.end()) {
+            *std::next(it) = "abcDef123";
+        }
+        EXPECT_TRUE(CommandParser::GetInstance().ProcessCommand(validParamVec));
+        EXPECT_TRUE(CommandParser::GetInstance().IsCommandValid());
     }
 }

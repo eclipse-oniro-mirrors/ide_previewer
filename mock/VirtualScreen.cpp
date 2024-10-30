@@ -125,6 +125,7 @@ void VirtualScreen::InitPipe(std::string pipeName, std::string pipePort)
     webSocketPort = pipePort;
     isWebSocketConfiged = true;
     WebSocketServer::GetInstance().SetServerPort(atoi(pipePort.c_str()));
+    WebSocketServer::GetInstance().SetSid(CommandParser::GetInstance().GetSid());
     WebSocketServer::GetInstance().Run();
     isWebSocketListening = true;
 }

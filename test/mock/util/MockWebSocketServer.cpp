@@ -38,6 +38,11 @@ void WebSocketServer::SetServerPort(int port)
     serverPort = port;
 }
 
+void WebSocketServer::SetSid(const std::string curSid)
+{
+    sid = curSid;
+}
+
 int WebSocketServer::ProtocolCallback(struct lws* wsi,
                                       enum lws_callback_reasons reason,
                                       void* user,
