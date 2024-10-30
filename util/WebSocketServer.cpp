@@ -45,13 +45,48 @@ void WebSocketServer::SetServerPort(int port)
     serverPort = port;
 }
 
-int WebSocketServer::ProtocolCallback(struct lws* wsi,
-                                      enum lws_callback_reasons reason,
-                                      void* user,
-                                      void* in,
-                                      size_t len)
+void WebSocketServer::SetSid(const std::string curSid)
+{
+    sid = curSid;
+}
+
+bool WebSocketServer::CheckSid(struct lws* wsi)
+{
+    if (WebSocketServer::GetInstance().sid.empty()) {
+        return true;
+    }
+    std::string uri(WebSocketServer::sidMaxLength, '\0');
+    int uriLength = lws_hdr_copy(wsi, &uri[0], uri.size(), WSI_TOKEN_GET_URI);
+    if (uriLength <= 0) {
+        return false;
+    }
+    uri.resize(uriLength);
+    if (uri.empty()) {
+        return false;
+    }
+    const std::string::size_type start = uri.find_last_of('/');
+    if (start == std::string::npos) {
+        return false;
+    }
+    std::string curSid = uri.substr(start + 1); // add 1 to next index
+    if (curSid == WebSocketServer::GetInstance().sid) {
+        ILOG("Websocket path validation passed.");
+        return true;
+    } else {
+        ELOG("Websocket path validation failed.");
+        return false;
+    }
+}
+
+int WebSocketServer::ProtocolCallback(struct lws* wsi, enum lws_callback_reasons reason,
+    void* user, void* in, size_t len)
 {
     switch (reason) {
+        case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+            if (!CheckSid(wsi)) {
+                return 1; // 1 is connection denied
+            }
+            break;
         case LWS_CALLBACK_PROTOCOL_INIT:
             ILOG("Engine Websocket protocol init");
             break;
