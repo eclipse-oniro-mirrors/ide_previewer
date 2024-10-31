@@ -19,6 +19,7 @@
 #include <thread>
 #include <csignal>
 #include <mutex>
+#include <string>
 #include "libwebsockets.h"
 
 class WebSocketServer {
@@ -27,6 +28,7 @@ public:
     WebSocketServer(const WebSocketServer&) = delete;
     static WebSocketServer& GetInstance();
     void SetServerPort(int port);
+    void SetSid(const std::string curSid);
     static int ProtocolCallback(struct lws* wsi, enum lws_callback_reasons reason, void* user, void* in, size_t len);
     void StartWebsocketListening();
     void Run();
@@ -40,6 +42,7 @@ public:
 private:
     WebSocketServer();
     virtual ~WebSocketServer();
+    static bool CheckSid(struct lws* wsi);
     static void SignalHandler(int sig);
     std::unique_ptr<std::thread> serverThread;
     int serverPort;
@@ -51,6 +54,8 @@ private:
     static const int MAX_PAYLOAD_SIZE = 6400000;
     static const int WEBSOCKET_SERVER_TIMEOUT = 1000;
     struct lws_protocols protocols[2];
+    std::string sid;
+    static constexpr int sidMaxLength = 256;
 };
 
 #endif // WEBSOCKETSERVER_H

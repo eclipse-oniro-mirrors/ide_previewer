@@ -46,7 +46,8 @@ CommandParser::CommandParser()
       containerSdkPath(""),
       isComponentMode(false),
       abilityPath(""),
-      staticCard(false)
+      staticCard(false),
+      sid("")
 {
     Register("-j", 1, "Launch the js app in <directory>.");
     Register("-n", 1, "Set the js app name show on <window title>.");
@@ -88,6 +89,7 @@ CommandParser::CommandParser()
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
     Register("-ljPath", 1, "Set loader.json path for Previewer");
+    Register("-sid", 1, "Set sid for websocket");
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -129,6 +131,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
     partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
     partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
+    partRet = partRet && IsSidValid();
     if (partRet) {
         return true;
     }
@@ -1036,4 +1039,25 @@ void CommandParser::GetFoldInfo(FoldInfo& info) const
     info.foldStatus = GetFoldStatus();
     info.foldResolutionWidth = GetFoldResolutionWidth();
     info.foldResolutionHeight = GetFoldResolutionHeight();
+}
+
+std::string CommandParser::GetSid() const
+{
+    return sid;
+}
+
+bool CommandParser::IsSidValid()
+{
+    if (!IsSet("sid")) {
+        return true;
+    }
+    std::string value = Value("sid");
+    std::regex reg(regex4Sid);
+    if (!std::regex_match(value.cbegin(), value.cend(), reg)) {
+        errorInfo = "Launch -sid parameter is not match regex.";
+        ELOG("Launch -sid parameter abnormal!");
+        return false;
+    }
+    sid = value;
+    return true;
 }

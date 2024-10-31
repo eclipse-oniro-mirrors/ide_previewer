@@ -95,6 +95,7 @@ public:
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info) const;
     void GetFoldInfo(FoldInfo& info) const;
+    std::string GetSid() const;
 
 private:
     CommandParser();
@@ -146,6 +147,7 @@ private:
     std::string containerSdkPath;
     std::string regex4Num = "^(0|[1-9][0-9]*)(\\.[0-9]+)?$";
     std::string regex4Str = "^(?:[a-zA-Z0-9-_./\\s]+)$";
+    std::string regex4Sid = "^[a-fA-F0-9]+$";
     bool isComponentMode;
     std::string abilityPath;
     std::string abilityName;
@@ -156,6 +158,7 @@ private:
     int32_t foldResolutionWidth;
     int32_t foldResolutionHeight;
     std::string loaderJsonPath;
+    std::string sid;
 
     bool IsDebugPortValid();
     bool IsAppPathValid();
@@ -194,6 +197,7 @@ private:
     bool IsFoldStatusValid();
     bool IsFoldResolutionValid();
     bool IsLoaderJsonPathValid();
+    bool IsSidValid();
     std::string HelpText();
     void ProcessingCommand(const std::vector<std::string>& strs);
 };
