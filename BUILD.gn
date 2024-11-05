@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/arkui/ace_engine/adapter/preview/build/component_test.gni")
 import("./gn/config.gni")
 
 template("previewer_executable") {
