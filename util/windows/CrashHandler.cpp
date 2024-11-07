@@ -14,8 +14,9 @@
  */
 
 #include "CrashHandler.h"
-
+#include <iomanip>
 #include <cstdlib>
+#include <vector>
 #include <dbghelp.h>
 #include <iostream>
 #include <sstream>
@@ -25,24 +26,42 @@
 #include "PreviewerEngineLog.h"
 #include "PublicMethods.h"
 
-static const int MAX_ADDRESS_LENGTH = 32;
+static const int MAX_NAME_LENGTH = 512;
+static const int MAX_ADDRESS_LENGTH = 16;
 
-struct CrashInfo {
-    CHAR ErrorCode[MAX_ADDRESS_LENGTH];
-    CHAR Address[MAX_ADDRESS_LENGTH];
-    CHAR Flags[MAX_ADDRESS_LENGTH];
-};
+void GetBacktrace(HANDLE hProcess, STACKFRAME64 &sf, SYMBOL_INFO *symbol)
+{
+    // get addr info
+    if (SymFromAddr(hProcess, sf.AddrPC.Offset, 0, symbol)) {
+        // get module info
+        IMAGEHLP_MODULE64 modInfo;
+        modInfo.SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
+        if (!SymGetModuleInfo64(hProcess, sf.AddrPC.Offset, &modInfo)) {
+            std::cout << "Unable to retrieve module information." << std::endl;
+        }
+        // print module name，function name and dll path
+        std::cout << "0x" << std::setw(MAX_ADDRESS_LENGTH) << std::setfill('0') << std::hex << sf.AddrPC.Offset
+            << std::dec << " in " << modInfo.ModuleName << "!_" << symbol->Name << " ()" << std::endl;
+        IMAGEHLP_LINE64 line;
+        line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+        DWORD displacement = 0;
+        // get line of source code
+        if (SymGetLineFromAddr64(hProcess, sf.AddrPC.Offset, &displacement, &line)) {
+            std::cout << "Source: " << line.FileName << " Line: " << line.LineNumber << std::endl;
+        }
+    } else {
+        std::cout << "Unable to retrieve symbol for address 0x"
+            << std::hex << sf.AddrPC.Offset << std::dec << std::endl;
+    }
+}
 
 void CrashHandler::RecordCallStack(const CONTEXT *context)
 {
     HANDLE hProcess = GetCurrentProcess();
     SymInitialize(hProcess, NULL, TRUE);
-
     CONTEXT crashContext = *context;
-
     STACKFRAME64 sf = {};
     DWORD imageType = IMAGE_FILE_MACHINE_I386;
-
 #ifdef _M_X64
     imageType = IMAGE_FILE_MACHINE_AMD64;
     sf.AddrPC.Offset = crashContext.Rip;
@@ -52,23 +71,17 @@ void CrashHandler::RecordCallStack(const CONTEXT *context)
     sf.AddrStack.Offset = crashContext.Rsp;
     sf.AddrStack.Mode = AddrModeFlat;
 #endif
-
     HANDLE hThread = GetCurrentThread();
-
-    while (true) {
-        if (!StackWalk64(imageType, hProcess, hThread, &sf, &crashContext, NULL,
-                         SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
+    std::vector<BYTE> symbolBuffer(sizeof(SYMBOL_INFO) + MAX_NAME_LENGTH * sizeof(TCHAR));
+    SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO*>(symbolBuffer.data());
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol->MaxNameLen = MAX_NAME_LENGTH;
+    while (StackWalk64(imageType, hProcess, hThread, &sf, &crashContext,
+                       NULL, SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
+        if (sf.AddrPC.Offset == 0) {
             break;
         }
-        if (sf.AddrFrame.Offset == 0) {
-            break;
-        }
-
-        int8_t stackIntLog[PublicMethods::MAX_ITOA_BIT] = {0};
-        unsigned int itoaLength = PublicMethods::Ulltoa(sf.AddrPC.Offset, stackIntLog);
-        int8_t offsetLog[] = "\n[JsEngine Crash]sf.AddrPC.Offset : 0x";
-        write(STDERR_FILENO, offsetLog, sizeof(offsetLog));
-        write(STDERR_FILENO, stackIntLog, itoaLength);
+        GetBacktrace(hProcess, sf, symbol);
     }
     SymCleanup(hProcess);
 }
