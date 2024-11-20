@@ -69,7 +69,8 @@
               "header_files": [
                 "EventRunner.h",
                 "EventHandler.h",
-                "StageContext.h"
+                "StageContext.h",
+                "JsMockUtil.h"
               ],
               "header_base": "//ide/tools/previewer/jsapp/rich/external"
             }
