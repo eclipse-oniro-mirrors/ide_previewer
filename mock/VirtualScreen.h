@@ -73,7 +73,7 @@ public:
     void SetLoadDocFlag(VirtualScreen::LoadDocType flag);
     VirtualScreen::LoadDocType GetLoadDocFlag() const;
 
-    enum class ProtocolVersion { LOADNORMAL = 2, LOADDOC = 3 };
+    enum class ProtocolVersion { LOADNORMAL = 2, LOADDOC = 3, LOADDOCRGBA = 4 };
 
     enum class JpgPixCountLevel { LOWCOUNT = 100000, MIDDLECOUNT = 300000, HIGHCOUNT = 500000};
     enum class JpgQualityLevel { HIGHLEVEL = 100, MIDDLELEVEL = 90, LOWLEVEL = 85, DEFAULTLEVEL = 75};

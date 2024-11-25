@@ -56,6 +56,9 @@ private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();
     void Send(const void* data, int32_t retWidth, int32_t retHeight);
+    void SendRgba(const void* data, size_t length);
+    void BackupAndDeleteBuffer(const unsigned long imageBufferSize);
+    bool JudgeBeforeSend(const void* data);
     bool SendPixmap(const void* data, size_t length, int32_t retWidth, int32_t retHeight);
     void FreeJpgMemory();
     template<class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
