@@ -1061,7 +1061,7 @@ void JsAppImpl::InitJsApp()
     }
 #ifdef COMPONENT_TEST_ENABLED
     if (parser.IsSet("componentTest")) {
-        JsAppImpl::GetInstance().SetComponentTestModeConfig(parser.Value("componentTest"));
+        SetComponentTestModeConfig(parser.Value("componentTest"));
     }
 #endif // COMPONENT_TEST_ENABLED
     VirtualScreenImpl::GetInstance().InitFoldParams();

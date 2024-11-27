@@ -36,3 +36,4 @@ os_include_dirs = [
   "$ace_root/interfaces/inner_api/ace",
   "//foundation/graphic/graphic_2d/rosen/modules/platform/utils",
 ]
+enable_component_test = true
