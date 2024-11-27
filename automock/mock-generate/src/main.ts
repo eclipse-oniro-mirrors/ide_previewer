@@ -24,7 +24,8 @@ import {
   specialFiles,
   generateKitMap,
   generateDependJsonFile,
-  generateMyComponent
+  generateMyComponent,
+  getAllEnumDeclaration
 } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
 import { generateEntry } from './generate/generateEntry';
@@ -164,6 +165,7 @@ function main(apiInputPath): void {
       const code = fs.readFileSync(value);
       const sourceFile = createSourceFile(value, code.toString(), ScriptTarget.Latest);
       getAllClassDeclaration(sourceFile);
+      getAllEnumDeclaration(sourceFile);
     }
   });
 

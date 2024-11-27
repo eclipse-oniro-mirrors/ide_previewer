@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
+import path from 'path';
 import type { SourceFile } from 'typescript';
 import { SyntaxKind } from 'typescript';
-import { firstCharacterToUppercase, getClassNameSet, specialType } from '../common/commonUtils';
-import type { ReturnTypeEntity } from '../common/commonUtils';
+import { allEnumMap, fileImportDeclarations, firstCharacterToUppercase, getClassNameSet, specialType } from '../common/commonUtils';
+import type { EunmType, ReturnTypeEntity } from '../common/commonUtils';
 import { getImportDeclarationArray } from '../declaration-node/importAndExportDeclaration';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 import type { MethodEntity } from '../declaration-node/methodDeclaration';
@@ -100,7 +101,7 @@ export function getReturnStatement(returnType: ReturnTypeEntity, sourceFile: Sou
   if (returnType.returnKind === SyntaxKind.TypeReference) {
     return handleTypeReferenceReturnBody(returnType, sourceFile);
   } else if (returnType.returnKind === SyntaxKind.UnionType) {
-    return handleUnionTypeReturnBody(returnType);
+    return handleUnionTypeReturnBody(returnType, sourceFile);
   }
   let returnName = returnType.returnKindName.trim();
   let temp = true;
@@ -161,10 +162,10 @@ function generateReturnType(returnType: ReturnTypeEntity, sourceFile: SourceFile
       : `return new ${returnType.returnKindName}()`;
   } else if (getClassNameSet().has(returnType.returnKindName) && specialType.includes(returnType.returnKindName)) {
     return `return ${returnType.returnKindName}`;
-  } else if (propertyTypeWhiteList(returnType.returnKindName) === returnType.returnKindName) {
+  } else if (propertyTypeWhiteList(returnType.returnKindName, sourceFile) === returnType.returnKindName) {
     return `return ${getTheRealReferenceFromImport(sourceFile, returnType.returnKindName)}`;
   } else {
-    return `return ${propertyTypeWhiteList(returnType.returnKindName)}`;
+    return `return ${propertyTypeWhiteList(returnType.returnKindName, sourceFile)}`;
   }
 }
 
@@ -216,13 +217,20 @@ function substepReturnBody(returnType: ReturnTypeEntity): string {
  * @param returnType
  * @returns
  */
-function handleUnionTypeReturnBody(returnType: ReturnTypeEntity): string {
+function handleUnionTypeReturnBody(returnType: ReturnTypeEntity, sourceFile: SourceFile): string {
   const returnNames = returnType.returnKindName.split('|');
   let returnName = returnNames[0];
   for (let i = 0; i < returnNames.length; i++) {
     if (!returnNames[i].includes('[]') && !returnNames[i].includes('<')) {
       returnName = returnNames[i];
       break;
+    }
+  }
+  if (allEnumMap.has(returnName.trim())) {
+    let propertySignatureBody = '';
+    propertySignatureBody = getEnumReturnValue(propertySignatureBody, returnName.trim(), sourceFile);
+    if (propertySignatureBody !== '') {
+      return `${propertySignatureBody}`;
     }
   }
   if (returnName.trim() === 'void') {
@@ -240,8 +248,15 @@ function handleUnionTypeReturnBody(returnType: ReturnTypeEntity): string {
  * @param propertyTypeName
  * @returns
  */
-export function propertyTypeWhiteList(propertyTypeName: string): boolean | number | string {
+export function propertyTypeWhiteList(propertyTypeName: string, sourceFile: SourceFile): boolean | number | string {
   const whiteList = ['GLboolean', 'GLuint', 'GLenum', 'GLint', 'NotificationFlags'];
+  if (allEnumMap.has(propertyTypeName)) {
+    let propertySignatureBody = '';
+    propertySignatureBody = getEnumReturnValue(propertySignatureBody, propertyTypeName, sourceFile);
+    if (propertySignatureBody !== '') {
+      return `${propertySignatureBody}`;
+    }
+  }
   if (whiteList.includes(propertyTypeName)) {
     if (propertyTypeName === 'NotificationFlags' || propertyTypeName === 'GLenum') {
       return `'[PC Preview] unknown ${propertyTypeName}'`;
@@ -876,6 +891,67 @@ export function hasExportDefaultKeyword(mockName: string, sourceFile: SourceFile
     return false;
   }
   return true;
+}
+
+/**
+ *
+ * @param propertySignatureBody string
+ * @param propertyTypeName string
+ * @param sourceFile SourceFile
+ * @returns string
+ */
+export function getEnumReturnValue(
+  propertySignatureBody: string,
+  propertyTypeName: string,
+  sourceFile: SourceFile
+): string {
+  let enumValue: EunmType[] = [];
+  if (allEnumMap.has(propertyTypeName)) {
+    enumValue = allEnumMap.get(propertyTypeName);
+    for (let i = 0; i < enumValue.length; i++) {
+      if (sourceFile.fileName.includes(enumValue[i].eunmPath)) {
+        propertySignatureBody = propertyTypeName + '.' + enumValue[i].name;
+        break;
+      } else {
+        propertySignatureBody = getImportEunmValue(propertyTypeName, enumValue);
+      }
+    }
+  }
+  return propertySignatureBody;
+}
+
+/**
+ *
+ * @param sourceFileEntity SourceFileEntity
+ * @param propertyTypeName string
+ * @param enumValue EunmType[]
+ * @returns string
+ */
+function getImportEunmValue(
+  propertyTypeName: string,
+  enumValue: EunmType[]
+): string {
+  let importElements: string[] = [];
+  let propertySignatureBody = '';
+  for (let i = 0; i < fileImportDeclarations.length; i++) {
+    importElements = fileImportDeclarations[i].importElements.replace('{', '').replace('}', '').split(',');
+    importElements = importElements.map((item) => item.trim());
+    let importPath = fileImportDeclarations[i].importPath;
+    if (importPath.includes('/')) {
+      importPath = path.basename(importPath).replace(/'/g, '');
+    } else {
+      importPath = importPath.replace(/'/g, '');
+    }
+    if (importElements.includes(propertyTypeName)) {
+      enumValue.forEach((value) => {
+        const enumPath = value.eunmPath.slice(0, value.eunmPath.lastIndexOf('.d.'));
+        if (enumPath === importPath) {
+          propertySignatureBody = propertyTypeName + '.' + value.name;
+        }
+      });
+    }
+  }
+  return propertySignatureBody;
 }
 
 export const overloadedFunctionArr = ['on', 'off'];

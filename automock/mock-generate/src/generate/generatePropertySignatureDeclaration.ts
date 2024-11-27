@@ -22,8 +22,10 @@ import {
   getTheRealReferenceFromImport,
   getWarnConsole,
   propertyTypeWhiteList,
-  paramsTypeStart
+  paramsTypeStart,
+  getEnumReturnValue
 } from './generateCommonUtil';
+import { allEnumMap } from '../common/commonUtils';
 
 /**
  * generate interface signature property
@@ -83,6 +85,12 @@ function generatePropertySignatureForTypeReference(
   sourceFile: SourceFile
 ): string {
   let propertySignatureBody = '';
+  if (allEnumMap.has(propertySignature.propertyTypeName)) {
+    const resultValue = getEnumReturnValue(propertySignatureBody, propertySignature.propertyTypeName, sourceFile);
+    if (resultValue !== '') {
+      return `${propertySignature.propertyName}: ${resultValue},`;
+    }
+  }
   if (propertySignature.propertyTypeName.startsWith('Array')) {
     propertySignatureBody = `${propertySignature.propertyName}: [],`;
   } else if (propertySignature.propertyTypeName.startsWith('Map')) {
@@ -100,10 +108,10 @@ function generatePropertySignatureForTypeReference(
     if (propertySignature.propertyTypeName.includes('<')) {
       propertySignatureBody = handlepropertyTypeNameBody(propertySignature, sourceFile);
     } else {
-      if (propertyTypeWhiteList(propertySignature.propertyTypeName) === propertySignature.propertyTypeName) {
+      if (propertyTypeWhiteList(propertySignature.propertyTypeName, sourceFile) === propertySignature.propertyTypeName) {
         propertySignatureBody = `${propertySignature.propertyName}: ${getTheRealReferenceFromImport(sourceFile, propertySignature.propertyTypeName)},`;
       } else {
-        propertySignatureBody = `${propertySignature.propertyName}: ${propertyTypeWhiteList(propertySignature.propertyTypeName)},`;
+        propertySignatureBody = `${propertySignature.propertyName}: ${propertyTypeWhiteList(propertySignature.propertyTypeName, sourceFile)},`;
       }
     }
   }
@@ -137,14 +145,17 @@ function generatePropertySignatureForUnionType(
     propertySignatureBody = `${propertySignature.propertyName}: new ${unionFirstElement}(),`;
   } else {
     let element = unionFirstElement;
+    const returnElement = propertyTypeWhiteList(unionFirstElement, sourceFile);
     if (element === 'HTMLCanvasElement') {
       element = `'[PC Preview] unknown ${propertySignature.propertyName}'`;
     } else if (element === 'WebGLActiveInfo') {
       element = '{size: \'[PC Preview] unknown GLint\', type: 0, name: \'[PC Preview] unknown name\'}';
     } else if (element.startsWith('Array')) {
       element = '[]';
-    } else if (propertyTypeWhiteList(unionFirstElement) === unionFirstElement) {
+    } else if (returnElement === unionFirstElement) {
       element = getTheRealReferenceFromImport(sourceFile, unionFirstElement);
+    } else if (returnElement.toString().includes(`${unionFirstElement}.`)) {
+      element = returnElement.toString();
     }
     propertySignatureBody = `${propertySignature.propertyName}: ${element},`;
   }

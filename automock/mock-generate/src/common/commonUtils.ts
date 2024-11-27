@@ -30,6 +30,7 @@ import type {
 import {
   isClassDeclaration,
   isComputedPropertyName,
+  isEnumDeclaration,
   isIdentifier,
   isModuleBlock,
   isModuleDeclaration,
@@ -39,11 +40,18 @@ import fs from 'fs';
 import ts from 'typescript';
 import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
 import { collectAllKitFiles } from './kitUtils';
+import { getEnumDeclaration } from '../declaration-node/enumDeclaration';
 
+export interface EunmType {
+  name: string,
+  eunmPath: string
+}
 const paramIndex = 2;
 const allLegalImports = new Set<string>();
 const fileNameList = new Set<string>();
 const allClassSet = new Set<string>();
+export const fileImportDeclarations:ImportElementEntity[] = [];
+export let allEnumMap = new Map<string, EunmType[]>();
 
 export const dtsFileList: Array<string> = [];
 
@@ -101,6 +109,14 @@ export function getClassNameSet(): Set<string> {
 }
 
 /**
+ * get all class name set
+ * @returns
+ */
+export function getEnumNameSet(): Map<string, EunmType[]> {
+  return allEnumMap;
+}
+
+/**
  * get all class declaration
  * @param sourceFile
  * @returns
@@ -118,6 +134,75 @@ export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
     }
   });
   return allClassSet;
+}
+
+/**
+ * get all enum declaration
+ * @param sourceFile
+ * @returns
+ */
+export function getAllEnumDeclaration(sourceFile: SourceFile): Map<string, EunmType[]> {
+  sourceFile.forEachChild(node => {
+    if (isEnumDeclaration(node)) {
+      if (node.name !== undefined) {
+        const eunmPath = path.basename(sourceFile.fileName);
+        const enumDeclaration = getEnumDeclaration(node, sourceFile);
+        const eunmValue: EunmType = {
+          name: enumDeclaration.enumMembers[0].enumValueName,
+          eunmPath: eunmPath
+        };
+        allEnumMap = setEunmValueMap(node.name.escapedText.toString(), eunmValue);
+      }
+    } else if (isModuleDeclaration(node)) {
+      const moduleDeclaration = node as ModuleDeclaration;
+      const moduleBody = moduleDeclaration.body;
+      findModuleEunm(moduleBody, sourceFile);
+    }
+  });
+  return allEnumMap;
+}
+
+/**
+ * find enum in the module
+ * @param item
+ * @param sourceFile
+ * @returns
+ */
+function findModuleEunm(item: ts.ModuleBody, sourceFile: SourceFile): void {
+  if (item !== undefined && isModuleBlock(item)) {
+    item.statements.forEach(node => {
+      if (isEnumDeclaration(node) && node.name !== undefined) {
+        const enumDeclaration = getEnumDeclaration(node, sourceFile);
+        const eunmPath = path.basename(sourceFile.fileName);
+        const eunmValue: EunmType = {
+          name: enumDeclaration.enumMembers[0].enumValueName,
+          eunmPath: eunmPath
+        };
+        allEnumMap = setEunmValueMap(enumDeclaration.enumName.toString(), eunmValue);
+      }
+    });
+  }
+}
+
+/**
+ * set all enum map
+ * @param enumKey
+ * @param enumValue
+ * @returns
+ */
+function setEunmValueMap(enumKey: string, enumValue: EunmType): Map<string, EunmType[]> {
+  if (!allEnumMap.size) {
+    allEnumMap.set(enumKey, [enumValue]);
+    return allEnumMap;
+  }
+  if (allEnumMap.has(enumKey)) {
+    const value = allEnumMap.get(enumKey);
+    value.push(enumValue);
+    allEnumMap.set(enumKey, value);
+  } else {
+    allEnumMap.set(enumKey, [enumValue]);
+  }
+  return allEnumMap;
 }
 
 /**
