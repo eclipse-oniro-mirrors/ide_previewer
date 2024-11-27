@@ -115,7 +115,7 @@ namespace {
         "-foldStatus half_fold "
         "-hs 100000 "
         "-hf true "
-        "-sid abcDef123"
+        "-sid abcDef123 "
         "-h";
 
     TEST_F(CommandParserTest, IsSetTest)
