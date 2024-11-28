@@ -32,13 +32,13 @@ CppTimerManager& CppTimerManager::GetTimerManager()
 void CppTimerManager::AddCppTimer(CppTimer& timer)
 {
     runningTimers.push_back(&timer);
-    ILOG("CppTimerManager::AddCppTimer %x %x", this, &timer);
+    ILOG("CppTimerManager::AddCppTimer");
 }
 
 void CppTimerManager::RemoveCppTimer(CppTimer& timer)
 {
     runningTimers.remove(&timer);
-    ILOG("CppTimerManager::RemoveCppTimer %x %x", this, &timer);
+    ILOG("CppTimerManager::RemoveCppTimer");
 }
 
 void CppTimerManager::RunTimerTick()
