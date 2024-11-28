@@ -56,7 +56,10 @@ describe('generateCommonUtil.ts file test', (): void => {
 
   test('Test the propertyTypeWhiteList function', (): void => {
     const propertyTypeName = 'formBindingData.FormBindingData';
-    const result = propertyTypeWhiteList(propertyTypeName);
+    const filePath = path.join(__dirname, './api/global.d.ts');
+    const code = fs.readFileSync(filePath);
+    const sourceFile = createSourceFile(filePath, code.toString(), ScriptTarget.Latest);
+    const result = propertyTypeWhiteList(propertyTypeName, sourceFile);
     expect(result).toBe('formBindingData.FormBindingData');
   });
 

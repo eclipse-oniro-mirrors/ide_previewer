@@ -20,6 +20,7 @@ import type { SourceFile } from 'typescript';
 import {
   collectAllLegalImports,
   dtsFileList,
+  fileImportDeclarations,
   firstCharacterToUppercase,
   getAllFileNameList,
   getApiInputPath
@@ -64,6 +65,10 @@ export function generateSourceFileElements(
   const dependsSourceFileList = collectReferenceFiles(sourceFile);
   const heritageClausesArray = getCurrentApiHeritageArray(sourceFileEntity, sourceFile);
   const extraImport = [];
+  fileImportDeclarations.length = 0;
+  sourceFileEntity.importDeclarations.forEach((item) => {
+    fileImportDeclarations.push(item);
+  });
 
   mockApi += importDeclarationsGenerate(sourceFileEntity, sourceFile, fileName, heritageClausesArray, dependsSourceFileList);
   const enumDeclarationsData = enumDeclarationsGenerate(sourceFileEntity, mockFunctionElements);
