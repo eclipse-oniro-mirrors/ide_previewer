@@ -37,7 +37,7 @@ int32_t GetBatteryStatus(bool *charging, double *level)
     }
     *level = SharedData<double>::GetData(SharedDataType::BATTERY_LEVEL);
     *charging = SharedData<uint8_t>::GetData(SharedDataType::BATTERY_STATUS);
-    ILOG("Battery charge state: %d level: %f", charging, level);
+    ILOG("Battery charge state: %d level: %f", *charging, *level);
     return 0;
 }
 
