@@ -14,548 +14,116 @@
  */
 
 import path from 'path';
-import type {
-  CallSignatureDeclaration,
-  ComputedPropertyName,
-  FunctionDeclaration,
-  Identifier,
-  MethodDeclaration,
-  MethodSignature,
-  ModifiersArray,
-  ModuleDeclaration,
-  ParameterDeclaration,
-  PropertyName,
-  SourceFile
-} from 'typescript';
-import {
-  isClassDeclaration,
-  isComputedPropertyName,
-  isEnumDeclaration,
-  isIdentifier,
-  isModuleBlock,
-  isModuleDeclaration,
-  isPrivateIdentifier
-} from 'typescript';
 import fs from 'fs';
-import ts from 'typescript';
-import type { ImportElementEntity } from '../declaration-node/importAndExportDeclaration';
-import { collectAllKitFiles } from './kitUtils';
-import { getEnumDeclaration } from '../declaration-node/enumDeclaration';
-
-export interface EunmType {
-  name: string,
-  eunmPath: string
-}
-const paramIndex = 2;
-const allLegalImports = new Set<string>();
-const fileNameList = new Set<string>();
-const allClassSet = new Set<string>();
-export const fileImportDeclarations:ImportElementEntity[] = [];
-export let allEnumMap = new Map<string, EunmType[]>();
-
-export const dtsFileList: Array<string> = [];
+import { KeyValue, Members, MockBuffer } from '../types';
+import { D_ETS, D_TS, KeyValueTypes, NAPI_DIR_PATH } from './constants';
+import { getProjectDir } from './systemUtils';
 
 /**
- * get all legal imports
- * @returns
+ * 递归创建文件夹
+ * @param dirname 需要创建文件夹的路径
+ * @returns 是否创建成功
  */
-export function getAllLegalImports(): Set<string> {
-  return new Set<string>(allLegalImports);
-}
-
-/**
- * get all legal imports
- * @param element
- */
-export function collectAllLegalImports(element: string): void {
-  allLegalImports.add(element);
-}
-
-/**
- * collect all mock js file path
- * @returns
- */
-export function getAllFileNameList(): Set<string> {
-  return new Set<string>(fileNameList);
-}
-
-/**
- * collect all file name
- */
-export function collectAllFileName(filePath: string): void {
-  const fullFileName = path.basename(filePath);
-  let fileName = '';
-  if (fullFileName.endsWith('d.ts')) {
-    fileName = fullFileName.split('.d.ts')[0];
-  } else if (fullFileName.endsWith('d.ets')) {
-    fileName = fullFileName.split('.d.ets')[0];
-  }
-
-  let outputFileName = '';
-  if (fileName.includes('@')) {
-    outputFileName = fileName.split('@')[1].replace(/\./g, '_');
+export function mkdirsSync(dirname: string): boolean {
+  if (fs.existsSync(dirname)) {
+    return true;
   } else {
-    outputFileName = fileName;
-  }
-  fileNameList.add(outputFileName);
-}
-
-/**
- * get all class name set
- * @returns
- */
-export function getClassNameSet(): Set<string> {
-  return new Set<string>(allClassSet);
-}
-
-/**
- * get all class name set
- * @returns
- */
-export function getEnumNameSet(): Map<string, EunmType[]> {
-  return allEnumMap;
-}
-
-/**
- * get all class declaration
- * @param sourceFile
- * @returns
- */
-export function getAllClassDeclaration(sourceFile: SourceFile): Set<string> {
-  sourceFile.forEachChild(node => {
-    if (isClassDeclaration(node)) {
-      if (node.name !== undefined) {
-        allClassSet.add(node.name.escapedText.toString());
-      }
-    } else if (isModuleDeclaration(node)) {
-      const moduleDeclaration = node as ModuleDeclaration;
-      const moduleBody = moduleDeclaration.body;
-      parseModuleBody(moduleBody);
+    if (mkdirsSync(path.dirname(dirname))) {
+      fs.mkdirSync(dirname);
+      return true;
     }
-  });
-  return allClassSet;
-}
-
-/**
- * get all enum declaration
- * @param sourceFile
- * @returns
- */
-export function getAllEnumDeclaration(sourceFile: SourceFile): Map<string, EunmType[]> {
-  sourceFile.forEachChild(node => {
-    if (isEnumDeclaration(node)) {
-      if (node.name !== undefined) {
-        const eunmPath = path.basename(sourceFile.fileName);
-        const enumDeclaration = getEnumDeclaration(node, sourceFile);
-        const eunmValue: EunmType = {
-          name: enumDeclaration.enumMembers[0].enumValueName,
-          eunmPath: eunmPath
-        };
-        allEnumMap = setEunmValueMap(node.name.escapedText.toString(), eunmValue);
-      }
-    } else if (isModuleDeclaration(node)) {
-      const moduleDeclaration = node as ModuleDeclaration;
-      const moduleBody = moduleDeclaration.body;
-      findModuleEunm(moduleBody, sourceFile);
-    }
-  });
-  return allEnumMap;
-}
-
-/**
- * find enum in the module
- * @param item
- * @param sourceFile
- * @returns
- */
-function findModuleEunm(item: ts.ModuleBody, sourceFile: SourceFile): void {
-  if (item !== undefined && isModuleBlock(item)) {
-    item.statements.forEach(node => {
-      if (isEnumDeclaration(node) && node.name !== undefined) {
-        const enumDeclaration = getEnumDeclaration(node, sourceFile);
-        const eunmPath = path.basename(sourceFile.fileName);
-        const eunmValue: EunmType = {
-          name: enumDeclaration.enumMembers[0].enumValueName,
-          eunmPath: eunmPath
-        };
-        allEnumMap = setEunmValueMap(enumDeclaration.enumName.toString(), eunmValue);
-      }
-    });
   }
+  return false;
 }
 
 /**
- * set all enum map
- * @param enumKey
- * @param enumValue
- * @returns
+ * 生成KeyValue节点
+ * @param key 节点名称
+ * @param type 节点类型
+ * @param parent 该节点的父节点
+ * @param optionMembers 其他初始化参数
+ * @returns KeyValue节点
  */
-function setEunmValueMap(enumKey: string, enumValue: EunmType): Map<string, EunmType[]> {
-  if (!allEnumMap.size) {
-    allEnumMap.set(enumKey, [enumValue]);
-    return allEnumMap;
-  }
-  if (allEnumMap.has(enumKey)) {
-    const value = allEnumMap.get(enumKey);
-    value.push(enumValue);
-    allEnumMap.set(enumKey, value);
+export function generateKeyValue(key: string, type: KeyValueTypes, parent?: KeyValue, optionMembers?: {
+  members: Members,
+  typeParameters: Members,
+  methodParams: Members,
+  constraint: Members,
+  sameName: KeyValue[],
+  dependOnGlobals: Set<KeyValue>
+}): KeyValue {
+  const keyValue = {key, type, parent};
+  if (optionMembers) {
+    keyValue['members'] = optionMembers.members ?? {};
+    keyValue['typeParameters'] = optionMembers.typeParameters ?? {};
+    keyValue['methodParams'] = optionMembers.methodParams ?? {};
+    keyValue['constraint'] = optionMembers.constraint ?? {};
+    keyValue['sameName'] = optionMembers.sameName ?? [];
+    keyValue['dependOnGlobals'] = optionMembers.dependOnGlobals ?? new Set<KeyValue>();
   } else {
-    allEnumMap.set(enumKey, [enumValue]);
+    keyValue['members'] = {};
+    keyValue['typeParameters'] = {};
+    keyValue['methodParams'] = {};
+    keyValue['constraint'] = {};
+    keyValue['sameName'] = [];
+    keyValue['dependOnGlobals'] = new Set<KeyValue>();
   }
-  return allEnumMap;
+  return keyValue as KeyValue;
 }
 
 /**
- * get module class declaration
- * @param moduleBody
- * @returns
- */
-function parseModuleBody(moduleBody: ts.ModuleBody): void {
-  if (moduleBody !== undefined && isModuleBlock(moduleBody)) {
-    moduleBody.statements.forEach(value => {
-      if (isClassDeclaration(value) && value.name !== undefined) {
-        allClassSet.add(firstCharacterToUppercase(value.name?.escapedText.toString()));
-      }
-    });
-  }
-}
-
-/**
- * get keywords
- * @param modifiers
- * @returns
- */
-export function getModifiers(modifiers: ModifiersArray): Array<number> {
-  const modifiersArray: Array<number> = [];
-  modifiers.forEach(value => modifiersArray.push(value.kind));
-  return modifiersArray;
-}
-
-/**
- * get property name
- * @param node property node
- * @param sourceFile
- * @returns
- */
-export function getPropertyName(node: PropertyName, sourceFile: SourceFile): string {
-  let propertyName = '';
-  const fileText = sourceFile.getFullText();
-  if (isIdentifier(node) || isPrivateIdentifier(node)) {
-    const newNameNode = node as Identifier;
-    propertyName = newNameNode.escapedText.toString();
-  } else if (isComputedPropertyName(node)) {
-    const newNameNode = node as ComputedPropertyName;
-    propertyName = fileText.slice(newNameNode.expression.pos, newNameNode.expression.end).trim();
-  } else {
-    propertyName = fileText.slice(node.pos, node.end).trim();
-  }
-  return propertyName;
-}
-
-/**
- * get parameter declaration
- * @param parameter
- * @param sourceFile
- * @returns
- */
-export function getParameter(parameter: ParameterDeclaration, sourceFile: SourceFile): ParameterEntity {
-  let paramName = '';
-  let paramTypeString = '';
-  const paramTypeKind = parameter.type?.kind === undefined ? -1 : parameter.type.kind;
-  const fileText = sourceFile.getFullText();
-  if (isIdentifier(parameter.name)) {
-    paramName = parameter.name.escapedText === undefined ? '' : parameter.name.escapedText.toString();
-  } else {
-    const start = parameter.name.pos === undefined ? 0 : parameter.name.pos;
-    const end = parameter.name.end === undefined ? 0 : parameter.name.end;
-    paramName = fileText.slice(start, end).trim();
-  }
-
-  const start = parameter.type?.pos === undefined ? 0 : parameter.type.pos;
-  const end = parameter.type?.end === undefined ? 0 : parameter.type.end;
-  paramTypeString = fileText.slice(start, end).trim();
-  return {
-    paramName: paramName,
-    paramTypeString: paramTypeString,
-    paramTypeKind: paramTypeKind
-  };
-}
-
-/**
- * get method or function return info
- * @param node
- * @param sourceFile
- * @returns
- */
-export function getFunctionAndMethodReturnInfo(
-  node: FunctionDeclaration | MethodDeclaration | MethodSignature | CallSignatureDeclaration,
-  sourceFile: SourceFile
-): ReturnTypeEntity {
-  const returnInfo = { returnKindName: '', returnKind: -1 };
-  if (node.type !== undefined) {
-    const start = node.type.pos === undefined ? 0 : node.type.pos;
-    const end = node.type.end === undefined ? 0 : node.type.end;
-    returnInfo.returnKindName = sourceFile.text.substring(start, end).trim();
-    returnInfo.returnKind = node.type.kind;
-  }
-  return returnInfo;
-}
-
-/**
- * get export modifiers
- * @param modifiers
- * @returns
- */
-export function getExportKeyword(modifiers: ModifiersArray): Array<number> {
-  const modifiersArray: Array<number> = [];
-  modifiers.forEach(value => {
-    modifiersArray.push(value.kind);
-  });
-  return modifiersArray;
-}
-
-/**
- *
- * @param str first letter capitalization
- * @returns
- */
-export function firstCharacterToUppercase(str: string): string {
-  return str.slice(0, 1).toUpperCase() + str.slice(1);
-}
-
-/**
- * parameters entity
- */
-export interface ParameterEntity {
-  paramName: string;
-  paramTypeString: string;
-  paramTypeKind: number;
-}
-
-/**
- * return type entity
- */
-export interface ReturnTypeEntity {
-  returnKindName: string;
-  returnKind: number;
-}
-
-/**
- * Get OpenHarmony project dir
- * @return project dir
- */
-
-export function getProjectDir(): string {
-  const apiInputPath = process.argv[paramIndex];
-  const privateInterface = path.join('vendor', 'huawei', 'interface', 'hmscore_sdk_js', 'api');
-  const openInterface = path.join('interface', 'sdk-js', 'api');
-  if (apiInputPath.indexOf(openInterface) > -1) {
-    return apiInputPath.replace(`${path.sep}${openInterface}`, '');
-  } else {
-    return apiInputPath.replace(`${path.sep}${privateInterface}`, '');
-  }
-}
-
-/**
- * return interface api dir in OpenHarmony
+ * 获取开源接口的api路径
  */
 export function getOhosInterfacesDir(): string {
   return path.join(getProjectDir(), 'interface', 'sdk-js', 'api');
 }
 
 /**
- * return interface api root path
- * @returns apiInputPath
+ * 获取导入路径的绝对路径
+ * @param mockBuffer 文件mock缓存信息
+ * @param specifier 导入路径
+ * @returns 导入文件的绝对路径
  */
-export function getApiInputPath(): string {
-  return process.argv[paramIndex];
-}
-
-/**
- * return OpenHarmony file path dependent on by HarmonyOs
- * @param importPath path of depend imported
- * @param sourceFile sourceFile of current file
- * @returns dependsFilePath
- */
-export function findOhosDependFile(importPath: string, sourceFile: SourceFile): string {
-  const interFaceDir = getOhosInterfacesDir();
-  const tmpImportPath = importPath.replace(/'/g, '').replace('.d.ts', '').replace('.d.ets', '');
-  const sourceFileDir = path.dirname(sourceFile.fileName);
-  let dependsFilePath: string;
-  if (tmpImportPath.startsWith('./')) {
-    const subIndex = 2;
-    dependsFilePath = path.join(sourceFileDir, tmpImportPath.substring(subIndex));
-  } else if (tmpImportPath.startsWith('../')) {
-    const backSymbolList = tmpImportPath.split('/').filter(step => step === '..');
-    dependsFilePath = [
-      ...sourceFileDir.split(path.sep).slice(0, -backSymbolList.length),
-      ...tmpImportPath.split('/').filter(step => step !== '..')
-    ].join(path.sep);
-  } else if (tmpImportPath.startsWith('@ohos.inner.')) {
-    const pathSteps = tmpImportPath.replace(/@ohos\.inner\./g, '').split('.');
-    for (let i = 0; i < pathSteps.length; i++) {
-      const tmpInterFaceDir = path.join(interFaceDir, ...pathSteps.slice(0, i), pathSteps.slice(i).join('.'));
-      if (fs.existsSync(tmpInterFaceDir + '.d.ts')) {
-        return tmpInterFaceDir + '.d.ts';
-      }
-
-      if (fs.existsSync(tmpInterFaceDir + '.d.ets')) {
-        return tmpInterFaceDir + '.d.ets';
-      }
-    }
-  } else if (tmpImportPath.startsWith('@ohos.')) {
-    dependsFilePath = path.join(getOhosInterfacesDir(), tmpImportPath);
-  }
-
-  if (fs.existsSync(dependsFilePath + '.d.ts')) {
-    return dependsFilePath + '.d.ts';
-  }
-
-  if (fs.existsSync(dependsFilePath + '.d.ets')) {
-    return dependsFilePath + '.d.ets';
-  }
-
-  console.warn(`Cannot find module '${importPath}'`);
-  return '';
-}
-
-/**
- * Determine if the file is a openHarmony interface file
- * @param path: interface file path
- * @returns
- */
-export function isOhosInterface(path: string): boolean {
-  return path.startsWith(getOhosInterfacesDir());
-}
-
-/**
- * reutn js-sdk root folder full path
- * @returns
- */
-export function getJsSdkDir(): string {
-  let sdkJsDir = process.argv[paramIndex].split(path.sep).slice(0, -1).join(path.sep);
-  sdkJsDir += sdkJsDir.endsWith(path.sep) ? '' : path.sep;
-  return sdkJsDir;
-}
-
-/**
- * Determine whether the object has been imported
- * @param importDeclarations imported Declaration list in current file
- * @param typeName Object being inspected
- * @returns
- */
-export function hasBeenImported(importDeclarations: ImportElementEntity[], typeName: string): boolean {
-  if (!typeName.trim()) {
-    return true;
-  }
-  if (isFirstCharLowerCase(typeName)) {
-    return true;
-  }
-  return importDeclarations.some(importDeclaration => {
-    if (importDeclaration.importElements.includes(typeName) && importDeclaration.importPath.includes('./')) {
-      return true;
-    }
-    return false;
-  });
-}
-
-/**
- * Determine whether the first character in a string is a lowercase letter
- * @param str target string
- * @returns
- */
-function isFirstCharLowerCase(str: string): boolean {
-  const lowerCaseFirstChar = str[0].toLowerCase();
-  return str[0] === lowerCaseFirstChar;
-}
-
-export const specialFiles = [
-  '@internal/component/ets/common.d.ts',
-  '@internal/component/ets/units.d.ts',
-  '@internal/component/ets/common_ts_ets_api.d.ts',
-  '@internal/component/ets/enums.d.ts',
-  '@internal/component/ets/alert_dialog.d.ts',
-  '@internal/component/ets/ability_component.d.ts',
-  '@internal/component/ets/rich_editor.d.ts',
-  '@internal/component/ets/symbolglyph.d.ts',
-  '@internal/component/ets/button.d.ts',
-  '@internal/component/ets/nav_destination.d.ts',
-  '@internal/component/ets/navigation.d.ts',
-  '@internal/component/ets/text_common.d.ts',
-  '@internal/component/ets/styled_string.d.ts'
-];
-
-export const specialType = ['Storage', 'File', 'ChildProcess', 'Cipher', 'Sensor', 'Authenticator'];
-
-export const specialClassName = ['Want', 'Configuration', 'InputMethodExtensionContext'];
-
-/**
- * get add kit file map
- * @param apiInputPath api input path
- * @returns
- */
-export function generateKitMap(apiInputPath: string): void {
-  const kitPath = path.join(apiInputPath, '../', 'kits');
-  if (!fs.existsSync(kitPath)) {
-    throw new Error(`${kitPath} does not exist.`);
-  }
-  collectAllKitFiles(kitPath);
-}
-
-export interface DependencyListParams {
-  dependency: Array<string>;
-  export: string;
-}
-
-export interface DependencyParams {
-  [key: string]: DependencyListParams;
-}
-
-// dependence on collecting files
-export const DEPENDENCY_LIST: DependencyParams = {};
-
-// Json file indentation configuration
-export const JSON_FILE_INDENTATION = 2;
-
-/**
- * generated depend.json
- */
-export function generateDependJsonFile(): void {
-  const dependInfoPath = path.join(__dirname, '../../../runtime/main/extend/systemplugin/depend.json');
-  fs.writeFileSync(dependInfoPath, JSON.stringify(DEPENDENCY_LIST, null, JSON_FILE_INDENTATION), 'utf-8');
-}
-
-/**
- * generated MyComponent.js
- *
- * @param outDir generated file root directory
- */
-export function generateMyComponent(outDir: string): void {
-  fs.writeFileSync(path.join(outDir, 'MyComponent.js'), 'class MyComponent {}\nexport { MyComponent };');
-}
-
-// initialize all variables in the file
-export let INITVARIABLE = '';
-
-/**
- * set initialize variable
- *
- * @param value variable name
- */
-export function setInitVariable(value?: string): void {
-  if (value) {
-    if (!INITVARIABLE.includes(`let ${value} = {};`)) {
-      INITVARIABLE += `let ${value} = {};\n`;
-    }
+export function getAbsolutePath(mockBuffer: MockBuffer, specifier: string): string {
+  let absolutePath: string;
+  const importPath = specifier.replace(/['"]/g, '');
+  if (importPath.startsWith('./') || importPath.startsWith('../')) {
+    absolutePath = path.resolve(path.dirname(mockBuffer.mockedFilePath), importPath) + '.js';
+  } else if (importPath.startsWith('@ohos.') || importPath.startsWith('@system.')) {
+    absolutePath = path.join(NAPI_DIR_PATH, 'api', importPath) + '.js';
+  } else if (importPath.startsWith('@kit.')) {
+    absolutePath = path.join(NAPI_DIR_PATH, 'kits', importPath) + '.js';
+  } else if (importPath.startsWith('@arkts.')) {
+    absolutePath = path.join(NAPI_DIR_PATH, 'arkts', importPath) + '.js';
   } else {
-    INITVARIABLE = '';
+    absolutePath = path.resolve(path.dirname(mockBuffer.mockedFilePath), importPath) + '.js';
   }
+  return absolutePath;
 }
 
-/**
- * get all initialize variable
- * @returns string
- */
-export function getInitVariable(): string {
-  return INITVARIABLE;
+export function handleIterableIterator(typeParams: string): string {
+  return `() {
+    yield ${typeParams};  
+    yield ${typeParams};
+    yield ${typeParams};
+  }`;
+}
+
+export function associateTypeParameters(keyValue: KeyValue, typeParameters: Members): void {
+  if (!keyValue.property) {
+    keyValue.typeParameters = typeParameters;
+    return;
+  }
+  associateTypeParameters(keyValue.property, typeParameters);
+}
+
+export function isDeclarationFile(fileName: string): boolean {
+  return fileName.endsWith(D_TS) || fileName.endsWith(D_ETS);
+}
+
+export function isNeedMocked(filePath: string): boolean {
+  if (path.basename(filePath).startsWith('@ohos.')) {
+    return true;
+  }
+  return path.basename(filePath).startsWith('@kit.');
 }

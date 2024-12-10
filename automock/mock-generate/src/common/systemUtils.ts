@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-/**
- * generate entry
- * @returns
- */
-export function generateEntry(): string {
-  return `import "@babel/polyfill";
-  import { mockSystemPlugin } from './index';
+import path from 'path';
+import { paramIndex } from './constants';
 
-  mockSystemPlugin()`;
+export function getProjectDir(): string {
+  const apiInputPath = process.argv[paramIndex];
+  const apiDir = path.join('interface', 'sdk-js', 'api');
+  return apiInputPath.replace(`${path.sep}${apiDir}`, '');
 }
