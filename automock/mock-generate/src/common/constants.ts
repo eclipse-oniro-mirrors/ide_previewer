@@ -15,17 +15,17 @@
 
 import path from 'path';
 import { SyntaxKind } from 'typescript';
-import { Declares, MockBuffer } from '../types';
+import { Declares, MockBuffer, mockedFilePath, rawFilePath } from '../types';
 import { handleIterableIterator } from './commonUtils';
 
 // api 路径参数所在索引
 export const paramIndex = 2;
 
 // 源文件到mock文件的映射
-export const RawFileMap: Map<string, string> = new Map<string, string>();
+export const RawFileMap: Map<rawFilePath, mockedFilePath> = new Map<rawFilePath, mockedFilePath>();
 
 // mock文件到源文件的映射
-export const MockedFileMap: Map<string, string> = new Map<string, string>();
+export const MockedFileMap: Map<mockedFilePath, rawFilePath> = new Map<mockedFilePath, rawFilePath>();
 
 // 开源api接口文件列表
 export const ohosDtsFileList: string[] = [];
@@ -43,7 +43,7 @@ export const arktsDtsFileList: string[] = [];
 export const kitsDtsFileList: string[] = [];
 
 // 源文件路径到mock信息的映射
-export const mockBufferMap: Map<string, MockBuffer> = new Map();
+export const mockBufferMap: Map<rawFilePath, MockBuffer> = new Map();
 
 /**
  * 由于有些接口类型不需要直接mock，这会导致部分接口文件不用生成任何内容

@@ -52,7 +52,7 @@ export function generateKeyValue(key: string, type: KeyValueTypes, parent?: KeyV
   sameName: KeyValue[],
   dependOnGlobals: Set<KeyValue>
 }): KeyValue {
-  const keyValue = {key, type, parent};
+  const keyValue = {key, type, parent, sameDeclares: []};
   if (optionMembers) {
     keyValue['members'] = optionMembers.members ?? {};
     keyValue['typeParameters'] = optionMembers.typeParameters ?? {};

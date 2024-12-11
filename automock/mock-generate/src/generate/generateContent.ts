@@ -786,47 +786,55 @@ function handleGlobalClass(keyValue: KeyValue, mockBuffer: MockBuffer, declarati
     handleHeritage(keyValue, mockBuffer, kvPath.concat(keyValue), keyValue);
   }
 
-  Object.keys(keyValue.members).forEach(memberKey => {
-    const memberKeyValue = keyValue.members[memberKey];
-    if (memberKeyValue.isMocked) {
-      return;
-    }
-    let elementName = `.${memberKey}`;
-    if (memberKeyValue.type === KeyValueTypes.EXPRESSION) {
-      memberKeyValue.key = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, keyValue, memberKeyValue.property);
-      memberKeyValue.type = KeyValueTypes.FUNCTION;
-      memberKeyValue.value = undefined;
-      elementName = memberKeyValue.key;
-    }
+  Object.keys(keyValue.members).forEach(memberKey => handleClassMembers(memberKey, keyValue, mockBuffer, kvPath, declarations));
+  // 处理同名declare
+  keyValue.sameDeclares.forEach(sameDeclare => {
+    const sameKeyValue = sameDeclare.keyValue;
+    const sameMockBuffer =  mockBufferMap.get(MockedFileMap.get(sameDeclare.from));
+    Object.keys(sameKeyValue.members).forEach(memberKey => handleClassMembers(memberKey, sameKeyValue, sameMockBuffer, kvPath, declarations));
+  });
+}
 
-    const star = memberKeyValue.type === KeyValueTypes.FUNCTION && memberKeyValue.members['IterableIterator'] ? '*' : '';
-    const memberValue = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, keyValue, memberKeyValue.property);
-    let value = '';
-    if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-      if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
-        const getKey = `get ${memberKeyValue.key}`;
-        const getMethodValue = keyValue.members[getKey] ? `get: function${star} ${handleKeyValue(getKey, keyValue.members[getKey], mockBuffer, kvPath, keyValue, memberKeyValue.property)},` : '';
-        const setKey = `set ${memberKeyValue.key}`;
-        const setMethodValue = keyValue.members[setKey] ? `set: function${star} ${handleKeyValue(setKey, keyValue.members[setKey], mockBuffer, kvPath, keyValue, memberKeyValue.property)},` : '';
-        value = `Object.defineProperty(global.${keyValue.key}_temp, '${memberKeyValue.key}', {
-    ${getMethodValue}
-    ${setMethodValue}
-  });`;
-        if (keyValue.members[getKey]) {
-          keyValue.members[getKey].isMocked = true;
-        }
-        if (keyValue.members[setKey]) {
-          keyValue.members[setKey].isMocked = true;
-        }
-      } else {
-        value = `global.${keyValue.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
+function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], declarations: string[]): void {
+  const memberKeyValue = parent.members[memberKey];
+  if (memberKeyValue.isMocked) {
+    return;
+  }
+  let elementName = `.${memberKey}`;
+  if (memberKeyValue.type === KeyValueTypes.EXPRESSION) {
+    memberKeyValue.key = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, parent, memberKeyValue.property);
+    memberKeyValue.type = KeyValueTypes.FUNCTION;
+    memberKeyValue.value = undefined;
+    elementName = memberKeyValue.key;
+  }
+
+  const star = memberKeyValue.type === KeyValueTypes.FUNCTION && memberKeyValue.members['IterableIterator'] ? '*' : '';
+  const memberValue = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, parent, memberKeyValue.property);
+  let value = '';
+  if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
+    if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
+      const getKey = `get ${memberKeyValue.key}`;
+      const getMethodValue = parent.members[getKey] ? `get: function${star} ${handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
+      const setKey = `set ${memberKeyValue.key}`;
+      const setMethodValue = parent.members[setKey] ? `set: function${star} ${handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
+      value = `Object.defineProperty(global.${parent.key}_temp, '${memberKeyValue.key}', {
+  ${getMethodValue}
+  ${setMethodValue}
+});`;
+      if (parent.members[getKey]) {
+        parent.members[getKey].isMocked = true;
+      }
+      if (parent.members[setKey]) {
+        parent.members[setKey].isMocked = true;
       }
     } else {
-      value = `global.${keyValue.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
+      value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
     }
-    memberKeyValue.isMocked = true;
-    declarations.push(value);
-  });
+  } else {
+    value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
+  }
+  memberKeyValue.isMocked = true;
+  declarations.push(value);
 }
 
 function handleGlobalModule(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {

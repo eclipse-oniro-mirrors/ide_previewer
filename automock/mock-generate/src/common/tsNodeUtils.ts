@@ -634,7 +634,11 @@ function handleDefaultOrExport(
   }
 
   if (modifiers.findIndex(modifier => modifier.kind === SyntaxKind.DeclareKeyword) >= 0) {
-    DECLARES[keyValue.key] = { keyValue, from: mockBuffer.mockedFilePath };
+    if (!DECLARES[keyValue.key]) {
+      DECLARES[keyValue.key] = { keyValue, from: mockBuffer.mockedFilePath };
+    } else {
+      DECLARES[keyValue.key].keyValue.sameDeclares.push({keyValue, from: mockBuffer.mockedFilePath});
+    }
     keyValue.isGlobalDeclare = true;
   }
 }

@@ -15,6 +15,12 @@
 
 import { KeyValueTypes } from '../common/constants';
 
+// 源文件路径
+export type rawFilePath = string;
+
+// mock后文件路径
+export type mockedFilePath = string;
+
 export interface KeyValue {
   key: string,
   type: KeyValueTypes,
@@ -23,6 +29,7 @@ export interface KeyValue {
   methodParams: Members,
   constraint: Members,
   sameName: KeyValue[],
+  sameDeclares: Declare[],
   importedModulePath?: string,
   heritage?: KeyValue,
   property?: KeyValue,
@@ -48,8 +55,8 @@ export interface Members {
 
 export interface MockBuffer {
   contents: KeyValue,
-  mockedFilePath: string,
-  rawFilePath: string,
+  mockedFilePath: mockedFilePath,
+  rawFilePath: rawFilePath,
 }
 
 export interface Declares {
@@ -58,7 +65,7 @@ export interface Declares {
 
 export interface Declare {
   keyValue: KeyValue,
-  from: string
+  from: rawFilePath
 }
 
 export type ApiFolder = 'api' | 'component' | 'arkts' | 'kits';
