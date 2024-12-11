@@ -538,22 +538,30 @@ function handleOverloadedFunction(sameFuncList: KeyValue[], mockBuffer: MockBuff
     memberLines.push(`const p${paramIndex} = ${value}`);
     callBackParams.push(`p${paramIndex}`);
   });
-  return `(...args) {
-      console.warn(ts.replace('{{}}', '${func.key}'));
-      ${memberLines.join(';\n')}
-      if (args && typeof args[args.length - 1] === 'function') {
-        args[args.length - 1].call(this, {
-          'code': '',
-          'data': '',
-          'name': '',
-          'message': '',
-          'stack': ''
-        }, ${callBackParams.join(', ')});
+  let isAsyncCallback = true;
+  const callbackError = '{\'code\': \'\',\'data\': \'\',\'name\': \'\',\'message\': \'\',\'stack\': \'\'}, ';
+  for (let i = 0; i < sameFuncList.length; i++) {
+    const element = sameFuncList[i];
+    Object.keys(element.methodParams).forEach(key => {
+      const callbackInfo = element.methodParams[key];
+      if (callbackInfo && Object.keys(callbackInfo.members).includes('Callback')) {
+        isAsyncCallback = false;
       }
-      return new Promise((resolve, reject) => {
-        resolve(${callBackParams.join(', ')});
-      });
-    }`;
+    });
+    if (!isAsyncCallback) {
+      break;
+    }
+  }
+  return `(...args) {
+    console.warn(ts.replace('{{}}', '${func.key}'));
+    ${memberLines.join(';\n')}
+    if (args && typeof args[args.length - 1] === 'function') {
+      args[args.length - 1].call(this, ${isAsyncCallback ? callbackError : ''}${callBackParams.join(', ')});
+    }
+    return new Promise((resolve, reject) => {
+      resolve(${callBackParams.join(', ')});
+    });
+  }`;
 }
 
 function concatProperty(property?: KeyValue): string {
