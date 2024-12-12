@@ -54,7 +54,6 @@ export function generateIndex(indexFilePath: string): string {
   indexBody += `export function mockRequireNapiFun() {
     global.requireNapi = function(...args) {
       const globalNapi = global.requireNapiPreview(...args);
-      console.log('AAAAAAAAAAABBBBBBBBBBBBBBB');
       if (globalNapi !== undefined) {
         return globalNapi;
       }
