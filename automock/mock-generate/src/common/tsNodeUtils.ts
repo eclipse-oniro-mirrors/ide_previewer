@@ -52,11 +52,11 @@ export function handleImportDeclaration(
  * @returns
  */
 export function handleModuleDeclaration(
-    node: ts.ModuleDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.ModuleDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const moduleName = handleModuleName(node.name, members, parent, type);
   moduleName.isNeedMock = true;
@@ -79,11 +79,11 @@ export function handleModuleDeclaration(
  * @returns
  */
 export function handleTypeAliasDeclaration(
-    node: ts.TypeAliasDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.TypeAliasDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const name = handleIdentifier(node.name, members, parent, type);
   node.typeParameters?.forEach(typeParam => {
@@ -104,11 +104,11 @@ export function handleTypeAliasDeclaration(
  * @returns
  */
 export function handleClassDeclaration(
-    node: ts.ClassDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.ClassDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const isComponent: boolean = isComponentNode(node, mockBuffer);
   const className = handleIdentifier(node.name, members, parent, type);
@@ -145,11 +145,11 @@ export function handleClassDeclaration(
  * @returns
  */
 export function handleInterfaceDeclaration(
-    node: ts.InterfaceDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.InterfaceDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const interfaceName = handleIdentifier(node.name, members, parent, type);
   handleDefaultOrExport(mockBuffer, interfaceName, node.modifiers);
@@ -175,11 +175,11 @@ export function handleInterfaceDeclaration(
  * @returns
  */
 export function handleEnumDeclaration(
-    node: ts.EnumDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.EnumDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const enumName = handleEnumName(node, members, parent, type);
   enumName.isNeedMock = true;
@@ -200,11 +200,11 @@ export function handleEnumDeclaration(
  * @returns
  */
 export function handleFunctionDeclaration(
-    node: ts.FunctionDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.FunctionDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const functionName = handleIdentifier(node.name, members, parent, type);
   functionName.isNeedMock = true;
@@ -229,11 +229,11 @@ export function handleFunctionDeclaration(
  * @returns
  */
 export function handleExportDeclaration(
-    node: ts.ExportDeclaration,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.ExportDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): void {
   let moduleSpecifier: KeyValue;
   let importedModulePath: string;
@@ -266,11 +266,11 @@ export function handleExportDeclaration(
  * @returns
  */
 export function handleVariableStatement(
-    node: ts.VariableStatement,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.VariableStatement,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): void {
   node.declarationList.declarations.forEach(declaration => {
     const declarationName = handleBindingName(declaration.name, mockBuffer, members, parent, type
@@ -294,11 +294,11 @@ export function handleVariableStatement(
  * @returns
  */
 export function handleExportAssignment(
-    node: ts.ExportAssignment,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.ExportAssignment,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   const exportDefault = handleExpression(node.expression, mockBuffer, {}, parent, type, []);
   members[exportDefault.key].isDefault = true;
@@ -322,7 +322,7 @@ function handleNamedExportBindings(
       return handleNamedExports(node, mockBuffer, members, parent, type, importedModulePath);
     }
     case SyntaxKind.NamespaceExport: {
-      return handleNamespaceExport(node, mockBuffer, members, parent, type, importedModulePath);
+      break;
     }
     default: {
       throw new Error('未知的NamedExportBindings类型');
@@ -346,15 +346,6 @@ function handleNamedExports(
     handleIdentifier(element.name, mockBuffer.contents.members, mockBuffer.contents, KeyValueTypes.REFERENCE);
   });
 }
-
-function handleNamespaceExport(
-  node: ts.NamespaceExport,
-  mockBuffer: MockBuffer,
-  members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes,
-  importedModulePath: string
-): void { }
 
 function handleParameterDeclaration(
   parameterNum: number,
@@ -430,11 +421,11 @@ function handleEnumMember(
 }
 
 function handleEnumMemberInitializer(
-    node: ts.Expression,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.Expression,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   if (!node) {
     return generateKeyValue('', KeyValueTypes.VALUE, parent);
@@ -447,13 +438,13 @@ function handleEnumMemberInitializer(
       return members[numericLiteral.text];
     }
     case SyntaxKind.StringLiteral: {
-      return handleStringLiteral(node as ts.StringLiteral, members, parent, type);
+      return handleStringLiteral(node as ts.StringLiteral, members, parent);
     }
     case SyntaxKind.BinaryExpression: {
-      return handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent, type);
+      return handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent);
     }
     case SyntaxKind.PrefixUnaryExpression: {
-      return handlePrefixUnaryExpression(node as ts.PrefixUnaryExpression, mockBuffer, members, parent, type);
+      return handlePrefixUnaryExpression(node as ts.PrefixUnaryExpression, members, parent);
     }
     case SyntaxKind.Identifier: {
       return handleIdentifier(node as ts.Identifier, members, parent, type);
@@ -538,12 +529,12 @@ function handleMethodSignature(
   const methodName = handlePropertyNameNode(node.name, mockBuffer, members, parent, type);
   for (let i = 0; i < node.parameters.length; i++) {
     node.parameters.forEach(_ => handleParameterDeclaration(
-        i,
-        node.parameters[i],
-        mockBuffer,
-        methodName.methodParams,
-        methodName,
-        KeyValueTypes.REFERENCE
+      i,
+      node.parameters[i],
+      mockBuffer,
+      methodName.methodParams,
+      methodName,
+      KeyValueTypes.REFERENCE
     ));
   }
   node.typeParameters?.forEach(parameter => {
@@ -689,12 +680,12 @@ function isComponentNode(node: ts.ClassDeclaration, mockBuffer: MockBuffer): boo
 }
 
 function handleImportClauseNode(
-    node: ts.ImportClause,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes,
-    importFilePath: string
+  node: ts.ImportClause,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes,
+  importFilePath: string
 ): void {
   const namedImportBindings = node.namedBindings;
   if (namedImportBindings) {
@@ -709,11 +700,11 @@ function handleImportClauseNode(
 }
 
 function handlePropertyNameNode(
-    node: ts.PropertyName,
-    mockBuffer: MockBuffer,
-    members: Members,
-    parent: KeyValue,
-    type: KeyValueTypes
+  node: ts.PropertyName,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
 ): KeyValue {
   if (!node) {
     members[''] = generateKeyValue('', type, parent);
@@ -1460,7 +1451,7 @@ function handleLiteralTypeNode(
 ): KeyValue {
   switch (node.literal.kind) {
     case SyntaxKind.StringLiteral: {
-      return handleStringLiteral(node.literal as ts.StringLiteral, members, parent, KeyValueTypes.VALUE);
+      return handleStringLiteral(node.literal as ts.StringLiteral, members, parent);
     }
     case SyntaxKind.TrueKeyword: {
       return handleTrueKeyword(members, parent);
@@ -1469,13 +1460,13 @@ function handleLiteralTypeNode(
       return handleFalseKeyword(members, parent);
     }
     case SyntaxKind.PrefixUnaryExpression: {
-      return handlePrefixUnaryExpression(node.literal as ts.PrefixUnaryExpression, mockBuffer, members, parent, type);
+      return handlePrefixUnaryExpression(node.literal as ts.PrefixUnaryExpression, members, parent);
     }
     case SyntaxKind.NumericLiteral: {
-      return handleNumericLiteral(node.literal as ts.NumericLiteral, members, parent, type);
+      return handleNumericLiteral(node.literal as ts.NumericLiteral, members, parent);
     }
     case SyntaxKind.NullKeyword: {
-      return handleNullLiteral(node.literal as ts.NullLiteral, members, parent, type);
+      return handleNullLiteral(members, parent, type);
     }
     case SyntaxKind.BigIntLiteral: {
       return handleBigIntLiteral(node.literal as ts.BigIntLiteral, members, parent, type);
@@ -1498,7 +1489,6 @@ function handleBigIntLiteral(
 }
 
 function handleNullLiteral(
-  node: ts.NullLiteral,
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
@@ -1509,10 +1499,8 @@ function handleNullLiteral(
 
 function handlePrefixUnaryExpression(
   node: ts.PrefixUnaryExpression,
-  mockBuffer: MockBuffer,
   members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes
+  parent: KeyValue
 ): KeyValue {
   const expression = generateKeyValue('expression', KeyValueTypes.EXPRESSION, parent);
   members['expression'] = expression;
@@ -1520,7 +1508,7 @@ function handlePrefixUnaryExpression(
 
   const operator = handlePrefixUnaryOperator(node.operator, {}, expression, KeyValueTypes.VALUE);
   expression.operateElements.push(operator);
-  expression.operateElements.push(handleUnaryExpression(node.operand, {}, operator, KeyValueTypes.VALUE));
+  expression.operateElements.push(handleUnaryExpression(node.operand, {}, operator));
   return expression;
 }
 
@@ -1546,12 +1534,11 @@ function handlePrefixUnaryOperator(
 function handleUnaryExpression(
   node: ts.UnaryExpression,
   members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes
+  parent: KeyValue
 ): KeyValue {
   switch (node.kind) {
     case SyntaxKind.NumericLiteral: {
-      return handleNumericLiteral(node as ts.NumericLiteral, members, parent, KeyValueTypes.VALUE);
+      return handleNumericLiteral(node as ts.NumericLiteral, members, parent);
     }
     default: {
       throw new Error('位置类型的UnaryExpression');
@@ -1568,7 +1555,7 @@ function handleTypeReferenceNode(
 ): KeyValue {
   const typeName = handleEntityName(node.typeName, mockBuffer, members, parent, type);
   node.typeArguments?.forEach(
-      typeArgument => handleTypeNode(mockBuffer, typeName.typeParameters, typeName, KeyValueTypes.REFERENCE, typeArgument)
+    typeArgument => handleTypeNode(mockBuffer, typeName.typeParameters, typeName, KeyValueTypes.REFERENCE, typeArgument)
   );
   members[typeName.key] = typeName;
   return typeName;
@@ -1594,7 +1581,7 @@ function handleExpression(
       break;
     }
     case SyntaxKind.NumericLiteral: {
-      keyValue = handleNumericLiteral(node as ts.NumericLiteral, members, parent, type);
+      keyValue = handleNumericLiteral(node as ts.NumericLiteral, members, parent);
       operateElements.push(keyValue);
       break;
     }
@@ -1603,7 +1590,7 @@ function handleExpression(
       break;
     }
     case SyntaxKind.StringLiteral: {
-      keyValue = handleStringLiteral(node as ts.StringLiteral, members, parent, type);
+      keyValue = handleStringLiteral(node as ts.StringLiteral, members, parent);
       operateElements.push(keyValue);
       break;
     }
@@ -1612,7 +1599,7 @@ function handleExpression(
       break;
     }
     case SyntaxKind.BinaryExpression: {
-      keyValue = handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent, type);
+      keyValue = handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent);
       operateElements.push(keyValue);
       break;
     }
@@ -1652,8 +1639,7 @@ function handleIdentifier(
 function handleNumericLiteral(
   node: ts.NumericLiteral,
   members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes
+  parent: KeyValue
 ): KeyValue {
   const text = node.text;
   members[text] = generateKeyValue(text, KeyValueTypes.VALUE, parent);
@@ -1698,8 +1684,7 @@ function handlePrivateIdentifier(
 function handleStringLiteral(
   node: ts.StringLiteral,
   members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes
+  parent: KeyValue
 ): KeyValue {
   const text = node.text;
   members[text] = generateKeyValue(`'${text}'`, KeyValueTypes.VALUE, parent);
@@ -1724,8 +1709,7 @@ function handleBinaryExpression(
   node: ts.BinaryExpression,
   mockBuffer: MockBuffer,
   members: Members,
-  parent: KeyValue,
-  type: KeyValueTypes
+  parent: KeyValue
 ): KeyValue {
   const expression = generateKeyValue('expression', KeyValueTypes.EXPRESSION, parent);
   members['expression'] = expression;

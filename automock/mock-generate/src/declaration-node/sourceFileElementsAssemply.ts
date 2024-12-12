@@ -44,7 +44,9 @@ import {
 /**
  * 解析所有 sourceFile 节点信息
  * @param sourceFile sourceFile对象
- * @param fileName 文件路径
+ * @param mockBuffer 当前文件mock信息
+ * @param members 文件内容成员对象
+ * @param parent 文件根节点
  * @returns
  */
 export function getSourceFileAssembly(sourceFile: SourceFile, mockBuffer: MockBuffer, members: Members, parent: KeyValue): void {
