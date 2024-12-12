@@ -101,6 +101,10 @@ export function getAbsolutePath(mockBuffer: MockBuffer, specifier: string): stri
   return absolutePath;
 }
 
+/**
+ * 处理迭代器函数
+ * @param typeParams 迭代器返回值的类型参数
+ */
 export function handleIterableIterator(typeParams: string): string {
   return `() {
     yield ${typeParams};  
@@ -109,6 +113,11 @@ export function handleIterableIterator(typeParams: string): string {
   }`;
 }
 
+/**
+ * 关联类型参数
+ * @param keyValue KV节点
+ * @param typeParameters
+ */
 export function associateTypeParameters(keyValue: KeyValue, typeParameters: Members): void {
   if (!keyValue.property) {
     keyValue.typeParameters = typeParameters;
@@ -117,10 +126,18 @@ export function associateTypeParameters(keyValue: KeyValue, typeParameters: Memb
   associateTypeParameters(keyValue.property, typeParameters);
 }
 
+/**
+ * 判断是否是类型申明文件
+ * @param fileName 文件名
+ */
 export function isDeclarationFile(fileName: string): boolean {
   return fileName.endsWith(D_TS) || fileName.endsWith(D_ETS);
 }
 
+/**
+ * 判断文件是否需要被mock
+ * @param filePath 文件路径
+ */
 export function isNeedMocked(filePath: string): boolean {
   if (path.basename(filePath).startsWith('@ohos.')) {
     return true;

@@ -48,7 +48,7 @@ export const mockBufferMap: Map<rawFilePath, MockBuffer> = new Map();
 /**
  * 由于有些接口类型不需要直接mock，这会导致部分接口文件不用生成任何内容
  * 这导致引入这样的文件后，运行时会报错
- * 引入需要将空文件收集起来，以便后续进行忽略
+ * 因此需要将空文件收集起来，以便后续进行忽略
  */
 export const NO_CONTENT_FILES: Set<string> = new Set<string>();
 
@@ -141,5 +141,3 @@ export const D_TS: string = '.d.ts';
 
 // .d.ets 文件后缀
 export const D_ETS: string = '.d.ets';
-
-export const indexFiles: string[] = [];

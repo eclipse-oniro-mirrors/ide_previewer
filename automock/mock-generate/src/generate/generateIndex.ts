@@ -18,7 +18,8 @@ import { isDeclarationFile, isNeedMocked } from '../common/commonUtils';
 import { mockBufferMap, NO_CONTENT_FILES, ohosDtsFileList } from '../common/constants';
 
 /**
- * generate index
+ * 声测会给你index文件
+ * @param indexFilePath index文件输出路径
  * @returns
  */
 export function generateIndex(indexFilePath: string): string {

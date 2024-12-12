@@ -16,7 +16,7 @@
 import { importDeclarationFiles } from '../common/constants';
 
 /**
- * generate startswith 'system_'
+ * 生成system接口文件
  * @returns
  */
 export function generateSystemIndex(): string {

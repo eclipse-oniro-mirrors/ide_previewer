@@ -14,7 +14,7 @@
  */
 
 /**
- * generate entry
+ * 生成 entry 文件
  * @returns
  */
 export function generateEntry(): string {

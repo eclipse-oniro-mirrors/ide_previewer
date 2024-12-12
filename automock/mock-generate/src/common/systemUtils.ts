@@ -16,6 +16,10 @@
 import path from 'path';
 import { paramIndex } from './constants';
 
+/**
+ * 获取OpenHarmony项目路径
+ * @returns OpenHarmony项目路径
+ */
 export function getProjectDir(): string {
   const apiInputPath = process.argv[paramIndex];
   const apiDir = path.join('interface', 'sdk-js', 'api');

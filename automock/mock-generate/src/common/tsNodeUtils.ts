@@ -19,6 +19,14 @@ import { BASE_KINDS, COMPONENT_DECORATORS, D_ETS, DECLARES, KeyValueTypes } from
 import { associateTypeParameters, generateKeyValue, getAbsolutePath } from './commonUtils';
 import path from 'path';
 
+/**
+ * 处理import导入节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ */
 export function handleImportDeclaration(node: ts.ImportDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
   const moduleSpecifier = handleExpression(node.moduleSpecifier, mockBuffer, {}, parent, type, []);
   const importFilePath = getAbsolutePath(mockBuffer, moduleSpecifier.key);
@@ -28,6 +36,15 @@ export function handleImportDeclaration(node: ts.ImportDeclaration, mockBuffer: 
   }
 }
 
+/**
+ * 处理module节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleModuleDeclaration(node: ts.ModuleDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const moduleName = handleModuleName(node.name, members, parent, type);
   moduleName.isNeedMock = true;
@@ -40,6 +57,15 @@ export function handleModuleDeclaration(node: ts.ModuleDeclaration, mockBuffer: 
   return moduleName;
 }
 
+/**
+ * 处理type节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleTypeAliasDeclaration(node: ts.TypeAliasDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const name = handleIdentifier(node.name, members, parent, type);
   node.typeParameters?.forEach(typeParam => {
@@ -50,6 +76,15 @@ export function handleTypeAliasDeclaration(node: ts.TypeAliasDeclaration, mockBu
   return name;
 }
 
+/**
+ * 处理class节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleClassDeclaration(node: ts.ClassDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const isComponent: boolean = isComponentNode(node, mockBuffer);
   const className = handleIdentifier(node.name, members, parent, type);
@@ -76,6 +111,15 @@ export function handleClassDeclaration(node: ts.ClassDeclaration, mockBuffer: Mo
   return className;
 }
 
+/**
+ * 处理interface节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleInterfaceDeclaration(node: ts.InterfaceDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const interfaceName = handleIdentifier(node.name, members, parent, type);
   handleDefaultOrExport(mockBuffer, interfaceName, node.modifiers);
@@ -91,6 +135,15 @@ export function handleInterfaceDeclaration(node: ts.InterfaceDeclaration, mockBu
   return interfaceName;
 }
 
+/**
+ * 处理enum节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleEnumDeclaration(node: ts.EnumDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const enumName = handleEnumName(node, members, parent, type);
   enumName.isNeedMock = true;
@@ -101,6 +154,15 @@ export function handleEnumDeclaration(node: ts.EnumDeclaration, mockBuffer: Mock
   return enumName;
 }
 
+/**
+ * 处理function节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleFunctionDeclaration(node: ts.FunctionDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const functionName = handleIdentifier(node.name, members, parent, type);
   functionName.isNeedMock = true;
@@ -115,6 +177,15 @@ export function handleFunctionDeclaration(node: ts.FunctionDeclaration, mockBuff
   return functionName;
 }
 
+/**
+ * 处理export节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleExportDeclaration(node: ts.ExportDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
   let moduleSpecifier: KeyValue;
   let importedModulePath: string;
@@ -137,6 +208,15 @@ export function handleExportDeclaration(node: ts.ExportDeclaration, mockBuffer: 
   }
 }
 
+/**
+ * 处理const节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleVariableStatement(node: ts.VariableStatement, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
   node.declarationList.declarations.forEach(declaration => {
     const declarationName = handleBindingName(declaration.name, mockBuffer, members, parent, type
@@ -150,6 +230,15 @@ export function handleVariableStatement(node: ts.VariableStatement, mockBuffer: 
   });
 }
 
+/**
+ * 处理export节点
+ * @param node typescript node节点
+ * @param mockBuffer mock信息
+ * @param members 当前节点应该归属的member
+ * @param parent 父级节点
+ * @param type KeyValue节点类型
+ * @returns 
+ */
 export function handleExportAssignment(node: ts.ExportAssignment, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
   const exportDefault = handleExpression(node.expression, mockBuffer, {}, parent, type, []);
   members[exportDefault.key].isDefault = true;

@@ -31,7 +31,6 @@ import {
   arktsDtsFileList,
   componentDtsFileList,
   D_ETS, D_TS,
-  indexFiles,
   KeyValueTypes,
   kitsDtsFileList,
   mockBufferMap,
@@ -44,8 +43,10 @@ import { ApiFolder, MockBuffer } from './types';
 import { generateContent, handleDeclares } from './generate/generateContent';
 
 /**
- * get all api .d.ts file path
- * @param dir
+ * 获取所有接口文件路径
+ * @param dir 接口目录路径
+ * @param fileList 接口文件列表
+ * @param isHmsDtsFile 是否是harmonyOS接口
  * @returns
  */
 function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): string[] {
@@ -60,7 +61,6 @@ function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): 
         if (!isDeclarationFile(value)) {
           return;
         }
-        isHmsDtsFile && indexFiles.push(value);
         fileList.push(fullPath);
       }
     });
@@ -69,8 +69,8 @@ function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): 
 }
 
 /**
- * get all component .d.ts file path
- * @param dir
+ * 获取所有组件接口文件路径
+ * @param dir 组件目录路径
  * @returns
  */
 function getAllComponentsFilePath(dir: string): Array<string> {
@@ -90,6 +90,10 @@ function getAllComponentsFilePath(dir: string): Array<string> {
   });
 }
 
+/**
+ * 获取所有global接口文件路径
+ * @param dir global目录路径
+ */
 function getAllGlobalFilePath(dir: string): Array<string> {
   const globalPath = path.join(dir, 'global');
   if (!fs.existsSync(globalPath)) {
@@ -107,6 +111,11 @@ function getAllGlobalFilePath(dir: string): Array<string> {
   });
 }
 
+/**
+ * 获取mock后的接口文件路径
+ * @param beforeMockedFilePath mock钱的文件路径
+ * @param apiFolder api目录路径
+ */
 function getMockedFileName(beforeMockedFilePath: string, apiFolder: ApiFolder): string {
   const outMockJsFolder = path.join(__dirname, '..', '..', 'runtime', 'main', 'extend', 'systemplugin');
   let fileName: string;
@@ -148,6 +157,11 @@ function getMockedFileName(beforeMockedFilePath: string, apiFolder: ApiFolder): 
   return path.join(dirName, fileName + '.js');
 }
 
+/**
+ * 初始化接口文件mock信息
+ * @param typeFile 类型文件路径
+ * @param apiFolder api目录路径
+ */
 function initialTypeFile(typeFile: string, apiFolder: ApiFolder): void {
   if (!isDeclarationFile(typeFile)) {
     return;
@@ -167,9 +181,7 @@ function initialTypeFile(typeFile: string, apiFolder: ApiFolder): void {
 }
 
 /**
- * hgandle all ets file mock logic
- * @param outMockJsFileDir automated mock file output path
- * @returns
+ * 处理所有ets文件的mock逻辑
  */
 function etsFileToMock(): void {
   componentDtsFileList.forEach(file => initialTypeFile(file, 'component'));
@@ -212,9 +224,7 @@ function etsFileToMock(): void {
 }
 
 /**
- * Project Entry Function
- * @param apiInputPath interface_sdk-js\api absolute file path
- * @returns
+ * 项目入口函数
  */
 function main(): void {
   const outMockJsFileDir = path.join(__dirname, '..', '..', 'runtime', 'main', 'extend', 'systemplugin');
