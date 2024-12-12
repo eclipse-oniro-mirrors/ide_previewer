@@ -21,6 +21,7 @@ export type rawFilePath = string;
 // mock后文件路径
 export type mockedFilePath = string;
 
+// KV节点
 export interface KeyValue {
   key: string,
   type: KeyValueTypes,
@@ -49,23 +50,28 @@ export interface KeyValue {
   isMocked?: boolean
 }
 
+// 成员对象
 export interface Members {
   [key: string]: KeyValue
 }
 
+// 文件的mock信息
 export interface MockBuffer {
   contents: KeyValue,
   mockedFilePath: mockedFilePath,
   rawFilePath: rawFilePath,
 }
 
+// 全局KV对象集
 export interface Declares {
   [key: string]: Declare,
 }
 
+// 全局KV对象
 export interface Declare {
   keyValue: KeyValue,
   from: rawFilePath
 }
 
+// api目录
 export type ApiFolder = 'api' | 'component' | 'arkts' | 'kits';
