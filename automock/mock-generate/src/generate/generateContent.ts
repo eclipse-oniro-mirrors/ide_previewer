@@ -1108,7 +1108,7 @@ function handleGlobalClass(keyValue: KeyValue, mockBuffer: MockBuffer, declarati
  * @param mockBuffer 所属文件的mock信息
  * @param kvPath KV节点路径
  * @param declarations 已mock的文本内容
- * @returns 
+ * @returns
  */
 function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], declarations: string[]): void {
   const memberKeyValue = parent.members[memberKey];
@@ -1127,24 +1127,7 @@ function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: Moc
   const memberValue = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, parent, memberKeyValue.property);
   let value = '';
   if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-    if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
-      const getKey = `get ${memberKeyValue.key}`;
-      const getMethodValue = parent.members[getKey] ? `get: function${star} ${handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
-      const setKey = `set ${memberKeyValue.key}`;
-      const setMethodValue = parent.members[setKey] ? `set: function${star} ${handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
-      value = `Object.defineProperty(global.${parent.key}_temp, '${memberKeyValue.key}', {
-  ${getMethodValue}
-  ${setMethodValue}
-});`;
-      if (parent.members[getKey]) {
-        parent.members[getKey].isMocked = true;
-      }
-      if (parent.members[setKey]) {
-        parent.members[setKey].isMocked = true;
-      }
-    } else {
-      value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
-    }
+    value = handleClassMethod(memberKey, memberKeyValue, star, parent, mockBuffer, kvPath, elementName, memberValue);
   } else {
     value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
   }
@@ -1159,7 +1142,7 @@ function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: Moc
  * @param declarations 已mock的文本内容
  * @param kvPath KV节点路径
  * @param member 不为undefined时，只mock这个member节点
- * @returns 
+ * @returns
  */
 function handleGlobalModule(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
   return handleGlobalModuleOrInterface(keyValue, mockBuffer, declarations, kvPath, member);
@@ -1172,7 +1155,7 @@ function handleGlobalModule(keyValue: KeyValue, mockBuffer: MockBuffer, declarat
  * @param declarations 已mock的文本内容
  * @param kvPath KV节点路径
  * @param member 不为undefined时，只mock这个member节点
- * @returns 
+ * @returns
  */
 function handleGlobalModuleOrInterface(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
   if (member) {
@@ -1211,7 +1194,7 @@ function handleGlobalModuleOrInterface(keyValue: KeyValue, mockBuffer: MockBuffe
  * @param declarations 已mock的文本内容
  * @param kvPath KV节点路径
  * @param member 不为undefined时，只mock这个member节点
- * @returns 
+ * @returns
  */
 function handleGlobalInterface(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
   if (keyValue.heritage) {
@@ -1264,4 +1247,27 @@ function findDefFromImport(importKeyValue: KeyValue, mockBuffer: MockBuffer, roo
     defKeyValue.value = `'${value}'`;
   }
   return { keyValue: defKeyValue, mockBuffer: importedMockBuffer };
+}
+
+function handleClassMethod(memberKey: string, memberKeyValue: KeyValue, star: string, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], elementName: string, memberValue: string): string {
+  let value:string;
+  if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
+    const getKey = `get ${memberKeyValue.key}`;
+    const getMethodValue = parent.members[getKey] ? `get: function${star} ${handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
+    const setKey = `set ${memberKeyValue.key}`;
+    const setMethodValue = parent.members[setKey] ? `set: function${star} ${handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
+    value = `Object.defineProperty(global.${parent.key}_temp, '${memberKeyValue.key}', {
+  ${getMethodValue}
+  ${setMethodValue}
+});`;
+    if (parent.members[getKey]) {
+      parent.members[getKey].isMocked = true;
+    }
+    if (parent.members[setKey]) {
+      parent.members[setKey].isMocked = true;
+    }
+  } else {
+    value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
+  }
+  return value;
 }
