@@ -15,7 +15,16 @@
 
 import fs from 'fs';
 import path from 'path';
-import { DECLARES, IGNORE_REFERENCES, importDeclarationFiles, KeyValueTypes, mockBufferMap, MockedFileMap, TSTypes, TYPESCRIPT_KEYWORDS } from '../common/constants';
+import {
+  DECLARES,
+  IGNORE_REFERENCES,
+  importDeclarationFiles,
+  KeyValueTypes,
+  mockBufferMap,
+  MockedFileMap,
+  TSTypes,
+  TYPESCRIPT_KEYWORDS
+} from '../common/constants';
 import { Declare, KeyValue, Members, MockBuffer } from '../types';
 import { generateKeyValue } from '../common/commonUtils';
 
@@ -47,10 +56,11 @@ export function generateContent(mockBuffer: MockBuffer, members: Members): strin
     if (keyValue.isGlobalDeclare) {
       membersContent.push(`export const ${memberKey}=global.${memberKey};`);
     } else {
+      const functionBody = handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property);
       if (keyValue.type === KeyValueTypes.FUNCTION) {
-        membersContent.push(`export function ${memberKey}${handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property)};`);
+        membersContent.push(`export function ${memberKey}${functionBody};`);
       } else {
-        membersContent.push(`export const ${memberKey} = ${handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property)};`);
+        membersContent.push(`export const ${memberKey} = ${functionBody};`);
       }
     }
     if (keyValue.isDefault) {
@@ -71,11 +81,22 @@ export function generateContent(mockBuffer: MockBuffer, members: Members): strin
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   if (keyValue.value !== undefined) {
     return keyValue.value;
   }
-  if (new Set<KeyValueTypes>([KeyValueTypes.CLASS, KeyValueTypes.MODULE, KeyValueTypes.INTERFACE]).has(keyValue.type) && kvPath.includes(keyValue)) {
+  if (new Set<KeyValueTypes>([
+    KeyValueTypes.CLASS,
+    KeyValueTypes.MODULE,
+    KeyValueTypes.INTERFACE
+  ]).has(keyValue.type) && kvPath.includes(keyValue)) {
     if (keyValue.isGlobalDeclare) {
       return `global.${keyValue.key}`;
     }
@@ -100,7 +121,14 @@ return mockKeyValue(key, keyValue, mockBuffer, kvPath, rootKeyValue, property);
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function mockKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function mockKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   let value: string;
   switch (keyValue.type) {
     case KeyValueTypes.CLASS: {
@@ -174,7 +202,14 @@ function mockKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, k
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleClassKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleClassKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberLines: string[] = [];
   const dynamicProperties: string[] = [];
 
@@ -214,14 +249,18 @@ function handleClassKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBu
 
 /**
  * 处理继承
- * @param key KV节点key值
  * @param keyValue KV节点
  * @param mockBuffer KV节点所在文件的mock信息
  * @param kvPath KV节点路径
  * @param rootKeyValue 仅次于FILE节点的根节点
  * @returns
  */
-function handleHeritage(keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue) {
+function handleHeritage(
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue
+) {
   const keyValueInfo = findKeyValueDefined(keyValue.heritage.key, keyValue.heritage, mockBuffer, kvPath, rootKeyValue, keyValue.heritage.property);
   const defKeyValue = keyValueInfo.keyValue;
   const defMockBuffer = keyValueInfo.mockBuffer;
@@ -251,7 +290,14 @@ function handleHeritage(keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyV
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleExportKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleExportKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   return `export * from './${path.relative(path.dirname(mockBuffer.mockedFilePath), keyValue.key)}';`;
 }
 
@@ -265,7 +311,14 @@ function handleExportKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockB
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleFileKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleFileKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   if (property) {
     const propertyKeyValue = keyValue.members[property.key];
     if (propertyKeyValue) {
@@ -278,7 +331,7 @@ function handleFileKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuf
 }
 
 /**
- * 处理funciton KV节点
+ * 处理function KV节点
  * @param key KV节点key值
  * @param keyValue KV节点
  * @param mockBuffer KV节点所在文件的mock信息
@@ -287,7 +340,14 @@ function handleFileKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuf
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleFunctionKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleFunctionKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberKey = 'IterableIterator';
   const memberKeyValue = keyValue.members[memberKey];
   if (memberKeyValue) {
@@ -313,7 +373,14 @@ function handleFunctionKeyValue(key: string, keyValue: KeyValue, mockBuffer: Moc
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleImportKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleImportKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const importedMockBuffer = mockBufferMap.get(MockedFileMap.get(keyValue.importedModulePath));
   const importedRootKeyValue = importedMockBuffer.contents;
   if (keyValue.isImportDefault) {
@@ -343,7 +410,14 @@ function handleImportKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockB
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleIntersectionKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleIntersectionKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const params: string[] = [];
   Object.keys(keyValue.methodParams).forEach(param => {
     const paramKeyValue = keyValue.methodParams[param];
@@ -364,7 +438,14 @@ function handleIntersectionKeyValue(key: string, keyValue: KeyValue, mockBuffer:
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleModuleKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property?: KeyValue): string {
+function handleModuleKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property?: KeyValue
+): string {
   const memberLines: string[] = [];
   if (property) {
     const propertyKeyValue = keyValue.members[property.key];
@@ -400,7 +481,14 @@ function handleModuleKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockB
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleInterfaceKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleInterfaceKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberLines: string[] = [];
 
   if (keyValue.heritage) {
@@ -429,7 +517,14 @@ function handleInterfaceKeyValue(key: string, keyValue: KeyValue, mockBuffer: Mo
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleValueKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleValueKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   return keyValue.key;
 }
 
@@ -443,7 +538,14 @@ function handleValueKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBu
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleVariableKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleVariableKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberLines: string[] = [];
   Object.keys(keyValue.members).forEach(memberKey => {
     const memberKeyValue = keyValue.members[memberKey];
@@ -463,7 +565,14 @@ function handleVariableKeyValue(key: string, keyValue: KeyValue, mockBuffer: Moc
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findKeyValueDefined(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): KeyValueInfo {
+function findKeyValueDefined(
+    key: string,
+    targetKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): KeyValueInfo {
   let keyValueInfo: KeyValueInfo | undefined;
   // 在当前文件中找
   keyValueInfo = findInCurrentFile(key, targetKeyValue, targetKeyValue.parent, mockBuffer, kvPath, rootKeyValue, property);
@@ -513,7 +622,14 @@ function findKeyValueDefined(key: string, targetKeyValue: KeyValue, mockBuffer: 
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findTSTypes(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): KeyValueInfo | undefined {
+function findTSTypes(
+    key: string,
+    targetKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): KeyValueInfo | undefined {
   const paramsContent: string[] = [];
   Object.keys(targetKeyValue.typeParameters).forEach(typeParameter => {
     const typeParamterKeyValue: KeyValue = targetKeyValue.typeParameters[typeParameter];
@@ -537,7 +653,13 @@ function findTSTypes(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuff
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleParams(params: Members, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleParams(
+    params: Members,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const contents: string[] = [];
   Object.keys(params).forEach(key => {
     const paramKeyValue = params[key];
@@ -556,7 +678,14 @@ function handleParams(params: Members, mockBuffer: MockBuffer, kvPath: KeyValue[
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findInLibs(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): KeyValueInfo | undefined {
+function findInLibs(
+    key: string,
+    targetKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): KeyValueInfo | undefined {
   if (key === 'globalThis') {
     const globalThisKeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
     return { keyValue: globalThisKeyValue, mockBuffer };
@@ -608,7 +737,14 @@ function findInLibs(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuffe
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findInLibFunction(key: string, targetKeyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): KeyValueInfo | undefined {
+function findInLibFunction(
+    key: string,
+    targetKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): KeyValueInfo | undefined {
   const params = handleParams(targetKeyValue.methodParams, mockBuffer, kvPath, rootKeyValue, property);
   let value: string;
   // 判断是否是函数
@@ -627,13 +763,22 @@ function findInLibFunction(key: string, targetKeyValue: KeyValue, mockBuffer: Mo
  * 在当前文件中查找类型定义
  * @param key KV节点key值
  * @param targetKeyValue 需要查找的reference KV节点
+ * @param parent 父节点
  * @param mockBuffer KV节点所在文件的mock信息
  * @param kvPath KV节点路径
  * @param rootKeyValue 仅次于FILE节点的根节点
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findInCurrentFile(key: string, targetKeyValue: KeyValue, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): KeyValueInfo | undefined {
+function findInCurrentFile(
+    key: string,
+    targetKeyValue: KeyValue,
+    parent: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): KeyValueInfo | undefined {
   if (!parent) {
     return;
   }
@@ -661,7 +806,12 @@ function findInCurrentFile(key: string, targetKeyValue: KeyValue, parent: KeyVal
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findInDeclares(key: string, targetKeyValue: KeyValue, kvPath: KeyValue[], property?: KeyValue): KeyValueInfo | undefined {
+function findInDeclares(
+    key: string,
+    targetKeyValue: KeyValue,
+    kvPath: KeyValue[],
+    property?: KeyValue
+): KeyValueInfo | undefined {
   if (DECLARES[key]) {
     const mockBuffer = mockBufferMap.get(MockedFileMap.get(DECLARES[key].from));
     return {
@@ -682,7 +832,12 @@ function findInDeclares(key: string, targetKeyValue: KeyValue, kvPath: KeyValue[
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findInAllFiles(key: string, targetKeyValue: KeyValue, kvPath: KeyValue[], property?: KeyValue): KeyValueInfo | undefined {
+function findInAllFiles(
+    key: string,
+    targetKeyValue: KeyValue,
+    kvPath: KeyValue[],
+    property?: KeyValue
+): KeyValueInfo | undefined {
   for (const definedMockBuffer of mockBufferMap.values()) {
     const members = definedMockBuffer.contents.members;
     if (members[key]) {
@@ -696,6 +851,7 @@ function findInAllFiles(key: string, targetKeyValue: KeyValue, kvPath: KeyValue[
  * 获取节点在当前文件的路径
  * 以递归的方式逐级向上获取所有祖先节点的key
  * @param keyValue KV节点
+ * @param paths 节点路径
  * @returns
  */
 function getKeyValuePath(keyValue: KeyValue, paths = []): string[] {
@@ -714,7 +870,12 @@ function getKeyValuePath(keyValue: KeyValue, paths = []): string[] {
  * @param rootKeyValue 仅次于FILE节点的根节点
  * @returns
  */
-function handleSameFunctions(sameFuncList: KeyValue[], mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue): string {
+function handleSameFunctions(
+    sameFuncList: KeyValue[],
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue
+): string {
   if (sameFuncList.length >= 2) {
     return handleOverloadedFunction(sameFuncList, mockBuffer, kvPath, rootKeyValue);
   } else {
@@ -730,7 +891,12 @@ function handleSameFunctions(sameFuncList: KeyValue[], mockBuffer: MockBuffer, k
  * @param rootKeyValue 仅次于FILE节点的根节点
  * @returns
  */
-function handleOverloadedFunction(sameFuncList: KeyValue[], mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue): string {
+function handleOverloadedFunction(
+    sameFuncList: KeyValue[],
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue
+): string {
   const func = sameFuncList.find(func => func.members.Promise);
   if (!func) {
     return handleSingleFunction(sameFuncList[0], mockBuffer, kvPath, rootKeyValue);
@@ -814,7 +980,14 @@ function findProperty(keyValue: KeyValue, property?: KeyValue): KeyValue | undef
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handlePropertyKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handlePropertyKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberLines: string[] = [];
   Object.keys(keyValue.members).forEach(memberKey => {
     const memberKeyValue = keyValue.members[memberKey];
@@ -834,7 +1007,14 @@ function handlePropertyKeyValue(key: string, keyValue: KeyValue, mockBuffer: Moc
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleReferenceKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleReferenceKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   if (IGNORE_REFERENCES.has(key)) {
     const memberLines: string[] = [];
     Object.keys(keyValue.typeParameters).forEach(memberKey => {
@@ -889,7 +1069,14 @@ function handleReferenceKeyValue(key: string, keyValue: KeyValue, mockBuffer: Mo
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleEnumKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleEnumKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const memberLines: string[] = [];
   Object.keys(keyValue.members).forEach(memberKey => {
     const memberKeyValue = keyValue.members[memberKey];
@@ -909,7 +1096,14 @@ function handleEnumKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuf
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleExpressionKeyValue(key: string, keyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue, property: KeyValue): string {
+function handleExpressionKeyValue(
+    key: string,
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue,
+    property: KeyValue
+): string {
   const elements = keyValue.operateElements;
   return elements.map(element => {
     return handleKeyValue(element.key, element, mockBuffer, kvPath, rootKeyValue, element.property);
@@ -918,15 +1112,18 @@ function handleExpressionKeyValue(key: string, keyValue: KeyValue, mockBuffer: M
 
 /**
  * 处理非重载函数
- * @param key KV节点key值
- * @param keyValue KV节点
+ * @param funcKeyValue 函数KV节点
  * @param mockBuffer KV节点所在文件的mock信息
  * @param kvPath KV节点路径
  * @param rootKeyValue 仅次于FILE节点的根节点
- * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function handleSingleFunction(funcKeyValue: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], rootKeyValue: KeyValue): string {
+function handleSingleFunction(
+    funcKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    rootKeyValue: KeyValue
+): string {
   const memberLines: string[] = [];
   Object.keys(funcKeyValue.members).forEach(memberKey => {
     const memberKeyValue = funcKeyValue.members[memberKey];
@@ -1004,7 +1201,12 @@ export function handleDeclares(outMockJsFileDir: string): void {
  * @param member 不为undefined时，只mock这个member节点
  * @returns
  */
-function handleDeclare(declaration: Declare, declarations: string[], mockedDeclarations: Set<string>, member?: KeyValue): void {
+function handleDeclare(
+    declaration: Declare,
+    declarations: string[],
+    mockedDeclarations: Set<string>,
+    member?: KeyValue
+): void {
   if (member?.isMocked) {
     return;
   }
@@ -1016,7 +1218,8 @@ function handleDeclare(declaration: Declare, declarations: string[], mockedDecla
   switch (keyValue.type) {
     case KeyValueTypes.FUNCTION: {
       if (!mockedDeclarations.has(key)) {
-        const value = `global.${key} = global.${key} || (function ${handleKeyValue(key, keyValue, mockBuffer, [], keyValue, keyValue.property)});`;
+        const functionBody = handleKeyValue(key, keyValue, mockBuffer, [], keyValue, keyValue.property);
+        const value = `global.${key} = global.${key} || (function ${functionBody});`;
         values.push(value);
         mockedDeclarations.add(key);
       }
@@ -1054,7 +1257,11 @@ function handleDeclare(declaration: Declare, declarations: string[], mockedDecla
  * @param mockedDeclarations 已mock的全局节点的集合
  * @returns
  */
-function handleDependOnGlobals(keyValue: KeyValue, declarations: string[], mockedDeclarations: Set<string>): void {
+function handleDependOnGlobals(
+    keyValue: KeyValue,
+    declarations: string[],
+    mockedDeclarations: Set<string>
+): void {
   if (keyValue.type === KeyValueTypes.FUNCTION) {
     return;
   }
@@ -1078,11 +1285,19 @@ function handleDependOnGlobals(keyValue: KeyValue, declarations: string[], mocke
  * @param member 不为undefined时，只mock这个member节点
  * @returns
  */
-function handleGlobalClass(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
+function handleGlobalClass(
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    declarations: string[],
+    kvPath: KeyValue[],
+    member?: KeyValue
+): void {
   if (member) {
     if (!member.isMocked) {
       const memberValue = handleKeyValue(member.key, member, mockBuffer, kvPath, keyValue, member.property);
-      const value = `global.${keyValue.key}_temp${member.isStatic ? '' : '.prototype'}.${member.key} = ${member.type === KeyValueTypes.FUNCTION ? 'function' : ''}${memberValue};`;
+      const functionKeyword = member.type === KeyValueTypes.FUNCTION ? 'function' : '';
+      const prototypeStr = member.isStatic ? '' : '.prototype';
+      const value = `global.${keyValue.key}_temp${prototypeStr}.${member.key} = ${functionKeyword}${memberValue};`;
       member.isMocked = true;
       declarations.push(value);
     }
@@ -1092,12 +1307,16 @@ function handleGlobalClass(keyValue: KeyValue, mockBuffer: MockBuffer, declarati
     handleHeritage(keyValue, mockBuffer, kvPath.concat(keyValue), keyValue);
   }
 
-  Object.keys(keyValue.members).forEach(memberKey => handleClassMembers(memberKey, keyValue, mockBuffer, kvPath, declarations));
+  Object.keys(keyValue.members).forEach(
+      memberKey => handleClassMembers(memberKey, keyValue, mockBuffer, kvPath, declarations)
+  );
   // 处理同名declare
   keyValue.sameDeclares.forEach(sameDeclare => {
     const sameKeyValue = sameDeclare.keyValue;
     const sameMockBuffer =  mockBufferMap.get(MockedFileMap.get(sameDeclare.from));
-    Object.keys(sameKeyValue.members).forEach(memberKey => handleClassMembers(memberKey, sameKeyValue, sameMockBuffer, kvPath, declarations));
+    Object.keys(sameKeyValue.members).forEach(
+        memberKey => handleClassMembers(memberKey, sameKeyValue, sameMockBuffer, kvPath, declarations)
+    );
   });
 }
 
@@ -1110,7 +1329,13 @@ function handleGlobalClass(keyValue: KeyValue, mockBuffer: MockBuffer, declarati
  * @param declarations 已mock的文本内容
  * @returns
  */
-function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], declarations: string[]): void {
+function handleClassMembers(
+    memberKey: string,
+    parent: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    declarations: string[]
+): void {
   const memberKeyValue = parent.members[memberKey];
   if (memberKeyValue.isMocked) {
     return;
@@ -1144,7 +1369,13 @@ function handleClassMembers(memberKey: string, parent: KeyValue, mockBuffer: Moc
  * @param member 不为undefined时，只mock这个member节点
  * @returns
  */
-function handleGlobalModule(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
+function handleGlobalModule(
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    declarations: string[],
+    kvPath: KeyValue[],
+    member?: KeyValue
+): void {
   return handleGlobalModuleOrInterface(keyValue, mockBuffer, declarations, kvPath, member);
 }
 
@@ -1157,7 +1388,13 @@ function handleGlobalModule(keyValue: KeyValue, mockBuffer: MockBuffer, declarat
  * @param member 不为undefined时，只mock这个member节点
  * @returns
  */
-function handleGlobalModuleOrInterface(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
+function handleGlobalModuleOrInterface(
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    declarations: string[],
+    kvPath: KeyValue[],
+    member?: KeyValue
+): void {
   if (member) {
     if (!member.isMocked) {
       const memberKey = member.key;
@@ -1196,7 +1433,13 @@ function handleGlobalModuleOrInterface(keyValue: KeyValue, mockBuffer: MockBuffe
  * @param member 不为undefined时，只mock这个member节点
  * @returns
  */
-function handleGlobalInterface(keyValue: KeyValue, mockBuffer: MockBuffer, declarations: string[], kvPath: KeyValue[], member?: KeyValue): void {
+function handleGlobalInterface(
+    keyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    declarations: string[],
+    kvPath: KeyValue[],
+    member?: KeyValue
+): void {
   if (keyValue.heritage) {
     handleHeritage(keyValue, mockBuffer, kvPath.concat(keyValue), keyValue);
   }
@@ -1211,7 +1454,12 @@ function handleGlobalInterface(keyValue: KeyValue, mockBuffer: MockBuffer, decla
  * @param property KV节点的调用属性节点，如A.b, b节点为property
  * @returns
  */
-function findDefFromImport(importKeyValue: KeyValue, mockBuffer: MockBuffer, rootKeyValue: KeyValue, property?: KeyValue): KeyValueInfo {
+function findDefFromImport(
+    importKeyValue: KeyValue,
+    mockBuffer: MockBuffer,
+    rootKeyValue: KeyValue,
+    property?: KeyValue
+): KeyValueInfo {
   const importedMockBuffer = mockBufferMap.get(MockedFileMap.get(importKeyValue.importedModulePath));
   if (!importedMockBuffer) {
     throw new Error('未找到foundKeyValue.importedModulePath对应的mockBuffer');
@@ -1249,25 +1497,58 @@ function findDefFromImport(importKeyValue: KeyValue, mockBuffer: MockBuffer, roo
   return { keyValue: defKeyValue, mockBuffer: importedMockBuffer };
 }
 
-function handleClassMethod(memberKey: string, memberKeyValue: KeyValue, star: string, parent: KeyValue, mockBuffer: MockBuffer, kvPath: KeyValue[], elementName: string, memberValue: string): string {
+function handleClassMethod(
+    memberKey: string,
+    memberKeyValue: KeyValue,
+    star: string,
+    parent: KeyValue,
+    mockBuffer: MockBuffer,
+    kvPath: KeyValue[],
+    elementName: string,
+    memberValue: string
+): string {
   let value:string;
   if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
-    const getKey = `get ${memberKeyValue.key}`;
-    const getMethodValue = parent.members[getKey] ? `get: function${star} ${handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
-    const setKey = `set ${memberKeyValue.key}`;
-    const setMethodValue = parent.members[setKey] ? `set: function${star} ${handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property)},` : '';
-    value = `Object.defineProperty(global.${parent.key}_temp, '${memberKeyValue.key}', {
-  ${getMethodValue}
-  ${setMethodValue}
-});`;
-    if (parent.members[getKey]) {
-      parent.members[getKey].isMocked = true;
-    }
-    if (parent.members[setKey]) {
-      parent.members[setKey].isMocked = true;
-    }
+    value = handleClassGetterOrSetterMethod(memberKey, memberKeyValue, star, parent, mockBuffer, kvPath, elementName, memberValue);
   } else {
     value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
   }
   return value;
+}
+
+function handleClassGetterOrSetterMethod(
+  memberKey: string,
+  memberKeyValue: KeyValue,
+  star: string,
+  parent: KeyValue,
+  mockBuffer: MockBuffer,
+  kvPath: KeyValue[],
+  elementName: string,
+  memberValue: string
+): string {
+  const getKey = `get ${memberKeyValue.key}`;
+  let getMethodValue: string = '';
+  if (parent.members[getKey]) {
+    const getFunctionBody = handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property);
+    getMethodValue = `get: function${star} ${getFunctionBody},`;
+  }
+
+  let setMethodValue: string = '';
+  const setKey = `set ${memberKeyValue.key}`;
+  if (parent.members[setKey]) {
+    const setFunctionBody = handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property);
+    setMethodValue = `set: function${star} ${setFunctionBody},`;
+  }
+
+  if (parent.members[getKey]) {
+    parent.members[getKey].isMocked = true;
+  }
+  if (parent.members[setKey]) {
+    parent.members[setKey].isMocked = true;
+  }
+
+  return `Object.defineProperty(global.${parent.key}_temp, '${memberKeyValue.key}', {
+  ${getMethodValue}
+  ${setMethodValue}
+});`;
 }

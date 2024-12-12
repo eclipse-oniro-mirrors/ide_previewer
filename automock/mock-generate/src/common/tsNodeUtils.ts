@@ -27,7 +27,13 @@ import path from 'path';
  * @param parent 父级节点
  * @param type KeyValue节点类型
  */
-export function handleImportDeclaration(node: ts.ImportDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
+export function handleImportDeclaration(
+  node: ts.ImportDeclaration,
+  mockBuffer: MockBuffer,
+  members: Members,
+  parent: KeyValue,
+  type: KeyValueTypes
+): void {
   const moduleSpecifier = handleExpression(node.moduleSpecifier, mockBuffer, {}, parent, type, []);
   const importFilePath = getAbsolutePath(mockBuffer, moduleSpecifier.key);
   const importClauseNode = node.importClause;
@@ -43,9 +49,15 @@ export function handleImportDeclaration(node: ts.ImportDeclaration, mockBuffer: 
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleModuleDeclaration(node: ts.ModuleDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleModuleDeclaration(
+    node: ts.ModuleDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const moduleName = handleModuleName(node.name, members, parent, type);
   moduleName.isNeedMock = true;
   if (!moduleName) {
@@ -64,9 +76,15 @@ export function handleModuleDeclaration(node: ts.ModuleDeclaration, mockBuffer: 
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleTypeAliasDeclaration(node: ts.TypeAliasDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleTypeAliasDeclaration(
+    node: ts.TypeAliasDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const name = handleIdentifier(node.name, members, parent, type);
   node.typeParameters?.forEach(typeParam => {
     handleTypeParameterDeclaration(typeParam, mockBuffer, name.typeParameters, name, KeyValueTypes.REFERENCE);
@@ -83,9 +101,15 @@ export function handleTypeAliasDeclaration(node: ts.TypeAliasDeclaration, mockBu
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleClassDeclaration(node: ts.ClassDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleClassDeclaration(
+    node: ts.ClassDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const isComponent: boolean = isComponentNode(node, mockBuffer);
   const className = handleIdentifier(node.name, members, parent, type);
   className.isNeedMock = true;
@@ -118,9 +142,15 @@ export function handleClassDeclaration(node: ts.ClassDeclaration, mockBuffer: Mo
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleInterfaceDeclaration(node: ts.InterfaceDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleInterfaceDeclaration(
+    node: ts.InterfaceDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const interfaceName = handleIdentifier(node.name, members, parent, type);
   handleDefaultOrExport(mockBuffer, interfaceName, node.modifiers);
   node.typeParameters?.forEach(typeParameter => {
@@ -142,9 +172,15 @@ export function handleInterfaceDeclaration(node: ts.InterfaceDeclaration, mockBu
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleEnumDeclaration(node: ts.EnumDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleEnumDeclaration(
+    node: ts.EnumDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const enumName = handleEnumName(node, members, parent, type);
   enumName.isNeedMock = true;
   handleDefaultOrExport(mockBuffer, enumName, node.modifiers);
@@ -161,9 +197,15 @@ export function handleEnumDeclaration(node: ts.EnumDeclaration, mockBuffer: Mock
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleFunctionDeclaration(node: ts.FunctionDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleFunctionDeclaration(
+    node: ts.FunctionDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const functionName = handleIdentifier(node.name, members, parent, type);
   functionName.isNeedMock = true;
   handleDefaultOrExport(mockBuffer, functionName, node.modifiers);
@@ -184,9 +226,15 @@ export function handleFunctionDeclaration(node: ts.FunctionDeclaration, mockBuff
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleExportDeclaration(node: ts.ExportDeclaration, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
+export function handleExportDeclaration(
+    node: ts.ExportDeclaration,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): void {
   let moduleSpecifier: KeyValue;
   let importedModulePath: string;
   if (node.moduleSpecifier) {
@@ -215,9 +263,15 @@ export function handleExportDeclaration(node: ts.ExportDeclaration, mockBuffer: 
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleVariableStatement(node: ts.VariableStatement, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): void {
+export function handleVariableStatement(
+    node: ts.VariableStatement,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): void {
   node.declarationList.declarations.forEach(declaration => {
     const declarationName = handleBindingName(declaration.name, mockBuffer, members, parent, type
 
@@ -237,9 +291,15 @@ export function handleVariableStatement(node: ts.VariableStatement, mockBuffer: 
  * @param members 当前节点应该归属的member
  * @param parent 父级节点
  * @param type KeyValue节点类型
- * @returns 
+ * @returns
  */
-export function handleExportAssignment(node: ts.ExportAssignment, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+export function handleExportAssignment(
+    node: ts.ExportAssignment,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   const exportDefault = handleExpression(node.expression, mockBuffer, {}, parent, type, []);
   members[exportDefault.key].isDefault = true;
   mockBuffer.contents.members.default = members[exportDefault.key];
@@ -369,7 +429,13 @@ function handleEnumMember(
   return memberName;
 }
 
-function handleEnumMemberInitializer(node: ts.Expression, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+function handleEnumMemberInitializer(
+    node: ts.Expression,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   if (!node) {
     return generateKeyValue('', KeyValueTypes.VALUE, parent);
   }
@@ -396,7 +462,13 @@ function handleEnumMemberInitializer(node: ts.Expression, mockBuffer: MockBuffer
       const expression = generateKeyValue('expression', KeyValueTypes.EXPRESSION, parent);
       expression.operateElements = [];
       members['expression'] = expression;
-      return handlePropertyAccessExpression(node as ts.PropertyAccessExpression, mockBuffer, expression.members, expression.parent, type, expression.operateElements);
+      return handlePropertyAccessExpression(
+          node as ts.PropertyAccessExpression,
+          mockBuffer, expression.members,
+          expression.parent,
+          type,
+          expression.operateElements
+      );
     }
     default: {
       throw new Error('未知的EnumMemberInitializer类型');
@@ -465,7 +537,14 @@ function handleMethodSignature(
   }
   const methodName = handlePropertyNameNode(node.name, mockBuffer, members, parent, type);
   for (let i = 0; i < node.parameters.length; i++) {
-    node.parameters.forEach(_ => handleParameterDeclaration(i, node.parameters[i], mockBuffer, methodName.methodParams, methodName, KeyValueTypes.REFERENCE));
+    node.parameters.forEach(_ => handleParameterDeclaration(
+        i,
+        node.parameters[i],
+        mockBuffer,
+        methodName.methodParams,
+        methodName,
+        KeyValueTypes.REFERENCE
+    ));
   }
   node.typeParameters?.forEach(parameter => {
     handleTypeParameterDeclaration(parameter, mockBuffer, methodName.typeParameters, methodName, KeyValueTypes.VALUE);
@@ -609,7 +688,14 @@ function isComponentNode(node: ts.ClassDeclaration, mockBuffer: MockBuffer): boo
   });
 }
 
-function handleImportClauseNode(node: ts.ImportClause, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes, importFilePath: string): void {
+function handleImportClauseNode(
+    node: ts.ImportClause,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes,
+    importFilePath: string
+): void {
   const namedImportBindings = node.namedBindings;
   if (namedImportBindings) {
     handleNamedBindings(namedImportBindings, members, parent, type, importFilePath);
@@ -622,7 +708,13 @@ function handleImportClauseNode(node: ts.ImportClause, mockBuffer: MockBuffer, m
   }
 }
 
-function handlePropertyNameNode(node: ts.PropertyName, mockBuffer: MockBuffer, members: Members, parent: KeyValue, type: KeyValueTypes): KeyValue {
+function handlePropertyNameNode(
+    node: ts.PropertyName,
+    mockBuffer: MockBuffer,
+    members: Members,
+    parent: KeyValue,
+    type: KeyValueTypes
+): KeyValue {
   if (!node) {
     members[''] = generateKeyValue('', type, parent);
     return members[''];
@@ -1348,9 +1440,9 @@ function handleUnionTypeNode(
   type: KeyValueTypes
 ): KeyValue {
   if (!node.types.length) {
-    const underfinedKeyValue = generateKeyValue('undefined', KeyValueTypes.VALUE, parent);
-    underfinedKeyValue.value = 'undefined';
-    return underfinedKeyValue;
+    const undefinedKeyValue = generateKeyValue('undefined', KeyValueTypes.VALUE, parent);
+    undefinedKeyValue.value = 'undefined';
+    return undefinedKeyValue;
   }
   const typeIndex = node.types.findIndex(typeNode => {
     return BASE_KINDS.includes(typeNode.kind);
@@ -1475,7 +1567,9 @@ function handleTypeReferenceNode(
   type: KeyValueTypes
 ): KeyValue {
   const typeName = handleEntityName(node.typeName, mockBuffer, members, parent, type);
-  node.typeArguments?.forEach(typeArgument => handleTypeNode(mockBuffer, typeName.typeParameters, typeName, KeyValueTypes.REFERENCE, typeArgument));
+  node.typeArguments?.forEach(
+      typeArgument => handleTypeNode(mockBuffer, typeName.typeParameters, typeName, KeyValueTypes.REFERENCE, typeArgument)
+  );
   members[typeName.key] = typeName;
   return typeName;
 }
