@@ -1341,8 +1341,8 @@ function handleFunctionTypeNode(
   if (node.name) {
     functionName = handlePropertyNameNode(node.name, mockBuffer, members, parent, type);
   } else {
-    functionName = generateKeyValue('', KeyValueTypes.FUNCTION, parent);
-    members[''] = functionName;
+    functionName = parent;
+    parent.type = KeyValueTypes.FUNCTION;
   }
   functionName.isArrowFunction = new Set<KeyValueTypes>([
     KeyValueTypes.INTERSECTION,

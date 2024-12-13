@@ -106,7 +106,7 @@ export function getAbsolutePath(mockBuffer: MockBuffer, specifier: string): stri
  * @param typeParams 迭代器返回值的类型参数
  */
 export function handleIterableIterator(typeParams: string): string {
-  return `() {
+  return `function* () {
     yield ${typeParams};  
     yield ${typeParams};
     yield ${typeParams};

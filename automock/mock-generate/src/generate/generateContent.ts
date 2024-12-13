@@ -57,11 +57,7 @@ export function generateContent(mockBuffer: MockBuffer, members: Members): strin
       membersContent.push(`export const ${memberKey}=global.${memberKey};`);
     } else {
       const functionBody = handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property);
-      if (keyValue.type === KeyValueTypes.FUNCTION) {
-        membersContent.push(`export function ${memberKey}${functionBody};`);
-      } else {
-        membersContent.push(`export const ${memberKey} = ${functionBody};`);
-      }
+      membersContent.push(`export const ${memberKey} = ${functionBody};`);
     }
     if (keyValue.isDefault) {
       const exportDefaultStr = `export default ${keyValue.key}`;
@@ -223,7 +219,8 @@ function handleClassKeyValue(
       memberKeyValue.value = undefined;
       elementName = memberKeyValue.key;
     }
-    const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+    const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)
+      .replace(/^function\*?/, '');
 
     if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
       if (memberKeyValue.members['IterableIterator']) {
@@ -590,8 +587,8 @@ function findTSTypes(
 ): KeyValueInfo | undefined {
   const paramsContent: string[] = [];
   Object.keys(targetKeyValue.typeParameters).forEach(typeParameter => {
-    const typeParamterKeyValue: KeyValue = targetKeyValue.typeParameters[typeParameter];
-    const paramContent: string = handleKeyValue(typeParameter, typeParamterKeyValue, mockBuffer, kvPath, rootKeyValue, typeParamterKeyValue.property);
+    const typeParameterKeyValue: KeyValue = targetKeyValue.typeParameters[typeParameter];
+    const paramContent: string = handleKeyValue(typeParameter, typeParameterKeyValue, mockBuffer, kvPath, rootKeyValue, typeParameterKeyValue.property);
     paramsContent.push(paramContent);
   });
   if (!TSTypes[key]) {
@@ -867,13 +864,13 @@ function handleOverloadedFunction(
       break;
     }
   }
-  return `(...args) {
+  return `function (...args) {
     console.warn(ts.replace('{{}}', '${func.key}'));
     ${memberLines.join(';\n')}
     if (args && typeof args[args.length - 1] === 'function') {
       args[args.length - 1].call(this, ${isAsyncCallback ? callbackError : ''}${callBackParams.join(', ')});
     }
-    return new Promise((resolve, reject) => {
+    return new Promise(function (resolve, reject) {
       resolve(${callBackParams.join(', ')});
     });
   }`;
@@ -991,9 +988,6 @@ function handleReferenceKeyValue(
     }
   }
 
-  if (keyValueInfo.keyValue.type === KeyValueTypes.FUNCTION) {
-    value = `function ${value}`;
-  }
   return value;
 }
 
@@ -1064,11 +1058,11 @@ function handleSingleFunction(
     methodParam => TYPESCRIPT_KEYWORDS.has(methodParam) ? `${methodParam}1` : methodParam
   ).join(', ');
   const returnStr = funcKeyValue.members.Promise && funcKeyValue.members.Promise.type === KeyValueTypes.REFERENCE ?
-    `return new Promise((resolve, reject) => {
+    `return new Promise(function (resolve, reject) {
           resolve(${memberLines.join(',')});
         })` :
     `return ${memberLines.join(',')}`;
-  return `(${methodParams}) ${funcKeyValue.isArrowFunction ? '=>' : ''} {
+  return `function (${methodParams}) {
   console.warn(ts.replace('{{}}', '${funcKeyValue.key}'));
   ${returnStr}
   }`;
@@ -1149,7 +1143,7 @@ function handleDeclare(
     case KeyValueTypes.FUNCTION: {
       if (!mockedDeclarations.has(key)) {
         const functionBody = handleKeyValue(key, keyValue, mockBuffer, [], keyValue, keyValue.property);
-        const value = `global.${key} = global.${key} || (function ${functionBody});`;
+        const value = `global.${key} = global.${key} || (${functionBody});`;
         values.push(value);
         mockedDeclarations.add(key);
       }
@@ -1278,11 +1272,10 @@ function handleClassMembers(
     elementName = memberKeyValue.key;
   }
 
-  const star = memberKeyValue.type === KeyValueTypes.FUNCTION && memberKeyValue.members['IterableIterator'] ? '*' : '';
   const memberValue = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, parent, memberKeyValue.property);
   let value: string;
   if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-    value = handleClassMethod(memberKey, memberKeyValue, star, parent, mockBuffer, kvPath, elementName, memberValue);
+    value = handleClassMethod(memberKey, memberKeyValue, parent, mockBuffer, kvPath, elementName, memberValue);
   } else {
     value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
   }
@@ -1329,7 +1322,7 @@ function handleGlobalModuleOrInterface(
     if (!member.isMocked) {
       const memberKey = member.key;
       const memberValue = handleKeyValue(memberKey, member, mockBuffer, kvPath, keyValue, member.property);
-      const value = `global.${keyValue.key}_temp.${memberKey} = ${member.type === KeyValueTypes.FUNCTION ? 'function' : ''}${memberValue};`;
+      const value = `global.${keyValue.key}_temp.${memberKey} = ${memberValue};`;
       member.isMocked = true;
       declarations.push(value);
     }
@@ -1348,7 +1341,7 @@ function handleGlobalModuleOrInterface(
       elementName = memberKeyValue.key;
     }
     const memberValue = handleKeyValue(elementName, memberKeyValue, mockBuffer, kvPath, keyValue, memberKeyValue.property);
-    const value = `global.${keyValue.key}_temp${elementName} = ${memberKeyValue.type === KeyValueTypes.FUNCTION ? 'function' : ''}${memberValue};`;
+    const value = `global.${keyValue.key}_temp${elementName} = ${memberValue};`;
     memberKeyValue.isMocked = true;
     declarations.push(value);
   });
@@ -1430,7 +1423,6 @@ function findDefFromImport(
 function handleClassMethod(
   memberKey: string,
   memberKeyValue: KeyValue,
-  star: string,
   parent: KeyValue,
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
@@ -1439,16 +1431,15 @@ function handleClassMethod(
 ): string {
   let value:string;
   if (memberKey.startsWith('get ') || memberKey.startsWith('set ')) {
-    value = handleClassGetterOrSetterMethod(memberKeyValue, star, parent, mockBuffer, kvPath);
+    value = handleClassGetterOrSetterMethod(memberKeyValue, parent, mockBuffer, kvPath);
   } else {
-    value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = function${star} ${memberValue};`;
+    value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
   }
   return value;
 }
 
 function handleClassGetterOrSetterMethod(
   memberKeyValue: KeyValue,
-  star: string,
   parent: KeyValue,
   mockBuffer: MockBuffer,
   kvPath: KeyValue[]
@@ -1457,14 +1448,14 @@ function handleClassGetterOrSetterMethod(
   let getMethodValue: string = '';
   if (parent.members[getKey]) {
     const getFunctionBody = handleKeyValue(getKey, parent.members[getKey], mockBuffer, kvPath, parent, memberKeyValue.property);
-    getMethodValue = `get: function${star} ${getFunctionBody},`;
+    getMethodValue = `get: ${getFunctionBody},`;
   }
 
   let setMethodValue: string = '';
   const setKey = `set ${memberKeyValue.key}`;
   if (parent.members[setKey]) {
     const setFunctionBody = handleKeyValue(setKey, parent.members[setKey], mockBuffer, kvPath, parent, memberKeyValue.property);
-    setMethodValue = `set: function${star} ${setFunctionBody},`;
+    setMethodValue = `set: ${setFunctionBody},`;
   }
 
   if (parent.members[getKey]) {
