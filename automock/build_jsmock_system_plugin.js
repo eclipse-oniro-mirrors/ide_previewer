@@ -83,7 +83,7 @@ rollup.rollup(configJSAPIMockInput).then(bundle => {
   bundle.write(configJSAPIMockOutput).then(() => {
     countSize(configJSAPIMockOutput.file);
     let fileContent = fs.readFileSync(configJSAPIMockOutput.file, 'utf-8');
-    const tipTemp = 'var ts = "The {{}} interface in the previewer is a mocked impementation and man behave differently than on a real device. AAAAAA";\n';
+    const tipTemp = 'var ts = "The {{}} interface in the previewer is a mocked impementation and man behave differently than on a real device.";\n';
     const valueTemp = 'var vt = "The value in the previewer is a mocked impementation and man behave differently than on a real device.";\n';
     fileContent = tipTemp + valueTemp + fileContent;
     fs.writeFileSync(configJSAPIMockOutput.file, fileContent, 'utf-8');

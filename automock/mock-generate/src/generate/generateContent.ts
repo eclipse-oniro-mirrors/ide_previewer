@@ -435,12 +435,7 @@ function handleModuleKeyValue(
     if (!keyValue.isGlobalDeclare && !memberKeyValue.isNeedMock) {
       return;
     }
-    let value: string;
-    if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-      value = `${memberKeyValue.key}${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
-    } else {
-      value = `${memberKeyValue.key}: ${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
-    }
+    const value = `${memberKeyValue.key}: ${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
     memberLines.push(value);
   });
   return `{\n${memberLines.join(',\n')}\n}`;
@@ -467,12 +462,7 @@ function handleInterfaceKeyValue(
   }
   Object.keys(keyValue.members).forEach(memberKey => {
     const memberKeyValue = keyValue.members[memberKey];
-    let value: string;
-    if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-      value = `${memberKeyValue.key}${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
-    } else {
-      value = `${memberKeyValue.key}: ${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
-    }
+    const value = `${memberKeyValue.key}: ${handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)}`;
     memberLines.push(value);
   });
   return `{\n${memberLines.join(',\n')}\n}`;
