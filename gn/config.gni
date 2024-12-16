@@ -27,6 +27,7 @@ os_include_dirs = [
   "$ace_root/frameworks",
   "$ace_root/frameworks/base/utils",
   "$ace_root/frameworks/core/event",
+  "$ace_root/interfaces/inner_api/ace_kit/include",
   "$flutter_root/engine",
   "$flutter_root/engine/flutter/shell/platform/common/cpp/public",
   "$flutter_root/engine/ace_adapter/flutter/shell/platform/glfw/public",
