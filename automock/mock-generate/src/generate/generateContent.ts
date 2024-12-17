@@ -1410,6 +1410,16 @@ function findDefFromImport(
   return { keyValue: defKeyValue, mockBuffer: importedMockBuffer };
 }
 
+/**
+ * mock类方法
+ * @param memberKey 方法原名
+ * @param memberKeyValue 方法KV节点
+ * @param parent  负极节点
+ * @param mockBuffer 当前文件的mock信息
+ * @param kvPath KV检点路径
+ * @param elementName 方法名转换后方法名
+ * @param memberValue 类方法的mock内容
+ */
 function handleClassMethod(
   memberKey: string,
   memberKeyValue: KeyValue,
@@ -1428,6 +1438,13 @@ function handleClassMethod(
   return value;
 }
 
+/**
+ * mock 类中带get和set关键字的方法
+ * @param memberKeyValue 类方法KV节点
+ * @param parent 父级KV节点
+ * @param mockBuffer 当前文件的mock信息
+ * @param kvPath KV节点路径
+ */
 function handleClassGetterOrSetterMethod(
   memberKeyValue: KeyValue,
   parent: KeyValue,

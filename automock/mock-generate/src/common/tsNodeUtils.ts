@@ -38,7 +38,7 @@ export function handleImportDeclaration(
   const importFilePath = getAbsolutePath(mockBuffer, moduleSpecifier.key);
   const importClauseNode = node.importClause;
   if (importClauseNode) {
-    handleImportClauseNode(importClauseNode, mockBuffer, members, parent, KeyValueTypes.IMPORT, importFilePath);
+    handleImportClauseNode(importClauseNode, members, parent, KeyValueTypes.IMPORT, importFilePath);
   }
 }
 
@@ -65,7 +65,7 @@ export function handleModuleDeclaration(
   }
   handleDefaultOrExport(mockBuffer, moduleName, node.modifiers);
 
-  handleModuleBody(mockBuffer, moduleName.members, moduleName, KeyValueTypes.PROPERTY, node.body);
+  handleModuleBody(mockBuffer, moduleName.members, moduleName, node.body);
   return moduleName;
 }
 
@@ -210,7 +210,7 @@ export function handleFunctionDeclaration(
   functionName.isNeedMock = true;
   handleDefaultOrExport(mockBuffer, functionName, node.modifiers);
   for (let i = 0; i < node.parameters.length; i++) {
-    handleParameterDeclaration(i, node.parameters[i], mockBuffer, functionName.methodParams, functionName, KeyValueTypes.REFERENCE);
+    handleParameterDeclaration(node.parameters[i], mockBuffer, functionName.methodParams, functionName, KeyValueTypes.REFERENCE);
   }
   node.typeParameters?.forEach(
     typeParameter => handleTypeParameterDeclaration(typeParameter, mockBuffer, functionName.typeParameters, functionName, KeyValueTypes.VALUE)
@@ -273,9 +273,7 @@ export function handleVariableStatement(
   type: KeyValueTypes
 ): void {
   node.declarationList.declarations.forEach(declaration => {
-    const declarationName = handleBindingName(declaration.name, mockBuffer, members, parent, type
-
-    );
+    const declarationName = handleBindingName(declaration.name, members, parent, type);
     declarationName.isNeedMock = true;
     declarationName.operateElements = [];
     handleDefaultOrExport(mockBuffer, declarationName, node.modifiers);
@@ -319,7 +317,7 @@ function handleNamedExportBindings(
   }
   switch (node.kind) {
     case SyntaxKind.NamedExports: {
-      return handleNamedExports(node, mockBuffer, members, parent, type, importedModulePath);
+      return handleNamedExports(node, mockBuffer, type, importedModulePath);
     }
     case SyntaxKind.NamespaceExport: {
       break;
@@ -333,8 +331,6 @@ function handleNamedExportBindings(
 function handleNamedExports(
   node: ts.NamedExports,
   mockBuffer: MockBuffer,
-  members: Members,
-  parent: KeyValue,
   type: KeyValueTypes,
   importedModulePath: string
 ): void {
@@ -348,14 +344,13 @@ function handleNamedExports(
 }
 
 function handleParameterDeclaration(
-  parameterNum: number,
   node: ts.ParameterDeclaration,
   mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
 ): KeyValue {
-  const name = handleBindingName(node.name, mockBuffer, members, parent, type);
+  const name = handleBindingName(node.name, members, parent, type);
   if (name.key === 'arguments') {
     delete members.arguments;
     name.key = name.key.replace('arguments', 'args');
@@ -367,7 +362,6 @@ function handleParameterDeclaration(
 
 function handleBindingName(
   node: ts.BindingName,
-  mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
@@ -529,7 +523,6 @@ function handleMethodSignature(
   const methodName = handlePropertyNameNode(node.name, mockBuffer, members, parent, type);
   for (let i = 0; i < node.parameters.length; i++) {
     node.parameters.forEach(_ => handleParameterDeclaration(
-      i,
       node.parameters[i],
       mockBuffer,
       methodName.methodParams,
@@ -608,7 +601,7 @@ function handleMethodDeclaration(
     handleTypeParameterDeclaration(typeParameter, mockBuffer, methodName.typeParameters, methodName, KeyValueTypes.REFERENCE);
   });
   for (let i = 0; i < node.parameters.length; i++) {
-    handleParameterDeclaration(i, node.parameters[i], mockBuffer, methodName.methodParams, methodName, KeyValueTypes.REFERENCE);
+    handleParameterDeclaration(node.parameters[i], mockBuffer, methodName.methodParams, methodName, KeyValueTypes.REFERENCE);
   }
   handleTypeNode(mockBuffer, methodName.members, methodName, KeyValueTypes.REFERENCE, node.type);
   return methodName;
@@ -681,7 +674,6 @@ function isComponentNode(node: ts.ClassDeclaration, mockBuffer: MockBuffer): boo
 
 function handleImportClauseNode(
   node: ts.ImportClause,
-  mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes,
@@ -839,7 +831,6 @@ function handleModuleBody(
   mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
-  type: KeyValueTypes,
   node?: ts.ModuleBody | ts.JSDocNamespaceDeclaration
 ): void {
   switch (node.kind) {
@@ -965,7 +956,7 @@ function handleAccessorDeclaration(
   method: KeyValue
 ): KeyValue {
   for (let i = 0; i < node.parameters.length; i++) {
-    handleParameterDeclaration(i, node.parameters[i], mockBuffer, method.methodParams, method, KeyValueTypes.REFERENCE);
+    handleParameterDeclaration(node.parameters[i], mockBuffer, method.methodParams, method, KeyValueTypes.REFERENCE);
   }
   handleTypeNode(mockBuffer, method.members, method, KeyValueTypes.REFERENCE, node.type);
   return method;
@@ -1027,10 +1018,10 @@ function handleTypeNode(
       return handleUnionTypeNode(node as ts.UnionTypeNode, mockBuffer, members, parent, type);
     }
     case SyntaxKind.LiteralType: {
-      return handleLiteralTypeNode(node as ts.LiteralTypeNode, mockBuffer, members, parent, KeyValueTypes.VALUE);
+      return handleLiteralTypeNode(node as ts.LiteralTypeNode, members, parent, KeyValueTypes.VALUE);
     }
     case SyntaxKind.TupleType: {
-      return handleTupleTypeNode(node as ts.TupleTypeNode, mockBuffer, members, parent, type);
+      return handleTupleTypeNode(node as ts.TupleTypeNode, mockBuffer, parent, type);
     }
     case SyntaxKind.FunctionType: {
       return handleFunctionTypeNode(node as ts.FunctionTypeNode, mockBuffer, members, parent, KeyValueTypes.FUNCTION);
@@ -1186,7 +1177,7 @@ function handleTemplateLiteralTypeNode(
 
   handleTemplateHead(node.head, expression.operateElements, expression, type);
 
-  node.templateSpans.forEach(templateSpan => handleTemplateLiteralTypeSpan(templateSpan, expression.operateElements, expression, type, mockBuffer));
+  node.templateSpans.forEach(templateSpan => handleTemplateLiteralTypeSpan(templateSpan, expression.operateElements, expression, mockBuffer));
   return expression;
 }
 
@@ -1194,7 +1185,6 @@ function handleTemplateLiteralTypeSpan(
   node: ts.TemplateLiteralTypeSpan,
   operateElements: KeyValue[],
   parent: KeyValue,
-  type: KeyValueTypes,
   mockBuffer: MockBuffer
 ): void {
   const addKeyValue = generateKeyValue('+', KeyValueTypes.VALUE, parent);
@@ -1351,7 +1341,7 @@ function handleFunctionTypeNode(
     KeyValueTypes.FUNCTION
   ]).has(parent.type);
   for (let i = 0; i < node.parameters.length; i++) {
-    handleParameterDeclaration(i, node.parameters[i], mockBuffer, functionName.methodParams, functionName, KeyValueTypes.REFERENCE);
+    handleParameterDeclaration(node.parameters[i], mockBuffer, functionName.methodParams, functionName, KeyValueTypes.REFERENCE);
   }
   handleTypeNode(mockBuffer, functionName.members, functionName, KeyValueTypes.REFERENCE, node.type);
   return functionName;
@@ -1360,7 +1350,6 @@ function handleFunctionTypeNode(
 function handleTupleTypeNode(
   node: ts.TupleTypeNode,
   mockBuffer: MockBuffer,
-  members: Members,
   parent: KeyValue,
   type: KeyValueTypes
 ): KeyValue {
@@ -1444,7 +1433,6 @@ function handleUnionTypeNode(
 
 function handleLiteralTypeNode(
   node: ts.LiteralTypeNode,
-  mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
@@ -1716,14 +1704,13 @@ function handleBinaryExpression(
   expression.operateElements = [];
 
   handleExpression(node.left, mockBuffer, {}, parent, KeyValueTypes.VALUE, expression.operateElements);
-  handleBinaryOperatorToken(node.operatorToken, {}, parent, KeyValueTypes.VALUE, expression.operateElements);
+  handleBinaryOperatorToken(node.operatorToken, parent, KeyValueTypes.VALUE, expression.operateElements);
   handleExpression(node.right, mockBuffer, {}, parent, KeyValueTypes.VALUE, expression.operateElements);
   return expression;
 }
 
 function handleBinaryOperatorToken(
   node: ts.BinaryOperatorToken,
-  members: Members,
   parent: KeyValue,
   type: KeyValueTypes,
   operateElements: KeyValue[]
