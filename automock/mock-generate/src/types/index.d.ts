@@ -75,3 +75,13 @@ export interface Declare {
 
 // api目录
 export type ApiFolder = 'api' | 'component' | 'arkts' | 'kits';
+
+// reference 节点查询结果信息
+interface KeyValueInfo {
+  keyValue: KeyValue,
+  mockBuffer: MockBuffer,
+  isGlobalDeclaration?: boolean
+}
+
+// reference 节点查询结果
+export type ReferenceFindResult = KeyValueInfo | undefined;

@@ -25,14 +25,8 @@ import {
   TSTypes,
   TYPESCRIPT_KEYWORDS
 } from '../common/constants';
-import { Declare, KeyValue, Members, MockBuffer } from '../types';
+import {Declare, KeyValue, ReferenceFindResult, Members, MockBuffer} from '../types';
 import { generateKeyValue } from '../common/commonUtils';
-
-interface KeyValueInfo {
-  keyValue: KeyValue,
-  mockBuffer: MockBuffer,
-  isGlobalDeclaration?: boolean
-}
 
 /**
  * 生成文件内容
@@ -519,8 +513,8 @@ function findKeyValueDefined(
   kvPath: KeyValue[],
   rootKeyValue: KeyValue,
   property: KeyValue
-): KeyValueInfo {
-  let keyValueInfo: KeyValueInfo | undefined;
+): ReferenceFindResult {
+  let keyValueInfo: ReferenceFindResult;
   // 在当前文件中找
   keyValueInfo = findInCurrentFile(key, targetKeyValue, targetKeyValue.parent, mockBuffer, kvPath, rootKeyValue, property);
   if (keyValueInfo) {
@@ -574,7 +568,7 @@ function findTSTypes(
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   const paramsContent: string[] = [];
   Object.keys(targetKeyValue.typeParameters).forEach(typeParameter => {
     const typeParameterKeyValue: KeyValue = targetKeyValue.typeParameters[typeParameter];
@@ -626,7 +620,7 @@ function findInLibs(
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   if (key === 'globalThis') {
     const globalThisKeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
     return { keyValue: globalThisKeyValue, mockBuffer };
@@ -683,7 +677,7 @@ function findInLibFunction(
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   const params = handleParams(targetKeyValue.methodParams, mockBuffer, kvPath, rootKeyValue);
   let value: string;
   // 判断是否是函数
@@ -717,7 +711,7 @@ function findInCurrentFile(
   kvPath: KeyValue[],
   rootKeyValue: KeyValue,
   property: KeyValue
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   if (!parent) {
     return;
   }
@@ -744,7 +738,7 @@ function findInCurrentFile(
  */
 function findInDeclares(
   key: string
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   if (DECLARES[key]) {
     const mockBuffer = mockBufferMap.get(MockedFileMap.get(DECLARES[key].from));
     return {
@@ -766,7 +760,7 @@ function findInDeclares(
 function findInAllFiles(
   key: string,
   property?: KeyValue
-): KeyValueInfo | undefined {
+): ReferenceFindResult {
   for (const definedMockBuffer of mockBufferMap.values()) {
     const members = definedMockBuffer.contents.members;
     if (members[key]) {
@@ -1372,7 +1366,7 @@ function findDefFromImport(
   mockBuffer: MockBuffer,
   rootKeyValue: KeyValue,
   property?: KeyValue
-): KeyValueInfo {
+): ReferenceFindResult {
   const importedMockBuffer = mockBufferMap.get(MockedFileMap.get(importKeyValue.importedModulePath));
   if (!importedMockBuffer) {
     throw new Error('未找到foundKeyValue.importedModulePath对应的mockBuffer');

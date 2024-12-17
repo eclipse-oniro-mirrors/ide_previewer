@@ -83,20 +83,20 @@ export const COMPONENT_DECORATORS: string[] = ['CustomDialog', 'Component'];
 
 // keyValue 节点类型
 export enum KeyValueTypes {
-  FUNCTION = 'FUNCTION',
-  CLASS = 'CLASS',
-  VALUE = 'VALUE',
-  FILE = 'FILE',
-  MODULE = 'MODULE',
-  INTERFACE = 'INTERFACE',
-  IMPORT = 'IMPORT',
-  EXPORT = 'EXPORT',
-  INTERSECTION = 'INTERSECTION',
-  VARIABLE = 'VARIABLE',
-  REFERENCE = 'REFERENCE',
-  PROPERTY = 'PROPERTY',
-  ENUM = 'ENUM',
-  EXPRESSION = 'EXPRESSION'
+  FUNCTION,
+  CLASS ,
+  VALUE ,
+  FILE,
+  MODULE,
+  INTERFACE,
+  IMPORT,
+  EXPORT,
+  INTERSECTION,
+  VARIABLE,
+  REFERENCE,
+  PROPERTY,
+  ENUM,
+  EXPRESSION,
 }
 
 // napi 目录
