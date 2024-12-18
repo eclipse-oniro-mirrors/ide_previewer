@@ -546,7 +546,7 @@ function findKeyValueDefined(
   }
 
   const keyValuePath: string[] = getKeyValuePath(targetKeyValue);
-  const value: string = `Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${MockedFileMap.get(keyValuePath[1])}`;
+  const value: string = `Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${MockedFileMap.get(keyValuePath[0])}`;
   console.warn(value);
   const keyValue: KeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
   keyValue.value = value;
@@ -1312,23 +1312,53 @@ function handleGlobalModuleOrInterface(
     }
     return;
   }
-  Object.keys(keyValue.members).forEach(memberKey => {
-    const memberKeyValue = keyValue.members[memberKey];
-    if (memberKeyValue.isMocked) {
+  Object.keys(keyValue.members).forEach(memberKey => handleModuleOrInterfaceMember(memberKey, keyValue, mockBuffer, kvPath, declarations, keyValue));
+  // 处理同名declare
+  keyValue.sameDeclares.forEach(sameDeclare => {
+    const sameKeyValue = sameDeclare.keyValue;
+    const sameMockBuffer = mockBufferMap.get(MockedFileMap.get(sameDeclare.from));
+    const needHandleTypes = new Set([KeyValueTypes.CLASS, KeyValueTypes.INTERFACE, KeyValueTypes.MODULE]);
+    if (!needHandleTypes.has(sameKeyValue.type) && path.basename(sameMockBuffer.rawFilePath).startsWith('@')) {
       return;
     }
-    let elementName = `.${memberKey}`;
-    if (memberKeyValue.type === KeyValueTypes.EXPRESSION) {
-      memberKeyValue.key = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, keyValue, memberKeyValue.property);
-      memberKeyValue.type = KeyValueTypes.PROPERTY;
-      memberKeyValue.value = undefined;
-      elementName = memberKeyValue.key;
-    }
-    const memberValue = handleKeyValue(elementName, memberKeyValue, mockBuffer, kvPath, keyValue, memberKeyValue.property);
-    const value = `global.${keyValue.key}_temp${elementName} = ${memberValue};`;
-    memberKeyValue.isMocked = true;
-    declarations.push(value);
+    Object.keys(sameKeyValue.members).forEach(
+      memberKey => handleModuleOrInterfaceMember(memberKey, sameKeyValue, sameMockBuffer, kvPath, declarations, keyValue)
+    );
   });
+}
+
+/**
+ * 处理module和interface的成员
+ * @param memberKey 成员名称
+ * @param parent 成员父节点
+ * @param mockBuffer 当前文件mock信息
+ * @param kvPath KV节点路径
+ * @param declarations 已mock的全局接口
+ * @param rootKeyValue
+ */
+function handleModuleOrInterfaceMember(
+  memberKey: string,
+  parent: KeyValue,
+  mockBuffer: MockBuffer,
+  kvPath: KeyValue[],
+  declarations: string[],
+  rootKeyValue: KeyValue
+): void {
+  const memberKeyValue = parent.members[memberKey];
+  if (memberKeyValue.isMocked) {
+    return;
+  }
+  let elementName = `.${memberKey}`;
+  if (memberKeyValue.type === KeyValueTypes.EXPRESSION) {
+    memberKeyValue.key = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+    memberKeyValue.type = KeyValueTypes.PROPERTY;
+    memberKeyValue.value = undefined;
+    elementName = memberKeyValue.key;
+  }
+  const memberValue = handleKeyValue(elementName, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+  const value = `global.${parent.key}_temp${elementName} = ${memberValue};`;
+  memberKeyValue.isMocked = true;
+  declarations.push(value);
 }
 
 /**

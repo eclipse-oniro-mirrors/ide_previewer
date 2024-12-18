@@ -75,7 +75,6 @@ const configJSAPIMockInput = {
 const configJSAPIMockOutput = {
   file: path.resolve(__dirname, 'dist/jsMockSystemPlugin.js'),
   format: 'umd',
-  treeshake: false,
   banner: frameworkBannerForJSAPIMock
 };
 
@@ -92,7 +91,7 @@ rollup.rollup(configJSAPIMockInput).then(bundle => {
 
 function countSize(filePath) {
   const file = path.relative(__dirname, filePath);
-  fs.stat(filePath, function (error, stats) {
+  fs.stat(filePath, function(error, stats) {
     if (error) {
       console.error('file size is wrong');
     } else {

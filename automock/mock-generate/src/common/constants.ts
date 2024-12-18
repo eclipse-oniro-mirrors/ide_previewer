@@ -84,8 +84,8 @@ export const COMPONENT_DECORATORS: string[] = ['CustomDialog', 'Component'];
 // keyValue 节点类型
 export enum KeyValueTypes {
   FUNCTION,
-  CLASS ,
-  VALUE ,
+  CLASS,
+  VALUE,
   FILE,
   MODULE,
   INTERFACE,
