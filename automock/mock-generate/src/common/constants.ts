@@ -141,3 +141,9 @@ export const D_TS: string = '.d.ts';
 
 // .d.ets 文件后缀
 export const D_ETS: string = '.d.ets';
+
+// on、off函数做特殊处理
+export const specialOverloadedFunctionArr = ['on', 'off'];
+
+// callback error info
+export const callbackError = '{\'code\': \'\',\'data\': \'\',\'name\': \'\',\'message\': \'\',\'stack\': \'\'}, ';

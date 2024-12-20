@@ -85,3 +85,6 @@ interface KeyValueInfo {
 
 // reference 节点查询结果
 export type ReferenceFindResult = KeyValueInfo | undefined;
+
+// 函数重载的类型
+export type OverloadedFunctionType = 'single' | 'multiple';

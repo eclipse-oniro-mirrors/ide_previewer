@@ -23,9 +23,10 @@ import {
   mockBufferMap,
   MockedFileMap,
   TSTypes,
-  TYPESCRIPT_KEYWORDS
+  specialOverloadedFunctionArr,
+  callbackError
 } from '../common/constants';
-import {Declare, KeyValue, ReferenceFindResult, Members, MockBuffer} from '../types';
+import {Declare, KeyValue, ReferenceFindResult, Members, MockBuffer, OverloadedFunctionType} from '../types';
 import { generateKeyValue } from '../common/commonUtils';
 
 /**
@@ -134,7 +135,7 @@ function mockKeyValue(
       break;
     }
     case KeyValueTypes.FUNCTION: {
-      value = handleFunctionKeyValue(keyValue, mockBuffer, kvPath, rootKeyValue);
+      value = handleFunctionKeyValue(key, keyValue, mockBuffer, kvPath, rootKeyValue);
       break;
     }
     case KeyValueTypes.IMPORT: {
@@ -318,6 +319,7 @@ function handleFileKeyValue(
  * @returns
  */
 function handleFunctionKeyValue(
+  key: string,
   keyValue: KeyValue,
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
@@ -335,7 +337,7 @@ function handleFunctionKeyValue(
   keyValue.sameName.forEach(sameFunction => {
     sameFuncList.push(sameFunction);
   });
-  return handleSameFunctions(sameFuncList, mockBuffer, kvPath, rootKeyValue);
+  return handleSameFunctions(key, sameFuncList, mockBuffer, kvPath, rootKeyValue);
 }
 
 /**
@@ -546,7 +548,7 @@ function findKeyValueDefined(
   }
 
   const keyValuePath: string[] = getKeyValuePath(targetKeyValue);
-  const value: string = `Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${MockedFileMap.get(keyValuePath[0])}`;
+  const value: string = `'Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${MockedFileMap.get(keyValuePath[0])}'`;
   console.warn(value);
   const keyValue: KeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
   keyValue.value = value;
@@ -794,15 +796,17 @@ function getKeyValuePath(keyValue: KeyValue, paths = []): string[] {
  * @returns
  */
 function handleSameFunctions(
+  key: string,
   sameFuncList: KeyValue[],
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
 ): string {
+  const functionName = sameFuncList[0].key;
   if (sameFuncList.length >= 2) {
-    return handleOverloadedFunction(sameFuncList, mockBuffer, kvPath, rootKeyValue);
+    return handleOverloadedFunction(key, sameFuncList, mockBuffer, kvPath, rootKeyValue, functionName);
   } else {
-    return handleSingleFunction(sameFuncList[0], mockBuffer, kvPath, rootKeyValue);
+    return handleSingleFunction(key, sameFuncList, mockBuffer, kvPath, rootKeyValue, functionName);
   }
 }
 
@@ -815,49 +819,96 @@ function handleSameFunctions(
  * @returns
  */
 function handleOverloadedFunction(
+  key: string,
   sameFuncList: KeyValue[],
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
-  rootKeyValue: KeyValue
+  rootKeyValue: KeyValue,
+  functionName: string
 ): string {
   const func = sameFuncList.find(func => func.members.Promise);
   if (!func) {
-    return handleSingleFunction(sameFuncList[0], mockBuffer, kvPath, rootKeyValue);
+    return handleSingleFunction(key, sameFuncList, mockBuffer, kvPath, rootKeyValue, functionName);
   }
   const promiseTypes = func.members.Promise;
   const memberLines: string[] = [];
-  const callBackParams: string[] = [];
+  const returnData: string[] = [];
   const paramIndex: number = 1;
   Object.keys(promiseTypes.typeParameters).forEach(memberKey => {
     const memberKeyValue = promiseTypes.typeParameters[memberKey];
     const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
     memberLines.push(`const p${paramIndex} = ${value}`);
-    callBackParams.push(`p${paramIndex}`);
+    returnData.push(`p${paramIndex}`);
   });
-  let isAsyncCallback = true;
-  const callbackError = '{\'code\': \'\',\'data\': \'\',\'name\': \'\',\'message\': \'\',\'stack\': \'\'}, ';
-  for (let i = 0; i < sameFuncList.length; i++) {
-    const element = sameFuncList[i];
-    Object.keys(element.methodParams).forEach(key => {
-      const callbackInfo = element.methodParams[key];
-      if (callbackInfo && Object.keys(callbackInfo.members).includes('Callback')) {
-        isAsyncCallback = false;
-      }
-    });
-    if (!isAsyncCallback) {
-      break;
-    }
-  }
-  return `function (...args) {
+  const isSpecial = specialOverloadedFunctionArr.includes(functionName);
+  const paramMockData = handleFunParamMockData(sameFuncList, mockBuffer, kvPath, rootKeyValue, isSpecial, 'multiple', returnData);
+  return `function (${key.startsWith('get ' + functionName) ? '' : '...args'}) {
     console.warn(ts.replace('{{}}', '${func.key}'));
-    ${memberLines.join(';\n')}
-    if (args && typeof args[args.length - 1] === 'function') {
-      args[args.length - 1].call(this, ${isAsyncCallback ? callbackError : ''}${callBackParams.join(', ')});
-    }
+    ${memberLines.join(';\n')}${paramMockData ? '\n' + paramMockData : ''} 
     return new Promise(function (resolve, reject) {
-      resolve(${callBackParams.join(', ')});
+      resolve(${returnData.join(', ')});
     });
   }`;
+}
+
+function handleFunParamMockData(
+  funcList: KeyValue[],
+  mockBuffer: MockBuffer,
+  kvPath: KeyValue[],
+  rootKeyValue: KeyValue,
+  isSpecial: boolean,
+  funType: OverloadedFunctionType,
+  returnData?: string[]
+): string {
+  let paramMockData = '';
+  for (let i = 0; i < funcList.length; i++) {
+    const funInfo = funcList[i];
+    let isAsyncCallback = true;
+    const callBackParams: string[] = [];
+    let paramName = '';
+    Object.keys(funInfo.methodParams).forEach(key => {
+      const paramInfo = funInfo.methodParams[key];
+      if (key === 'callback') {
+        let callbackInfo: KeyValue;
+        if (paramInfo.members['Callback']) {
+          isAsyncCallback = false;
+          callbackInfo = paramInfo.members['Callback'];
+        }
+        if (paramInfo.members['AsyncCallback']) {
+          isAsyncCallback = true;
+          callbackInfo = paramInfo.members['AsyncCallback'];
+        }
+        callbackInfo && Object.keys(callbackInfo.typeParameters).forEach(memberKey => {
+          const memberKeyValue = callbackInfo.typeParameters[memberKey];
+          const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+          callBackParams.push(value);
+        });
+      }
+    if (key === 'type' && isSpecial) {
+      Object.keys(paramInfo.members).forEach(memberKey => {
+        if (!paramName) {
+          paramName = memberKey;
+        }
+      });
+    }
+    });
+    if (!callBackParams.length) {
+      continue;
+    }
+    const returnInfo = isSpecial
+      ? callBackParams.join(', ')
+      : funType === 'single'
+        ? callBackParams.join(', ')
+        : returnData?.join(', ');
+    const data = `if (args && typeof args[args.length - 1] === 'function') {
+      args[args.length - 1].call(this, ${isAsyncCallback ? callbackError : ''}${returnInfo}); 
+    }`;
+    const info = (paramName ? `if(args && ['${paramName}'].includes(args[0])){\n` : '') + data + (paramName ? '}\n' : '');
+    if (funType === 'single' || isSpecial || !isSpecial && !paramMockData) {
+      paramMockData += info;
+    }
+  }
+  return paramMockData;
 }
 
 /**
@@ -1027,28 +1078,32 @@ function handleExpressionKeyValue(
  * @returns
  */
 function handleSingleFunction(
-  funcKeyValue: KeyValue,
+  key: string,
+  sameFuncList: KeyValue[],
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
-  rootKeyValue: KeyValue
+  rootKeyValue: KeyValue,
+  functionName: string
 ): string {
+  const funcKeyValue = sameFuncList[0];
   const memberLines: string[] = [];
   Object.keys(funcKeyValue.members).forEach(memberKey => {
     const memberKeyValue = funcKeyValue.members[memberKey];
     const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
     memberLines.push(value);
   });
-  const methodParams = Object.keys(funcKeyValue.methodParams).map(
-    methodParam => TYPESCRIPT_KEYWORDS.has(methodParam) ? `${methodParam}1` : methodParam
-  ).join(', ');
+  const isSpecial = specialOverloadedFunctionArr.includes(functionName);
+  const funcList = isSpecial ? sameFuncList : [sameFuncList[0]];
+  const paramMockData = handleFunParamMockData(funcList, mockBuffer, kvPath, rootKeyValue, isSpecial, 'single');
+
   const returnStr = funcKeyValue.members.Promise && funcKeyValue.members.Promise.type === KeyValueTypes.REFERENCE ?
     `return new Promise(function (resolve, reject) {
           resolve(${memberLines.join(',')});
         })` :
     `return ${memberLines.join(',')}`;
-  return `function (${methodParams}) {
+  return `function (${key.startsWith('get ' + functionName) ? '' : '...args'}) {
   console.warn(ts.replace('{{}}', '${funcKeyValue.key}'));
-  ${returnStr}
+  ${paramMockData ?? ''}${returnStr}
   }`;
 }
 
