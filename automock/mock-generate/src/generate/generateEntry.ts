@@ -14,11 +14,12 @@
  */
 
 /**
- * generate entry
+ * 生成 entry 文件
  * @returns
  */
 export function generateEntry(): string {
-  return `import { mockSystemPlugin } from './index';
+  return `import "@babel/polyfill";
+  import { mockSystemPlugin } from './index';
 
   mockSystemPlugin()`;
 }

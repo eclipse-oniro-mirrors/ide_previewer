@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-import type { ImportEuqalEntity } from '../declaration-node/importAndExportDeclaration';
+import path from 'path';
+import { paramIndex } from './constants';
 
 /**
- * generate import equal node info
- * @param importEqualEntity
- * @returns
+ * 获取OpenHarmony项目路径
+ * @returns OpenHarmony项目路径
  */
-export function generateImportEqual(importEqualEntity: ImportEuqalEntity): string {
-  if (importEqualEntity.importEqualTypeName === 'connection.NetAddress') {
-    return `const ${importEqualEntity.importEqualName} = mockConnection().NetAddress`;
-  } else {
-    return `const ${importEqualEntity.importEqualName} = ${importEqualEntity.importEqualTypeName}`;
-  }
+export function getProjectDir(): string {
+  const apiInputPath = process.argv[paramIndex];
+  const apiDir = path.join('interface', 'sdk-js', 'api');
+  return apiInputPath.replace(`${path.sep}${apiDir}`, '');
 }

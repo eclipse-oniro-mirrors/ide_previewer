@@ -75,21 +75,23 @@ const configJSAPIMockInput = {
 const configJSAPIMockOutput = {
   file: path.resolve(__dirname, 'dist/jsMockSystemPlugin.js'),
   format: 'umd',
-  treeshake: false,
   banner: frameworkBannerForJSAPIMock
 };
 
 rollup.rollup(configJSAPIMockInput).then(bundle => {
   bundle.write(configJSAPIMockOutput).then(() => {
     countSize(configJSAPIMockOutput.file);
-    const fileContent = fs.readFileSync(configJSAPIMockOutput.file, 'utf-8');
-    fs.writeFileSync(configJSAPIMockOutput.file, fileContent.replace(/CommonMethod\$\d*/g, 'CommonMethod'), 'utf-8');
+    let fileContent = fs.readFileSync(configJSAPIMockOutput.file, 'utf-8');
+    const tipTemp = 'var ts = "The {{}} interface in the previewer is a mocked impementation and man behave differently than on a real device.";\n';
+    const valueTemp = 'var vt = "The value in the previewer is a mocked impementation and man behave differently than on a real device.";\n';
+    fileContent = tipTemp + valueTemp + fileContent;
+    fs.writeFileSync(configJSAPIMockOutput.file, fileContent, 'utf-8');
   });
 });
 
 function countSize(filePath) {
   const file = path.relative(__dirname, filePath);
-  fs.stat(filePath, function (error, stats) {
+  fs.stat(filePath, function(error, stats) {
     if (error) {
       console.error('file size is wrong');
     } else {

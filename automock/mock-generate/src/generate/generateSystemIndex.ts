@@ -13,49 +13,21 @@
  * limitations under the License.
  */
 
-const systemIndexArray: Array<SystemIndexEntity> = [];
-const systemNoMockArray = [
-  'system.app',
-  'system.configuration',
-  'system.device',
-  'system.mediaquery',
-  'system.prompt',
-  'system.router'
-];
-
-export function addToSystemIndexArray(systemIndexEntity: SystemIndexEntity): void {
-  systemIndexArray.push(systemIndexEntity);
-}
-
-export function getSystemIndexArray(): Array<SystemIndexEntity> {
-  return systemIndexArray;
-}
+import { importDeclarationFiles } from '../common/constants';
 
 /**
- * generate startswith 'system_'
+ * 生成system接口文件
  * @returns
  */
 export function generateSystemIndex(): string {
   let systemIndex = 'import regeneratorRuntime from \'babel-runtime/regenerator\'\n';
-  let exportFunction = '';
-  systemIndexArray.forEach(value => {
-    if (!systemNoMockArray.includes(value.filename.replace('_', '.'))) {
-      systemIndex += `import { ${value.mockFunctionName} } from './${value.filename}'\n`;
-      exportFunction += `${value.mockFunctionName}();\n`;
-    }
-  });
+  systemIndex += importDeclarationFiles.join('\n');
   systemIndex += 'import {mockRequireNapiFun} from \'./napi/index\';\n';
   systemIndex += `;(function mockSystemPlugin() {
     global.regeneratorRuntime = regeneratorRuntime
     global.systemplugin = {}
-    global.ohosplugin = {}\n`;
-  systemIndex += exportFunction;
+    global.ohosplugin = {};\n`;
   systemIndex += 'mockRequireNapiFun();\n';
   systemIndex += '}());';
   return systemIndex;
-}
-
-export interface SystemIndexEntity {
-  filename: string;
-  mockFunctionName: string;
 }

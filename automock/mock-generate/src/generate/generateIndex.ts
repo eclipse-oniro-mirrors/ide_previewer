@@ -13,55 +13,42 @@
  * limitations under the License.
  */
 
-import { firstCharacterToUppercase } from '../common/commonUtils';
+import path from 'path';
+import { isDeclarationFile, isNeedMocked } from '../common/commonUtils';
+import { mockBufferMap, NO_CONTENT_FILES, ohosDtsFileList } from '../common/constants';
 
 /**
- * save all mock function
- */
-const indexArray: Array<IndexEntity> = [];
-
-export function addToIndexArray(indexEntity: IndexEntity): void {
-  indexArray.push(indexEntity);
-}
-
-export function getIndexArray(): Array<IndexEntity> {
-  return indexArray;
-}
-
-/**
- * generate index
+ * 声测会给你index文件
+ * @param indexFilePath index文件输出路径
  * @returns
  */
-export function generateIndex(): string {
+export function generateIndex(indexFilePath: string): string {
   let indexBody = '';
   let caseBody = '';
-  indexBody += 'import * as etsglobal from \'./@internal/ets/global\';\n';
-  const filterSet: Set<string> = new Set<string>();
 
-  indexArray.forEach(value => {
-    let functionName = value.mockFunctionName;
-    let isHasSameValue = false;
-    if (filterSet.has(value.mockFunctionName)) {
-      isHasSameValue = true;
-      const tmpArr = value.fileName.split('_');
-      let tmpName = tmpArr[0];
-      for (let i = 1; i < tmpArr.length; i++) {
-        tmpName += firstCharacterToUppercase(tmpArr[i]);
-      }
-      functionName = `${tmpName}`;
+  ohosDtsFileList.forEach(fileName => {
+    if (NO_CONTENT_FILES.has(fileName)) {
+      return;
     }
-    filterSet.add(functionName);
-    if (isHasSameValue) {
-      indexBody += `import { ${value.mockFunctionName} as ${functionName} } from './${value.fileName}';\n`;
-    } else {
-      indexBody += `import { ${functionName} } from './${value.fileName}';\n`;
+    if (!isDeclarationFile(fileName)) {
+      return;
+    }
+    if (!isNeedMocked(fileName)) {
+      return;
     }
 
-    if (value.fileName.startsWith('ohos_')) {
-      caseBody += `case '${value.fileName.split('ohos_')[1].replace(/_/g, '.')}':\n\treturn ${functionName}();\n`;
+    const mockBuffer = mockBufferMap.get(fileName);
+    const mockedFilePath = mockBuffer.mockedFilePath;
+    const fileBaseName = path.basename(mockedFilePath, '.js');
+    const relativePath = path.relative(path.dirname(indexFilePath), mockedFilePath).replace(/\.js$/, '').replace(/\\/g, '/');
+    const asName = path.basename(fileBaseName).replace(/^@/, '').replace(/\./g, '_');
+    if (mockBuffer?.contents.members.default && mockBuffer?.contents.members.default.isNeedMock) {
+      indexBody += `import ${asName} from './${relativePath}';\n`;
     } else {
-      caseBody += `case '${value.fileName}':\n\treturn ${functionName}();\n`;
+      indexBody += `import * as ${asName} from './${relativePath}';\n`;
     }
+
+    caseBody += `case '${fileBaseName.replace(/^@ohos\./, '')}':\n\treturn ${asName};\n`;
   });
 
   indexBody += `export function mockRequireNapiFun() {
@@ -80,9 +67,4 @@ export function generateIndex(): string {
         }`;
   indexBody += endBody;
   return indexBody;
-}
-
-interface IndexEntity {
-  fileName: string;
-  mockFunctionName: string;
 }
