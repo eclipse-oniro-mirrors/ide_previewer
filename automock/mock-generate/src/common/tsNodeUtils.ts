@@ -354,7 +354,7 @@ function handleParameterDeclaration(
   if (name.key === 'arguments') {
     delete members.arguments;
     name.key = name.key.replace('arguments', 'args');
-    members['args'] = name;
+    members.args = name;
   }
   handleTypeNode(mockBuffer, name.members, name, KeyValueTypes.REFERENCE, node.type);
   return name;
@@ -446,7 +446,7 @@ function handleEnumMemberInitializer(
     case SyntaxKind.PropertyAccessExpression: {
       const expression = generateKeyValue('expression', KeyValueTypes.EXPRESSION, parent);
       expression.operateElements = [];
-      members['expression'] = expression;
+      members.expression = expression;
       return handlePropertyAccessExpression(
           node as ts.PropertyAccessExpression,
           mockBuffer, expression.members,
@@ -1564,7 +1564,7 @@ function handleExpression(
   let keyValue: KeyValue;
   switch (node.kind) {
     case SyntaxKind.Identifier: {
-      keyValue = handleIdentifier(node as ts.Identifier, members, parent, type);
+      keyValue = handleIdentifier(node as ts.Identifier, members, parent, KeyValueTypes.REFERENCE);
       operateElements.push(keyValue);
       break;
     }

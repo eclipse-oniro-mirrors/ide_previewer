@@ -52,21 +52,21 @@ export function generateKeyValue(key: string, type: KeyValueTypes, parent?: KeyV
   sameName: KeyValue[],
   dependOnGlobals: Set<KeyValue>
 }): KeyValue {
-  const keyValue = {key, type, parent, sameDeclares: []};
+  const keyValue = {key, type, parent, sameDeclares: []} as KeyValue;
   if (optionMembers) {
-    keyValue['members'] = optionMembers.members ?? {};
-    keyValue['typeParameters'] = optionMembers.typeParameters ?? {};
-    keyValue['methodParams'] = optionMembers.methodParams ?? {};
-    keyValue['constraint'] = optionMembers.constraint ?? {};
-    keyValue['sameName'] = optionMembers.sameName ?? [];
-    keyValue['dependOnGlobals'] = optionMembers.dependOnGlobals ?? new Set<KeyValue>();
+    keyValue.members = optionMembers.members ?? {};
+    keyValue.typeParameters = optionMembers.typeParameters ?? {};
+    keyValue.methodParams = optionMembers.methodParams ?? {};
+    keyValue.constraint = optionMembers.constraint ?? {};
+    keyValue.sameName = optionMembers.sameName ?? [];
+    keyValue.dependOnGlobals = optionMembers.dependOnGlobals ?? new Set<KeyValue>();
   } else {
-    keyValue['members'] = {};
-    keyValue['typeParameters'] = {};
-    keyValue['methodParams'] = {};
-    keyValue['constraint'] = {};
-    keyValue['sameName'] = [];
-    keyValue['dependOnGlobals'] = new Set<KeyValue>();
+    keyValue.members = {};
+    keyValue.typeParameters = {};
+    keyValue.methodParams = {};
+    keyValue.constraint = {};
+    keyValue.sameName = [];
+    keyValue.dependOnGlobals = new Set<KeyValue>();
   }
   return keyValue as KeyValue;
 }
