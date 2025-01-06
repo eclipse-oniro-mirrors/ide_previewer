@@ -15,7 +15,12 @@
 
 import path from 'path';
 import { isDeclarationFile, isNeedMocked } from '../common/commonUtils';
-import { mockBufferMap, NO_CONTENT_FILES, ohosDtsFileList } from '../common/constants';
+import {
+  arktsDtsFileList,
+  mockBufferMap,
+  NO_CONTENT_FILES,
+  ohosDtsFileList
+} from '../common/constants';
 
 /**
  * 声测会给你index文件
@@ -26,7 +31,10 @@ export function generateIndex(indexFilePath: string): string {
   let indexBody = '';
   let caseBody = '';
 
-  ohosDtsFileList.forEach(fileName => {
+  [
+    ...ohosDtsFileList,
+    ...arktsDtsFileList
+  ].forEach(fileName => {
     if (NO_CONTENT_FILES.has(fileName)) {
       return;
     }
@@ -48,7 +56,7 @@ export function generateIndex(indexFilePath: string): string {
       indexBody += `import * as ${asName} from './${relativePath}';\n`;
     }
 
-    caseBody += `case '${fileBaseName.replace(/^@ohos\./, '')}':\n\treturn ${asName};\n`;
+    caseBody += `case '${fileBaseName.replace(/^@(ohos\.)?/, '')}':\n\treturn ${asName};\n`;
   });
 
   indexBody += `export function mockRequireNapiFun() {

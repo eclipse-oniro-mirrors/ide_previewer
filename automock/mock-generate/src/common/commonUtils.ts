@@ -107,9 +107,10 @@ export function getAbsolutePath(mockBuffer: MockBuffer, specifier: string): stri
  */
 export function handleIterableIterator(typeParams: string): string {
   return `function* () {
-    yield ${typeParams};  
-    yield ${typeParams};
-    yield ${typeParams};
+    const yieldObj = ${typeParams};
+    yield yieldObj;  
+    yield yieldObj;
+    yield yieldObj;
   }`;
 }
 
@@ -140,6 +141,9 @@ export function isDeclarationFile(fileName: string): boolean {
  */
 export function isNeedMocked(filePath: string): boolean {
   if (path.basename(filePath).startsWith('@ohos.')) {
+    return true;
+  }
+  if (path.basename(filePath).startsWith('@arkts.')) {
     return true;
   }
   return path.basename(filePath).startsWith('@kit.');

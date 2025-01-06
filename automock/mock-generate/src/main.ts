@@ -52,20 +52,22 @@ import { generateContent, handleDeclares } from './generate/generateContent';
 function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): string[] {
   const arr = fs.readdirSync(dir);
   if (!dir.toString().includes('node_modules') && !dir.toString().includes(path.join('@internal', 'component'))) {
-    arr.forEach(value => {
-      const fullPath = path.join(dir, value);
-      const stats = fs.statSync(fullPath);
-      if (stats.isDirectory()) {
-        getAllDtsFile(fullPath, fileList, isHmsDtsFile);
-      } else {
-        if (!isDeclarationFile(value)) {
-          return;
-        }
-        fileList.push(fullPath);
-      }
-    });
+    arr.forEach(value => collectFile(dir, fileList, value, isHmsDtsFile));
   }
   return fileList;
+}
+
+function collectFile(dir: string, fileList: string[], value: string, isHmsDtsFile: boolean): void {
+  const fullPath = path.join(dir, value);
+  const stats = fs.statSync(fullPath);
+  if (stats.isDirectory()) {
+    getAllDtsFile(fullPath, fileList, isHmsDtsFile);
+  } else {
+    if (!isDeclarationFile(value)) {
+      return;
+    }
+    fileList.push(fullPath);
+  }
 }
 
 /**
@@ -205,7 +207,10 @@ function etsFileToMock(): void {
 
   handleDeclares(path.join(__dirname, '..', '..', 'runtime', 'main', 'extend', 'systemplugin'));
 
-  ohosDtsFileList.forEach(filepath => {
+  [
+    ...ohosDtsFileList,
+    ...arktsDtsFileList
+  ].forEach(filepath => {
     if (!isDeclarationFile(filepath)) {
       return;
     }

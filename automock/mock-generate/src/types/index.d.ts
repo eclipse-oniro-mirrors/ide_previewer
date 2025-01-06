@@ -86,5 +86,15 @@ interface KeyValueInfo {
 // reference 节点查询结果
 export type ReferenceFindResult = KeyValueInfo | undefined;
 
+// 继承 KV节点
+export type HeritageKeyValue = KeyValue | undefined;
+
 // 函数重载的类型
 export type OverloadedFunctionType = 'single' | 'multiple';
+
+// 回调函数参数Mock数据
+export interface CallbackParamMockData {
+  paramName: string,
+  isAsyncCallback: boolean,
+  callBackParams: string[]
+}

@@ -54,16 +54,16 @@ export const NO_CONTENT_FILES: Set<string> = new Set<string>();
 
 // typescript 内置高级类型的mock方式
 export const TSTypes = {
-  Record: () => '{}',
-  IterableIterator: (typeParams: string) => handleIterableIterator(typeParams),
-  PropertyDecorator: () => '() => {}',
-  ClassDecorator: () => '() => {}',
-  MethodDecorator: () => '() => {}',
-  Readonly: (params: string) => params,
-  CanvasRenderingContext2D: () => '{name: \'The CanvasRenderingContext2D is not mocked\'}',
-  WebGLRenderingContext: () => '{name: \'The WebGLRenderingContext is not mocked\'}',
-  WebGL2RenderingContext: () => '{name: \'The WebGL2RenderingContext is not mocked\'}',
-  thisType: () => '{}'
+  Record: (): string => '{}',
+  IterableIterator: (typeParams: string): string => handleIterableIterator(typeParams),
+  PropertyDecorator: (): string => '() => {}',
+  ClassDecorator: (): string => '() => {}',
+  MethodDecorator: (): string => '() => {}',
+  Readonly: (params: string): string => params,
+  CanvasRenderingContext2D: (): string => '{name: \'The CanvasRenderingContext2D is not mocked\'}',
+  WebGLRenderingContext: (): string => '{name: \'The WebGLRenderingContext is not mocked\'}',
+  WebGL2RenderingContext: (): string => '{name: \'The WebGL2RenderingContext is not mocked\'}',
+  thisType: (): string => '{}'
 };
 
 // 可以忽略的typescript内置类型
