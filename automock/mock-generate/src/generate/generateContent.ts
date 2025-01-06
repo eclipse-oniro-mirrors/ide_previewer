@@ -26,7 +26,15 @@ import {
   specialOverloadedFunctionArr,
   callbackError
 } from '../common/constants';
-import {Declare, KeyValue, ReferenceFindResult, Members, MockBuffer, OverloadedFunctionType} from '../types';
+import {
+  Declare,
+  KeyValue,
+  ReferenceFindResult,
+  Members,
+  MockBuffer,
+  OverloadedFunctionType,
+  CallbackParamMockData
+} from '../types';
 import { generateKeyValue } from '../common/commonUtils';
 
 /**
@@ -218,7 +226,7 @@ function handleClassKeyValue(
       .replace(/^function\*?/, '');
 
     if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
-      if (memberKeyValue.members['IterableIterator']) {
+      if (memberKeyValue.members.IterableIterator) {
         memberLines.push(`*${elementName}${value}`);
       } else {
         memberLines.push(`${memberKeyValue.isStatic ? 'static ' : ''}${elementName}${value}`);
@@ -248,7 +256,7 @@ function handleHeritage(
   mockBuffer: MockBuffer,
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
-) {
+): void {
   const keyValueInfo = findKeyValueDefined(keyValue.heritage.key, keyValue.heritage, mockBuffer, kvPath, rootKeyValue, keyValue.heritage.property);
   const defKeyValue = keyValueInfo.keyValue;
   const defMockBuffer = keyValueInfo.mockBuffer;
@@ -312,6 +320,7 @@ function handleFileKeyValue(
 
 /**
  * 处理function KV节点
+ * @param key
  * @param keyValue KV节点
  * @param mockBuffer KV节点所在文件的mock信息
  * @param kvPath KV节点路径
@@ -517,6 +526,13 @@ function findKeyValueDefined(
   property: KeyValue
 ): ReferenceFindResult {
   let keyValueInfo: ReferenceFindResult;
+
+  // 在js库中找
+  keyValueInfo = findInLibs(key, targetKeyValue, mockBuffer, kvPath, rootKeyValue);
+  if (keyValueInfo) {
+    return keyValueInfo;
+  }
+
   // 在当前文件中找
   keyValueInfo = findInCurrentFile(key, targetKeyValue, targetKeyValue.parent, mockBuffer, kvPath, rootKeyValue, property);
   if (keyValueInfo) {
@@ -525,12 +541,6 @@ function findKeyValueDefined(
 
   // 在全局定义中找
   keyValueInfo = findInDeclares(key);
-  if (keyValueInfo) {
-    return keyValueInfo;
-  }
-
-  // 在js库中找
-  keyValueInfo = findInLibs(key, targetKeyValue, mockBuffer, kvPath, rootKeyValue);
   if (keyValueInfo) {
     return keyValueInfo;
   }
@@ -548,7 +558,8 @@ function findKeyValueDefined(
   }
 
   const keyValuePath: string[] = getKeyValuePath(targetKeyValue);
-  const value: string = `'Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${MockedFileMap.get(keyValuePath[0])}'`;
+  const fromFilePath = MockedFileMap.get(keyValuePath[0]).replace(/\\/, '/');
+  const value: string = `'Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${fromFilePath}'`;
   console.warn(value);
   const keyValue: KeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
   keyValue.value = value;
@@ -578,7 +589,7 @@ function findTSTypes(
     paramsContent.push(paramContent);
   });
   if (!TSTypes[key]) {
-    return;
+    return undefined;
   }
   const keyValue: KeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
   keyValue.value = TSTypes[key](paramsContent.join(', '));
@@ -628,7 +639,7 @@ function findInLibs(
     return { keyValue: globalThisKeyValue, mockBuffer };
   }
   if (!global[key]) {
-    return;
+    return undefined;
   }
   if (key === 'Symbol') {
     return {
@@ -662,6 +673,7 @@ function findInLibs(
       break;
     }
   }
+  return undefined;
 }
 
 /**
@@ -715,22 +727,22 @@ function findInCurrentFile(
   property: KeyValue
 ): ReferenceFindResult {
   if (!parent) {
-    return;
+    return undefined as ReferenceFindResult;
   }
   if (parent.typeParameters[key] && parent.typeParameters[key] !== targetKeyValue) {
-    return { keyValue: parent.typeParameters[key], mockBuffer };
+    return { keyValue: parent.typeParameters[key], mockBuffer } as ReferenceFindResult;
   }
   const foundKeyValue = parent.members[key];
   if (foundKeyValue && foundKeyValue !== targetKeyValue) {
     if (foundKeyValue.type === KeyValueTypes.IMPORT) {
-      return findDefFromImport(foundKeyValue, mockBuffer, rootKeyValue, property);
+      return findDefFromImport(foundKeyValue, mockBuffer, rootKeyValue, property) as ReferenceFindResult;
     }
     const defKeyValue = findProperty(foundKeyValue, property);
     if (defKeyValue) {
-      return {keyValue: defKeyValue, mockBuffer};
+      return {keyValue: defKeyValue, mockBuffer} as ReferenceFindResult;
     }
   }
-  return findInCurrentFile(key, targetKeyValue, parent.parent, mockBuffer, kvPath, rootKeyValue, property);
+  return findInCurrentFile(key, targetKeyValue, parent.parent, mockBuffer, kvPath, rootKeyValue, property) as ReferenceFindResult;
 }
 
 /**
@@ -747,9 +759,9 @@ function findInDeclares(
       keyValue: DECLARES[key].keyValue,
       mockBuffer,
       isGlobalDeclaration: path.basename(mockBuffer.rawFilePath).startsWith('@')
-    };
+    } as ReferenceFindResult;
   } else {
-    return;
+    return undefined as ReferenceFindResult;
   }
 }
 
@@ -767,9 +779,10 @@ function findInAllFiles(
     const members = definedMockBuffer.contents.members;
     if (members[key]) {
       const defKeyValue = findProperty(members[key], property);
-      return { keyValue: defKeyValue, mockBuffer: definedMockBuffer };
+      return { keyValue: defKeyValue, mockBuffer: definedMockBuffer } as ReferenceFindResult;
     }
   }
+  return undefined as ReferenceFindResult;
 }
 
 /**
@@ -789,6 +802,7 @@ function getKeyValuePath(keyValue: KeyValue, paths = []): string[] {
 
 /**
  * 处理同名函数
+ * @param key
  * @param sameFuncList 同名函数列表
  * @param mockBuffer 当前文件的mock信息
  * @param kvPath KV节点路径
@@ -812,10 +826,12 @@ function handleSameFunctions(
 
 /**
  * 处理重载函数
+ * @param key
  * @param sameFuncList 同名函数列表
  * @param mockBuffer 当前文件的mock信息
  * @param kvPath KV节点路径
  * @param rootKeyValue 仅次于FILE节点的根节点
+ * @param functionName
  * @returns
  */
 function handleOverloadedFunction(
@@ -863,35 +879,7 @@ function handleFunParamMockData(
   let paramMockData = '';
   for (let i = 0; i < funcList.length; i++) {
     const funInfo = funcList[i];
-    let isAsyncCallback = true;
-    const callBackParams: string[] = [];
-    let paramName = '';
-    Object.keys(funInfo.methodParams).forEach(key => {
-      const paramInfo = funInfo.methodParams[key];
-      if (key === 'callback') {
-        let callbackInfo: KeyValue;
-        if (paramInfo.members['Callback']) {
-          isAsyncCallback = false;
-          callbackInfo = paramInfo.members['Callback'];
-        }
-        if (paramInfo.members['AsyncCallback']) {
-          isAsyncCallback = true;
-          callbackInfo = paramInfo.members['AsyncCallback'];
-        }
-        callbackInfo && Object.keys(callbackInfo.typeParameters).forEach(memberKey => {
-          const memberKeyValue = callbackInfo.typeParameters[memberKey];
-          const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
-          callBackParams.push(value);
-        });
-      }
-    if (key === 'type' && isSpecial) {
-      Object.keys(paramInfo.members).forEach(memberKey => {
-        if (!paramName) {
-          paramName = memberKey;
-        }
-      });
-    }
-    });
+    const { paramName, callBackParams, isAsyncCallback } = getCallbackMockData(funInfo, mockBuffer, kvPath, rootKeyValue, isSpecial);
     if (!callBackParams.length) {
       continue;
     }
@@ -909,6 +897,72 @@ function handleFunParamMockData(
     }
   }
   return paramMockData;
+}
+
+function getCallbackMockData(
+  funInfo: KeyValue,
+  mockBuffer: MockBuffer,
+  kvPath: KeyValue[],
+  rootKeyValue: KeyValue,
+  isSpecial: boolean
+): CallbackParamMockData {
+  let paramName = '';
+  let isAsyncCallback = true;
+  let callBackParams: string[] = [];
+  Object.keys(funInfo.methodParams).forEach(key => {
+    const paramInfo = funInfo.methodParams[key];
+    const callbackData = handleCallbackParamMockData(key, paramInfo, callBackParams, paramName, isAsyncCallback, mockBuffer, kvPath, rootKeyValue, isSpecial);
+    paramName = callbackData.paramName;
+    isAsyncCallback = callbackData.isAsyncCallback;
+    callBackParams = callbackData.callBackParams;
+  });
+  return {
+    paramName,
+    isAsyncCallback,
+    callBackParams
+  };
+}
+
+function handleCallbackParamMockData(
+  key: string,
+  paramInfo: KeyValue,
+  callBackParams: string[],
+  paramName: string,
+  isAsyncCallback: boolean,
+  mockBuffer: MockBuffer,
+  kvPath: KeyValue[],
+  rootKeyValue: KeyValue,
+  isSpecial: boolean
+): CallbackParamMockData {
+  if (key === 'callback') {
+    let callbackInfo: KeyValue;
+    if (paramInfo.members.Callback) {
+      isAsyncCallback = false;
+      callbackInfo = paramInfo.members.Callback;
+    }
+    if (paramInfo.members.AsyncCallback) {
+      isAsyncCallback = true;
+      callbackInfo = paramInfo.members.AsyncCallback;
+    }
+    callbackInfo && Object.keys(callbackInfo.typeParameters).forEach(memberKey => {
+      const memberKeyValue = callbackInfo.typeParameters[memberKey];
+      const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+      callBackParams.push(value);
+    });
+  }
+  if (key === 'type' && isSpecial) {
+    Object.keys(paramInfo.members).forEach(memberKey => {
+      if (!paramName) {
+        paramName = memberKey;
+      }
+    });
+  }
+
+  return {
+    isAsyncCallback,
+    callBackParams,
+    paramName
+  };
 }
 
 /**
@@ -933,13 +987,14 @@ function concatProperty(property?: KeyValue): string {
  * @param property 调用KV节点的属性
  * @returns
  */
-function findProperty(keyValue: KeyValue, property?: KeyValue): KeyValue | undefined {
+function findProperty(keyValue: KeyValue, property?: KeyValue): KeyValue {
+  const keyValueKey = keyValue.key;
   while (property && keyValue) {
     keyValue = keyValue.members[property.key];
     property = property.property;
   }
   if (!keyValue && property) {
-    return;
+    throw new Error(`未能在${keyValueKey}下找到${property.key}子孙属性`);
   }
   return keyValue;
 }
@@ -1071,10 +1126,12 @@ function handleExpressionKeyValue(
 
 /**
  * 处理非重载函数
- * @param funcKeyValue 函数KV节点
+ * @param key
+ * @param sameFuncList
  * @param mockBuffer KV节点所在文件的mock信息
  * @param kvPath KV节点路径
  * @param rootKeyValue 仅次于FILE节点的根节点
+ * @param functionName
  * @returns
  */
 function handleSingleFunction(
@@ -1146,7 +1203,7 @@ export function handleDeclares(outMockJsFileDir: string): void {
     handleDeclare(DECLARES[key], declarations, mockedDeclarations);
   });
 
-  const INTERVAL = 20;
+  const INTERVAL = 100;
   for (let counter = 0; counter < declarations.length; counter += INTERVAL) {
     const index = Math.floor(counter / INTERVAL) + 1;
     const filePath = path.join(outMockJsFileDir, `globalDeclarations${index}.js`);

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+const startTime = Date.now();
+
 const fs = require('fs');
 
 const path = require('path');
@@ -99,7 +101,8 @@ function countSize(filePath) {
       const num = 2;
       const size = (stats.size / KB_BYTE_LENGTH).toFixed(num) + 'KB';
       console.log(`generate snapshot file: ${file}...\nthe snapshot file size: ${size}...`);
+      const endTime = Date.now();
+      console.log(`耗时：${(endTime - startTime) / 1000}秒`);
     }
   });
 }
-
