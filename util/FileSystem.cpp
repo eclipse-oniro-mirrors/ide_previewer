@@ -17,6 +17,20 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <direct.h>
+#elif __linux__
+#include <climits>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 
 #include "PreviewerEngineLog.h"
 #include "NativeFileSystem.h"
@@ -25,11 +39,7 @@ std::vector<std::string> FileSystem::pathList = {"file_system", "app", "ace", "d
 std::string FileSystem::bundleName = "";
 std::string FileSystem::fileSystemPath = "";
 
-#ifdef _WIN32
-std::string FileSystem::separator = "\\";
-#else
 std::string FileSystem::separator = "/";
-#endif
 
 bool FileSystem::IsFileExists(std::string path)
 {
@@ -75,8 +85,14 @@ void FileSystem::MakeVirtualFileSystemPath()
     fileSystemPath = dirToMake;
 }
 
-int FileSystem::MakeDir(std::string path)
+int FileSystem::MakeDir(const std::string &path)
 {
+    std::string basePath = BaseDir(path);
+    if (!basePath.empty() && !IsDirectoryExists(basePath)) {
+        if (int err = MakeDir(basePath)) {
+            return err;
+        }
+    }
     int result = 0;
 #ifdef _WIN32
     result = mkdir(path.data());
@@ -84,6 +100,102 @@ int FileSystem::MakeDir(std::string path)
     result = mkdir(path.data(), S_IRUSR | S_IWUSR | S_IXUSR);
 #endif
     return result;
+}
+
+std::string FileSystem::BaseDir(const std::string &path)
+{
+    return path.substr(0, path.rfind(separator));
+}
+
+std::string FileSystem::BaseName(const std::string &path)
+{
+    return path.substr(path.rfind(separator) + 1);
+}
+
+bool FileSystem::RemoveDir(const std::string &dirPath)
+{
+    DIR *dir = opendir(dirPath.c_str());
+    if (dir == nullptr) {
+        ELOG("Failed to open directory");
+        return false;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string fileOrDirName = entry->d_name;
+        if (fileOrDirName == "." || fileOrDirName == "..") {
+            continue;
+        }
+
+        std::string fullPath = dirPath + separator + fileOrDirName;
+
+        struct stat pathStat;
+        if (stat(fullPath.c_str(), &pathStat) == -1) {
+            ELOG(("Failed to get file status: " + fullPath).c_str());
+            closedir(dir);
+            return false;
+        }
+
+        if (S_ISDIR(pathStat.st_mode)) {
+            if (!RemoveDir(fullPath)) {
+                closedir(dir);
+                return false;
+            }
+        } else {
+            if (remove(fullPath.c_str()) != 0) {
+                ELOG(("Failed to delete file: " + fullPath).c_str());
+                closedir(dir);
+                return false;
+            }
+        }
+    }
+
+    closedir(dir);
+
+    if (rmdir(dirPath.c_str()) != 0) {
+        ELOG(("Failed to remove directory: " + dirPath).c_str());
+        return false;
+    }
+
+    return true;
+}
+
+static std::string GetTempDir()
+{
+#ifdef _WIN32
+    char tempPath[MAX_PATH];
+    GetTempPath(MAX_PATH, tempPath);
+    return std::string(tempPath);
+#else
+    char* tempPath = getenv("TMPDIR");
+    return tempPath == nullptr ? std::string("/tmp") : std::string(tempPath);
+#endif
+}
+
+std::string FileSystem::CreateTempDirectory()
+{
+#ifdef _WIN32
+    char tempDir[MAX_PATH];
+    if (GetTempFileName(GetTempDir().c_str(), "previewer", 0, tempDir) == 0) {
+        ELOG("Failed to create temporary directory");
+        return "";
+    }
+    DeleteFile(tempDir);
+    if (!CreateDirectory(tempDir, nullptr)) {
+        ELOG("Failed to create temporary directory");
+        return "";
+    }
+    return std::string(tempDir);
+#else
+    std::string tempDirTemplate = GetTempDir() + "/previewer_XXXXXX";
+    char tempDir[tempDirTemplate.size() + 1];
+    tempDirTemplate.copy(tempDir, tempDirTemplate.size());
+    if (mkdtemp(tempDir) == nullptr) {
+        ELOG("Failed to create temporary directory");
+        return "";
+    }
+    return std::string(tempDir);
+#endif
 }
 
 void FileSystem::SetBundleName(std::string name)
@@ -120,4 +232,55 @@ std::string FileSystem::NormalizePath(const std::string& path)
         }
     }
     return normalizedPath;
+}
+
+std::string FileSystem::GetFullPath(const std::string& path)
+{
+    char fullPath[PATH_MAX];
+
+#ifdef _WIN32
+    if (GetFullPathName(path.c_str(), PATH_MAX, fullPath, NULL)) {
+        return std::string(fullPath);
+    }
+#elif __linux__ || __APPLE__
+    if (realpath(path.c_str(), fullPath)) {
+        return std::string(fullPath);
+    }
+#endif
+
+    return path;
+}
+
+std::string FileSystem::GetExecutablePath()
+{
+    std::string path;
+
+#ifdef _WIN32
+    char buffer[MAX_PATH];
+    GetModuleFileName(NULL, buffer, MAX_PATH);
+    std::string::size_type pos = std::string(buffer).find_last_of("\\/");
+    path = std::string(buffer).substr(0, pos);
+
+#elif __linux__
+    char buffer[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", buffer, PATH_MAX);
+    if (count != -1) {
+        path = std::string(buffer, (count > 0) ? count : 0);
+        std::string::size_type pos = path.find_last_of('/');
+        path = path.substr(0, pos);
+    }
+
+#elif __APPLE__
+    char buffer[PATH_MAX];
+    uint32_t size = sizeof(buffer);
+    if (_NSGetExecutablePath(buffer, &size) == 0) {
+        path = std::string(buffer);
+        std::string::size_type pos = path.find_last_of('/');
+        path = path.substr(0, pos);
+    }
+#endif
+
+    ILOG("Executable path: %s", path.c_str());
+
+    return path;
 }

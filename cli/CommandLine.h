@@ -522,4 +522,32 @@ public:
 protected:
     void RunGet() override;
 };
+
+class ScreenShotCommand : public CommandLine {
+public:
+    ScreenShotCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
+    ~ScreenShotCommand() override {}
+
+protected:
+    void RunAction() override;
+};
+
+class StartVideoRecordCommand : public CommandLine {
+public:
+    StartVideoRecordCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
+    ~StartVideoRecordCommand() override {}
+
+protected:
+    void RunAction() override;
+};
+
+class StopVideoRecordCommand : public CommandLine {
+public:
+    StopVideoRecordCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket);
+    ~StopVideoRecordCommand() override {}
+
+protected:
+    void RunAction() override;
+};
+
 #endif // COMMANDLINE_H

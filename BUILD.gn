@@ -165,6 +165,7 @@ ohos_copy("copy_ide_library") {
   deps += [ "jsapp/rich/external:ide_extension" ]
   out_path = get_label_info("jsapp/rich/external:ide_extension", "root_out_dir")
   sources += [ out_path + "/ide/previewer/libide_extension" + suffix ]
+  sources += [ rebase_path("config/config.json", root_out_dir) ]
 
   outputs = [ target_out_dir + "/previewer/common/bin/{{source_file_part}}" ]
   module_source_dir = target_out_dir + "/previewer/common/bin/"

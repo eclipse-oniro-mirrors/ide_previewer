@@ -15,7 +15,7 @@
 
 #include "EventRunner.h"
 
-namespace OHOS::AppExecFwk {
+namespace OHOS::Ide {
 EventRunner& EventRunner::Current()
 {
     static EventRunner mainRunner;

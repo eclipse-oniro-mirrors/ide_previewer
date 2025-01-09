@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "JsonReader.h"
+
 class CommandInfo {
 public:
     std::string deviceType;
@@ -58,6 +60,7 @@ public:
     std::string Value(std::string key);
     std::vector<std::string> Values(std::string key);
     void Register(std::string key, uint32_t argc, std::string help);
+    bool IsResolutionValid();
     bool IsResolutionValid(int32_t resolution) const;
     int32_t GetOrignalResolutionWidth() const;
     int32_t GetOrignalResolutionHeight() const;
@@ -95,6 +98,8 @@ public:
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info) const;
     void GetFoldInfo(FoldInfo& info) const;
+    bool IsStandaloneMode();
+    std::string GetHapDir();
     std::string GetSid() const;
 #ifdef COMPONENT_TEST_ENABLED
     std::string GetComponentTestConfig() const;
@@ -102,7 +107,7 @@ public:
 
 private:
     CommandParser();
-    ~CommandParser() {}
+    ~CommandParser();
     std::string errorInfo;
     std::map<std::string, std::vector<std::string>> argsMap;
     std::map<std::string, uint32_t> regsArgsCountMap;
@@ -128,6 +133,7 @@ private:
     const int MAX_JSHEAPSIZE = 512 * 1024;
     const int MIN_JSHEAPSIZE = 48 * 1024;
     const size_t MAX_NAME_LENGTH = 256;
+    const size_t headSymCount = 2;
     bool isSendJSHeap;
     int32_t orignalResolutionWidth;
     int32_t orignalResolutionHeight;
@@ -165,11 +171,15 @@ private:
     int32_t foldResolutionHeight;
     std::string loaderJsonPath;
     std::string sid;
+    std::string hapDir;
+    bool isHapDirTemp = false;
+    Json2::Value moduleInfoJson;
+    Json2::Value resourcesProfieJson;
+    Json2::Value config;
 
     bool IsDebugPortValid();
     bool IsAppPathValid();
     bool IsAppNameValid();
-    bool IsResolutionValid();
     bool IsConfigPathValid();
     bool IsAppResourcePathValid();
     bool IsResolutionRangeValid(std::string value);
@@ -206,6 +216,10 @@ private:
     bool IsSidValid();
     std::string HelpText();
     void ProcessingCommand(const std::vector<std::string>& strs);
+    bool GetModuleInfoJson();
+    bool GetResourcesProfieJson();
+    static bool GetJson(const std::string &fileName, Json2::Value &jsonData);
+    bool LoadConfig();
 };
 
 #endif // COMMANDPARSER_H

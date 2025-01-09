@@ -665,6 +665,11 @@ Json2::Value JsonReader::CreateBool(const bool value)
     return Json2::Value(cJSON_CreateBool(value));
 }
 
+Json2::Value JsonReader::CreateNumber(double value)
+{
+    return Json2::Value(cJSON_CreateNumber(value));
+}
+
 Json2::Value JsonReader::CreateString(const std::string& value)
 {
     return Json2::Value(cJSON_CreateString(value.c_str()));

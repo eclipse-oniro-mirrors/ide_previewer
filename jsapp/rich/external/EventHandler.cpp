@@ -15,7 +15,7 @@
 
 #include "EventHandler.h"
 
-namespace OHOS::AppExecFwk {
+namespace OHOS::Ide {
     void EventHandler::SetMainThreadId(std::thread::id id)
     {
         EventRunner::Current().SetMainThreadId(id);

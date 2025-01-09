@@ -28,6 +28,7 @@
 #include "SharedData.h"
 #include "TraceTool.h"
 #include "VirtualScreenImpl.h"
+#include "FileSystem.h"
 
 static const int NOTIFY_INTERVAL_TIME = 1000; // Unit millisecond
 
@@ -111,17 +112,21 @@ int main(int argc, char* argv[])
     if (ret >= 0) {
         return ret;
     }
+    if (parser.IsStandaloneMode()) {
+        chdir(FileSystem::GetExecutablePath().c_str());
+    }
     InitSharedData();
     if (parser.IsSet("s")) {
-        CommandLineInterface::GetInstance().Init(parser.Value("s"));
+        CommandLineInterface::GetInstance().Init(parser.Value("s"), parser.IsStandaloneMode());
     }
-
-    TraceTool::GetInstance().HandleTrace("Enter the main function");
-
-    std::thread commandThead(ProcessCommand);
-    commandThead.detach();
+    if (!parser.IsStandaloneMode()) {
+        TraceTool::GetInstance().HandleTrace("Enter the main function");
+    }
+    std::thread commandThread(ProcessCommand);
     VirtualScreenImpl::GetInstance().InitResolution();
-    ApplyConfig();
+    if (!parser.IsStandaloneMode()) {
+        ApplyConfig();
+    }
     JsAppImpl::GetInstance().InitJsApp();
     std::this_thread::sleep_for(std::chrono::milliseconds(500)); // sleep 500 ms
     return 0;
