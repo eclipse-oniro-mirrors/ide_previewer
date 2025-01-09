@@ -24,7 +24,9 @@
 #include "CommandParser.h"
 #include "PreviewerEngineLog.h"
 #include "TraceTool.h"
+#include "VideoRecorder.h"
 #include <sstream>
+#include <fstream>
 
 VirtualScreenImpl& VirtualScreenImpl::GetInstance()
 {
@@ -318,15 +320,26 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
             dataTemp[nowBasePos + bluePos] = *((char*)data + inputBasePos + bluePos);
         }
     }
+
+    VideoRecorder::GetInstance().PushFrame(dataTemp, retWidth * retHeight * jpgPix);
+
     VirtualScreen::RgbToJpg(dataTemp, retWidth, retHeight);
+    
     delete [] dataTemp;
+    UpdateScreenshotBuffer();
+}
+
+void VirtualScreenImpl::UpdateScreenshotBuffer()
+{
     if (jpgBufferSize > bufferSize - headSize) {
         FLOG("VirtualScreenImpl::Send length must < %d", bufferSize - headSize);
         return;
     }
 
     std::copy(jpgScreenBuffer, jpgScreenBuffer + jpgBufferSize, screenBuffer + headSize);
-    writed = WebSocketServer::GetInstance().WriteData(screenBuffer, headSize + jpgBufferSize);
+    if (isWebSocketConfiged) {
+        writed = WebSocketServer::GetInstance().WriteData(screenBuffer, headSize + jpgBufferSize);
+    }
     BackupAndDeleteBuffer(jpgBufferSize);
 }
 
@@ -354,19 +367,18 @@ void VirtualScreenImpl::BackupAndDeleteBuffer(const unsigned long imageBufferSiz
     std::copy(screenBuffer,
               screenBuffer + headSize + imageBufferSize,
               WebSocketServer::GetInstance().firstImageBuffer + LWS_PRE);
+    screenShotBuffer = WebSocketServer::GetInstance().firstImageBuffer + LWS_PRE + headSize;
+    screenShotBufferSize = imageBufferSize;
 
     FreeJpgMemory();
 }
 
 bool VirtualScreenImpl::JudgeBeforeSend(const void* data)
 {
-    if (data == nullptr) {
-        ELOG("render callback data is null.");
-        invalidFrameCountPerMinute++;
-        return false;
-    }
-    if (!isWebSocketConfiged) {
-        ELOG("image socket is not ready");
+    if (!isWebSocketConfiged || (data == nullptr)) {
+        if (data == nullptr) {
+            invalidFrameCountPerMinute++;
+        }
         return false;
     }
     return true;
@@ -378,8 +390,9 @@ bool VirtualScreenImpl::SendPixmap(const void* data, size_t length, int32_t retW
         return false;
     }
     if (isFirstRender) {
-        ILOG("Get first render buffer");
-        TraceTool::GetInstance().HandleTrace("Get first render buffer");
+        if (!CommandParser::GetInstance().IsStandaloneMode()) {
+            TraceTool::GetInstance().HandleTrace("Get first render buffer");
+        }
         isFirstRender = false;
     }
     isFrameUpdated = true;
@@ -472,4 +485,15 @@ void VirtualScreenImpl::InitFoldParams()
     if (parser.IsSet("fr")) {
         SetFoldResolution(info.foldResolutionWidth, info.foldResolutionHeight);
     }
+}
+
+void VirtualScreenImpl::MakeScreenShot(const std::string &fileName)
+{
+    std::ofstream myfile;
+    myfile.open((fileName + ".jpg").c_str(), std::ios::out | std::ios::binary);
+    if (screenShotBuffer != nullptr) {
+        std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
+        myfile.write((char *)screenShotBuffer, screenShotBufferSize);
+    }
+    myfile.close();
 }

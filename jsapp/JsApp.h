@@ -121,6 +121,7 @@ public:
     virtual std::string GetDefaultJSONTree();
     virtual void OrientationChanged(std::string commandOrientation);
     virtual void ResolutionChanged(ResolutionParam&, int32_t, std::string);
+    virtual void GetFramebufferSize(int32_t &width, int32_t &height);
     virtual void SetArgsColorMode(const std::string& value);
     virtual void SetArgsAceVersion(const std::string& value);
     virtual std::string GetOrientation() const;

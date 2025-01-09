@@ -30,6 +30,7 @@ ohos_source_set("util_lite") {
     "SharedDataManager.cpp",
     "TimeTool.cpp",
     "TraceTool.cpp",
+    "Unhap.cpp",
     "WebSocketServer.cpp",
   ]
   cflags = [ "-std=c++17" ]
@@ -68,6 +69,7 @@ ohos_source_set("util_lite") {
     "//third_party/cJSON:cjson_static",
     "//third_party/libwebsockets:websockets_static",
   ]
+  external_deps = [ "zlib:shared_libz" ]
   part_name = "previewer"
   subsystem_name = "ide"
 }
@@ -125,6 +127,7 @@ ohos_shared_library("ide_util") {
       "PreviewerEngineLog.cpp",
       "TimeTool.cpp",
       "TraceTool.cpp",
+      "Unhap.cpp",
     ]
     cflags = [ "-std=c++17" ]
     cflags_cc = cflags
@@ -184,6 +187,7 @@ ohos_shared_library("ide_util") {
       "//third_party/bounds_checking_function:libsec_shared",
       "//third_party/cJSON:cjson",
     ]
+    external_deps = [ "zlib:shared_libz" ]
   }
   part_name = "previewer"
   subsystem_name = "ide"

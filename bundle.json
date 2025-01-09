@@ -33,7 +33,9 @@
             "bounds_checking_function",
             "libjpeg-turbo",
             "libwebsockets",
-            "cJSON"
+            "cJSON",
+            "glfw",
+            "ffmpeg"
           ]
       },
       "build": {
@@ -47,6 +49,7 @@
           "//ide/tools/previewer/util:util_lite",
           "//ide/tools/previewer/util:util_rich",
           "//ide/tools/previewer:rich_previewer",
+          "//ide/tools/previewer:previewer_cli",
           "//ide/tools/previewer:lite_previewer",
           "//ide/tools/previewer/jsapp/rich/external:ide_extension"
         ],

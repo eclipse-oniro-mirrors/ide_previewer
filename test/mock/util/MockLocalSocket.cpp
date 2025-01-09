@@ -61,3 +61,8 @@ size_t LocalSocket::WriteData(const void* data, size_t length) const
 {
     return length;
 }
+
+bool LocalSocket::RunServer(std::string name)
+{
+    return true;
+}

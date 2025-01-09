@@ -19,7 +19,10 @@
 
 LocalSocket::LocalSocket() : pipeHandle(nullptr) {}
 
-LocalSocket::~LocalSocket() {}
+LocalSocket::~LocalSocket()
+{
+    DisconnectFromServer();
+}
 
 bool LocalSocket::ConnectToServer(std::string name, LocalSocket::OpenMode openMode, TransMode transMode)
 {
@@ -38,6 +41,58 @@ bool LocalSocket::ConnectToServer(std::string name, LocalSocket::OpenMode openMo
         return false;
     }
 
+    isConnected = true;
+    return true;
+}
+
+bool LocalSocket::RunServer(std::string name)
+{
+    DisconnectFromServer();
+    serverName = name;
+    std::wstring tempName = std::wstring(name.begin(), name.end());
+    constexpr int bufSize = 4096;
+    pipeHandle = CreateNamedPipeW(
+        tempName.c_str(),
+        PIPE_ACCESS_DUPLEX,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+        1,
+        bufSize,
+        bufSize,
+        0,
+        nullptr);
+    if (pipeHandle == INVALID_HANDLE_VALUE) {
+        ELOG("LocalSocket::RunServer CreateNamedPipeW failed: %d", GetLastError());
+        return false;
+    }
+    isServer = true;
+    isConnected = false;
+    return true;
+}
+
+bool LocalSocket::ConnectClient(bool wait)
+{
+    if (isConnected) {
+        return true;
+    }
+    if (!isServer) {
+        return false;
+    }
+
+    if (!wait) {
+        DWORD bytesAvailable = 0;
+        BOOL result = PeekNamedPipe(pipeHandle, nullptr, 0, nullptr, &bytesAvailable, nullptr);
+        if (!result || bytesAvailable == 0) {
+            return false;
+        }
+    }
+
+    BOOL connected = ConnectNamedPipe(pipeHandle, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
+    if (!connected) {
+        ELOG("LocalSocket::ConnectClient ConnectNamedPipe failed: %d", GetLastError());
+        return false;
+    }
+
+    isConnected = true;
     return true;
 }
 
@@ -58,11 +113,23 @@ std::string LocalSocket::GetImagePipeName(std::string baseName) const
 
 void LocalSocket::DisconnectFromServer()
 {
-    CloseHandle(pipeHandle);
+    if (pipeHandle != INVALID_HANDLE_VALUE) {
+        FlushFileBuffers(pipeHandle);
+        DisconnectNamedPipe(pipeHandle);
+        CloseHandle(pipeHandle);
+        pipeHandle = INVALID_HANDLE_VALUE;
+    }
+    isConnected = false;
 }
 
 int64_t LocalSocket::ReadData(char* data, size_t length) const
 {
+    if (!isConnected) {
+        if (!isServer || !const_cast<LocalSocket*>(this)->ConnectClient(false)) {
+            return 0;
+        }
+    }
+
     if (length > UINT32_MAX) {
         ELOG("LocalSocket::ReadData length must < %d", UINT32_MAX);
         return -1;
@@ -70,7 +137,11 @@ int64_t LocalSocket::ReadData(char* data, size_t length) const
 
     DWORD readSize = 0;
     if (!PeekNamedPipe(pipeHandle, nullptr, 0, nullptr, &readSize, nullptr)) {
-        return 0;
+        ELOG("LocalSocket::ReadData PeekNamedPipe failed: %d", GetLastError());
+        if (isServer) {
+            const_cast<LocalSocket*>(this)->RunServer(serverName);
+        }
+        return -1;
     }
 
     if (readSize == 0) {
@@ -80,6 +151,9 @@ int64_t LocalSocket::ReadData(char* data, size_t length) const
     if (!ReadFile(pipeHandle, data, static_cast<DWORD>(length), &readSize, NULL)) {
         DWORD error = GetLastError();
         ELOG("LocalSocket::ReadData ReadFile failed: %d", error);
+        if (isServer) {
+            const_cast<LocalSocket*>(this)->RunServer(serverName);
+        }
         return 0 - static_cast<int64_t>(error);
     }
     return readSize;

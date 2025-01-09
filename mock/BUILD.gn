@@ -34,6 +34,7 @@ ohos_source_set("mock_rich") {
   deps = [
     "../jsapp:jsapp_rich",
     "../util:util_rich",
+    "//third_party/ffmpeg:libohosffmpeg",
     "//third_party/libjpeg-turbo:turbojpeg_static",
     "//third_party/libwebsockets:websockets_static",
   ]
@@ -43,6 +44,7 @@ ohos_source_set("mock_rich") {
     "MouseInput.cpp",
     "MouseWheel.cpp",
     "SystemCapability.cpp",
+    "VideoRecorder.cpp",
     "VirtualMessage.cpp",
     "VirtualScreen.cpp",
     "rich/KeyInputImpl.cpp",
@@ -53,7 +55,10 @@ ohos_source_set("mock_rich") {
     "rich/VirtualScreenImpl.cpp",
   ]
 
-  include_dirs += [ "./rich/" ]
+  include_dirs += [
+    "./rich/",
+    "//third_party/ffmpeg/",
+  ]
 
   part_name = "previewer"
   subsystem_name = "ide"
@@ -77,6 +82,7 @@ ohos_source_set("mock_lite") {
     "//commonlibrary/utils_lite/js/builtin/simulator:ace_kit_file_simulator",
     "//commonlibrary/utils_lite/js/builtin/simulator:ace_kit_kvstore_simulator",
     "//foundation/arkui/ace_engine_lite/frameworks/targets/simulator:ace_lite",
+    "//third_party/ffmpeg:libohosffmpeg",
     "//third_party/libjpeg-turbo:turbojpeg_static",
     "//third_party/libwebsockets:websockets_static",
   ]
@@ -87,6 +93,7 @@ ohos_source_set("mock_lite") {
     "MouseInput.cpp",
     "MouseWheel.cpp",
     "SystemCapability.cpp",
+    "VideoRecorder.cpp",
     "VirtualMessage.cpp",
     "VirtualScreen.cpp",
     "lite/AblityKit.cpp",
@@ -112,6 +119,7 @@ ohos_source_set("mock_lite") {
     "//foundation/arkui/ui_lite/interfaces/kits/",
     "//foundation/graphic/graphic_utils_lite/interfaces/kits/",
     "//foundation/graphic/graphic_utils_lite/interfaces/innerkits/",
+    "//third_party/ffmpeg/",
   ]
 
   if (build_lite_full) {

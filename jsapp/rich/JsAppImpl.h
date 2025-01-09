@@ -39,7 +39,7 @@ namespace Rosen {
     struct SystemBarProperty;
     struct Rect;
 }
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
 namespace AbilityRuntime {
     class Simulator;
     struct Options;
@@ -65,6 +65,7 @@ public:
     std::string GetDefaultJSONTree() override;
     void OrientationChanged(std::string commandOrientation) override;
     void ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason) override;
+    void GetFramebufferSize(int32_t &destWidth, int32_t &destHeight) override;
     OHOS::Ace::WindowSizeChangeReason ConvertResizeReason(std::string reason);
     void SetResolutionParams(int32_t changedOriginWidth, int32_t changedOriginHeight,
                            int32_t changedWidth, int32_t changedHeight, int32_t screenDensity);
@@ -115,6 +116,7 @@ protected:
     double twoInOneScreenDensity = 240;    // Car Screen Density
 
 private:
+    void InitParams();
     void SetPkgContextInfo();
     void SetMockJsonInfo();
     void SetAssetPath(OHOS::Ace::Platform::AceRunArgs& args, const std::string) const;
@@ -157,13 +159,14 @@ private:
     int32_t height = 0;
     int32_t orignalWidth = 0;
     int32_t orignalHeight = 0;
+    bool isGUI = false;
     AvoidAreas avoidInitialAreas;
     OHOS::Ace::Platform::AceRunArgs aceRunArgs;
     std::shared_ptr<OHOS::Rosen::GlfwRenderContext> glfwRenderContext;
 #ifdef COMPONENT_TEST_ENABLED
     std::string componentTestModeConfig;
 #endif // COMPONENT_TEST_ENABLED
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
     std::shared_ptr<OHOS::AbilityRuntime::Simulator> simulator;
     int64_t debugAbilityId = -1;
     void SetSimulatorParams(OHOS::AbilityRuntime::Options& options);

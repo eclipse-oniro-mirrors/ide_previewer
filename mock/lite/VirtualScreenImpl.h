@@ -38,7 +38,7 @@ public:
     uint16_t GetScreenHeight() override;
     void InitBuffer();
     void InitAll(std::string pipeName, std::string pipePort);
-
+    void MakeScreenShot(const std::string &fileName) {}
 private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();

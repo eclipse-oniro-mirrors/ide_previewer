@@ -52,7 +52,11 @@ std::map<std::string, std::string> richDataMap = {
     {"AvoidArea", R"({"topRect":{"posX":0,"posY":0,"width":2340,"height":117},"bottomRect":{"posX":
         0,"posY":0,"width":0,"height":0},"leftRect":{"posX":0,"posY":0,"width":0,"height":0},
         "rightRect":{"posX":0,"posY":0,"width":2340,"height":84}})"},
-    {"AvoidAreaChanged", ""}
+    {"AvoidAreaChanged", ""},
+    {"AvoidAreaChanged", ""},
+    {"ScreenShot", ""},
+    {"StartVideoRecord", ""},
+    {"StopVideoRecord", ""}
 };
 
 TEST(RichCommandParseFuzzTest, test_command)
