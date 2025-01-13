@@ -24,7 +24,7 @@ import {
   MockedFileMap,
   TSTypes,
   specialOverloadedFunctionArr,
-  callbackError
+  callbackError, ClassNotInEts
 } from '../common/constants';
 import {
   Declare,
@@ -59,8 +59,8 @@ export function generateContent(mockBuffer: MockBuffer, members: Members): strin
     if (keyValue.isGlobalDeclare) {
       membersContent.push(`export const ${memberKey}=global.${memberKey};`);
     } else {
-      const functionBody = handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property);
-      membersContent.push(`export const ${memberKey} = ${functionBody};`);
+      const memberBody = handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property);
+      membersContent.push(`export const ${memberKey} = ${memberBody};`);
     }
     if (keyValue.isDefault) {
       const exportDefaultStr = `export default ${keyValue.key}`;
@@ -206,7 +206,7 @@ function handleClassKeyValue(
   rootKeyValue: KeyValue
 ): string {
   const memberLines: string[] = [];
-  const dynamicProperties: string[] = [];
+  const dynamicProperties: string[] = ['this.isAutoMock=true'];
 
   if (keyValue.heritage) {
     handleHeritage(keyValue, mockBuffer, kvPath.concat([keyValue.heritage]), rootKeyValue);
@@ -233,7 +233,7 @@ function handleClassKeyValue(
       }
     } else {
       if (memberKeyValue.isStatic) {
-        memberLines.push(`static ${elementName} = ${value}`);
+        memberLines.push(`static get ${elementName}(){return ${value}}`);
       } else {
         dynamicProperties.push(`this.${elementName} = ${value}`);
       }
@@ -460,7 +460,7 @@ function handleInterfaceKeyValue(
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
 ): string {
-  const memberLines: string[] = [];
+  const memberLines: string[] = ['isAutoMock: true'];
 
   if (keyValue.heritage) {
     handleHeritage(keyValue, mockBuffer, kvPath.concat([keyValue.heritage]), rootKeyValue);
@@ -638,7 +638,7 @@ function findInLibs(
     const globalThisKeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
     return { keyValue: globalThisKeyValue, mockBuffer };
   }
-  if (!global[key]) {
+  if (ClassNotInEts.has(key) || !global[key]) {
     return undefined;
   }
   if (key === 'Symbol') {
@@ -1095,7 +1095,7 @@ function handleEnumKeyValue(
   kvPath: KeyValue[],
   rootKeyValue: KeyValue
 ): string {
-  const memberLines: string[] = [];
+  const memberLines: string[] = ['isAutoMock: 0'];
   Object.keys(keyValue.members).forEach(memberKey => {
     const memberKeyValue = keyValue.members[memberKey];
     const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
@@ -1189,12 +1189,12 @@ export function handleDeclares(outMockJsFileDir: string): void {
     const keyValue = DECLARES[key].keyValue;
     switch (keyValue.type) {
       case KeyValueTypes.CLASS: {
-        declarations.push(`global.${key}_temp = class {};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        declarations.push(`global.${key}_temp = class {constructor(){this.isAutoMock=true}};\nglobal.${key} = global.${key} || global.${key}_temp;`);
         break;
       }
       case KeyValueTypes.INTERFACE:
       case KeyValueTypes.MODULE: {
-        declarations.push(`global.${key}_temp = {};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        declarations.push(`global.${key}_temp = {isAutoMock: true};\nglobal.${key} = global.${key} || global.${key}_temp;`);
       }
     }
   });
@@ -1374,6 +1374,9 @@ function handleClassMembers(
     value = handleClassMethod(memberKey, memberKeyValue, parent, mockBuffer, kvPath, elementName, memberValue);
   } else {
     value = `global.${parent.key}_temp${memberKeyValue.isStatic ? '' : '.prototype'}${elementName} = ${memberValue};`;
+  }
+  if (!memberKeyValue.isStatic && memberKeyValue.sameName.some(sameKeyValue => sameKeyValue.isStatic)) {
+    value += `\nglobal.${parent.key}_temp${elementName} = global.${parent.key}_temp.prototype${elementName}`;
   }
   memberKeyValue.isMocked = true;
   declarations.push(value);
