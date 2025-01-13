@@ -136,6 +136,8 @@ export const TYPESCRIPT_KEYWORDS: Set<string> = new Set([
   'as const', 'is unknown', 'is any', 'is never', 'checks', 'constraint', 'covariant', 'contravariant', 'invariant'
 ]);
 
+export const ClassNotInEts: Set<string> = new Set(['TextEncoder', 'TextDecoder']);
+
 // .d.ts 文件后缀
 export const D_TS: string = '.d.ts';
 

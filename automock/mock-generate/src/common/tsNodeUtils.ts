@@ -1003,11 +1003,11 @@ function handleTypeNode(
   }
   switch (node.kind) {
     case SyntaxKind.NumberKeyword: {
-      typeText = '1';
+      typeText = '0';
       break;
     }
     case SyntaxKind.StringKeyword: {
-      typeText = 'vt';
+      typeText = '\'\'';
       break;
     }
     case SyntaxKind.ArrayType: {
@@ -1015,7 +1015,7 @@ function handleTypeNode(
       break;
     }
     case SyntaxKind.BooleanKeyword: {
-      typeText = 'true';
+      typeText = 'false';
       break;
     }
     case SyntaxKind.TypeReference: {
@@ -1160,6 +1160,7 @@ function handlePropertyDeclaration(
     return;
   }
   const propertyName = handlePropertyNameNode(node.name, mockBuffer, members, parent, type);
+  propertyName.isStatic = node.modifiers?.some(modify => modify.kind === SyntaxKind.StaticKeyword);
   if (node.initializer) {
     const expressionKeyValue = generateKeyValue('expression', KeyValueTypes.EXPRESSION, propertyName);
     propertyName.members.expression = expressionKeyValue;
@@ -1388,11 +1389,11 @@ function handleTupleTypeNode(
     let elementKeyValue: KeyValue;
     switch (element.kind) {
       case SyntaxKind.NumberKeyword: {
-        elementKeyValue = generateKeyValue('1', KeyValueTypes.VALUE, keyValue);
+        elementKeyValue = generateKeyValue('0', KeyValueTypes.VALUE, keyValue);
         break;
       }
       case SyntaxKind.StringKeyword: {
-        elementKeyValue = generateKeyValue('vt', KeyValueTypes.VALUE, keyValue);
+        elementKeyValue = generateKeyValue('\'\'', KeyValueTypes.VALUE, keyValue);
         break;
       }
       case SyntaxKind.NamedTupleMember: {
