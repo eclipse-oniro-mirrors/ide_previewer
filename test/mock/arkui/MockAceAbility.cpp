@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#define private public
-#include "ace_ability.h"
 #include "window.h"
 #include "MockGlobalResult.h"
+#define private public
+#include "ace_ability.h"
 
 namespace OHOS::Ace::Platform {
 AceAbility::AceAbility(const AceRunArgs& runArgs) : runArgs_(runArgs) {}
