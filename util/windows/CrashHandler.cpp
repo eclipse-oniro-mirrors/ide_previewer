@@ -29,6 +29,7 @@
 static const int MAX_NAME_LENGTH = 512;
 static const int MAX_ADDRESS_LENGTH = 16;
 
+namespace {
 void GetBacktrace(HANDLE hProcess, STACKFRAME64 &sf, SYMBOL_INFO *symbol)
 {
     // get addr info
@@ -53,6 +54,7 @@ void GetBacktrace(HANDLE hProcess, STACKFRAME64 &sf, SYMBOL_INFO *symbol)
         std::cout << "Unable to retrieve symbol for address 0x"
             << std::hex << sf.AddrPC.Offset << std::dec << std::endl;
     }
+}
 }
 
 void CrashHandler::RecordCallStack(const CONTEXT *context)
