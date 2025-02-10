@@ -21,6 +21,7 @@
 #include "FileSystem.h"
 #include "PreviewerEngineLog.h"
 #include "TraceTool.h"
+#include "Unhap.h"
 
 CommandParser* CommandParser::example = nullptr;
 CommandParser::CommandParser()
@@ -92,9 +93,20 @@ CommandParser::CommandParser()
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
     Register("-ljPath", 1, "Set loader.json path for Previewer");
     Register("-sid", 1, "Set sid for websocket");
+    Register("-gui", 0, "Standalone Previewer GUI mode.");
+    Register("-cli", 0, "Standalone Previewer CLI mode.");
+    Register("-hap", 1, "Path to HAP.");
+    Register("-config", 1, "Config file name.");
 #ifdef COMPONENT_TEST_ENABLED
     Register("-componentTest", 1, "Set component test config");
 #endif // COMPONENT_TEST_ENABLED
+}
+
+CommandParser::~CommandParser()
+{
+    if (isHapDirTemp) {
+        FileSystem::RemoveDir(hapDir);
+    }
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -137,7 +149,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
     partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
     partRet = partRet && IsSidValid();
-    if (partRet) {
+    if (partRet || IsStandaloneMode()) {
         return true;
     }
     ELOG(errorInfo.c_str());
@@ -148,28 +160,53 @@ bool CommandParser::IsCommandValid()
 
 bool CommandParser::IsSet(std::string key)
 {
-    if (argsMap.find(std::string("-") + key) == argsMap.end()) {
-        return false;
+    if (argsMap.find(std::string("-") + key) != argsMap.end()) {
+        return true;
     }
-    return true;
+    if (config[key].IsValid()) {
+        return true;
+    }
+    return false;
 }
 
 std::string CommandParser::Value(std::string key)
 {
-    auto args = argsMap[std::string("-") + key];
-    if (args.size() > 0) {
-        return args[0];
+    auto argsIt = argsMap.find(std::string("-") + key);
+    if (argsIt != argsMap.end()) {
+        if (argsIt->second.size() > 0) {
+            return argsIt->second[0];
+        }
+        return std::string();
+    }
+    Json2::Value configValue = config[key];
+    if (configValue.IsString()) {
+        return configValue.AsString();
+    } else if (configValue.IsNumber()) {
+        return std::to_string(configValue.AsDouble());
     }
     return std::string();
 }
 
 std::vector<std::string> CommandParser::Values(std::string key)
 {
-    if (argsMap.find(key) == argsMap.end()) {
-        return std::vector<std::string>();
+    auto argsIt = argsMap.find(key);
+    if (argsIt != argsMap.end()) {
+        return argsIt->second;
     }
-    std::vector<std::string> args = argsMap[key];
-    return args;
+    Json2::Value configValue = config[key.substr(1)];
+    if (configValue.IsArray()) {
+        std::vector<std::string> args;
+        for (uint32_t i = 0; i < configValue.GetArraySize(); ++i) {
+            Json2::Value item = configValue.GetArrayItem(i);
+            if (item.IsString()) {
+                args.push_back(item.AsString());
+            } else if (item.IsNumber()) {
+                args.push_back(std::to_string(item.AsDouble()));
+            }
+        }
+        return args;
+    }
+    return std::vector<std::string>();
 }
 
 void CommandParser::Register(std::string key, uint32_t argc, std::string help)
@@ -323,18 +360,70 @@ bool CommandParser::IsDebugPortValid()
 
 bool CommandParser::IsAppPathValid()
 {
-    if (!IsSet("j")) {
+    if (!IsSet("j") && !IsSet("hap")) {
         errorInfo = std::string("No app path specified.");
         ELOG("Launch -j parameters abnormal!");
         return false;
     }
-    std::string path = Value("j");
+    std::string path = "";
+    if (IsSet("hap")) {
+        path = FileSystem::NormalizePath(GetHapDir() + "/ets");
+    } else {
+        path = Value("j");
+    }
     if (!FileSystem::IsDirectoryExists(path)) {
         errorInfo = std::string("Js app path not exist.");
         ELOG("Launch -j parameters abnormal!");
         return false;
     }
 
+    return true;
+}
+
+bool CommandParser::GetModuleInfoJson()
+{
+    if (!IsSet("hap")) {
+        return false;
+    }
+    if (moduleInfoJson.IsValid()) {
+        return true;
+    }
+
+    return GetJson(FileSystem::NormalizePath(GetHapDir() + "/module.json"), moduleInfoJson);
+}
+
+bool CommandParser::GetResourcesProfieJson()
+{
+    if (!IsSet("hap")) {
+        return false;
+    }
+    if (resourcesProfieJson.IsValid()) {
+        return true;
+    }
+    if (!IsPagesValid()) {
+        return false;
+    }
+    std::string path = GetHapDir() + "/resources/base/profile/" + pages + ".json";
+    return GetJson(FileSystem::NormalizePath(path), resourcesProfieJson);
+}
+
+bool CommandParser::GetJson(const std::string &fileName, Json2::Value &jsonDataOut)
+{
+    // Read the JSON file into a string
+    std::string jsonStr = JsonReader::ReadFile(fileName);
+    if (jsonStr.empty()) {
+        ELOG("Error: Failed to read JSON file \"%s\" or file is empty.", fileName.c_str());
+        return false;
+    }
+
+    // Parse the string into a JSON object
+    Json2::Value jsonData = JsonReader::ParseJsonData2(jsonStr);
+    if (!jsonData.IsValid()) {
+        ELOG("Error: Failed to parse JSON data.");
+        return false;
+    }
+
+    std::swap(jsonDataOut, jsonData);
     return true;
 }
 
@@ -351,6 +440,11 @@ bool CommandParser::IsAppNameValid()
             return false;
         }
         appName = Value("n");
+    } else if (GetModuleInfoJson() &&
+               moduleInfoJson.IsMember("module") &&
+               moduleInfoJson["module"].IsMember("name") &&
+               moduleInfoJson["module"]["name"].IsString()) {
+        appName = moduleInfoJson["module"]["name"].AsString();
     }
     ILOG("CommandParser app name: %s", appName.c_str());
     return true;
@@ -443,8 +537,22 @@ bool CommandParser::IsDeviceValid()
 
 bool CommandParser::IsUrlValid()
 {
-    urlPath = Value("url");
-    if (urlPath.empty()) {
+    auto url = Value("url");
+    if (!url.empty()) {
+        urlPath = url;
+    } else if (GetResourcesProfieJson()) {
+        Json2::Value src = resourcesProfieJson["src"];
+        if (src.GetArraySize() == 0) {
+            ELOG("Error: Key 'src' or first src not found in 'main_pages.json'.");
+            return false;
+        }
+        Json2::Value firstSrc = src.GetArrayItem(0);
+        urlPath = firstSrc.AsString();
+        if (urlPath.empty()) {
+            ELOG("Error: First src record is empty.");
+            return false;
+        }
+    } else {
         errorInfo = "Launch -url parameters is empty.";
         return false;
     }
@@ -470,11 +578,16 @@ bool CommandParser::IsConfigPathValid()
 
 bool CommandParser::IsAppResourcePathValid()
 {
-    if (!IsSet("arp")) {
+    if (!IsSet("arp") && !IsSet("hap")) {
         return true;
     }
 
-    std::string path = Value("arp");
+    std::string path = "";
+    if (IsSet("hap")) {
+        path = GetHapDir();
+    } else {
+        path = Value("arp");
+    }
     if (!FileSystem::IsDirectoryExists(path)) {
         errorInfo = std::string("The configuration appResource path does not exist.");
         ELOG("Launch -arp parameters abnormal!");
@@ -505,10 +618,18 @@ bool CommandParser::IsProjectModelValid()
 
 bool CommandParser::IsPagesValid()
 {
-    if (!IsSet("pages")) {
+    const std::string prefix = "$profile:";
+    if (IsSet("pages")) {
+        pages = Value("pages");
+    } else if (GetModuleInfoJson() &&
+            moduleInfoJson.IsMember("module") &&
+            moduleInfoJson["module"].IsMember("pages") &&
+            moduleInfoJson["module"]["pages"].IsString() &&
+            moduleInfoJson["module"]["pages"].AsString().substr(0, prefix.length()) == prefix) {
+        pages = moduleInfoJson["module"]["pages"].AsString().substr(prefix.length());
+    } else {
         return true;
     }
-    pages = Value("pages");
     if (CheckParamInvalidity(pages, false)) {
         errorInfo = "Launch -pages parameters is not match regex.";
         return false;
@@ -844,17 +965,39 @@ bool CommandParser::IsAbilityPathValid()
     if (deviceType == "liteWearable" || deviceType == "smartVision") {
         return true;
     }
-    if (!IsSet("abp")) {
+    if (IsSet("abp")) {
+        std::string path = Value("abp");
+        if (path.empty()) {
+            errorInfo = std::string("The ability path is empty.");
+            ELOG("Launch -abp parameters abnormal!");
+            return false;
+        }
+        abilityPath = path;
+    } else if (GetModuleInfoJson()) {
+        // Check if "abilities[0].srcEntry" and "abilities[0].name" keys are present
+        if (!moduleInfoJson["module"].IsMember("abilities") ||
+            moduleInfoJson["module"]["abilities"].GetArraySize() == 0) {
+            ELOG("Error: Key 'abilities' or first ability not found in 'module.json'.");
+            return false;
+        }
+        Json2::Value firstAbility = moduleInfoJson["module"]["abilities"].GetArrayItem(0);
+        if (!firstAbility.IsMember("srcEntry") || !firstAbility.IsMember("name")) {
+            ELOG("Error: Key 'srcEntry' or 'name' not found in first ability.");
+            return false;
+        }
+        auto path = firstAbility["srcEntry"].AsString();
+        if (path.find("./") == 0) {
+            path = path.substr(headSymCount);
+        }
+        auto baseDir = FileSystem::BaseDir(path);
+        auto baseName = FileSystem::BaseName(path);
+        auto name = baseName.substr(0, baseName.rfind('.'));
+        abilityPath = FileSystem::NormalizePath(baseDir + '/' + name + ".abc");
+    } else {
         errorInfo = "Launch -d parameters without -abp parameters.";
         return false;
     }
-    std::string path = Value("abp");
-    if (path.empty()) {
-        errorInfo = std::string("The ability path is empty.");
-        ELOG("Launch -abp parameters abnormal!");
-        return false;
-    }
-    abilityPath = path;
+    ILOG("CommandParser ability path: %s", abilityPath.c_str());
     return true;
 }
 
@@ -866,17 +1009,31 @@ bool CommandParser::IsAbilityNameValid()
     if (deviceType == "liteWearable" || deviceType == "smartVision") {
         return true;
     }
-    if (!IsSet("abn")) {
+    if (IsSet("abn")) {
+        std::string name = Value("abn");
+        if (name.empty()) {
+            errorInfo = std::string("The ability name is empty.");
+            ELOG("Launch -abn parameters abnormal!");
+            return false;
+        }
+        abilityName = name;
+    } else if (GetModuleInfoJson()) {
+        // Check if "abilities[0].srcEntry" and "abilities[0].name" keys are present
+        if (!moduleInfoJson["module"].IsMember("abilities") ||
+            moduleInfoJson["module"]["abilities"].GetArraySize() == 0) {
+            ELOG("Error: Key 'abilities' or first ability not found in 'module.json'.");
+            return false;
+        }
+        Json2::Value firstAbility = moduleInfoJson["module"]["abilities"].GetArrayItem(0);
+        if (!firstAbility.IsMember("srcEntry") || !firstAbility.IsMember("name")) {
+            ELOG("Error: Key 'srcEntry' or 'name' not found in first ability.");
+            return false;
+        }
+        abilityName = firstAbility["name"].AsString();
+    } else {
         ELOG("Launch -d parameters without -abn parameters.");
         return true; // 兼容老版本IDE（沒有abn参数）
     }
-    std::string name = Value("abn");
-    if (name.empty()) {
-        errorInfo = std::string("The ability name is empty.");
-        ELOG("Launch -abn parameters abnormal!");
-        return false;
-    }
-    abilityName = name;
     return true;
 }
 
@@ -1000,6 +1157,43 @@ bool CommandParser::IsLoaderJsonPathValid()
     return true;
 }
 
+bool CommandParser::IsStandaloneMode()
+{
+    if (IsSet("gui") || IsSet("cli")) {
+        return true;
+    }
+    return false;
+}
+
+bool CommandParser::LoadConfig()
+{
+    if (config.IsValid()) {
+        return true;
+    }
+
+    auto fileName = FileSystem::NormalizePath(FileSystem::GetExecutablePath() + "/config.json");
+    if (IsSet("config")) {
+        fileName = Value("config");
+    }
+
+    // Read the JSON file into a string
+    std::string jsonStr = JsonReader::ReadFile(fileName);
+    if (jsonStr.empty()) {
+        ELOG("Error: Failed to read JSON file or file is empty.");
+        return false;
+    }
+
+    // Parse the string into a JSON object
+    Json2::Value jsonData = JsonReader::ParseJsonData2(jsonStr);
+    if (!jsonData.IsValid()) {
+        ELOG("Error: Failed to parse JSON data.");
+        return false;
+    }
+
+    std::swap(config, jsonData);
+    return true;
+}
+
 int CommandParser::ParseArgs(int argc, char* argv[])
 {
     int startParamInvalidCode = 11;
@@ -1014,6 +1208,7 @@ int CommandParser::ParseArgs(int argc, char* argv[])
     if (!ProcessCommand(strs)) {
         return 0;
     }
+    LoadConfig();
     if (!IsCommandValid()) {
         FLOG("Start args is invalid.");
         return startParamInvalidCode;
@@ -1046,6 +1241,23 @@ void CommandParser::GetFoldInfo(FoldInfo& info) const
     info.foldStatus = GetFoldStatus();
     info.foldResolutionWidth = GetFoldResolutionWidth();
     info.foldResolutionHeight = GetFoldResolutionHeight();
+}
+
+std::string CommandParser::GetHapDir()
+{
+    if (hapDir.empty() && IsSet("hap")) {
+        std::string hap = Value("hap");
+        if (FileSystem::IsDirectoryExists(hap)) {
+            hapDir = FileSystem::GetFullPath(hap);
+        } else if (FileSystem::IsFileExists(hap)) {
+            hapDir = FileSystem::CreateTempDirectory();
+            if (!hapDir.empty()) {
+                Unhap(hap, hapDir);
+                isHapDirTemp = true;
+            }
+        }
+    }
+    return hapDir;
 }
 
 std::string CommandParser::GetSid() const

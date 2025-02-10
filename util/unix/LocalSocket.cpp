@@ -20,6 +20,8 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
+#include <unistd.h>
+
 #include "PreviewerEngineLog.h"
 
 LocalSocket::LocalSocket() : socketHandle(-1) {}
@@ -47,7 +49,71 @@ bool LocalSocket::ConnectToServer(std::string name, OpenMode openMode, TransMode
         ELOG("connect socket failed");
         return false;
     }
+    isConnected = true;
+    return true;
+}
 
+bool LocalSocket::RunServer(std::string name)
+{
+    constexpr int defaultTimeout = 5;
+    DisconnectFromServer();
+    serverName = name;
+    socketHandle = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (socketHandle < 0) {
+        ELOG("Failed to create socket");
+        return false;
+    }
+    struct sockaddr_un un;
+    un.sun_family = AF_UNIX;
+    std::size_t length = name.copy(un.sun_path, name.size());
+    un.sun_path[length] = '\0';
+    unlink(un.sun_path);
+    struct sockaddr* sockun = reinterpret_cast<struct sockaddr*>(&un);
+    if (bind(socketHandle, sockun, sizeof(un)) < 0) {
+        ELOG("Bind failed");
+        return false;
+    }
+    if (listen(socketHandle, defaultTimeout) < 0) {
+        ELOG("Listen failed");
+        return false;
+    }
+    isServer = true;
+    isConnected = false;
+    return true;
+}
+
+bool LocalSocket::ConnectClient(bool wait)
+{
+    if (isConnected) {
+        return true;
+    }
+    if (!isServer) {
+        return false;
+    }
+    if (!wait) {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(socketHandle, &readfds);
+
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 0;
+
+        int selectResult = select(socketHandle + 1, &readfds, nullptr, nullptr, &timeout);
+        if (selectResult <= 0) {
+            return false;
+        }
+    }
+    struct sockaddr_un clientAddr;
+    socklen_t clientLen = sizeof(clientAddr);
+    int clientSocket = accept(socketHandle, (struct sockaddr*)&clientAddr, &clientLen);
+    if (clientSocket < 0) {
+        ELOG("Accept failed");
+        return false;
+    }
+    close(socketHandle);
+    socketHandle = clientSocket;
+    isConnected = true;
     return true;
 }
 
@@ -68,32 +134,58 @@ std::string LocalSocket::GetImagePipeName(std::string baseName) const
 
 void LocalSocket::DisconnectFromServer()
 {
-    shutdown(socketHandle, SHUT_RDWR);
+    if (socketHandle != -1) {
+        shutdown(socketHandle, SHUT_RDWR);
+        close(socketHandle);
+    }
+    isConnected = false;
 }
 
 int64_t LocalSocket::ReadData(char* data, size_t length) const
 {
+    if (!isConnected) {
+        if (!isServer || !const_cast<LocalSocket *>(this)->ConnectClient(false))
+            return 0;
+    }
     if (length > UINT32_MAX) {
-        ELOG("LocalSocket::ReadData length must < %d", UINT32_MAX);
         return -1;
     }
-
     int32_t bytes_read;
-    ioctl(socketHandle, FIONREAD, &bytes_read);
-
-    if (bytes_read <= 0) {
+    if (ioctl(socketHandle, FIONREAD, &bytes_read) < 0) {
+        if (isServer) {
+            const_cast<LocalSocket *>(this)->RunServer(serverName);
+        }
+        return -1;
+    }
+    if (bytes_read == 0) {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(socketHandle, &readfds);
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 0;
+        int selectResult = select(socketHandle + 1, &readfds, nullptr, nullptr, &timeout);
+        if (selectResult < 0) {
+            if (isServer) {
+                const_cast<LocalSocket *>(this)->RunServer(serverName);
+            }
+            return -1;
+        } else if (selectResult == 0) {
+            return 0;
+        }
+    }
+    int32_t readSize = recv(socketHandle, data, length, 0);
+    if (readSize < 0) {
+        if (isServer) {
+            const_cast<LocalSocket *>(this)->RunServer(serverName);
+        }
+        return -1;
+    } else if (readSize == 0) {
+        if (isServer) {
+            const_cast<LocalSocket *>(this)->RunServer(serverName);
+        }
         return 0;
     }
-
-    int32_t readSize = recv(socketHandle, data, length, 0);
-    if (readSize == 0) {
-        ELOG("LocalSocket::ReadData Server is shut down");
-    }
-
-    if (readSize < 0) {
-        ELOG("LocalSocket::ReadData ReadFile failed");
-    }
-
     return readSize;
 }
 
@@ -108,11 +200,9 @@ size_t LocalSocket::WriteData(const void* data, size_t length) const
     if (writeSize == 0) {
         ELOG("LocalSocket::WriteData Server is shut down");
     }
-
     if (writeSize < 0) {
         ELOG("LocalSocket::WriteData ReadFile failed");
     }
-
     return writeSize;
 }
 

@@ -9,6 +9,18 @@ The Previewer is a component that empowers the DevEco Studio Previewer to levera
 ![](figures/Previewer-Component-Architecture.PNG "Previewer Component Architecture")
 
 To start with, the DevEco Studio Previewer launches the Previewer component through the command line and passes to it startup parameters such as the ArkTS build product path and preview specifications. When starting up, the Previewer component launches the ArkUI rendering engine, which then renders pages based on the startup parameters and delivers preview images for the DevEco Studio Previewer. When page information changes, the DevEco Studio Previewer sends page refresh commands through the named pipe to the Previewer component. Based on the received commands, the Previewer component calls the ArkUI processing APIs to refresh and render the pages and deliver the images.
+
+The Previewer can be started without the DevEco Studio and a project. Just with any hap file.
+
+For example on Linux PC:
+
+```
+./Previewer -d -gui -hap ~/MyApplication.hap
+```
+You will see GUI Window with application content, and you can interacts with application by a mouse and a keyboard.
+
+The default parameters are into config.json file. You can change it if needs.
+
 ## Directory Structure
 
 The source code of the Previewer component is stored in **/ide_previewer**. The following shows the directory structure.

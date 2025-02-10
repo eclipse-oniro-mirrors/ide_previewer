@@ -36,6 +36,8 @@ public:
     LocalSocket& operator=(const LocalSocket&) = delete;
     LocalSocket(const LocalSocket&) = delete;
     bool ConnectToServer(std::string name, OpenMode openMode, TransMode transMode = TRANS_BYTE);
+    bool RunServer(std::string name);
+    bool ConnectClient(bool wait = true);
     std::string GetCommandPipeName(std::string baseName) const;
     std::string GetImagePipeName(std::string baseName) const;
     std::string GetTracePipeName(std::string baseName) const;
@@ -59,6 +61,9 @@ public:
     const LocalSocket& operator>>(std::string& data) const;
 
 private:
+    bool isServer = false;
+    bool isConnected = false;
+    std::string serverName;
 #ifdef _WIN32
     HANDLE pipeHandle;
     DWORD GetWinOpenMode(OpenMode mode) const;

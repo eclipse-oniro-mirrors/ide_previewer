@@ -1,0 +1,16 @@
+{
+  "s": "previewer",
+  "refresh": "region",
+  "cpm": "false",
+  "device": "phone",
+  "shape": "rect",
+  "sd": 160,
+  "or": [432, 936],
+  "cr": [432, 936],
+  "n": "entry",
+  "av": "ACE_2_0",
+  "pm": "Stage",
+  "l": "en_US",
+  "cm": "light",
+  "o": "portrait"
+}

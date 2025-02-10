@@ -32,9 +32,10 @@
 #include "window_model.h"
 #include "window_display.h"
 #include "ace_preview_helper.h"
+#include "samples/event_adapter.h"
 #include "ClipboardHelper.h"
 #include "CommandLineInterface.h"
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
 #include "options.h"
 #include "simulator.h"
 #endif
@@ -64,7 +65,7 @@ OHOS::sptr<PreviewerListener> listener = nullptr;
 
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
     windowModel = std::make_shared<OHOS::Previewer::PreviewerWindowModel>();
 #endif
 }
@@ -80,15 +81,19 @@ JsAppImpl& JsAppImpl::GetInstance()
 void JsAppImpl::Start()
 {
     VirtualScreenImpl::GetInstance().InitVirtualScreen();
-    VirtualScreenImpl::GetInstance().InitAll(pipeName, pipePort);
+    bool standaloneMode = CommandParser::GetInstance().IsStandaloneMode();
+    if (!standaloneMode) {
+        VirtualScreenImpl::GetInstance().InitAll(pipeName, pipePort);
+    }
     isFinished = false;
     ILOG("Start run js app");
-    OHOS::AppExecFwk::EventHandler::SetMainThreadId(std::this_thread::get_id());
+    Ide::EventHandler::SetMainThreadId(std::this_thread::get_id());
     RunJsApp();
     ILOG("Js app run finished");
-    while (!isStop) {
+    while (!isStop &&
+           !(isGUI ? glfwRenderContext->WindowShouldClose() : false)) {
         // Execute all tasks in the main thread
-        OHOS::AppExecFwk::EventHandler::Run();
+        Ide::EventHandler::Run();
         glfwRenderContext->PollEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -132,7 +137,7 @@ void JsAppImpl::OrientationChanged(std::string commandOrientation)
     ILOG("OrientationChanged: %s %d %d %f", orientation.c_str(), aceRunArgs.deviceWidth,
          aceRunArgs.deviceHeight, aceRunArgs.deviceConfig.density);
     if (ability != nullptr) {
-        OHOS::AppExecFwk::EventHandler::PostTask([this]() {
+        Ide::EventHandler::PostTask([this]() {
             glfwRenderContext->SetWindowSize(width, height);
         });
         ability->SurfaceChanged(aceRunArgs.deviceConfig.orientation, aceRunArgs.deviceConfig.density,
@@ -208,9 +213,9 @@ void JsAppImpl::RunJsApp()
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldable(screenInfo.foldable);
     OHOS::Previewer::PreviewerDisplay::GetInstance().SetFoldStatus(ConvertFoldStatus(screenInfo.foldStatus));
     InitGlfwEnv();
-    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(AppExecFwk::EventHandler::PostTask);
+    Platform::AcePreviewHelper::GetInstance()->SetCallbackOfPostTask(Ide::EventHandler::PostTask);
     Platform::AcePreviewHelper::GetInstance()->
-        SetCallbackOfIsCurrentRunnerThread(AppExecFwk::EventHandler::IsCurrentRunnerThread);
+        SetCallbackOfIsCurrentRunnerThread(Ide::EventHandler::IsCurrentRunnerThread);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfSetClipboardData(ClipboardHelper::SetClipboardData);
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfGetClipboardData(ClipboardHelper::GetClipboardData);
     listener = new(std::nothrow) PreviewerListener();
@@ -243,7 +248,9 @@ void JsAppImpl::RunNormalAbility()
     if (ability != nullptr) {
         ability.reset();
     }
-    TraceTool::GetInstance().HandleTrace("Launch Js App");
+    if (!CommandParser::GetInstance().IsStandaloneMode()) {
+        TraceTool::GetInstance().HandleTrace("Launch Js App");
+    }
     ability = Platform::AceAbility::CreateInstance(aceRunArgs);
     if (ability == nullptr) {
         ELOG("JsApp::Run ability create failed.");
@@ -261,7 +268,7 @@ void JsAppImpl::RunNormalAbility()
     ability->InitEnv();
 }
 
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
 void JsAppImpl::RunDebugAbility()
 {
     // init window params
@@ -369,7 +376,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
         options.previewPath = fPath.substr(0, pos) + ".idea" + FileSystem::GetSeparator() + "previewer";
         ILOG("previewPath info:%s", options.previewPath.c_str());
     }
-    options.postTask = AppExecFwk::EventHandler::PostTask;
+    options.postTask = Ide::EventHandler::PostTask;
 }
 
 std::shared_ptr<AppExecFwk::Configuration> JsAppImpl::UpdateConfiguration(OHOS::Ace::Platform::AceRunArgs& args)
@@ -606,7 +613,7 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
     SetResolutionParams(param.orignalWidth, param.orignalHeight, param.compressionWidth,
         param.compressionHeight, screenDensity);
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         SetWindowParams();
         OHOS::Ace::ViewportConfig config;
         config.SetSize(windowModel->originWidth, windowModel->originHeight);
@@ -620,7 +627,7 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
             return;
         }
         InitAvoidAreas(window);
-        OHOS::AppExecFwk::EventHandler::PostTask([this]() {
+        Ide::EventHandler::PostTask([this]() {
             glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
         simulator->UpdateConfiguration(*(UpdateConfiguration(aceRunArgs).get()));
@@ -629,7 +636,7 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
     } else {
         if (ability != nullptr) {
             InitAvoidAreas(ability->GetWindow());
-            OHOS::AppExecFwk::EventHandler::PostTask([this]() {
+            Ide::EventHandler::PostTask([this]() {
                 glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
             });
             ability->SurfaceChanged(aceRunArgs.deviceConfig.orientation, aceRunArgs.deviceConfig.density,
@@ -815,7 +822,7 @@ void JsAppImpl::LoadDocument(const std::string filePath,
              ((params.colorMode == ColorMode::DARK) ? "dark" : "light"),
              ((params.orientation == DeviceOrientation::LANDSCAPE) ? "landscape" : "portrait"),
              GetDeviceTypeName(params.deviceType).c_str());
-        OHOS::AppExecFwk::EventHandler::PostTask([this]() {
+        Ide::EventHandler::PostTask([this]() {
             glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
         ability->LoadDocument(filePath, componentName, params);
@@ -829,7 +836,7 @@ void JsAppImpl::DispatchBackPressedEvent() const
 void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         OHOS::Rosen::Window* window = OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
         if (!window) {
             ELOG("JsApp::Run get window failed.");
@@ -844,7 +851,7 @@ void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& key
 void JsAppImpl::DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         OHOS::Rosen::Window* window = OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
         if (!window) {
             ELOG("JsApp::Run get window failed.");
@@ -891,7 +898,22 @@ void JsAppImpl::InitGlfwEnv()
         ELOG("Could not create window: InitGlfwEnv failed.");
         return;
     }
-    glfwRenderContext->CreateGlfwWindow(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight, false);
+
+    ILOG("CreateGlfwWindow WINDOW SIZE %d x %d", aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
+    glfwRenderContext->CreateGlfwWindow(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight, isGUI);
+    if (isGUI) {
+        auto&& keyEventCallback = [](const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) {
+            ILOG("JsAppImpl GLFWwindow KeyEventCallback");
+            JsAppImpl::GetInstance().DispatchKeyEvent(keyEvent);
+        };
+        auto&& mouseEventCallback = [](const std::shared_ptr<PointerEvent>& pointerEvent) {
+            ILOG("JsAppImpl GLFWwindow MouseEventCallback");
+            JsAppImpl::GetInstance().DispatchPointerEvent(pointerEvent);
+        };
+        OHOS::Ace::Sample::EventAdapter::GetInstance().Initialize(glfwRenderContext);
+        OHOS::Ace::Sample::EventAdapter::GetInstance().RegisterKeyEventCallback(keyEventCallback);
+        OHOS::Ace::Sample::EventAdapter::GetInstance().RegisterPointerEventCallback(mouseEventCallback);
+    }
     ILOG("InitGlfwEnv finished");
 }
 
@@ -899,7 +921,7 @@ void JsAppImpl::SetMockJsonInfo()
 {
     std::string filePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "mock-config.json";
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
 #endif
     } else {
@@ -1004,7 +1026,7 @@ void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::R
 OHOS::Rosen::Window* JsAppImpl::GetWindow() const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         return OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
 #else
         return nullptr;
@@ -1022,11 +1044,9 @@ void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
         window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR));
 }
 
-void JsAppImpl::InitJsApp()
+void JsAppImpl::InitParams()
 {
     CommandParser& parser = CommandParser::GetInstance();
-    InitCommandInfo();
-    SetJsAppPath(parser.Value("j"));
     if (parser.IsSet("s")) {
         SetPipeName(parser.Value("s"));
     }
@@ -1047,6 +1067,25 @@ void JsAppImpl::InitJsApp()
     }
     if (parser.IsSet("cc")) {
         SetConfigChanges(parser.Value("cc"));
+    }
+    if (parser.IsSet("gui")) {
+        isGUI = true;
+    }
+}
+
+void JsAppImpl::InitJsApp()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    InitCommandInfo();
+    if (parser.IsSet("hap")) {
+        SetJsAppPath(FileSystem::NormalizePath(parser.GetHapDir() + "/ets"));
+    } else {
+        SetJsAppPath(parser.Value("j"));
+    }
+    InitParams();
+    if (parser.IsStandaloneMode() && parser.IsResolutionValid()) {
+        aceRunArgs.deviceWidth = parser.GetOrignalResolutionWidth();
+        aceRunArgs.deviceHeight = parser.GetOrignalResolutionHeight();
     }
     if (commandInfo.compressionResolutionWidth <= commandInfo.compressionResolutionHeight) {
         SetDeviceOrentation("portrait");
@@ -1091,7 +1130,7 @@ void JsAppImpl::StopAbility()
         }
     }
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if defined(__APPLE__) || defined(_WIN32) || defined(__linux__)
         if (simulator) {
             simulator->TerminateAbility(debugAbilityId);
         }

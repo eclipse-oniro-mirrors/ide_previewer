@@ -18,7 +18,7 @@
 
 #include "EventRunner.h"
 
-namespace OHOS::AppExecFwk {
+namespace OHOS::Ide {
 class EventHandler final {
 public:
     EventHandler() = default;
