@@ -34,8 +34,7 @@
             "libjpeg-turbo",
             "libwebsockets",
             "cJSON",
-            "glfw",
-            "ffmpeg"
+            "glfw"
           ]
       },
       "build": {
