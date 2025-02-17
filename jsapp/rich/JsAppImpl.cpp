@@ -534,7 +534,8 @@ void JsAppImpl::SetOrientation(Platform::AceRunArgs& args, const std::string ori
 void JsAppImpl::SetAceVersionArgs(Platform::AceRunArgs& args, const std::string aceVersion) const
 {
     ILOG("JsAppImpl::RunJsApp SetAceVersionArgs: %s", aceVersion.c_str());
-    if (aceVersion == "ACE_2_0") {
+    auto prjMode = CommandParser::GetInstance().GetProjectModelEnumValue();
+    if (aceVersion == "ACE_2_0" && prjMode > 0) { // ACE_2_0 isn't supported for FA apps
         args.aceVersion = Platform::AceVersion::ACE_2_0;
     } else {
         args.aceVersion = Platform::AceVersion::ACE_1_0;
