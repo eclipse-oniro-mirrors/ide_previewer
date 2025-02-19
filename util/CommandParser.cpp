@@ -1208,7 +1208,9 @@ int CommandParser::ParseArgs(int argc, char* argv[])
     if (!ProcessCommand(strs)) {
         return 0;
     }
-    LoadConfig();
+    if (IsStandaloneMode()) {
+        LoadConfig();
+    }
     if (!IsCommandValid()) {
         FLOG("Start args is invalid.");
         return startParamInvalidCode;
