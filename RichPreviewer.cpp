@@ -128,6 +128,8 @@ int main(int argc, char* argv[])
         ApplyConfig();
     }
     JsAppImpl::GetInstance().InitJsApp();
+    Interrupter::Interrupt();
+    commandThread.join();
     std::this_thread::sleep_for(std::chrono::milliseconds(500)); // sleep 500 ms
     return 0;
 }

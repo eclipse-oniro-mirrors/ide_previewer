@@ -96,6 +96,37 @@ previewer_executable("rich_previewer") {
   ]
 }
 
+ohos_executable("previewer_cli") {
+  part_name = "previewer"
+  output_name = "PreviewerCLI"
+  sources = [ "PreviewerCLI.cpp" ]
+  include_dirs = [ "./util/" ]
+  include_dirs += [ "//arkcompiler/runtime_core/libpandabase" ]
+  include_dirs += os_include_dirs
+  libs = []
+  deps = [
+    "util:util_rich",
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/libwebsockets:websockets_static",
+  ]
+  defines = []
+  if (platform == "mingw_x86_64") {
+    defines += [ "NOGDI" ]
+    ldflags = [
+      "-static",
+      "-lws2_32",
+      "-lshlwapi",
+      "-ldbghelp",
+    ]
+  }
+  cflags = [
+    "-std=c++17",
+    "-Wno-deprecated-declarations",
+    "-Wno-reorder",
+    "-Wno-sign-compare",
+  ]
+}
+
 previewer_executable("lite_previewer") {
   part_name = "litePreviewer"
   output_name = "Simulator"
@@ -166,7 +197,6 @@ ohos_copy("copy_ide_library") {
   out_path = get_label_info("jsapp/rich/external:ide_extension", "root_out_dir")
   sources += [ out_path + "/ide/previewer/libide_extension" + suffix ]
   sources += [ rebase_path("config/config.json", root_out_dir) ]
-
   outputs = [ target_out_dir + "/previewer/common/bin/{{source_file_part}}" ]
   module_source_dir = target_out_dir + "/previewer/common/bin/"
   module_install_name = ""

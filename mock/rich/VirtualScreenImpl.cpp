@@ -300,7 +300,6 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
         && VirtualScreen::isOutOfSeconds) {
         return;
     }
-
     if (retWidth < 1 || retHeight < 1) {
         FLOG("VirtualScreenImpl::RgbToJpg the retWidth or height is invalid value");
         return;
@@ -319,16 +318,16 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
             dataTemp[nowBasePos + bluePos] = *((char*)data + inputBasePos + bluePos);
         }
     }
-
     VirtualScreen::RgbToJpg(dataTemp, retWidth, retHeight);
     delete [] dataTemp;
     if (jpgBufferSize > bufferSize - headSize) {
         FLOG("VirtualScreenImpl::Send length must < %d", bufferSize - headSize);
         return;
     }
-
     std::copy(jpgScreenBuffer, jpgScreenBuffer + jpgBufferSize, screenBuffer + headSize);
-    writed = WebSocketServer::GetInstance().WriteData(screenBuffer, headSize + jpgBufferSize);
+    if (isWebSocketConfiged) {
+        writed = WebSocketServer::GetInstance().WriteData(screenBuffer, headSize + jpgBufferSize);
+    }
     std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
     if (WebSocketServer::GetInstance().firstImageBuffer) {
         delete [] WebSocketServer::GetInstance().firstImageBuffer;
@@ -340,18 +339,16 @@ void VirtualScreenImpl::Send(const void* data, int32_t retWidth, int32_t retHeig
         return;
     }
     WebSocketServer::GetInstance().firstImagebufferSize = headSize + jpgBufferSize;
-    std::copy(screenBuffer,
-              screenBuffer + headSize + jpgBufferSize,
+    std::copy(screenBuffer, screenBuffer + headSize + jpgBufferSize,
               WebSocketServer::GetInstance().firstImageBuffer + LWS_PRE);
     screenShotBuffer = WebSocketServer::GetInstance().firstImageBuffer + LWS_PRE + headSize;
     screenShotBufferSize = jpgBufferSize;
-
     FreeJpgMemory();
 }
 
 bool VirtualScreenImpl::SendPixmap(const void* data, size_t length, int32_t retWidth, int32_t retHeight)
 {
-    if (!isWebSocketConfiged || (data == nullptr)) {
+    if ((!isWebSocketConfiged && !CommandParser::GetInstance().IsStandaloneMode()) || (data == nullptr)) {
         if (data == nullptr) {
             invalidFrameCountPerMinute++;
         }
