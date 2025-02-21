@@ -38,6 +38,7 @@ ide_fuzztest("RichCommandParseFuzzTest") {
     "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
   ]
   include_dirs += graphic_2d_include_path
   include_dirs += window_manager_include_path
@@ -84,6 +85,7 @@ ide_fuzztest("RichCommandParseFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -96,6 +98,7 @@ ide_fuzztest("RichCommandParseFuzzTest") {
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
   ]
   libs = []
   cflags = [ "-Wno-error=overflow" ]
@@ -117,6 +120,7 @@ ide_fuzztest("LiteCommandParseFuzzTest") {
     "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
   ]
   include_dirs += graphic_2d_include_path
   include_dirs += window_manager_include_path
@@ -163,6 +167,7 @@ ide_fuzztest("LiteCommandParseFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -175,6 +180,7 @@ ide_fuzztest("LiteCommandParseFuzzTest") {
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
   ]
   libs = []
   cflags = [ "-Wno-error=overflow" ]
@@ -196,6 +202,7 @@ ide_fuzztest("CommonCommandParseFuzzTest") {
     "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
   ]
   include_dirs += graphic_2d_include_path
   include_dirs += window_manager_include_path
@@ -242,6 +249,7 @@ ide_fuzztest("CommonCommandParseFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -254,6 +262,7 @@ ide_fuzztest("CommonCommandParseFuzzTest") {
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
   ]
   libs = []
   cflags = [ "-Wno-error=overflow" ]

@@ -53,4 +53,9 @@ void GlfwRenderContext::PollEvents()
 }
 
 void GlfwRenderContext::SetWindowSize(int32_t width, int32_t height) {}
+
+int GlfwRenderContext::WindowShouldClose()
+{
+    return 1;
+}
 }

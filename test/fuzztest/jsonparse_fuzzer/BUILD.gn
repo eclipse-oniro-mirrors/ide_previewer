@@ -42,6 +42,7 @@ ide_fuzztest("DeviceConfigParseFuzzTest") {
     "//third_party/libwebsockets/include",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
   ]
   include_dirs += graphic_2d_include_path
   include_dirs += window_manager_include_path
@@ -88,6 +89,7 @@ ide_fuzztest("DeviceConfigParseFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -99,6 +101,7 @@ ide_fuzztest("DeviceConfigParseFuzzTest") {
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
   ]
   libs = []
   cflags = [ "-Wno-error=overflow" ]
@@ -132,6 +135,7 @@ ide_fuzztest("ReadFileContentsFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -155,6 +159,7 @@ ide_fuzztest("ReadFileContentsFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -223,6 +228,7 @@ ide_fuzztest("GetModulePathMapFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -246,6 +252,7 @@ ide_fuzztest("GetModulePathMapFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -313,6 +320,7 @@ ide_fuzztest("GetHspAceModuleBuildFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -336,6 +344,7 @@ ide_fuzztest("GetHspAceModuleBuildFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -403,6 +412,7 @@ ide_fuzztest("GetModuleBufferFromHspFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -426,6 +436,7 @@ ide_fuzztest("GetModuleBufferFromHspFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -494,6 +505,7 @@ ide_fuzztest("ParseMockJsonFileFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -517,6 +529,7 @@ ide_fuzztest("ParseMockJsonFileFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
@@ -584,6 +597,7 @@ ide_fuzztest("SetPkgContextInfoFuzzTest") {
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
+    "$ide_previewer_path/test/mock/mock/MockEventAdapter.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseWheelImpl.cpp",
@@ -607,6 +621,7 @@ ide_fuzztest("SetPkgContextInfoFuzzTest") {
     "$ide_previewer_path/util/SharedDataManager.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
   ]
