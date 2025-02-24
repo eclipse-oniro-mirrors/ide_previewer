@@ -52,7 +52,9 @@ import { generateContent, handleDeclares } from './generate/generateContent';
 function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): string[] {
   const arr = fs.readdirSync(dir);
   if (!dir.toString().includes('node_modules') && !dir.toString().includes(path.join('@internal', 'component'))) {
-    arr.forEach(value => collectFile(dir, fileList, value, isHmsDtsFile));
+    arr.forEach(value => {
+      collectFile(dir, fileList, value, isHmsDtsFile);
+    });
   }
   return fileList;
 }

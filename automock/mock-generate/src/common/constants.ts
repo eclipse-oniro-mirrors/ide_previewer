@@ -136,7 +136,7 @@ export const TYPESCRIPT_KEYWORDS: Set<string> = new Set([
   'as const', 'is unknown', 'is any', 'is never', 'checks', 'constraint', 'covariant', 'contravariant', 'invariant'
 ]);
 
-export const ClassNotInEts: Set<string> = new Set(['TextEncoder', 'TextDecoder']);
+export const ClassNotInEts: Set<string> = new Set(['TextEncoder', 'TextDecoder', 'URL']);
 
 // .d.ts 文件后缀
 export const D_TS: string = '.d.ts';
@@ -149,3 +149,10 @@ export const specialOverloadedFunctionArr = ['on', 'off'];
 
 // callback error info
 export const callbackError = '{\'code\': \'\',\'data\': \'\',\'name\': \'\',\'message\': \'\',\'stack\': \'\'}, ';
+
+// Mapping configuration of corresponding open source files in closed source files
+export const ClosedSourceFileMapping = {
+  '@ohos.inner.application.Context': 'application/Context',
+  '@ohos.inner.application.ExtensionContext': 'application/ExtensionContext',
+  '@ohos.inner.application.UIExtensionContext': 'application/UIExtensionContext'
+};
