@@ -57,12 +57,12 @@ ohos_source_set("jsapp_rich") {
     "//third_party/libwebsockets:websockets_static",
   ]
   external_deps = [
-    "ability_runtime:ability_simulator",
     "ace_engine:libace_compatible",
     "ace_engine:libevent_adapter",
     "graphic_2d:librender_service_client",
     "window_manager:previewer_window",
   ]
+  external_deps += [ "ability_runtime:ability_simulator" ]
   part_name = "previewer"
   subsystem_name = "ide"
 }
