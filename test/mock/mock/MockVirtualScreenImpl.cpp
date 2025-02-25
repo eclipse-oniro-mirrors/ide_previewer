@@ -57,3 +57,5 @@ ScreenInfo VirtualScreenImpl::GetScreenInfo()
 }
 
 void VirtualScreenImpl::InitFoldParams() {}
+
+void VirtualScreenImpl::MakeScreenShot(const std::string &fileName) {}
