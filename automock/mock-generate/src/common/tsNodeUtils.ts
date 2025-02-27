@@ -15,7 +15,7 @@
 
 import ts, { SyntaxKind } from 'typescript';
 import { HeritageKeyValue, KeyValue, Members, MockBuffer } from '../types';
-import { BASE_KINDS, COMPONENT_DECORATORS, D_ETS, DECLARES, KeyValueTypes } from './constants';
+import { BASE_KINDS, ClosedSourceFileMapping, COMPONENT_DECORATORS, D_ETS, DECLARES, KeyValueTypes } from './constants';
 import { associateTypeParameters, generateKeyValue, getAbsolutePath } from './commonUtils';
 import path from 'path';
 
@@ -1702,7 +1702,10 @@ function handleStringLiteral(
   members: Members,
   parent: KeyValue
 ): KeyValue {
-  const text = node.text;
+  let text = node.text;
+  if (ClosedSourceFileMapping[text]) {
+    text = ClosedSourceFileMapping[text];
+  }
   members[text] = generateKeyValue(`'${text}'`, KeyValueTypes.VALUE, parent);
   return members[text];
 }
