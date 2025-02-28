@@ -91,6 +91,18 @@ function mkdirsSync(dirname): boolean {
   return false;
 }
 
+function isHaveEtsFile(value: string): boolean {
+  let temp = false;
+  if (value.endsWith('.d.ts')) {
+    return temp;
+  }
+  const fileDts = value.replace('.d.ets', '.d.ts');
+  if (dtsFileList.includes(fileDts)) {
+    temp = true;
+  }
+  return temp;
+}
+
 /**
  * hgandle all ets file mock logic
  * @param outMockJsFileDir automated mock file output path
@@ -102,7 +114,7 @@ function etsFileToMock(outMockJsFileDir: string): void {
     const value = dtsFileList[index];
     index++;
 
-    if (!value.endsWith('.d.ts') && !value.endsWith('.d.ets')) {
+    if (!value.endsWith('.d.ts') && !value.endsWith('.d.ets') || isHaveEtsFile(value)) {
       continue;
     }
 
