@@ -97,7 +97,12 @@ function isHaveEtsFile(value: string): boolean {
     return temp;
   }
   const fileDts = value.replace('.d.ets', '.d.ts');
-  if (dtsFileList.includes(fileDts)) {
+  const filename = path.basename(value, '.d.ets');
+  if (
+    filename.includes('@ohos.arkui.component.') ||
+    filename.includes('@ohos.arkui.advanced') ||
+    dtsFileList.includes(fileDts)
+  ) {
     temp = true;
   }
   return temp;
@@ -168,7 +173,6 @@ function main(apiInputPath): void {
   const dtsDir = apiInputPath;
   const outMockJsFileDir = path.join(__dirname, '../../runtime/main/extend/systemplugin');
   generateKitMap(apiInputPath);
-  getAllDtsFile(dtsDir);
   getAllComponentsFilePath(dtsDir);
   dtsFileList.forEach(value => {
     collectAllFileName(value);
