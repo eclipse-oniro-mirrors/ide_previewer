@@ -47,7 +47,7 @@ ohos_source_set("util_lite") {
       "unix/LocalSocket.cpp",
       "unix/NativeFileSystem.cpp",
     ]
-  } else if (platform == "linux_x64" || platform == "linux_arm64") {
+  } else if (platform == "linux_x64") {
     sources += [
       "unix/CrashHandler.cpp",
       "unix/LocalDate.cpp",
@@ -162,7 +162,7 @@ ohos_shared_library("ide_util") {
           "Carbon.framework",
         ]
       }
-    } else if (platform == "linux_x64" || platform == "linux_arm64") {
+    } else if (platform == "linux_x64") {
       sources += [
         "linux/ClipboardHelper.cpp",
         "linux/ClipboardX11.cpp",
