@@ -31,10 +31,7 @@ export function generateIndex(indexFilePath: string): string {
   let indexBody = '';
   let caseBody = '';
 
-  [
-    ...ohosDtsFileList,
-    ...arktsDtsFileList
-  ].forEach(fileName => {
+  [].forEach(fileName => {
     if (NO_CONTENT_FILES.has(fileName)) {
       return;
     }
