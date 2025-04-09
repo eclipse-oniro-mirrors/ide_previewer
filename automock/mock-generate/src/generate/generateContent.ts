@@ -733,7 +733,13 @@ function findInCurrentFile(
     return { keyValue: parent.typeParameters[key], mockBuffer } as ReferenceFindResult;
   }
   const foundKeyValue = parent.members[key];
-  if (foundKeyValue && foundKeyValue !== targetKeyValue) {
+  if (
+    foundKeyValue &&
+    foundKeyValue !== targetKeyValue &&
+    (
+      parent.type === KeyValueTypes.ENUM || foundKeyValue.type !== KeyValueTypes.PROPERTY
+    )
+  ) {
     if (foundKeyValue.type === KeyValueTypes.IMPORT) {
       return findDefFromImport(foundKeyValue, mockBuffer, rootKeyValue, property) as ReferenceFindResult;
     }
