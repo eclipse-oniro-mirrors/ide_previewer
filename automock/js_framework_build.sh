@@ -60,15 +60,15 @@ if [ -d "$prebuilts_path" ]; then
   cd $7
   if [ "${8}" == 'true' ];then
     if [ "${12}" == 'true' ];then
-      ./current/bin/node ./mock-generate/build.js ${10}
+      ./current/bin/node --max-old-space-size=4096 ./mock-generate/build.js ${10}
     fi
-    ./current/bin/node build_jsmock_system_plugin.js || exit 1 &
+    ./current/bin/node --max-old-space-size=4096 build_jsmock_system_plugin.js || exit 1 &
     wait
   else
     if [ "${12}" == 'true' ];then
-      ./current/bin/node ./mock-generate/build.js ${10}
+      ./current/bin/node --max-old-space-size=4096 ./mock-generate/build.js ${10}
     fi
-    ./current/bin/node build_jsmock_system_plugin.js || exit 1 &
+    ./current/bin/node --max-old-space-size=4096 build_jsmock_system_plugin.js || exit 1 &
     wait
   fi
 else

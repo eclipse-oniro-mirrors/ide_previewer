@@ -15,7 +15,15 @@
 
 import ts, { SyntaxKind } from 'typescript';
 import { HeritageKeyValue, KeyValue, Members, MockBuffer } from '../types';
-import { BASE_KINDS, ClosedSourceFileMapping, COMPONENT_DECORATORS, D_ETS, DECLARES, KeyValueTypes } from './constants';
+import {
+  BASE_KINDS,
+  ClosedSourceFileMapping,
+  COMPONENT_DECORATORS,
+  D_ETS,
+  DECLARES,
+  KeyValueTypes,
+  specialTSTypes
+} from './constants';
 import { associateTypeParameters, generateKeyValue, getAbsolutePath } from './commonUtils';
 import path from 'path';
 
@@ -1571,6 +1579,9 @@ function handleTypeReferenceNode(
   type: KeyValueTypes
 ): KeyValue {
   const typeName = handleEntityName(node.typeName, mockBuffer, members, parent, type);
+  if (specialTSTypes.includes(typeName.key)) {
+    return typeName;
+  }
   node.typeArguments?.forEach(
     typeArgument => handleTypeNode(mockBuffer, typeName.typeParameters, typeName, KeyValueTypes.REFERENCE, typeArgument)
   );

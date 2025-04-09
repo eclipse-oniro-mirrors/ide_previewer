@@ -66,6 +66,8 @@ export const TSTypes = {
   thisType: (): string => '{}'
 };
 
+export const specialTSTypes = ['Record'];
+
 // 可以忽略的typescript内置类型
 export const IGNORE_REFERENCES: Set<string> = new Set<string>([
   'Promise',
