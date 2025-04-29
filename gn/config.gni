@@ -21,6 +21,7 @@ windows_buildtool = "//build/toolchain/mingw:mingw_x86_64"
 linux_buildtool = "//build/toolchain/linux:clang_${host_cpu}"
 ace_root = "//foundation/arkui/ace_engine"
 flutter_root = "//third_party/flutter"
+window_root = "//foundation/window/window_manager"
 os_include_dirs = [
   "$ace_root",
   "$ace_root/adapter/preview/entrance",
@@ -36,5 +37,6 @@ os_include_dirs = [
   "$ace_root/adapter/preview/entrance/clipboard",
   "$ace_root/interfaces/inner_api/ace",
   "//foundation/graphic/graphic_2d/rosen/modules/platform/utils",
+  "$window_root",
 ]
 enable_component_test = true
