@@ -34,6 +34,7 @@
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
 #include "CommandLineInterface.h"
+#include "ui_content_impl.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -104,7 +105,13 @@ void JsAppImpl::Restart()
 
 std::string JsAppImpl::GetJSONTree()
 {
-    std::string jsonTree = ability->GetJSONTree();
+    std::string jsonTree = "";
+    if (isDebug && debugServerPort >= 0) {
+        auto uiContent = GetWindow()->GetUIContent();
+        jsonTree = uiContent->GetJSONTree();
+    } else {
+        jsonTree = ability->GetJSONTree();
+    }
     return jsonTree;
 }
 
@@ -748,6 +755,9 @@ bool JsAppImpl::MemoryRefresh(const std::string memoryRefreshArgs) const
     ILOG("MemoryRefresh.");
     if (ability != nullptr) {
         return ability->OperateComponent(memoryRefreshArgs);
+    } else {
+        auto uiContent = GetWindow()->GetUIContent();
+        return uiContent->OperateComponent(memoryRefreshArgs);
     }
     return false;
 }
@@ -801,24 +811,28 @@ void JsAppImpl::LoadDocument(const std::string filePath,
                              const Json2::Value& previewContext)
 {
     ILOG("LoadDocument.");
+    OHOS::Ace::Platform::SystemParams params;
+    SetSystemParams(params, previewContext);
+    ILOG("LoadDocument params is density: %f region: %s language: %s deviceWidth: %d\
+         deviceHeight: %d isRound:%d colorMode:%s orientation: %s deviceType: %s",
+         params.density,
+         params.region.c_str(),
+         params.language.c_str(),
+         params.deviceWidth,
+         params.deviceHeight,
+         (params.isRound ? "true" : "false"),
+         ((params.colorMode == ColorMode::DARK) ? "dark" : "light"),
+         ((params.orientation == DeviceOrientation::LANDSCAPE) ? "landscape" : "portrait"),
+        GetDeviceTypeName(params.deviceType).c_str());
+    OHOS::AppExecFwk::EventHandler::PostTask([this]() {
+        glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
+    });
+
     if (ability != nullptr) {
-        OHOS::Ace::Platform::SystemParams params;
-        SetSystemParams(params, previewContext);
-        ILOG("LoadDocument params is density: %f region: %s language: %s deviceWidth: %d\
-             deviceHeight: %d isRound:%d colorMode:%s orientation: %s deviceType: %s",
-             params.density,
-             params.region.c_str(),
-             params.language.c_str(),
-             params.deviceWidth,
-             params.deviceHeight,
-             (params.isRound ? "true" : "false"),
-             ((params.colorMode == ColorMode::DARK) ? "dark" : "light"),
-             ((params.orientation == DeviceOrientation::LANDSCAPE) ? "landscape" : "portrait"),
-             GetDeviceTypeName(params.deviceType).c_str());
-        OHOS::AppExecFwk::EventHandler::PostTask([this]() {
-            glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
-        });
         ability->LoadDocument(filePath, componentName, params);
+    } else {
+        auto uiContent = GetWindow()->GetUIContent();
+        uiContent->LoadDocument(filePath, componentName, params);
     }
 }
 
