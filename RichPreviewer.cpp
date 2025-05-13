@@ -64,11 +64,9 @@ static void NotifyInspectorChanged()
 
 static void ProcessCommand()
 {
-    if (!CommandParser::GetInstance().IsSet("d")) {
-        static CppTimer inspectorNotifytimer(NotifyInspectorChanged);
-        inspectorNotifytimer.Start(NOTIFY_INTERVAL_TIME); // Notify per second
-        CppTimerManager::GetTimerManager().AddCppTimer(inspectorNotifytimer);
-    }
+    static CppTimer inspectorNotifytimer(NotifyInspectorChanged);
+    inspectorNotifytimer.Start(NOTIFY_INTERVAL_TIME); // Notify per second
+    CppTimerManager::GetTimerManager().AddCppTimer(inspectorNotifytimer);
 
     VirtualScreenImpl::GetInstance().InitFrameCountTimer();
     while (!Interrupter::IsInterrupt()) {
