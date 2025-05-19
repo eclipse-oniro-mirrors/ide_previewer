@@ -383,25 +383,25 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
 {
     unzFile zipfile = unzOpen2(hspFilePath.c_str(), nullptr);
     if (zipfile == NULL) {
-        printf("Failed to open the zip file: %s\n", hspFilePath.c_str());
+        ELOG("Failed to open the zip file: %s\n", hspFilePath.c_str());
         return nullptr;
     }
 
     if (unzLocateFile(zipfile, fileName.c_str(), 1) != UNZ_OK) {
-        printf("Failed to locate the file: %s\n", fileName.c_str());
+        ELOG("Failed to locate the file: %s\n", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
 
     unz_file_info file_info;
     if (unzGetCurrentFileInfo(zipfile, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
-        printf("Failed to get the file info: %s\n", fileName.c_str());
+        ELOG("Failed to get the file info: %s\n", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
 
     if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
-        printf("Failed to open the file: %s\n", fileName.c_str());
+        ELOG("Failed to open the file: %s\n", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
@@ -420,7 +420,7 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
     unzCloseCurrentFile(zipfile);
     unzClose(zipfile);
 
-    printf("File extracted and content saved: %s\n", fileName.c_str());
+    ILOG("File extracted and content saved: %s\n", fileName.c_str());
     return fileContent;
 }
 
@@ -567,5 +567,185 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
         return;
     }
     pkgContextInfoJsonStringMap = {{moduleName, ctxInfoJsonStr}};
+    Json2::Value rootJson = JsonReader::ParseJsonData2(ctxInfoJsonStr);
+    if (rootJson.IsNull() || !rootJson.IsValid()) {
+        ELOG("parse ctx info json failed.");
+        return;
+    }
+    for (const auto& element : rootJson.GetMemberNames()) {
+        if (!rootJson[element]["moduleName"].IsString()) {
+            return;
+        }
+        packageNameMap[element] = rootJson[element]["moduleName"].AsString();
+    }
+}
+
+bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::string& writePath,
+    const std::vector<std::string> fileNames)
+{
+    unzFile zipfile = unzOpen(hspFilePath.c_str());
+    if (zipfile == NULL) {
+        ELOG("Error: Unable to open zip file %s\n", hspFilePath.c_str());
+        return false;
+    }
+
+    bool isUnzipSuccess = true;
+    for (const auto& fileName : fileNames) {
+        if (unzLocateFile(zipfile, fileName.c_str(), 1) != UNZ_OK) {
+            ELOG("Failed to locate the file: %s\n", fileName.c_str());
+            unzClose(zipfile);
+            return false;
+        }
+        unz_file_info file_info;
+        if (unzGetCurrentFileInfo(zipfile, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
+            ELOG("Failed to get the file info: %s\n", fileName.c_str());
+            unzClose(zipfile);
+            return false;
+        }
+        if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
+            ELOG("Failed to open the file: %s\n", fileName.c_str());
+            unzClose(zipfile);
+            return false;
+        }
+
+        std::string filePath = writePath + FileSystem::GetSeparator() + fileName;
+        FILE *outputFile = fopen(filePath.c_str(), "wb");
+        if (outputFile == NULL) {
+            ELOG("Error: Unable to open output file %s\n", fileName.c_str());
+            unzCloseCurrentFile(zipfile);
+            break;
+        }
+
+        char buffer[4096];
+        int bytesRead = 0;
+        do {
+            bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer));
+            if (bytesRead < 0 || bytesRead != fwrite(buffer, 1, bytesRead, outputFile)) {
+                ELOG("Failed to unzip all elements to the output file.\n");
+                isUnzipSuccess = false;
+                break;
+            }
+        } while (bytesRead > 0);
+
+        fclose(outputFile);
+        unzCloseCurrentFile(zipfile);
+        if (!isUnzipSuccess) {
+            break;
+        }
+    }
+
+    unzClose(zipfile);
+    return isUnzipSuccess;
+}
+
+void StageContext::GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos)
+{
+    if (hspNameOhmMap.empty()) {
+        ELOG("hspNameOhmMap is empty.");
+        return;
+    }
+    for (const auto &pair : hspNameOhmMap) {
+        std::string packageName = pair.first;
+        HspInfo hspInfo;
+        if (packageNameMap.find(packageName) != packageNameMap.end()) {
+            hspInfo.moduleName = packageNameMap[packageName];
+            GetHspinfo(packageName, hspInfo);
+        }
+        dependencyHspInfos.push_back(hspInfo);
+    }
+}
+
+void StageContext::GetHspinfo(const std::string& packageName, HspInfo& hspInfo)
+{
+    if (packageNameMap.find(packageName) != packageNameMap.end()
+        && modulePathMap.count(packageNameMap[packageName]) > 0) {
+        bool ret = GetLocalModuleInfo(hspInfo);
+        if (!ret) {
+            GetCloudModuleInfo(packageName, hspInfo);
+        }
+    } else {
+        GetCloudModuleInfo(packageName, hspInfo);
+    }
+}
+
+bool StageContext::GetLocalModuleInfo(HspInfo& hspInfo)
+{
+    std::string modulePath = StageContext::GetInstance().modulePathMap[hspInfo.moduleName];
+    if (modulePath.empty()) {
+        ELOG("modulePath is empty.");
+        return false;
+    }
+    ILOG("get modulePath: %s successfully.", modulePath.c_str());
+    if (!FileSystem::IsDirectoryExists(modulePath)) {
+        ELOG("don't find moduleName: %s in modulePathMap from loader.json.", hspInfo.moduleName.c_str());
+        return false;
+    }
+    if (ContainsRelativePath(modulePath)) {
+        ELOG("modulePath format error: %s.", modulePath.c_str());
+        return false;
+    }
+    std::string separator = FileSystem::GetSeparator();
+    // 读取hsp的module.json和resources.index
+    std::string hspConfigPath = modulePath + separator + ".preview" + separator + "default" +
+        separator + "intermediates" + separator + "res" + separator + "default";
+    std::string moduleJsonPath = hspConfigPath + separator + "module.json";
+    std::string resources = hspConfigPath + separator + "resources.index";
+    if (!FileSystem::IsFileExists(resources)) {
+        ELOG("The resources.index file is not exist.");
+        return false;
+    }
+    hspInfo.resourcePath = resources;
+    if (!FileSystem::IsFileExists(moduleJsonPath)) {
+        ELOG("The module.json file is not exist.");
+        return false;
+    }
+    std::optional<std::vector<uint8_t>> ctx = OHOS::Ide::StageContext::GetInstance().ReadFileContents(moduleJsonPath);
+    if (ctx.has_value()) {
+        hspInfo.moduleJsonBuffer = ctx.value();
+    } else {
+        ELOG("get %s module.json content failed", hspInfo.moduleName.c_str());
+    }
+    return true;
+}
+
+bool StageContext::GetCloudModuleInfo(const std::string& packageName, HspInfo& hspInfo)
+{
+    std::string hspPath = GetActualCloudHspDir(packageName);
+    ILOG("get hspPath:%s actualName:%s", hspPath.c_str(), packageName.c_str());
+    if (!FileSystem::IsDirectoryExists(hspPath)) {
+        ELOG("hspPath: %s is not exist.", hspPath.c_str());
+        return false;
+    }
+    std::string moduleHspFile = hspPath + "/" + packageName + ".hsp";
+    ILOG("get moduleHspFile:%s.", moduleHspFile.c_str());
+    if (!FileSystem::IsFileExists(moduleHspFile)) {
+        ELOG("the moduleHspFile:%s is not exist.", moduleHspFile.c_str());
+        return false;
+    }
+    std::string separator = FileSystem::GetSeparator();
+    // 读取hsp的module.json和resources.index
+    std::vector<std::string> fileNames = {"module.json", "resources.index"};
+    if (!UnzipHspFile(moduleHspFile, hspPath, fileNames)) {
+        ELOG("unzip hsp file failed.");
+        return false;
+    };
+    std::string modulePath = hspPath + separator + "module.json";
+    std::string resources = hspPath + separator + "resources.index";
+    if (!FileSystem::IsFileExists(resources)) {
+        ELOG("The resources.index file is not exist.");
+        return false;
+    }
+    hspInfo.resourcePath = resources;
+    if (!FileSystem::IsFileExists(modulePath)) {
+        ELOG("The module.json file is not exist.");
+        return false;
+    }
+    std::optional<std::vector<uint8_t>> ctx = OHOS::Ide::StageContext::GetInstance().ReadFileContents(modulePath);
+    if (ctx.has_value()) {
+        hspInfo.moduleJsonBuffer = ctx.value();
+    } else {
+        ELOG("get %s module.json content failed", hspInfo.moduleName.c_str());
+    }
+    return true;
 }
 }

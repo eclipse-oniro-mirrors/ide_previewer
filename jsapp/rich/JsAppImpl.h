@@ -43,6 +43,7 @@ namespace Rosen {
 namespace AbilityRuntime {
     class Simulator;
     struct Options;
+    struct DependencyHspInfo;
 }
 namespace AppExecFwk {
     class Configuration;
