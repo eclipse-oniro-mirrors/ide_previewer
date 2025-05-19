@@ -26,6 +26,12 @@ namespace Json2 {
 }
 
 namespace OHOS::Ide {
+class HspInfo {
+public:
+    std::string moduleName;
+    std::string resourcePath;
+    std::vector<uint8_t> moduleJsonBuffer;
+};
 class StageContext {
 public:
     static StageContext& GetInstance();
@@ -45,6 +51,7 @@ public:
     std::vector<uint8_t>* GetModuleBufferFromHsp(const std::string& hspFilePath, const std::string& fileName);
     void SetPkgContextInfo(std::map<std::string, std::string>& pkgContextInfoJsonStringMap,
         std::map<std::string, std::string>& packageNameList);
+    void GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos);
 private:
     StageContext() = default;
     ~StageContext() = default;
@@ -59,9 +66,15 @@ private:
     std::string GetCloudHspVersion(const std::string& hspPath, const std::string& actualName);
     std::vector<int> SplitHspVersion(const std::string& version);
     int CompareHspVersion(const std::string& version1, const std::string& version2);
+    bool UnzipHspFile(const std::string& hspFilePath, const std::string& writePath,
+        const std::vector<std::string> fileNames);
+    void GetHspinfo(const std::string& packageName, HspInfo& hspInfo);
+    bool GetLocalModuleInfo(HspInfo &hspInfo);
+    bool GetCloudModuleInfo(const std::string& packageName, HspInfo& hspInfo);
     std::string loaderJsonPath;
     std::map<std::string, std::string> modulePathMap;
     std::map<std::string, std::string> hspNameOhmMap;
+    std::map<std::string, std::string> packageNameMap;
     std::string projectRootPath;
     std::string buildConfigPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
