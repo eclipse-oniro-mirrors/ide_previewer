@@ -75,6 +75,7 @@ private:
     std::map<std::string, std::string> modulePathMap;
     std::map<std::string, std::string> hspNameOhmMap;
     std::map<std::string, std::string> packageNameMap;
+    std::map<std::string, std::string> hspResourcesMap;
     std::string projectRootPath;
     std::string buildConfigPath;
     std::vector<std::vector<uint8_t>*> hspBufferPtrsVec;
