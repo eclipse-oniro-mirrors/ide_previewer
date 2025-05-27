@@ -82,7 +82,7 @@ void StageContext::GetModulePathMapFromLoaderJson()
         return;
     }
     if (!rootJson.IsMember("modulePathMap") || !rootJson.IsMember("harNameOhmMap") ||
-        !rootJson.IsMember("projectRootPath")) {
+        !rootJson.IsMember("projectRootPath") || !rootJson.IsMember("hspResourcesMap")) {
         ELOG("Don't find some necessary node in loader.json.");
         return;
     }
@@ -103,6 +103,10 @@ void StageContext::GetModulePathMapFromLoaderJson()
     projectRootPath = rootJson["projectRootPath"].AsString();
     if (rootJson.IsMember("buildConfigPath")) {
         buildConfigPath = rootJson["buildConfigPath"].AsString();
+    }
+    Json2::Value jsonObjResources = rootJson["hspResourcesMap"];
+    for (const auto& key : jsonObjResources.GetMemberNames()) {
+        hspResourcesMap[key] = jsonObjResources[key].AsString();
     }
 }
 
@@ -657,8 +661,7 @@ void StageContext::GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos)
 
 void StageContext::GetHspinfo(const std::string& packageName, HspInfo& hspInfo)
 {
-    if (packageNameMap.find(packageName) != packageNameMap.end()
-        && modulePathMap.count(packageNameMap[packageName]) > 0) {
+   if (modulePathMap.count(hspInfo.moduleName) > 0) {
         bool ret = GetLocalModuleInfo(hspInfo);
         if (!ret) {
             GetCloudModuleInfo(packageName, hspInfo);
@@ -670,26 +673,25 @@ void StageContext::GetHspinfo(const std::string& packageName, HspInfo& hspInfo)
 
 bool StageContext::GetLocalModuleInfo(HspInfo& hspInfo)
 {
-    std::string modulePath = StageContext::GetInstance().modulePathMap[hspInfo.moduleName];
-    if (modulePath.empty()) {
-        ELOG("modulePath is empty.");
+    if (hspResourcesMap.find(hspInfo.moduleName) == hspResourcesMap.end()) {
+        ELOG("ResourcesPath is empty.");
         return false;
     }
-    ILOG("get modulePath: %s successfully.", modulePath.c_str());
-    if (!FileSystem::IsDirectoryExists(modulePath)) {
-        ELOG("don't find moduleName: %s in modulePathMap from loader.json.", hspInfo.moduleName.c_str());
+    std::string modulePath = hspResourcesMap[hspInfo.moduleName];
+    if (modulePath.empty()) {
+        ELOG("modulePath is empty.");
         return false;
     }
     if (ContainsRelativePath(modulePath)) {
         ELOG("modulePath format error: %s.", modulePath.c_str());
         return false;
     }
-    std::string separator = FileSystem::GetSeparator();
     // 读取hsp的module.json和resources.index
-    std::string hspConfigPath = modulePath + separator + ".preview" + separator + "default" +
-        separator + "intermediates" + separator + "res" + separator + "default";
-    std::string moduleJsonPath = hspConfigPath + separator + "module.json";
-    std::string resources = hspConfigPath + separator + "resources.index";
+    std::string flag = "ResourceTable.txt";
+    int idx = modulePath.find_last_of(flag);
+    std::string dirPath = modulePath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
+    std::string moduleJsonPath = dirPath + "module.json";
+    std::string resources = dirPath + "resources.index";
     if (!FileSystem::IsFileExists(resources)) {
         ELOG("The resources.index file is not exist.");
         return false;
