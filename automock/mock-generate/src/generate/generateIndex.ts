@@ -31,31 +31,6 @@ export function generateIndex(indexFilePath: string): string {
   let indexBody = '';
   let caseBody = '';
 
-  [].forEach(fileName => {
-    if (NO_CONTENT_FILES.has(fileName)) {
-      return;
-    }
-    if (!isDeclarationFile(fileName)) {
-      return;
-    }
-    if (!isNeedMocked(fileName)) {
-      return;
-    }
-
-    const mockBuffer = mockBufferMap.get(fileName);
-    const mockedFilePath = mockBuffer.mockedFilePath;
-    const fileBaseName = path.basename(mockedFilePath, '.js');
-    const relativePath = path.relative(path.dirname(indexFilePath), mockedFilePath).replace(/\.js$/, '').replace(/\\/g, '/');
-    const asName = path.basename(fileBaseName).replace(/^@/, '').replace(/\./g, '_');
-    if (mockBuffer?.contents.members.default && mockBuffer?.contents.members.default.isNeedMock) {
-      indexBody += `import ${asName} from './${relativePath}';\n`;
-    } else {
-      indexBody += `import * as ${asName} from './${relativePath}';\n`;
-    }
-
-    caseBody += `case '${fileBaseName.replace(/^@(ohos\.)?/, '')}':\n\treturn ${asName};\n`;
-  });
-
   indexBody += `export function mockRequireNapiFun() {
     global.requireNapi = function(...args) {
       const globalNapi = global.requireNapiPreview(...args);
