@@ -188,6 +188,8 @@ private:
                 return T::TABLET;
             case OHOS::Ace::DeviceType::PHONE:
                 return T::PHONE;
+            case OHOS::Ace::DeviceType::TWO_IN_ONE:
+                return T::TWO_IN_ONE;
             default:
                 return T::UNKNOWN;
         }
