@@ -338,11 +338,10 @@ void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
     OHOS::Ide::StageContext::GetInstance().GetModuleInfo(dependencyHspInfos);
     for (const auto &info : dependencyHspInfos) {
         OHOS::AbilityRuntime::DependencyHspInfo hspInfo;
-        hspInfo.moduleName = info.moduleName;
         hspInfo.resourcePath = info.resourcePath;
         hspInfo.moduleJsonBuffer = std::move(info.moduleJsonBuffer);
         options.dependencyHspInfos.push_back(hspInfo);
-        ILOG("moduleName:%s ,resourcePath:%s", info.moduleName.c_str(), info.resourcePath.c_str());
+        ILOG("resourcePath:%s", info.resourcePath.c_str());
     }
     SetSimulatorCommonParams(options);
     ILOG("setted bundleName:%s moduleName:%s", options.modulePath.c_str(), options.resourcePath.c_str());

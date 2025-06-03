@@ -644,24 +644,24 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
 
 void StageContext::GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos)
 {
-    if (hspNameOhmMap.empty()) {
-        ELOG("hspNameOhmMap is empty.");
+    if (hspResourcesMap.empty()) {
+        ELOG("hspResourcesMap is empty.");
         return;
     }
-    for (const auto &pair : hspNameOhmMap) {
-        std::string packageName = pair.first;
+    for (const auto &pair : hspResourcesMap) {
+        std::string moduleName = pair.first;
+        std::string packageName = "";
         HspInfo hspInfo;
-        if (packageNameMap.find(packageName) != packageNameMap.end()) {
-            hspInfo.moduleName = packageNameMap[packageName];
-            GetHspinfo(packageName, hspInfo);
-        }
+        GetHspActualName(moduleName, packageName);
+        hspInfo.moduleName = moduleName;
+        GetHspinfo(packageName, hspInfo);
         dependencyHspInfos.push_back(hspInfo);
     }
 }
 
 void StageContext::GetHspinfo(const std::string& packageName, HspInfo& hspInfo)
 {
-   if (modulePathMap.count(hspInfo.moduleName) > 0) {
+    if (modulePathMap.count(hspInfo.moduleName) > 0) {
         bool ret = GetLocalModuleInfo(hspInfo);
         if (!ret) {
             GetCloudModuleInfo(packageName, hspInfo);
@@ -746,7 +746,7 @@ bool StageContext::GetCloudModuleInfo(const std::string& packageName, HspInfo& h
     if (ctx.has_value()) {
         hspInfo.moduleJsonBuffer = ctx.value();
     } else {
-        ELOG("get %s module.json content failed", hspInfo.moduleName.c_str());
+        ELOG("get %s module.json content failed", packageName.c_str());
     }
     return true;
 }
