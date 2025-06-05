@@ -241,6 +241,8 @@ function main(): void {
   getAllDtsFile(path.resolve(getOhosInterfacesDir(), '..', 'arkts'), arktsDtsFileList, false);
   getAllDtsFile(path.resolve(getOhosInterfacesDir(), '..', 'kits'), kitsDtsFileList, false);
 
+  etsFileToMock();
+
   if (!fs.existsSync(path.join(outMockJsFileDir, 'napi'))) {
     mkdirsSync(path.join(outMockJsFileDir, 'napi'));
   }
