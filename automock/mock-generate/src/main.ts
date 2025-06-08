@@ -53,6 +53,12 @@ function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): 
   const arr = fs.readdirSync(dir);
   if (!dir.toString().includes('node_modules') && !dir.toString().includes(path.join('@internal', 'component'))) {
     arr.forEach(value => {
+      const extName = path.extname(value);
+      if (extName === '.ets') {
+        if (arr.includes(value.replace('.ets', '.ts'))) {
+          return;
+        }
+      }
       collectFile(dir, fileList, value, isHmsDtsFile);
     });
   }
@@ -84,6 +90,12 @@ function getAllComponentsFilePath(dir: string): Array<string> {
   }
   const componentPathArr = fs.readdirSync(componentPath);
   componentPathArr.forEach(value => {
+    const extName = path.extname(value);
+    if (extName === '.ets') {
+      if (componentPathArr.includes(value.replace('.ets', '.ts'))) {
+        return;
+      }
+    }
     const fullPath = path.join(componentPath, value);
     if (fs.existsSync(fullPath) && !fs.statSync(fullPath).isDirectory()) {
       if (!isDeclarationFile(value)) {
@@ -105,6 +117,12 @@ function getAllGlobalFilePath(dir: string): Array<string> {
   }
   const globalPathArr = fs.readdirSync(globalPath);
   globalPathArr.forEach(value => {
+    const extName = path.extname(value);
+    if (extName === '.ets') {
+      if (globalPathArr.includes(value.replace('.ets', '.ts'))) {
+        return;
+      }
+    }
     const fullPath = path.join(globalPath, value);
     if (fs.existsSync(fullPath) && !fs.statSync(fullPath).isDirectory()) {
       if (!isDeclarationFile(value)) {

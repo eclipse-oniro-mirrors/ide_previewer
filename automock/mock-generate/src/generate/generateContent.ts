@@ -1164,7 +1164,7 @@ function handleSingleFunction(
           resolve(${memberLines.join(',')});
         })` :
     `return ${memberLines.join(',')}`;
-  return `function (${key.startsWith('get ' + functionName) ? '' : '...args'}) {
+  return `function (${key.startsWith('get ' + functionName) ? '' : `${key.startsWith('set ' + functionName) ? 'args' : '...args'}`}) {
   console.warn(ts.replace('{{}}', '${funcKeyValue.key}'));
   ${paramMockData ?? ''}${returnStr}
   }`;
