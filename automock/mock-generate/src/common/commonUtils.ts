@@ -16,7 +16,7 @@
 import path from 'path';
 import fs from 'fs';
 import { KeyValue, Members, MockBuffer } from '../types';
-import { D_ETS, D_TS, KeyValueTypes, NAPI_DIR_PATH } from './constants';
+import { D_ETS, D_TS, KeyValueTypes, NAPI_DIR_PATH, needShieldingDirOrFile } from './constants';
 import { getProjectDir } from './systemUtils';
 
 /**
@@ -147,4 +147,31 @@ export function isNeedMocked(filePath: string): boolean {
     return true;
   }
   return path.basename(filePath).startsWith('@kit.');
+}
+
+/**
+ * .d.ets 和 .d.ts文件同时存在时，过滤掉.d.ets文件
+ * @param value 文件名称
+ * @returns boolean
+ */
+export function identifyDuplicateFile(value: string, arr: string[]): boolean {
+  const extName = path.extname(value);
+  if (extName === '.ets' && arr.includes(value.replace('.ets', '.ts'))) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 过滤掉不需要mock的文件
+ * @param value 文件名称
+ * @returns boolean
+ */
+export function filterDuplicateFile(value: string): boolean {
+  for (let i = 0; i < needShieldingDirOrFile.length; i++) {
+    if (value.includes(needShieldingDirOrFile[i])) {
+      return true;
+    }
+  }
+  return false;
 }

@@ -21,7 +21,9 @@ import {
   isDeclarationFile,
   mkdirsSync,
   generateKeyValue,
-  isNeedMocked
+  isNeedMocked,
+  identifyDuplicateFile,
+  filterDuplicateFile
 } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
 import { generateEntry } from './generate/generateEntry';
@@ -53,11 +55,8 @@ function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): 
   const arr = fs.readdirSync(dir);
   if (!dir.toString().includes('node_modules') && !dir.toString().includes(path.join('@internal', 'component'))) {
     arr.forEach(value => {
-      const extName = path.extname(value);
-      if (extName === '.ets') {
-        if (arr.includes(value.replace('.ets', '.ts'))) {
-          return;
-        }
+      if (identifyDuplicateFile(value, arr)) {
+        return;
       }
       collectFile(dir, fileList, value, isHmsDtsFile);
     });
@@ -67,6 +66,9 @@ function getAllDtsFile(dir: string, fileList: string[], isHmsDtsFile: boolean): 
 
 function collectFile(dir: string, fileList: string[], value: string, isHmsDtsFile: boolean): void {
   const fullPath = path.join(dir, value);
+  if (filterDuplicateFile(fullPath)) {
+    return;
+  }
   const stats = fs.statSync(fullPath);
   if (stats.isDirectory()) {
     getAllDtsFile(fullPath, fileList, isHmsDtsFile);
@@ -90,11 +92,8 @@ function getAllComponentsFilePath(dir: string): Array<string> {
   }
   const componentPathArr = fs.readdirSync(componentPath);
   componentPathArr.forEach(value => {
-    const extName = path.extname(value);
-    if (extName === '.ets') {
-      if (componentPathArr.includes(value.replace('.ets', '.ts'))) {
-        return;
-      }
+    if (identifyDuplicateFile(value, componentPathArr)) {
+      return;
     }
     const fullPath = path.join(componentPath, value);
     if (fs.existsSync(fullPath) && !fs.statSync(fullPath).isDirectory()) {
@@ -117,11 +116,8 @@ function getAllGlobalFilePath(dir: string): Array<string> {
   }
   const globalPathArr = fs.readdirSync(globalPath);
   globalPathArr.forEach(value => {
-    const extName = path.extname(value);
-    if (extName === '.ets') {
-      if (globalPathArr.includes(value.replace('.ets', '.ts'))) {
-        return;
-      }
+    if (identifyDuplicateFile(value, globalPathArr)) {
+      return;
     }
     const fullPath = path.join(globalPath, value);
     if (fs.existsSync(fullPath) && !fs.statSync(fullPath).isDirectory()) {
@@ -220,7 +216,11 @@ function etsFileToMock(): void {
 
   allFileList.forEach(file => {
     const code = fs.readFileSync(file);
-    const sourceFile = createSourceFile(file, code.toString().replace(/ struct /g, ' class '), ScriptTarget.Latest);
+    let text = code.toString().replace(/struct /g, ' class ');
+    if (file.endsWith(path.join('application', 'Context.d.ts'))) {
+      text = text.replace('export default Context', '').replace('declare class', 'export default class');
+    }
+    const sourceFile = createSourceFile(file, text, ScriptTarget.Latest);
     const mockBuffer = mockBufferMap.get(file);
     getSourceFileAssembly(sourceFile, mockBuffer, mockBuffer.contents.members, mockBuffer.contents);
   });
