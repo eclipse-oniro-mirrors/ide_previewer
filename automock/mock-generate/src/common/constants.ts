@@ -158,3 +158,11 @@ export const ClosedSourceFileMapping = {
   '@ohos.inner.application.ExtensionContext': 'application/ExtensionContext',
   '@ohos.inner.application.UIExtensionContext': 'application/UIExtensionContext'
 };
+
+//Filter files that are not mocked
+export const needShieldingDirOrFile = [
+  path.join('arkui', 'component'),
+  path.join('arkui', 'external'),
+  path.join('arkui', 'runtime-api'),
+  path.join('arkui', 'stateManagement')
+];
