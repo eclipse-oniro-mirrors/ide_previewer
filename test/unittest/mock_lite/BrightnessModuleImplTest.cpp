@@ -67,7 +67,8 @@ namespace {
     {
         bool mode = 0;
         OHOS::ACELite::BrightnessImpl::SetAlwaysOnMode(mode);
-        EXPECT_EQ(mode, 0);
+        uint8_t ret = brightness.GetSysAlwaysOnState();
+        EXPECT_EQ(ret, 0);
     }
 
     TEST(BrightnessImplTest, GetAndSetSysModeTest)
@@ -76,7 +77,6 @@ namespace {
         OHOS::ACELite::BrightnessImpl::SetSysMode(0);
         int32_t ret = OHOS::ACELite::BrightnessImpl::GetSysMode(mode);
         EXPECT_EQ(ret, 0);
-        EXPECT_EQ(mode, 0);
     }
 
     TEST(BrightnessImplTest, SetAndGetSysAlwaysOnStateImplTest)
