@@ -414,12 +414,12 @@ namespace {
         if (!file) {
             printf("Error creating file: %s\r\n", path.c_str());
             EXPECT_TRUE(false);
-            return;
+        } else {
+            file << g_obj;
+            file.close();
+            std::string readStr = JsonReader::ReadFile(path);
+            EXPECT_EQ(readStr, g_obj);
         }
-        file << g_obj;
-        file.close();
-        std::string readStr = JsonReader::ReadFile(path);
-        EXPECT_EQ(readStr, g_obj);
     }
 
     TEST(JsonReaderTest, GetErrorPtrTest)
