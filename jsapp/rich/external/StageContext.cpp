@@ -657,8 +657,7 @@ void StageContext::GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos)
 
 void StageContext::GetHspinfo(const std::string& packageName, HspInfo& hspInfo)
 {
-    if (packageNameMap.find(packageName) != packageNameMap.end()
-        && modulePathMap.count(packageNameMap[packageName]) > 0) {
+    if (modulePathMap.count(hspInfo.moduleName) > 0) {
         bool ret = GetLocalModuleInfo(hspInfo);
         if (!ret) {
             GetCloudModuleInfo(packageName, hspInfo);
