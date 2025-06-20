@@ -21,7 +21,7 @@
 #include <chrono>
 #include <functional>
 
-namespace OHOS::AppExecFwk {
+namespace OHOS::Ide {
 using Callback = std::function<void()>;
 
 class EventTask {

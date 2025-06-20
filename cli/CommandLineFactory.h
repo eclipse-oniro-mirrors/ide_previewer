@@ -38,6 +38,7 @@ private:
         std::string,
         std::unique_ptr<CommandLine> (*)(CommandLine::CommandType, const Json2::Value&, const LocalSocket& socket)>;
     static CommandTypeMap typeMap;
+    static void InitCommandMapLite();
 };
 
 #endif // COMMANDLINEFACTORY_H

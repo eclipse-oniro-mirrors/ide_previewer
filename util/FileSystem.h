@@ -26,11 +26,17 @@ public:
     static std::string GetApplicationPath();
     static const std::string& GetVirtualFileSystemPath();
     static void MakeVirtualFileSystemPath();
-    static int MakeDir(std::string path);
+    static int MakeDir(const std::string &path);
+    static std::string BaseDir(const std::string &path);
+    static std::string BaseName(const std::string &path);
+    static bool RemoveDir(const std::string &dirPath);
+    static std::string CreateTempDirectory();
     static void SetBundleName(std::string name);
     static std::string GetSeparator();
     static std::string FindSubfolderByName(const std::string& parentFolderPath, const std::string& subfolderName);
     static std::string NormalizePath(const std::string& path);
+    static std::string GetFullPath(const std::string &path);
+    static std::string GetExecutablePath();
 private:
     static std::vector<std::string> pathList;
     static std::string separator;

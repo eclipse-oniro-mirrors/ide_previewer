@@ -52,6 +52,7 @@ public:
     void InitAll(std::string pipeName, std::string pipePort);
     ScreenInfo GetScreenInfo();
     void InitFoldParams();
+    void MakeScreenShot(const std::string &fileName);
 private:
     VirtualScreenImpl();
     ~VirtualScreenImpl();
@@ -69,6 +70,7 @@ private:
         std::copy(startPos, startPos + sizeof(dataToSend), screenBuffer + currentPos);
         currentPos += sizeof(dataToSend);
     }
+    void UpdateScreenshotBuffer();
 
     bool isFirstSend;
     bool isFirstRender;
@@ -95,6 +97,9 @@ private:
     uint64_t flushEmptyTimeStamp = 0;
     std::chrono::system_clock::time_point flushEmptyTime = std::chrono::system_clock::time_point::min();
     std::chrono::system_clock::time_point onRenderTime = std::chrono::system_clock::time_point::min();
+
+    uint8_t *screenShotBuffer = nullptr;
+    size_t screenShotBufferSize = 0;
 };
 
 #endif // VIRTUALSREENIMPL_H

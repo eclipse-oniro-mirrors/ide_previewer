@@ -21,7 +21,7 @@
 #include <thread>
 #include "EventQueue.h"
 
-namespace OHOS::AppExecFwk {
+namespace OHOS::Ide {
 class EventRunner final {
 public:
     EventRunner() = default;

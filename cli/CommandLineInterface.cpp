@@ -33,7 +33,7 @@ CommandLineInterface::CommandLineInterface() : socket(nullptr) {}
 
 CommandLineInterface::~CommandLineInterface() {}
 
-void CommandLineInterface::InitPipe(const std::string name)
+void CommandLineInterface::InitPipe(const std::string name, bool isServer)
 {
     if (socket != nullptr) {
         socket.reset();
@@ -45,8 +45,14 @@ void CommandLineInterface::InitPipe(const std::string name)
         FLOG("CommandLineInterface::Connect socket memory allocation failed!");
     }
 
-    if (!socket->ConnectToServer(socket->GetCommandPipeName(name), LocalSocket::READ_WRITE)) {
-        FLOG("CommandLineInterface command pipe connect failed");
+    if (isServer) {
+        if (!socket->RunServer(socket->GetCommandPipeName(name))) {
+            FLOG("CommandLineInterface command pipe connect failed");
+        }
+    } else {
+        if (!socket->ConnectToServer(socket->GetCommandPipeName(name), LocalSocket::OpenMode::READ_WRITE)) {
+            FLOG("CommandLineInterface command pipe connect failed");
+        }
     }
     isPipeConnected  = true;
 }
@@ -236,10 +242,10 @@ void CommandLineInterface::ApplyConfigCommands(const std::string& key,
     }
 }
 
-void CommandLineInterface::Init(std::string pipeBaseName)
+void CommandLineInterface::Init(std::string pipeBaseName, bool isServer)
 {
     CommandLineFactory::InitCommandMap();
-    InitPipe(pipeBaseName);
+    InitPipe(pipeBaseName, isServer);
 }
 
 void CommandLineInterface::ReadAndApplyConfig(std::string path) const
@@ -256,6 +262,10 @@ void CommandLineInterface::CreatCommandToSendData(const std::string commandName,
                                                   const Json2::Value& jsonData,
                                                   const std::string type) const
 {
+    if (CommandParser::GetInstance().IsStandaloneMode()) {
+        ILOG("CommandLineInterface::CreatCommandToSendData : no need to create command in standalone mode");
+        return;
+    }
     CommandLine::CommandType commandType = GetCommandType(type);
     std::unique_ptr<CommandLine> commandLine =
         CommandLineFactory::CreateCommandLine(commandName, commandType, jsonData, *socket);

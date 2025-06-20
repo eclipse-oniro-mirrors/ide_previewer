@@ -18,6 +18,9 @@
 #include <algorithm>
 #include <regex>
 #include <sstream>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 
 #include "CommandLineInterface.h"
 #include "CommandParser.h"
@@ -35,6 +38,7 @@
 #include "SharedData.h"
 #include "VirtualMessageImpl.h"
 #include "VirtualScreenImpl.h"
+#include "VideoRecorder.h"
 
 CommandLine::CommandLine(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
     : args(arg), cliSocket(socket), type(commandType), commandName("")
@@ -512,6 +516,7 @@ bool OrientationCommand::IsSetArgValid() const
 
 void OrientationCommand::RunSet()
 {
+    VideoRecorder::GetInstance().Stop();
     std::string commandOrientation = args["Orientation"].AsString();
     std::string currentOrientation = JsAppImpl::GetInstance().GetOrientation();
     if (commandOrientation != currentOrientation) {
@@ -1600,3 +1605,53 @@ void AvoidAreaChangedCommand::RunGet()
     SetResultToManager("args", args, "AvoidAreaChanged");
     ILOG("Get AvoidAreaChangedCommand run finished.");
 }
+
+static std::string GetTimeString()
+{
+    auto now = std::chrono::system_clock::now();
+    auto cNow = std::chrono::system_clock::to_time_t(now);
+    tm* tmNow = localtime(&cNow);
+
+    std::stringstream timeString;
+    timeString << std::put_time(tmNow, "%Y-%m-%d_%H-%M-%S");
+    return timeString.str();
+}
+
+ScreenShotCommand::ScreenShotCommand(CommandType commandType, const Json2::Value& arg, const LocalSocket& socket)
+    : CommandLine(commandType, arg, socket)
+{
+}
+
+void ScreenShotCommand::RunAction()
+{
+    VirtualScreenImpl::GetInstance().MakeScreenShot("screen_" + GetTimeString());
+    SetCommandResult("result", JsonReader::CreateBool(true));
+}
+
+StartVideoRecordCommand::StartVideoRecordCommand(CommandType commandType, const Json2::Value& arg,
+    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+{
+}
+
+void StartVideoRecordCommand::RunAction()
+{
+    int32_t width = VirtualScreenImpl::GetInstance().GetCurrentWidth();
+    int32_t height = VirtualScreenImpl::GetInstance().GetCurrentHeight();
+#ifdef __APPLE__
+    JsAppImpl::GetInstance().GetFramebufferSize(width, height);
+#endif
+    VideoRecorder::GetInstance().Start("video_" + GetTimeString(), width, height, videoRecordingFps);
+    SetCommandResult("result", JsonReader::CreateBool(true));
+}
+
+StopVideoRecordCommand::StopVideoRecordCommand(CommandType commandType, const Json2::Value& arg,
+    const LocalSocket& socket) : CommandLine(commandType, arg, socket)
+{
+}
+
+void StopVideoRecordCommand::RunAction()
+{
+    VideoRecorder::GetInstance().Stop();
+    SetCommandResult("result", JsonReader::CreateBool(true));
+}
+

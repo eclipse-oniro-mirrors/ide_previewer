@@ -24,6 +24,23 @@
 CommandLineFactory::CommandTypeMap CommandLineFactory::typeMap = CommandLineFactory::CommandTypeMap();
 CommandLineFactory::CommandLineFactory() {}
 
+void CommandLineFactory::InitCommandMapLite()
+{
+    typeMap["Power"] = &CommandLineFactory::CreateObject<PowerCommand>;
+    typeMap["Volume"] = &CommandLineFactory::CreateObject<VolumeCommand>;
+    typeMap["Barometer"] = &CommandLineFactory::CreateObject<BarometerCommand>;
+    typeMap["Location"] = &CommandLineFactory::CreateObject<LocationCommand>;
+    typeMap["KeepScreenOnState"] = &CommandLineFactory::CreateObject<KeepScreenOnStateCommand>;
+    typeMap["WearingState"] = &CommandLineFactory::CreateObject<WearingStateCommand>;
+    typeMap["BrightnessMode"] = &CommandLineFactory::CreateObject<BrightnessModeCommand>;
+    typeMap["ChargeMode"] = &CommandLineFactory::CreateObject<ChargeModeCommand>;
+    typeMap["Brightness"] = &CommandLineFactory::CreateObject<BrightnessCommand>;
+    typeMap["HeartRate"] = &CommandLineFactory::CreateObject<HeartRateCommand>;
+    typeMap["StepCount"] = &CommandLineFactory::CreateObject<StepCountCommand>;
+    typeMap["DistributedCommunications"] = &CommandLineFactory::CreateObject<DistributedCommunicationsCommand>;
+    typeMap["CrownRotate"] = &CommandLineFactory::CreateObject<MouseWheelCommand>;
+}
+
 void CommandLineFactory::InitCommandMap()
 {
     CommandParser& cmdParser = CommandParser::GetInstance();
@@ -48,20 +65,11 @@ void CommandLineFactory::InitCommandMap()
         typeMap["FoldStatus"] = &CommandLineFactory::CreateObject<FoldStatusCommand>;
         typeMap["AvoidArea"] = &CommandLineFactory::CreateObject<AvoidAreaCommand>;
         typeMap["AvoidAreaChanged"] = &CommandLineFactory::CreateObject<AvoidAreaChangedCommand>;
+        typeMap["ScreenShot"] = &CommandLineFactory::CreateObject<ScreenShotCommand>;
+        typeMap["StartVideoRecord"] = &CommandLineFactory::CreateObject<StartVideoRecordCommand>;
+        typeMap["StopVideoRecord"] = &CommandLineFactory::CreateObject<StopVideoRecordCommand>;
     } else {
-        typeMap["Power"] = &CommandLineFactory::CreateObject<PowerCommand>;
-        typeMap["Volume"] = &CommandLineFactory::CreateObject<VolumeCommand>;
-        typeMap["Barometer"] = &CommandLineFactory::CreateObject<BarometerCommand>;
-        typeMap["Location"] = &CommandLineFactory::CreateObject<LocationCommand>;
-        typeMap["KeepScreenOnState"] = &CommandLineFactory::CreateObject<KeepScreenOnStateCommand>;
-        typeMap["WearingState"] = &CommandLineFactory::CreateObject<WearingStateCommand>;
-        typeMap["BrightnessMode"] = &CommandLineFactory::CreateObject<BrightnessModeCommand>;
-        typeMap["ChargeMode"] = &CommandLineFactory::CreateObject<ChargeModeCommand>;
-        typeMap["Brightness"] = &CommandLineFactory::CreateObject<BrightnessCommand>;
-        typeMap["HeartRate"] = &CommandLineFactory::CreateObject<HeartRateCommand>;
-        typeMap["StepCount"] = &CommandLineFactory::CreateObject<StepCountCommand>;
-        typeMap["DistributedCommunications"] = &CommandLineFactory::CreateObject<DistributedCommunicationsCommand>;
-        typeMap["CrownRotate"] = &CommandLineFactory::CreateObject<MouseWheelCommand>;
+        InitCommandMapLite();
     }
     typeMap["MousePress"] = &CommandLineFactory::CreateObject<TouchPressCommand>;
     typeMap["MouseRelease"] = &CommandLineFactory::CreateObject<TouchReleaseCommand>;

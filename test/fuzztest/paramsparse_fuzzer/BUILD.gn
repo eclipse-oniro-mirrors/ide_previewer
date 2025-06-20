@@ -35,6 +35,7 @@ ide_fuzztest("ParamsParseFuzzTest") {
     "$ide_previewer_path/util/PreviewerEngineLog.cpp",
     "$ide_previewer_path/util/TimeTool.cpp",
     "$ide_previewer_path/util/TraceTool.cpp",
+    "$ide_previewer_path/util/Unhap.cpp",
     "$ide_previewer_path/util/unix/LocalDate.cpp",
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
     "../main.cpp",
@@ -48,10 +49,12 @@ ide_fuzztest("ParamsParseFuzzTest") {
     "$ide_previewer_path/util/unix",
     "//third_party/cJSON",
     "//third_party/bounds_checking_function/include",
+    "//third_party/zlib",
   ]
   deps = [
     "//third_party/bounds_checking_function:libsec_static",
     "//third_party/cJSON:cjson_static",
+    "//third_party/zlib:libz",
   ]
   libs = []
   cflags = []

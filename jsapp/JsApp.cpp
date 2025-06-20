@@ -173,6 +173,8 @@ void JsApp::OrientationChanged(std::string commandOrientation)
 
 void JsApp::ResolutionChanged(ResolutionParam&, int32_t, std::string) {}
 
+void JsApp::GetFramebufferSize(int32_t &width, int32_t &height) {}
+
 void JsApp::ReloadRuntimePage(const std::string) {}
 
 bool JsApp::MemoryRefresh(const std::string) const
