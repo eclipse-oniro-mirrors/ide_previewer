@@ -24,7 +24,8 @@ import {
   MockedFileMap,
   TSTypes,
   specialOverloadedFunctionArr,
-  callbackError, ClassNotInEts
+  callbackError, ClassNotInEts,
+  undefinedTypes
 } from '../common/constants';
 import {
   Declare,
@@ -557,6 +558,13 @@ function findKeyValueDefined(
     return keyValueInfo;
   }
 
+  // 全局都未找到定义的类型，做特殊处理
+  if (Object.keys(undefinedTypes).includes(key)) {
+    const keyValue: KeyValue = generateKeyValue(key, KeyValueTypes.VALUE);
+    keyValue.value = undefinedTypes[key];
+    return { keyValue, mockBuffer };
+  }
+
   const keyValuePath: string[] = getKeyValuePath(targetKeyValue);
   const fromFilePath = MockedFileMap.get(keyValuePath[0]).replace(/\\/, '/');
   const value: string = `'Cannot find type definition for ${keyValuePath.slice(1).join('->')} from file ${fromFilePath}'`;
@@ -864,8 +872,10 @@ function handleOverloadedFunction(
   });
   const isSpecial = specialOverloadedFunctionArr.includes(functionName);
   const paramMockData = handleFunParamMockData(sameFuncList, mockBuffer, kvPath, rootKeyValue, isSpecial, 'multiple', returnData);
-  return `function (${key.startsWith('get ' + functionName) ? '' : '...args'}) {
-    console.warn(ts.replace('{{}}', '${func.key}'));
+  const isGetAccessor = key.startsWith('get ' + functionName);
+  const isSetAccessor = key.startsWith('set ' + functionName);
+  return `function (${isGetAccessor ? '' : `${isSetAccessor ? 'args' : '...args'}`}) {
+    ${isGetAccessor || isSetAccessor ? '' : `console.warn(ts.replace('{{}}', '${func.key}'));`}
     ${memberLines.join(';\n')}${paramMockData ? '\n' + paramMockData : ''} 
     return new Promise(function (resolve, reject) {
       resolve(${returnData.join(', ')});
@@ -1159,13 +1169,16 @@ function handleSingleFunction(
   const funcList = isSpecial ? sameFuncList : [sameFuncList[0]];
   const paramMockData = handleFunParamMockData(funcList, mockBuffer, kvPath, rootKeyValue, isSpecial, 'single');
 
+  const isGetAccessor = key.startsWith('get ' + functionName);
+  const isSetAccessor = key.startsWith('set ' + functionName);
   const returnStr = funcKeyValue.members.Promise && funcKeyValue.members.Promise.type === KeyValueTypes.REFERENCE ?
     `return new Promise(function (resolve, reject) {
           resolve(${memberLines.join(',')});
         })` :
     `return ${memberLines.join(',')}`;
-  return `function (${key.startsWith('get ' + functionName) ? '' : `${key.startsWith('set ' + functionName) ? 'args' : '...args'}`}) {
-  console.warn(ts.replace('{{}}', '${funcKeyValue.key}'));
+
+  return `function (${isGetAccessor ? '' : `${isSetAccessor ? 'args' : '...args'}`}) {
+  ${isGetAccessor || isSetAccessor ? '' : `console.warn(ts.replace('{{}}', '${funcKeyValue.key}'));`}
   ${paramMockData ?? ''}${returnStr}
   }`;
 }

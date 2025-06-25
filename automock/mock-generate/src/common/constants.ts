@@ -159,10 +159,20 @@ export const ClosedSourceFileMapping = {
   '@ohos.inner.application.UIExtensionContext': 'application/UIExtensionContext'
 };
 
-//Filter files that are not mocked
+// Filter files that are not mocked
 export const needShieldingDirOrFile = [
   path.join('arkui', 'component'),
   path.join('arkui', 'external'),
   path.join('arkui', 'runtime-api'),
   path.join('arkui', 'stateManagement')
 ];
+
+// Special handling for interface types not found globally
+export const undefinedTypes = {
+  'int': 0,
+  'double': 0,
+  'float': 0,
+  'long': 0,
+  'VpnConnectState': 'undefined',
+  'Intl': 'undefined'
+};
