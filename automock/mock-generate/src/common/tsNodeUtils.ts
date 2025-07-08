@@ -24,7 +24,7 @@ import {
   KeyValueTypes,
   specialTSTypes
 } from './constants';
-import { associateTypeParameters, generateKeyValue, getAbsolutePath } from './commonUtils';
+import { associateTypeParameters, generateKeyValue, getAbsolutePath, isArktsOne } from './commonUtils';
 import path from 'path';
 
 /**
@@ -60,6 +60,7 @@ export function handleImportDeclaration(
  * @returns
  */
 export function handleModuleDeclaration(
+  sourceFile: ts.SourceFile,
   node: ts.ModuleDeclaration,
   mockBuffer: MockBuffer,
   members: Members,
@@ -73,7 +74,7 @@ export function handleModuleDeclaration(
   }
   handleDefaultOrExport(mockBuffer, moduleName, node.modifiers);
 
-  handleModuleBody(mockBuffer, moduleName.members, moduleName, node.body);
+  handleModuleBody(sourceFile, mockBuffer, moduleName.members, moduleName, node.body);
 }
 
 /**
@@ -111,6 +112,7 @@ export function handleTypeAliasDeclaration(
  * @returns
  */
 export function handleClassDeclaration(
+  sourceFile: ts.SourceFile,
   node: ts.ClassDeclaration,
   mockBuffer: MockBuffer,
   members: Members,
@@ -137,6 +139,9 @@ export function handleClassDeclaration(
   });
 
   node.members.forEach(member => {
+    if (!isArktsOne(member, sourceFile)) {
+      return;
+    }
     handleClassElement(member, mockBuffer, className.members, className, KeyValueTypes.PROPERTY);
   });
   return className;
@@ -152,6 +157,7 @@ export function handleClassDeclaration(
  * @returns
  */
 export function handleInterfaceDeclaration(
+  sourceFile: ts.SourceFile,
   node: ts.InterfaceDeclaration,
   mockBuffer: MockBuffer,
   members: Members,
@@ -167,6 +173,9 @@ export function handleInterfaceDeclaration(
     interfaceName.heritage = handleHeritageClause(heritageClause, mockBuffer, {}, interfaceName, KeyValueTypes.REFERENCE);
   });
   node.members.forEach(member => {
+    if (!isArktsOne(member, sourceFile)) {
+      return;
+    }
     handleTypeElement(member, mockBuffer, interfaceName.members, interfaceName, KeyValueTypes.PROPERTY);
   });
   return interfaceName;
@@ -182,6 +191,7 @@ export function handleInterfaceDeclaration(
  * @returns
  */
 export function handleEnumDeclaration(
+  sourceFile: ts.SourceFile,
   node: ts.EnumDeclaration,
   mockBuffer: MockBuffer,
   members: Members,
@@ -192,6 +202,9 @@ export function handleEnumDeclaration(
   enumName.isNeedMock = true;
   handleDefaultOrExport(mockBuffer, enumName, node.modifiers);
   node.members.forEach(member => {
+    if (!isArktsOne(member, sourceFile)) {
+      return;
+    }
     handleEnumMember(member, mockBuffer, enumName.members, enumName, KeyValueTypes.PROPERTY);
   });
   return enumName;
@@ -318,6 +331,9 @@ export function handleExportAssignment(
   type: KeyValueTypes
 ): KeyValue {
   const exportDefault = handleExpression(node.expression, mockBuffer, {}, parent, type, []);
+  if (!members[exportDefault.key]) {
+    return;
+  }
   members[exportDefault.key].isDefault = true;
   mockBuffer.contents.members.default = members[exportDefault.key];
   return exportDefault;
@@ -849,6 +865,7 @@ function handleModuleName(
 }
 
 function handleModuleBody(
+  sourceFile: ts.SourceFile,
   mockBuffer: MockBuffer,
   members: Members,
   parent: KeyValue,
@@ -857,7 +874,7 @@ function handleModuleBody(
   switch (node.kind) {
     case SyntaxKind.ModuleBlock: {
       node.statements.forEach(statement => {
-        handleStatement(statement, mockBuffer, members, parent);
+        handleStatement(sourceFile, statement, mockBuffer, members, parent);
       });
       return;
     }
@@ -868,6 +885,7 @@ function handleModuleBody(
 }
 
 function handleStatement(
+  sourceFile: ts.SourceFile,
   node: ts.Statement,
   mockBuffer: MockBuffer,
   members: Members,
@@ -875,11 +893,11 @@ function handleStatement(
 ): void {
   switch (node.kind) {
     case SyntaxKind.EnumDeclaration: {
-      handleEnumDeclaration(node as ts.EnumDeclaration, mockBuffer, members, parent, KeyValueTypes.ENUM);
+      handleEnumDeclaration(sourceFile, node as ts.EnumDeclaration, mockBuffer, members, parent, KeyValueTypes.ENUM);
       break;
     }
     case SyntaxKind.InterfaceDeclaration: {
-      handleInterfaceDeclaration(node as ts.InterfaceDeclaration, mockBuffer, members, parent, KeyValueTypes.INTERFACE);
+      handleInterfaceDeclaration(sourceFile, node as ts.InterfaceDeclaration, mockBuffer, members, parent, KeyValueTypes.INTERFACE);
       break;
     }
     case SyntaxKind.VariableStatement: {
@@ -891,7 +909,7 @@ function handleStatement(
       break;
     }
     case SyntaxKind.ClassDeclaration: {
-      handleClassDeclaration(node as ts.ClassDeclaration, mockBuffer, members, parent, KeyValueTypes.CLASS);
+      handleClassDeclaration(sourceFile, node as ts.ClassDeclaration, mockBuffer, members, parent, KeyValueTypes.CLASS);
       break;
     }
     case SyntaxKind.TypeAliasDeclaration: {
@@ -903,7 +921,7 @@ function handleStatement(
       break;
     }
     case SyntaxKind.ModuleDeclaration: {
-      handleModuleDeclaration(node as ts.ModuleDeclaration, mockBuffer, members, parent, KeyValueTypes.MODULE);
+      handleModuleDeclaration(sourceFile, node as ts.ModuleDeclaration, mockBuffer, members, parent, KeyValueTypes.MODULE);
       break;
     }
     case SyntaxKind.ImportEqualsDeclaration: {

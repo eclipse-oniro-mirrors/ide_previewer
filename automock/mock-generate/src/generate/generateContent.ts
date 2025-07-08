@@ -1080,7 +1080,7 @@ function handleReferenceKeyValue(
   if (value !== 'this') {
     switch (keyValueInfo.keyValue.type) {
       case KeyValueTypes.CLASS: {
-        value = `new (${value})()`;
+        value = value.startsWith('global.') ? value : `new (${value})()`;
         break;
       }
       case KeyValueTypes.ENUM: {
