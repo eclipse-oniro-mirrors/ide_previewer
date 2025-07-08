@@ -40,6 +40,7 @@ import {
   handleTypeAliasDeclaration,
   handleVariableStatement
 } from '../common/tsNodeUtils';
+import { isArktsOne } from '../common/commonUtils';
 
 /**
  * 解析所有 sourceFile 节点信息
@@ -52,18 +53,21 @@ import {
 export function getSourceFileAssembly(sourceFile: SourceFile, mockBuffer: MockBuffer, members: Members, parent: KeyValue): void {
   let defaultExportNode: ts.ExportAssignment;
   sourceFile.forEachChild(node => {
+    if (!isArktsOne(node, sourceFile)) {
+      return;
+    }
     if (isImportDeclaration(node)) {
       handleImportDeclaration(node, mockBuffer, members, parent, KeyValueTypes.IMPORT);
     } else if (isModuleDeclaration(node)) {
-      handleModuleDeclaration(node, mockBuffer, members, parent, KeyValueTypes.MODULE);
+      handleModuleDeclaration(sourceFile, node, mockBuffer, members, parent, KeyValueTypes.MODULE);
     } else if (isTypeAliasDeclaration(node)) {
       handleTypeAliasDeclaration(node, mockBuffer, members, parent, KeyValueTypes.VARIABLE);
     } else if (isClassDeclaration(node)) {
-      handleClassDeclaration(node, mockBuffer, members, parent, KeyValueTypes.CLASS);
+      handleClassDeclaration(sourceFile, node, mockBuffer, members, parent, KeyValueTypes.CLASS);
     } else if (isInterfaceDeclaration(node)) {
-      handleInterfaceDeclaration(node, mockBuffer, members, parent, KeyValueTypes.INTERFACE);
+      handleInterfaceDeclaration(sourceFile, node, mockBuffer, members, parent, KeyValueTypes.INTERFACE);
     } else if (isEnumDeclaration(node)) {
-      handleEnumDeclaration(node, mockBuffer, members, parent, KeyValueTypes.ENUM);
+      handleEnumDeclaration(sourceFile, node, mockBuffer, members, parent, KeyValueTypes.ENUM);
     } else if (isFunctionDeclaration(node)) {
       handleFunctionDeclaration(node, mockBuffer, members, parent, KeyValueTypes.FUNCTION);
     } else if (isExportAssignment(node)) {
