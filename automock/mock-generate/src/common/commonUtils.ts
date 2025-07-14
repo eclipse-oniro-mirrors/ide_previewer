@@ -15,6 +15,7 @@
 
 import path from 'path';
 import fs from 'fs';
+import { Node, SourceFile, JSDoc } from 'typescript';
 import { KeyValue, Members, MockBuffer } from '../types';
 import { D_ETS, D_TS, KeyValueTypes, NAPI_DIR_PATH, needShieldingDirOrFile } from './constants';
 import { getProjectDir } from './systemUtils';
@@ -174,4 +175,24 @@ export function filterDuplicateFile(value: string): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Determine whether the content contains arkts1.2 by parsing the comments.
+ * @param node
+ * @param sourceFile
+ * @returns boolean
+ */
+export function isArktsOne(node: Node, sourceFile: SourceFile): boolean {
+  const jsDocNode = node['jsDoc'] as JSDoc[];
+  if (!jsDocNode) {
+    return true;
+  }
+  for (let i = 0; i < jsDocNode.length; i++) {
+    const element = jsDocNode[i];
+    if (sourceFile.text.substring(element.pos, element.end).includes('@arkts 1.2')) {
+      return false;
+    }
+  }
+  return true;
 }

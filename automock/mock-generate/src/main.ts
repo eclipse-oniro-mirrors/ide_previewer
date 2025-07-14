@@ -44,6 +44,9 @@ import {
 import { ApiFolder, MockBuffer } from './types';
 import { generateContent, handleDeclares } from './generate/generateContent';
 
+// remove arkts 1.2 content
+export const regex = /\/\*\*\* if arkts 1\.2 \*\/[\s\S]*?\/\*\*\* endif \*\//g;
+
 /**
  * 获取所有接口文件路径
  * @param dir 接口目录路径
@@ -216,7 +219,7 @@ function etsFileToMock(): void {
 
   allFileList.forEach(file => {
     const code = fs.readFileSync(file);
-    let text = code.toString().replace(/struct /g, ' class ');
+    let text = code.toString().replace(/struct /g, ' class ').replace(regex, '');
     if (file.endsWith(path.join('application', 'Context.d.ts'))) {
       text = text.replace('export default Context', '').replace('declare class', 'export default class');
     }
@@ -258,6 +261,8 @@ function main(): void {
   getAllDtsFile(getOhosInterfacesDir(), ohosDtsFileList, false);
   getAllDtsFile(path.resolve(getOhosInterfacesDir(), '..', 'arkts'), arktsDtsFileList, false);
   getAllDtsFile(path.resolve(getOhosInterfacesDir(), '..', 'kits'), kitsDtsFileList, false);
+
+  etsFileToMock();
 
   if (!fs.existsSync(path.join(outMockJsFileDir, 'napi'))) {
     mkdirsSync(path.join(outMockJsFileDir, 'napi'));
