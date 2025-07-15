@@ -872,6 +872,9 @@ function handleModuleBody(
   switch (node.kind) {
     case SyntaxKind.ModuleBlock: {
       node.statements.forEach(statement => {
+        if (!isArktsOne(statement, sourceFile)) {
+          return;
+        }
         handleStatement(sourceFile, statement, mockBuffer, members, parent);
       });
       return;
