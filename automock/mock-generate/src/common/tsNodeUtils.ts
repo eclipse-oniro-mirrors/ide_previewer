@@ -929,6 +929,15 @@ function handleStatement(
       handleImportEqualsDeclaration(node as ts.ImportEqualsDeclaration, mockBuffer, members, parent, KeyValueTypes.VARIABLE);
       break;
     }
+    case SyntaxKind.ExpressionStatement: {
+      break;
+    }
+    case SyntaxKind.Block: {
+      break;
+    }
+    case SyntaxKind.EmptyStatement: {
+      break;
+    }
     default: {
       throw new Error('未知的Statement类型');
     }
