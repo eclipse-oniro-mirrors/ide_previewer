@@ -329,14 +329,12 @@ export function handleExportAssignment(
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
-): KeyValue {
+): void {
   const exportDefault = handleExpression(node.expression, mockBuffer, {}, parent, type, []);
-  if (!members[exportDefault.key]) {
-    return;
+  if (members[exportDefault.key]) {
+    members[exportDefault.key].isDefault = true;
+    mockBuffer.contents.members.default = members[exportDefault.key];
   }
-  members[exportDefault.key].isDefault = true;
-  mockBuffer.contents.members.default = members[exportDefault.key];
-  return exportDefault;
 }
 
 function handleNamedExportBindings(
@@ -929,6 +927,15 @@ function handleStatement(
     }
     case SyntaxKind.ImportEqualsDeclaration: {
       handleImportEqualsDeclaration(node as ts.ImportEqualsDeclaration, mockBuffer, members, parent, KeyValueTypes.VARIABLE);
+      break;
+    }
+    case SyntaxKind.ExpressionStatement: {
+      break;
+    }
+    case SyntaxKind.Block: {
+      break;
+    }
+    case SyntaxKind.EmptyStatement: {
       break;
     }
     default: {
