@@ -22,6 +22,6 @@ import { paramIndex } from './constants';
  */
 export function getProjectDir(): string {
   const apiInputPath = process.argv[paramIndex];
-  const apiDir = path.join('interface', 'sdk-js', 'api');
+  const apiDir = path.join('ets1.1', 'sdk-js', 'api');
   return apiInputPath.replace(`${path.sep}${apiDir}`, '');
 }
