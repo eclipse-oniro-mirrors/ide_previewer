@@ -33,6 +33,7 @@ action("gen_node_modules") {
 }
 
 action("gen_snapshot_jsmock") {
+  deps = ["//interface/sdk-js:build_sdk_interop1"]
   script = "$mock_root/js_framework_build.sh"
   js_framework_mock_generate = "$mock_root/mock-generate"
   is_mac = "false"
@@ -56,7 +57,7 @@ action("gen_snapshot_jsmock") {
   tsconfig = "$mock_root/mock-generate/tsconfig.json"
   eslint = "$mock_root/mock-generate/.eslintrc"
   babel = "$mock_root/mock-generate/.babelrc"
-  api_input_path = "//interface/sdk-js/api"
+  api_input_path = interface_sdk_path_ets1 + "/api"
 
   args = [
     rebase_path(buildfile_jsmock, root_build_dir),
