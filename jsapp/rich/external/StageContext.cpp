@@ -424,7 +424,6 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
     unzCloseCurrentFile(zipfile);
     unzClose(zipfile);
 
-    ILOG("File extracted and content saved: %s\n", fileName.c_str());
     return fileContent;
 }
 
@@ -652,7 +651,14 @@ void StageContext::GetModuleInfo(std::vector<HspInfo>& dependencyHspInfos)
         std::string moduleName = pair.first;
         std::string packageName = "";
         HspInfo hspInfo;
-        GetHspActualName(moduleName, packageName);
+        int ret = GetHspActualName(moduleName, packageName);
+        if (ret > 1) {
+            WLOG("have more same module name hsp in the project, load the first as default.");
+        }
+        if (packageName.empty()) {
+            ELOG("get hsp actual name failed.");
+            return;
+        }
         hspInfo.moduleName = moduleName;
         GetHspinfo(packageName, hspInfo);
         dependencyHspInfos.push_back(hspInfo);

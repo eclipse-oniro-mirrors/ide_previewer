@@ -343,10 +343,8 @@ void JsAppImpl::SetSimulatorParams(OHOS::AbilityRuntime::Options& options)
         hspInfo.resourcePath = info.resourcePath;
         hspInfo.moduleJsonBuffer = std::move(info.moduleJsonBuffer);
         options.dependencyHspInfos.push_back(hspInfo);
-        ILOG("resourcePath:%s", info.resourcePath.c_str());
     }
     SetSimulatorCommonParams(options);
-    ILOG("setted bundleName:%s moduleName:%s", options.modulePath.c_str(), options.resourcePath.c_str());
 }
 
 void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
