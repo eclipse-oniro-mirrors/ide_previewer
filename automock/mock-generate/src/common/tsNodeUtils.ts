@@ -463,6 +463,9 @@ function handleEnumMemberInitializer(
       members[numericLiteral.text] = generateKeyValue(numericLiteral.text, KeyValueTypes.VALUE, parent);
       return members[numericLiteral.text];
     }
+    case SyntaxKind.BigIntLiteral: {
+      return handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
+    }
     case SyntaxKind.StringLiteral: {
       return handleStringLiteral(node as ts.StringLiteral, members, parent);
     }
@@ -486,6 +489,12 @@ function handleEnumMemberInitializer(
           type,
           expression.operateElements
       );
+    }
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement: {
+      return;
     }
     default: {
       throw new Error('未知的EnumMemberInitializer类型');
@@ -519,6 +528,12 @@ function handleTypeElement(
     }
     case SyntaxKind.ConstructSignature: {
       generateKeyValue('', type, parent);
+      break;
+    }
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement: {
       break;
     }
     default: {
@@ -603,6 +618,10 @@ function handleClassElement(
       handleMethodDeclaration(node as ts.MethodDeclaration, mockBuffer, members, parent, KeyValueTypes.FUNCTION);
       return;
     }
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement:
     case SyntaxKind.IndexSignature:
     case SyntaxKind.Constructor: {
       return;
@@ -929,13 +948,12 @@ function handleStatement(
       handleImportEqualsDeclaration(node as ts.ImportEqualsDeclaration, mockBuffer, members, parent, KeyValueTypes.VARIABLE);
       break;
     }
-    case SyntaxKind.ExpressionStatement: {
-      break;
-    }
-    case SyntaxKind.Block: {
-      break;
-    }
-    case SyntaxKind.EmptyStatement: {
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement:
+    case SyntaxKind.IndexSignature:
+    case SyntaxKind.Constructor: {
       break;
     }
     default: {
@@ -1132,6 +1150,12 @@ function handleOthersTypeNode(
     }
     case SyntaxKind.TypeQuery: {
       return handleTypeQueryNode(node as ts.TypeQueryNode, mockBuffer, members, parent, type);
+    }
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement: {
+      return;
     }
     default: {
       throw new Error('未知的TypeNode类型');
@@ -1593,6 +1617,9 @@ function handleUnaryExpression(
     case SyntaxKind.NumericLiteral: {
       return handleNumericLiteral(node as ts.NumericLiteral, members, parent);
     }
+    case SyntaxKind.BigIntLiteral: {
+      return handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
+    }
     default: {
       throw new Error('位置类型的UnaryExpression');
     }
@@ -1640,6 +1667,11 @@ function handleExpression(
       operateElements.push(keyValue);
       break;
     }
+    case SyntaxKind.BigIntLiteral: {
+      keyValue = handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
+      operateElements.push(keyValue);
+      break;
+    }
     case SyntaxKind.PropertyAccessExpression: {
       keyValue = handlePropertyAccessExpression(node as ts.PropertyAccessExpression, mockBuffer, members, parent, type, operateElements);
       break;
@@ -1666,6 +1698,12 @@ function handleExpression(
     case SyntaxKind.FalseKeyword: {
       keyValue = handleFalseKeyword(members, parent);
       operateElements.push(keyValue);
+      break;
+    }
+    case SyntaxKind.EmptyStatement:
+    case SyntaxKind.Block:
+    case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ExpressionStatement: {
       break;
     }
     default: {
