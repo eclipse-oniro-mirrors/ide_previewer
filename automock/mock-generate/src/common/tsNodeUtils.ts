@@ -452,46 +452,51 @@ function handleEnumMemberInitializer(
   members: Members,
   parent: KeyValue,
   type: KeyValueTypes
-): KeyValue {
-  if (!node) {
-    return generateKeyValue('', KeyValueTypes.VALUE, parent);
-  }
-
+): void {
   switch (node.kind) {
     case SyntaxKind.NumericLiteral: {
       const numericLiteral = node as ts.NumericLiteral;
       members[numericLiteral.text] = generateKeyValue(numericLiteral.text, KeyValueTypes.VALUE, parent);
-      return members[numericLiteral.text];
+      break;
+    }
+    case SyntaxKind.BigIntLiteral: {
+      handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
+      break;
     }
     case SyntaxKind.StringLiteral: {
-      return handleStringLiteral(node as ts.StringLiteral, members, parent);
+      handleStringLiteral(node as ts.StringLiteral, members, parent);
+      break;
     }
     case SyntaxKind.BinaryExpression: {
-      return handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent);
+      handleBinaryExpression(node as ts.BinaryExpression, mockBuffer, members, parent);
+      break;
     }
     case SyntaxKind.PrefixUnaryExpression: {
-      return handlePrefixUnaryExpression(node as ts.PrefixUnaryExpression, members, parent);
+      handlePrefixUnaryExpression(node as ts.PrefixUnaryExpression, members, parent);
+      break;
     }
     case SyntaxKind.Identifier: {
-      return handleIdentifier(node as ts.Identifier, members, parent, type);
+      handleIdentifier(node as ts.Identifier, members, parent, type);
+      break;
     }
     case SyntaxKind.PropertyAccessExpression: {
       const expression = generateKeyValue('expression', KeyValueTypes.EXPRESSION, parent);
       expression.operateElements = [];
       members.expression = expression;
-      return handlePropertyAccessExpression(
+      handlePropertyAccessExpression(
           node as ts.PropertyAccessExpression,
           mockBuffer, expression.members,
           expression.parent,
           type,
           expression.operateElements
       );
+      break;
     }
     case SyntaxKind.EmptyStatement:
     case SyntaxKind.Block:
     case SyntaxKind.SemicolonClassElement:
     case SyntaxKind.ExpressionStatement: {
-      return;
+      break;
     }
     default: {
       throw new Error('未知的EnumMemberInitializer类型');
@@ -1106,7 +1111,10 @@ function handleTypeNode(
       break;
     }
     default: {
-      return handleOthersTypeNode(mockBuffer, members, parent, type, node);
+      const keyValue = handleOthersTypeNode(mockBuffer, members, parent, type, node);
+      if (keyValue) {
+        return keyValue;
+      }
     }
   }
   members[typeText] = generateKeyValue(typeText, KeyValueTypes.VALUE, parent);
@@ -1119,7 +1127,7 @@ function handleOthersTypeNode(
   parent: KeyValue,
   type: KeyValueTypes,
   node: ts.TypeNode
-): KeyValue {
+): KeyValue | undefined {
   switch (node.kind) {
     case SyntaxKind.MappedType: {
       return handleMappedTypeNode(node as ts.MappedTypeNode, mockBuffer, members, parent, type);
@@ -1152,7 +1160,7 @@ function handleOthersTypeNode(
     case SyntaxKind.Block:
     case SyntaxKind.SemicolonClassElement:
     case SyntaxKind.ExpressionStatement: {
-      return;
+      return undefined;
     }
     default: {
       throw new Error('未知的TypeNode类型');
@@ -1614,6 +1622,9 @@ function handleUnaryExpression(
     case SyntaxKind.NumericLiteral: {
       return handleNumericLiteral(node as ts.NumericLiteral, members, parent);
     }
+    case SyntaxKind.BigIntLiteral: {
+      return handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
+    }
     default: {
       throw new Error('位置类型的UnaryExpression');
     }
@@ -1658,6 +1669,11 @@ function handleExpression(
     }
     case SyntaxKind.NumericLiteral: {
       keyValue = handleNumericLiteral(node as ts.NumericLiteral, members, parent);
+      operateElements.push(keyValue);
+      break;
+    }
+    case SyntaxKind.BigIntLiteral: {
+      keyValue = handleBigIntLiteral(node as ts.BigIntLiteral, members, parent, KeyValueTypes.VALUE);
       operateElements.push(keyValue);
       break;
     }
