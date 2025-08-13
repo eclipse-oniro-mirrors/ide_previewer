@@ -156,6 +156,10 @@ export function isNeedMocked(filePath: string): boolean {
  * @returns boolean
  */
 export function identifyDuplicateFile(value: string, arr: string[]): boolean {
+  const baseName = path.basename(value);
+  if (baseName.includes('.static.d.')) {
+    return true;
+  }
   const extName = path.extname(value);
   if (extName === '.ets' && arr.includes(value.replace('.ets', '.ts'))) {
     return true;
