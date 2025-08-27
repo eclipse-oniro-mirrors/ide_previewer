@@ -95,10 +95,10 @@ public:
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info) const;
     void GetFoldInfo(FoldInfo& info) const;
-    std::string GetSid() const;
 #ifdef COMPONENT_TEST_ENABLED
     std::string GetComponentTestConfig() const;
 #endif // COMPONENT_TEST_ENABLED
+    std::string GetSid() const;
 
 private:
     CommandParser();

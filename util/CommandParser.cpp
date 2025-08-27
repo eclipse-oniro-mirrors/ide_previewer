@@ -91,10 +91,10 @@ CommandParser::CommandParser()
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
     Register("-ljPath", 1, "Set loader.json path for Previewer");
-    Register("-sid", 1, "Set sid for websocket");
 #ifdef COMPONENT_TEST_ENABLED
     Register("-componentTest", 1, "Set component test config");
 #endif // COMPONENT_TEST_ENABLED
+    Register("-sid", 1, "Set sid for websocket");
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -102,6 +102,13 @@ CommandParser& CommandParser::GetInstance()
     static CommandParser instance;
     return instance;
 }
+
+#ifdef COMPONENT_TEST_ENABLED
+std::string CommandParser::GetComponentTestConfig() const
+{
+    return componentTestConfig;
+}
+#endif // COMPONENT_TEST_ENABLED
 
 /*
  * Parse user input and check parameter validity
@@ -1068,10 +1075,3 @@ bool CommandParser::IsSidValid()
     sid = value;
     return true;
 }
-
-#ifdef COMPONENT_TEST_ENABLED
-std::string CommandParser::GetComponentTestConfig() const
-{
-    return componentTestConfig;
-}
-#endif // COMPONENT_TEST_ENABLED

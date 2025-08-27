@@ -235,8 +235,7 @@ void JsAppImpl::RunJsApp()
 void JsAppImpl::RunNormalAbility()
 {
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfHspBufferTracker(
-        [](const std::string& inputPath, uint8_t** buff, size_t* buffSize,
-            std::string &errorMsg) -> bool {
+        [](const std::string& inputPath, uint8_t** buff, size_t* buffSize, std::string &errorMsg) -> bool {
             if (!buff || !buffSize || inputPath.empty()) {
                 return false;
             }
@@ -284,8 +283,7 @@ void JsAppImpl::RunDebugAbility()
         return;
     }
     simulator->SetHostResolveBufferTracker(
-        [](const std::string &inputPath, uint8_t **buff, size_t *buffSize,
-            std::string &errorMsg) -> bool {
+        [](const std::string &inputPath, uint8_t **buff, size_t *buffSize, std::string &errorMsg) -> bool {
             if (inputPath.empty() || buff == nullptr || buffSize == nullptr) {
                 ELOG("Param invalid.");
                 return false;
