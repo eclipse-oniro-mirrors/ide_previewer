@@ -11,10 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/config/components/ets_frontend/es2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
-import("//foundation/arkui/ace_engine/build/ace_gen_obj.gni")
 
 prebuilt_js_api_mock_path =
     get_label_info(":gen_snapshot_jsmock", "target_out_dir") +
@@ -81,27 +79,4 @@ action("gen_snapshot_jsmock") {
     "./mock-generate/tsconfig.json",
   ]
   outputs = [ prebuilt_js_api_mock_path ]
-}
-
-es2abc_gen_abc("gen_abc_js_mock") {
-  js_mock_path = get_label_info(":gen_snapshot_jsmock", "target_out_dir") +
-                 "/dist/jsMockSystemPlugin.js"
-  src_js = rebase_path(js_mock_path)
-  dst_file = rebase_path(target_out_dir + "/jsMockSystemPlugin.abc")
-  in_puts = [ js_mock_path ]
-  out_puts = [ target_out_dir + "/jsMockSystemPlugin.abc" ]
-  extra_dependencies = [ ":gen_snapshot_jsmock" ]
-}
-
-gen_obj("js_mock_abc") {
-  input = get_label_info(":gen_abc_js_mock", "target_out_dir") +
-          "/jsMockSystemPlugin.abc"
-
-  if (is_mac || is_mingw || is_linux) {
-    output = target_out_dir + "/js_mock_abc.c"
-  } else {
-    output = target_out_dir + "/js_mock_abc.o"
-  }
-
-  snapshot_dep = [ ":gen_abc_js_mock" ]
 }
