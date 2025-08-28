@@ -368,6 +368,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
     options.pkgContextInfoJsonStringMap = aceRunArgs.pkgContextInfoJsonStringMap;
     options.packageNameList = aceRunArgs.packageNameList;
     options.isComponentMode = aceRunArgs.isComponentMode;
+    options.enableFileOperation = commandInfo.enableFileOperation;
     OHOS::AbilityRuntime::DeviceConfig deviceCfg;
     deviceCfg.deviceType = SetDevice<OHOS::AbilityRuntime::DeviceType>(aceRunArgs.deviceConfig.deviceType);
     deviceCfg.orientation = SetOrientation<OHOS::AbilityRuntime::DeviceOrientation>(
