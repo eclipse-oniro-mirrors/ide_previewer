@@ -1489,7 +1489,7 @@ function handleModuleOrInterfaceMember(
     memberKeyValue.value = undefined;
     elementName = memberKeyValue.key;
   }
-  const memberValue = handleKeyValue(elementName, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
+  const memberValue = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
   const value = `global.${parent.key}_temp${elementName} = ${memberValue};`;
   memberKeyValue.isMocked = true;
   declarations.push(value);

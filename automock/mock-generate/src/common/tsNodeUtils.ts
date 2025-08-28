@@ -256,7 +256,7 @@ export function handleExportDeclaration(
   type: KeyValueTypes
 ): void {
   let moduleSpecifier: KeyValue;
-  let importedModulePath: string;
+  let importedModulePath: string | undefined;
   if (node.moduleSpecifier) {
     moduleSpecifier = handleExpression(node.moduleSpecifier, mockBuffer, {}, parent, KeyValueTypes.EXPORT, []);
     importedModulePath = getAbsolutePath(mockBuffer, moduleSpecifier.key);
@@ -264,9 +264,7 @@ export function handleExportDeclaration(
   }
 
   if (node.exportClause) {
-    if (importedModulePath) {
-      handleNamedExportBindings(node.exportClause, mockBuffer, type, importedModulePath);
-    }
+    handleNamedExportBindings(node.exportClause, mockBuffer, parent, type, importedModulePath);
   } else {
     if (moduleSpecifier) {
       members[moduleSpecifier.key] = moduleSpecifier;
@@ -297,6 +295,16 @@ export function handleVariableStatement(
     declarationName.isNeedMock = true;
     declarationName.operateElements = [];
     handleDefaultOrExport(mockBuffer, declarationName, node.modifiers);
+    if (declaration.initializer) {
+      handleExpression(
+        declaration.initializer,
+        mockBuffer,
+        declarationName.members,
+        declarationName, KeyValueTypes.REFERENCE,
+        declarationName.operateElements
+      );
+      return;
+    }
     declaration.initializer && handleExpression(
       declaration.initializer,
       mockBuffer,
@@ -340,15 +348,16 @@ export function handleExportAssignment(
 function handleNamedExportBindings(
   node: ts.NamedExportBindings,
   mockBuffer: MockBuffer,
+  parent: KeyValue,
   type: KeyValueTypes,
-  importedModulePath: string
+  importedModulePath: string | undefined
 ): void {
   if (!node) {
     throw new Error('NamedExportBindings类型node为undefined');
   }
   switch (node.kind) {
     case SyntaxKind.NamedExports: {
-      handleNamedExports(node, mockBuffer, type, importedModulePath);
+      handleNamedExports(node, mockBuffer, parent, type, importedModulePath);
       break;
     }
     case SyntaxKind.NamespaceExport: {
@@ -363,15 +372,17 @@ function handleNamedExportBindings(
 function handleNamedExports(
   node: ts.NamedExports,
   mockBuffer: MockBuffer,
+  parent: KeyValue,
   type: KeyValueTypes,
-  importedModulePath: string
+  importedModulePath: string | undefined
 ): void {
+  const whereParent = mockBuffer.contents.members[parent.key] ?? mockBuffer.contents;
   node.elements.forEach(element => {
     if (importedModulePath) {
-      const exportName = handleIdentifier(element.name, mockBuffer.contents.members, mockBuffer.contents, type);
+      const exportName = handleIdentifier(element.name, whereParent.members, whereParent, type);
       exportName.importedModulePath = importedModulePath;
     }
-    handleIdentifier(element.name, mockBuffer.contents.members, mockBuffer.contents, KeyValueTypes.REFERENCE);
+    handleIdentifier(element.name, whereParent.members, whereParent, KeyValueTypes.REFERENCE);
   });
 }
 
@@ -1727,7 +1738,11 @@ function handleIdentifier(
   const text = node?.escapedText.toString() ?? '';
   const keyValue = generateKeyValue(text, type, parent);
   if (members[text] && members[text].sameName) {
-    members[text].sameName.push(keyValue);
+    if (parent.key === 'fileIo' && text === 'OpenMode') {
+      members[text] = keyValue;
+    } else {
+      members[text].sameName.push(keyValue);
+    }
     return keyValue;
   }
   members[text] = keyValue;
