@@ -44,6 +44,7 @@ CommandParser::CommandParser()
       pages("main_pages"),
       containerSdkPath(""),
       isComponentMode(false),
+      enableFileOperation(false),
       abilityPath(""),
 #ifdef COMPONENT_TEST_ENABLED
       componentTestConfig(""),
@@ -91,10 +92,11 @@ CommandParser::CommandParser()
     Register("-foldStatus", 1, "Set fold status for Previewer.");
     Register("-fr", 2, "Fold resolution <width> <height>"); // 2 arguments
     Register("-ljPath", 1, "Set loader.json path for Previewer");
-    Register("-sid", 1, "Set sid for websocket");
 #ifdef COMPONENT_TEST_ENABLED
     Register("-componentTest", 1, "Set component test config");
 #endif // COMPONENT_TEST_ENABLED
+    Register("-sid", 1, "Set sid for websocket");
+    Register("-ilt", 1, "Set enable file opertaion for mock");
 }
 
 CommandParser& CommandParser::GetInstance()
@@ -136,7 +138,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsFoldableValid() && IsFoldStatusValid() && IsFoldResolutionValid();
     partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
     partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
-    partRet = partRet && IsSidValid();
+    partRet = partRet && IsSidValid() && EnableFileOperationValid();
     if (partRet) {
         return true;
     }
@@ -274,6 +276,11 @@ uint32_t CommandParser::GetJsHeapSize() const
 std::string CommandParser::GetAppName() const
 {
     return appName;
+}
+
+bool CommandParser::EnableFileOperation() const
+{
+    return enableFileOperation;
 }
 
 bool CommandParser::IsSendJSHeap() const
@@ -766,6 +773,23 @@ bool CommandParser::IsContainerSdkPathValid()
     return true;
 }
 
+bool CommandParser::EnableFileOperationValid()
+{
+    if (!IsSet("ilt")) {
+        return true;
+    }
+
+    std::string ilt = Value("ilt");
+    if (ilt != "true" && ilt != "false") {
+        errorInfo = std::string("The LocalTest argument unsupported.");
+        ELOG("Launch -ilt parameters abnormal!");
+        return false;
+    }
+
+    enableFileOperation = ilt == "true" ? true : false;
+    return true;
+}
+
 std::string CommandParser::HelpText()
 {
     std::string helpText = "Usage:\n";
@@ -1038,6 +1062,7 @@ void CommandParser::GetCommandInfo(CommandInfo& info) const
     info.orignalResolutionHeight = GetOrignalResolutionHeight();
     info.compressionResolutionWidth = GetCompressionResolutionWidth();
     info.compressionResolutionHeight = GetCompressionResolutionHeight();
+    info.enableFileOperation = EnableFileOperation();
 }
 
 void CommandParser::GetFoldInfo(FoldInfo& info) const
@@ -1047,6 +1072,13 @@ void CommandParser::GetFoldInfo(FoldInfo& info) const
     info.foldResolutionWidth = GetFoldResolutionWidth();
     info.foldResolutionHeight = GetFoldResolutionHeight();
 }
+
+#ifdef COMPONENT_TEST_ENABLED
+std::string CommandParser::GetComponentTestConfig() const
+{
+    return componentTestConfig;
+}
+#endif // COMPONENT_TEST_ENABLED
 
 std::string CommandParser::GetSid() const
 {
@@ -1068,10 +1100,3 @@ bool CommandParser::IsSidValid()
     sid = value;
     return true;
 }
-
-#ifdef COMPONENT_TEST_ENABLED
-std::string CommandParser::GetComponentTestConfig() const
-{
-    return componentTestConfig;
-}
-#endif // COMPONENT_TEST_ENABLED

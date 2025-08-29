@@ -169,11 +169,11 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
     }
     if (bundleName == localBundleName) { // local hsp
         if (modulePathMap.count(moduleName) > 0) { // exist local hsp
-            if (GetLocalModuleBuffer(moduleName) == nullptr) {
+            std::vector<uint8_t>* buffer = GetLocalModuleBuffer(moduleName);
+            if (buffer == nullptr) {
                 return GetCloudModuleBuffer(moduleName);
-            } else {
-                return GetLocalModuleBuffer(moduleName);
             }
+            return buffer;
         } else { // local hsp not exist, load cloud hsp
             ILOG("cloud hsp bundleName is same as the local project.");
             return GetCloudModuleBuffer(moduleName);
@@ -636,7 +636,6 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
             break;
         }
     }
-
     unzClose(zipfile);
     return isUnzipSuccess;
 }
