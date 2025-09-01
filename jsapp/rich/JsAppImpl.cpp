@@ -235,8 +235,7 @@ void JsAppImpl::RunJsApp()
 void JsAppImpl::RunNormalAbility()
 {
     Platform::AcePreviewHelper::GetInstance()->SetCallbackOfHspBufferTracker(
-        [](const std::string& inputPath, uint8_t** buff, size_t* buffSize,
-            std::string &errorMsg) -> bool {
+        [](const std::string& inputPath, uint8_t** buff, size_t* buffSize, std::string &errorMsg) -> bool {
             if (!buff || !buffSize || inputPath.empty()) {
                 return false;
             }
@@ -284,8 +283,7 @@ void JsAppImpl::RunDebugAbility()
         return;
     }
     simulator->SetHostResolveBufferTracker(
-        [](const std::string &inputPath, uint8_t **buff, size_t *buffSize,
-            std::string &errorMsg) -> bool {
+        [](const std::string &inputPath, uint8_t **buff, size_t *buffSize, std::string &errorMsg) -> bool {
             if (inputPath.empty() || buff == nullptr || buffSize == nullptr) {
                 ELOG("Param invalid.");
                 return false;
@@ -370,6 +368,7 @@ void JsAppImpl::SetSimulatorCommonParams(OHOS::AbilityRuntime::Options& options)
     options.pkgContextInfoJsonStringMap = aceRunArgs.pkgContextInfoJsonStringMap;
     options.packageNameList = aceRunArgs.packageNameList;
     options.isComponentMode = aceRunArgs.isComponentMode;
+    options.enableFileOperation = commandInfo.enableFileOperation;
     OHOS::AbilityRuntime::DeviceConfig deviceCfg;
     deviceCfg.deviceType = SetDevice<OHOS::AbilityRuntime::DeviceType>(aceRunArgs.deviceConfig.deviceType);
     deviceCfg.orientation = SetOrientation<OHOS::AbilityRuntime::DeviceOrientation>(

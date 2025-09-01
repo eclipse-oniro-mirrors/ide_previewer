@@ -28,6 +28,7 @@ public:
     bool isCardDisplay;
     std::string containerSdkPath;
     bool isComponentMode;
+    bool enableFileOperation;
     std::string loaderJsonPath;
     std::string abilityPath;
     std::string abilityName;
@@ -83,6 +84,7 @@ public:
     std::string GetContainerSdkPath() const;
     bool CheckParamInvalidity(std::string param, bool isNum);
     bool IsComponentMode() const;
+    bool EnableFileOperation() const;
     std::string GetAbilityPath() const;
     std::string GetAbilityName() const;
     bool IsStaticCard() const;
@@ -95,10 +97,10 @@ public:
     int ParseArgs(int argc, char* argv[]);
     void GetCommandInfo(CommandInfo& info) const;
     void GetFoldInfo(FoldInfo& info) const;
-    std::string GetSid() const;
 #ifdef COMPONENT_TEST_ENABLED
     std::string GetComponentTestConfig() const;
 #endif // COMPONENT_TEST_ENABLED
+    std::string GetSid() const;
 
 private:
     CommandParser();
@@ -152,6 +154,7 @@ private:
     std::string regex4Str = "^(?:[a-zA-Z0-9-_./\\s]+)$";
     std::string regex4Sid = "^[a-fA-F0-9]+$";
     bool isComponentMode;
+    bool enableFileOperation;
     std::string abilityPath;
     std::string abilityName;
 #ifdef COMPONENT_TEST_ENABLED
@@ -196,6 +199,7 @@ private:
     bool IsConfigChangesValid();
     bool IsContainerSdkPathValid();
     bool IsComponentModeValid();
+    bool EnableFileOperationValid();
     bool IsAbilityPathValid();
     bool IsAbilityNameValid();
     bool IsStaticCardValid();
