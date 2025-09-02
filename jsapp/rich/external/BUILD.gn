@@ -13,11 +13,6 @@
 
 import("//build/ohos.gni")
 
-config("jsmock_util_config") {
-  visibility = [ ":*" ]
-  include_dirs = [ "." ]
-}
-
 ohos_shared_library("ide_extension") {
   if (is_linux || is_mac || is_mingw) {
     libs = []
@@ -25,20 +20,16 @@ ohos_shared_library("ide_extension") {
       "EventHandler.cpp",
       "EventQueue.cpp",
       "EventRunner.cpp",
-      "JsMockUtil.cpp",
       "StageContext.cpp",
     ]
     cflags = [ "-std=c++17" ]
     cflags_cc = cflags
-    public_configs = [ ":jsmock_util_config" ]
+
     include_dirs = [
       ".",
       "../../../util/",
     ]
-    deps = [
-      "../../../automock:gen_obj_src_js_mock_abc",
-      "../../../util:ide_util",
-    ]
+    deps = [ "../../../util:ide_util" ]
     external_deps = [ "zlib:shared_libz" ]
   }
   subsystem_name = "ide"
