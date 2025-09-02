@@ -55,6 +55,7 @@ ohos_source_set("jsapp_rich") {
     "rich/external:ide_extension",
     "//third_party/libwebsockets:websockets_static",
   ]
+
   external_deps = [
     "ace_engine:libace_compatible",
     "graphic_2d:libglfw_render_context",
