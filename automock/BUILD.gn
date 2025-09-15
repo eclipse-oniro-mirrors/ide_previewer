@@ -33,7 +33,7 @@ action("gen_node_modules") {
 }
 
 action("gen_snapshot_jsmock") {
-  deps = ["//interface/sdk-js:build_sdk_interop1"]
+  deps = ["//interface/sdk-js:build_dynamic_sdk_interop_inner"]
   script = "$mock_root/js_framework_build.sh"
   js_framework_mock_generate = "$mock_root/mock-generate"
   is_mac = "false"
