@@ -21,7 +21,11 @@ import { paramIndex } from './constants';
  * @returns OpenHarmony项目路径
  */
 export function getProjectDir(): string {
-  const apiInputPath = process.argv[paramIndex];
-  const apiDir = path.join('interface', 'sdk-js', 'api');
-  return apiInputPath.replace(`${path.sep}${apiDir}`, '');
+  try {
+    const apiInputPath = process.argv[paramIndex];
+    const apiDir = path.join('interface', 'sdk-js', 'api');
+    return apiInputPath.replace(`${path.sep}${apiDir}`, '');
+  } catch (error) {
+    throw new Error('OpenHarmony项目路径获取失败');
+  }
 }
