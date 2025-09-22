@@ -76,7 +76,7 @@ export function generateKeyValue(key: string, type: KeyValueTypes, parent?: KeyV
  * 获取开源接口的api路径
  */
 export function getOhosInterfacesDir(): string {
-  return path.join(getProjectDir(), 'ets1.1', 'sdk-js', 'api');
+  return path.join(getProjectDir(), 'dynamic', 'sdk-js', 'api');
 }
 
 /**
