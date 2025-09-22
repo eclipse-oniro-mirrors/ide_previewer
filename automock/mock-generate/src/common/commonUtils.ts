@@ -160,8 +160,7 @@ export function identifyDuplicateFile(value: string, arr: string[]): boolean {
   if (baseName.includes('.static.d.')) {
     return true;
   }
-  const extName = path.extname(value);
-  if (extName === '.ets' && arr.includes(value.replace('.ets', '.ts'))) {
+  if (value.endsWith(D_ETS) && arr.includes(value.replace(D_ETS, D_TS))) {
     return true;
   }
   return false;
@@ -181,6 +180,11 @@ export function filterDuplicateFile(value: string): boolean {
   return false;
 }
 
+// for example: @since 6.0.0(20)|20|6.0.0 static|staticonly
+const regForStatic = /\*\s*@since\s*.*(static|staticonly)\b/ig;
+// for example: @since 6.0.0(20)|20|6.0.0 dynamic|dynamiconly
+const regForDynamic = /\*\s*@since\s*.*(dynamic|dynamiconly)\b/ig;
+
 /**
  * Determine whether the content contains arkts1.2 by parsing the comments.
  * @param node
@@ -194,7 +198,8 @@ export function isArktsOne(node: Node, sourceFile: SourceFile): boolean {
   }
   for (let i = 0; i < jsDocNode.length; i++) {
     const element = jsDocNode[i];
-    if (sourceFile.text.substring(element.pos, element.end).includes('@arkts 1.2')) {
+    const text = sourceFile.text.substring(element.pos, element.end);
+    if (text.includes('@arkts 1.2') || text.match(regForStatic) && !text.match(regForDynamic)) {
       return false;
     }
   }
