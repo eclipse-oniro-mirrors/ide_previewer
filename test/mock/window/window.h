@@ -38,6 +38,7 @@ class Context;
 
 namespace OHOS {
 namespace Rosen {
+class RSUIContext;
 using ContentInfoCallback = std::function<void(std::string contentInfo)>;
 using SendRenderDataCallback = bool (*)(const void*, const size_t, const int32_t, const int32_t, const uint64_t);
 
@@ -64,7 +65,7 @@ class Window : public RefBase {
 public:
     static sptr<Window> Create(const std::string& windowName,
     sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context = nullptr,
-    WMError& errCode = DefaultCreateErrCode);
+    WMError& errCode = DefaultCreateErrCode, const std::shared_ptr<RSUIContext>& rsUIContext = nullptr);
 
     virtual WMError RegisterSystemBarEnableListener(const sptr<IWindowSystemBarEnableListener>& listener) = 0;
     virtual WMError UnRegisterSystemBarEnableListener(const sptr<IWindowSystemBarEnableListener>& listener) = 0;

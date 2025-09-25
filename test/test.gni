@@ -45,6 +45,7 @@ ability_runtime_include_path = [
 ]
 window_manager_path = "//foundation/window/window_manager"
 window_manager_include_path = [
+  "$window_manager_path",
   "$window_manager_path/previewer/include",
   "$window_manager_path/previewer/mock",
   "$window_manager_path/utils/include",
