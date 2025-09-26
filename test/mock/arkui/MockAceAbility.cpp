@@ -16,7 +16,7 @@
 #include "window.h"
 #include "MockGlobalResult.h"
 #define private public
-#include "ace_ability.h"
+#include "adapter/preview/entrance/ace_ability.h"
 
 namespace OHOS::Ace::Platform {
 AceAbility::AceAbility(const AceRunArgs& runArgs) : runArgs_(runArgs) {}

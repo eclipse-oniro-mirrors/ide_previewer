@@ -21,7 +21,7 @@
 #include <thread>
 
 #include "JsApp.h"
-#include "ace_ability.h"
+#include "adapter/preview/entrance/ace_ability.h"
 #include "ace_run_args.h"
 #include "device_config.h"
 #include "device_type.h"

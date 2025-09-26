@@ -34,7 +34,7 @@
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
 #include "CommandLineInterface.h"
-#include "ui_content_impl.h"
+#include "adapter/preview/entrance/ui_content_impl.h"
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"

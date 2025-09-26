@@ -55,7 +55,8 @@ private:
 };
 
 sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& option,
-    const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode)
+    const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode,
+    const std::shared_ptr<RSUIContext>& rsUIContext)
 {
     sptr<MockWindow> windowImpl = new(std::nothrow) MockWindow();
     return windowImpl;
