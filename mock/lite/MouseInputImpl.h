@@ -23,8 +23,8 @@
 class MouseInputImpl : public MouseInput, public OHOS::PointerInputDevice {
 public:
     static MouseInputImpl& GetInstance();
-    virtual bool Read(OHOS::DeviceData& data) override;
-    virtual void SetMouseStatus(int status) override;
+    bool Read(OHOS::DeviceData& data) override;
+    void SetMouseStatus(int status) override;
 
 private:
     MouseInputImpl();

@@ -23,7 +23,7 @@
 class MouseWheelImpl : public MouseWheel, public OHOS::RotateInputDevice {
 public:
     static MouseWheelImpl& GetInstance();
-    virtual bool Read(OHOS::DeviceData& data) override;
+    bool Read(OHOS::DeviceData& data) override;
 
 private:
     MouseWheelImpl();

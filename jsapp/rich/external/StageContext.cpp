@@ -633,6 +633,7 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
         fclose(outputFile);
         unzCloseCurrentFile(zipfile);
         if (!isUnzipSuccess) {
+            ELOG("Failed to unzip hsp file.\n");
             break;
         }
     }
