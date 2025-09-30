@@ -30,7 +30,7 @@ public:
     static VirtualMessageImpl& GetInstance();
     void RegistBundle(const char* bundleAppName, SuccessCallback success, FailCallback fail);
     void UnregistBundle(const char* bundleAppName);
-    virtual void SendVirtualMessage(MessageInfo info) override;
+    void SendVirtualMessage(MessageInfo info) override;
 
 private:
     VirtualMessageImpl() {}

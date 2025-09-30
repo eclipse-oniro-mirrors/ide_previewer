@@ -21,7 +21,7 @@
 class VirtualMessageImpl : public VirtualMessage {
 public:
     static VirtualMessageImpl& GetInstance();
-    virtual void SendVirtualMessage(MessageInfo info) override;
+    void SendVirtualMessage(MessageInfo info) override;
 };
 
 #endif // VIRTUALABILITYKIT_H
