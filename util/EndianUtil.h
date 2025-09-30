@@ -32,7 +32,12 @@ namespace EndianUtil {
         union {
             T data;
             unsigned char buffer[sizeof(T)];
-        } source, dest;
+        } source;
+
+        union {
+            T data;
+            unsigned char buffer[sizeof(T)];
+        } dest;
 
         source.data = data;
         for (std::size_t i = 0; i < sizeof(T); i++) {

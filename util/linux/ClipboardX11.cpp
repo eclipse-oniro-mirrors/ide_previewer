@@ -20,28 +20,34 @@
 
 void ClipboardX11::SetClipboardData(const std::string& str)
 {
-    display = XOpenDisplay(0);
+    display = XOpenDisplay(nullptr);
     int ret = DefaultScreen(display);
     window = XCreateSimpleWindow(display, RootWindow(display, ret), 0, 0, 1, 1, 0,
         BlackPixel(display, ret), WhitePixel(display, ret));
     targets_atom = XInternAtom(display, "TARGETS", 0);
     text_atom = XInternAtom(display, "TEXT", 0);
     UTF8 = XInternAtom(display, "UTF8_STRING", 1);
-    if (UTF8 == None) UTF8 = XA_STRING;
+    if (UTF8 == None) {
+        UTF8 = XA_STRING;
+    }
     Atom selection = XInternAtom(display, "CLIPBOARD", 0);
     SetCopyData(selection, str, strlen(str.c_str()));
 }
 
 const std::string ClipboardX11::GetClipboardData()
 {
-    display = XOpenDisplay(0);
+    display = XOpenDisplay(nullptr);
     int ret = DefaultScreen(display);
     window = XCreateSimpleWindow(display, RootWindow(display, ret), 0, 0, 1, 1, 0,
                                  BlackPixel(display, ret), WhitePixel(display, ret));
     std::string retStr; // NOLINT
     UTF8 = XInternAtom(display, "UTF8_STRING", True);
-    if (UTF8 != None) retStr = GetPasteType(UTF8);
-    if (retStr.empty()) retStr = GetPasteType(XA_STRING);
+    if (UTF8 != None) {
+        retStr = GetPasteType(UTF8);
+    }
+    if (retStr.empty()) {
+        retStr = GetPasteType(XA_STRING);
+    }
     return retStr;
 }
 
@@ -88,7 +94,8 @@ std::string ClipboardX11::GetPasteType(const Atom& atom)
 {
     XEvent event;
     int format;
-    unsigned long num, size;
+    unsigned long num;
+    unsigned long size;
     char* data = nullptr;
     std::string retStr;
     Atom target, CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0), XSEL_DATA = XInternAtom(display, "XSEL_DATA", 0);
