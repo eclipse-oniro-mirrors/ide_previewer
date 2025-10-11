@@ -87,7 +87,7 @@ export function getOhosInterfacesDir(): string {
  */
 export function getAbsolutePath(mockBuffer: MockBuffer, specifier: string): string {
   let absolutePath: string;
-  const importPath = specifier.replace(/['"]/g, '');
+  const importPath = specifier.replace(/['"]|\.d\.(ts|ets)/g, '');
   if (importPath.startsWith('./') || importPath.startsWith('../')) {
     absolutePath = path.resolve(path.dirname(mockBuffer.mockedFilePath), importPath) + '.js';
   } else if (importPath.startsWith('@ohos.') || importPath.startsWith('@system.')) {
