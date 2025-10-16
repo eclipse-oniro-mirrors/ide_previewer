@@ -96,7 +96,7 @@ previewer_executable("rich_previewer") {
 }
 
 previewer_executable("lite_previewer") {
-  part_name = "litePreviewer"
+  part_name = "previewer"
   output_name = "Simulator"
   src = [ "ThinPreviewer.cpp" ]
   includes = [
