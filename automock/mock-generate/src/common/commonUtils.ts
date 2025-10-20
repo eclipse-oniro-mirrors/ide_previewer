@@ -205,3 +205,23 @@ export function isArktsOne(node: Node, sourceFile: SourceFile): boolean {
   }
   return true;
 }
+
+// for example: overload xxx { xxx, xxx }、export overload from { xxx, xxx }、overload constructor { xxx }
+const regexForOverload = /(export|static)?[\s\r\n]*overload[\s\r\n]*([\w\$\&\@\#\*\%]+)[\s\r\n]*\{([\s\S]*?)\};?/g;
+
+// for example: remove arkts 1.2 content
+const regex = /\/\*\*\*\s*if arkts (1\.2|static)\s*\*\/[\s\S]*?\/\*\*\*\s*endif\s*\*\//g;
+
+// for example: constructor fromOptions(options: ReadableOptions);
+const regexForConstructor = /constructor\s/g;
+
+const OVERLOAD = 'overload';
+
+/**
+ * remove arkts 1.2 content
+ * @param content
+ * @returns
+ */
+export function removeArktsTwoContent(content: string): string {
+  return content.replace(regex, '').replace(regexForOverload, OVERLOAD).replace(regexForConstructor, '');
+}

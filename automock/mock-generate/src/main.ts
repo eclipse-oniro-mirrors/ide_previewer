@@ -23,7 +23,8 @@ import {
   generateKeyValue,
   isNeedMocked,
   identifyDuplicateFile,
-  filterDuplicateFile
+  filterDuplicateFile,
+  removeArktsTwoContent
 } from './common/commonUtils';
 import { getSourceFileAssembly } from './declaration-node/sourceFileElementsAssemply';
 import { generateEntry } from './generate/generateEntry';
@@ -43,9 +44,6 @@ import {
 } from './common/constants';
 import { ApiFolder, MockBuffer } from './types';
 import { generateContent, handleDeclares } from './generate/generateContent';
-
-// remove arkts 1.2 content
-export const regex = /\/\*\*\* if arkts 1\.2 \*\/[\s\S]*?\/\*\*\* endif \*\//g;
 
 /**
  * 获取所有接口文件路径
@@ -219,7 +217,7 @@ function etsFileToMock(): void {
 
   allFileList.forEach(file => {
     const code = fs.readFileSync(file);
-    let text = code.toString().replace(/struct /g, ' class ').replace(regex, '');
+    let text = removeArktsTwoContent(code.toString());
     if (file.endsWith(path.join('application', 'Context.d.ts'))) {
       text = text.replace('export default Context', '').replace('declare class', 'export default class');
     }
