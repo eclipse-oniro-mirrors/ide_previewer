@@ -223,5 +223,6 @@ const OVERLOAD = 'overload';
  * @returns
  */
 export function removeArktsTwoContent(content: string): string {
-  return content.replace(regex, '').replace(regexForOverload, OVERLOAD).replace(regexForConstructor, '');
+  return content.replace(/struct /g, ' class ').replace(regex, '')
+    .replace(regexForOverload, OVERLOAD).replace(regexForConstructor, '');
 }
