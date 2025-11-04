@@ -562,6 +562,10 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
     std::string jsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
     std::string flag = "loader.json";
     int idx = jsonPath.find_last_of(flag);
+    if (idx == std::string::npos) {
+        ELOG("loader.json not found in path.");
+        return;
+    }
     std::string dirPath = jsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string ctxPath = dirPath + "pkgContextInfo.json";
     std::string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
@@ -695,6 +699,10 @@ bool StageContext::GetLocalModuleInfo(HspInfo& hspInfo)
     // 读取hsp的module.json和resources.index
     std::string flag = "ResourceTable.txt";
     int idx = modulePath.find_last_of(flag);
+    if (idx == std::string::npos) {
+        ELOG("ResourceTable.txt not found in path.");
+        return false;
+    }
     std::string dirPath = modulePath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string moduleJsonPath = dirPath + "module.json";
     std::string resources = dirPath + "resources.index";
