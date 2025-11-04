@@ -215,6 +215,11 @@ void TouchPressCommand::RunAction()
 {
     int type = 0;
     EventParams param;
+    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
+        !args["x"].IsDouble() || !args["y"].IsDouble()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
+    }
     param.x = args["x"].AsDouble();
     param.y = args["y"].AsDouble();
     param.type = type;
@@ -243,6 +248,10 @@ MouseWheelCommand::MouseWheelCommand(CommandType commandType, const Json2::Value
 void MouseWheelCommand::RunAction()
 {
     if (CommandParser::GetInstance().GetScreenMode() == CommandParser::ScreenMode::STATIC) {
+        return;
+    }
+    if (args.IsNull() || !args.IsMember("rotate") || !args["rotate"].IsDouble()) {
+        ELOG("Invalid parameter of arguments!");
         return;
     }
     MouseWheelImpl::GetInstance().SetRotate(args["rotate"].AsDouble());
@@ -278,6 +287,11 @@ void TouchReleaseCommand::RunAction()
 {
     int type = 1;
     EventParams param;
+    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
+        !args["x"].IsDouble() || !args["y"].IsDouble()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
+    }
     param.x = args["x"].AsDouble();
     param.y = args["y"].AsDouble();
     param.type = type;
@@ -318,6 +332,11 @@ void TouchMoveCommand::RunAction()
 {
     int type = 2;
     EventParams param;
+    if (args.IsNull() || !args.IsMember("x") || !args.IsMember("y") ||
+        !args["x"].IsDouble() || !args["y"].IsDouble()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
+    }
     param.x = args["x"].AsDouble();
     param.y = args["y"].AsDouble();
     param.type = type;
@@ -360,6 +379,10 @@ void PowerCommand::RunGet()
 
 void PowerCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("Power") || !args["Power"].IsDouble()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     double val = args["Power"].AsDouble();
     SharedData<double>::SetData(SharedDataType::BATTERY_LEVEL, val);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -418,6 +441,10 @@ void BarometerCommand::RunGet()
 
 void BarometerCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("Barometer") || !args["Barometer"].IsUInt()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     uint32_t val = args["Barometer"].AsUInt();
     SharedData<uint32_t>::SetData(SharedDataType::PRESSURE_VALUE, val);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -461,6 +488,14 @@ bool ResolutionSwitchCommand::IsSetArgValid() const
 
 bool ResolutionSwitchCommand::IsIntValValid() const
 {
+    if (args.IsNull() || !args.IsMember("originWidth") || !args["originWidth"].IsInt() ||
+        !args.IsMember("originHeight") || !args["originHeight"].IsInt() ||
+        !args.IsMember("width") || !args["width"].IsInt() ||
+        !args.IsMember("height") || !args["height"].IsInt() ||
+        !args.IsMember("screenDensity") || !args["screenDensity"].IsInt()) {
+        ELOG("Invalid parameters of arguments!");
+        return false;
+    }
     if (args["originWidth"].AsInt() < minWidth || args["originWidth"].AsInt() > maxWidth ||
         args["originHeight"].AsInt() < minWidth || args["originHeight"].AsInt() > maxWidth ||
         args["width"].AsInt() < minWidth || args["width"].AsInt() > maxWidth ||
@@ -477,13 +512,21 @@ bool ResolutionSwitchCommand::IsIntValValid() const
 
 void ResolutionSwitchCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("originWidth") || !args["originWidth"].IsInt() ||
+        !args.IsMember("originHeight") || !args["originHeight"].IsInt() ||
+        !args.IsMember("width") || !args["width"].IsInt() ||
+        !args.IsMember("height") || !args["height"].IsInt() ||
+        !args.IsMember("screenDensity") || !args["screenDensity"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     int32_t originWidth = args["originWidth"].AsInt();
     int32_t originHeight = args["originHeight"].AsInt();
     int32_t width = args["width"].AsInt();
     int32_t height = args["height"].AsInt();
     int32_t screenDensity = args["screenDensity"].AsInt();
     std::string reason = "undefined";
-    if (args.IsMember("reason")) {
+    if (args.IsMember("reason") || args["reason"].IsString()) {
         reason = args["reason"].AsString();
     }
     ResolutionParam param(originWidth, originHeight, width, height);
@@ -512,6 +555,10 @@ bool OrientationCommand::IsSetArgValid() const
 
 void OrientationCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("Orientation") || !args["Orientation"].IsString()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     std::string commandOrientation = args["Orientation"].AsString();
     std::string currentOrientation = JsAppImpl::GetInstance().GetOrientation();
     if (commandOrientation != currentOrientation) {
@@ -542,6 +589,10 @@ bool ColorModeCommand::IsSetArgValid() const
 
 void ColorModeCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("ColorMode") || !args["ColorMode"].IsString()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     std::string commandColorMode = args["ColorMode"].AsString();
     std::string currentColorMode = JsAppImpl::GetInstance().GetColorMode();
     if (commandColorMode != currentColorMode) {
@@ -569,6 +620,10 @@ bool FontSelectCommand::IsSetArgValid() const
 void FontSelectCommand::RunSet()
 {
     SetCommandResult("result", JsonReader::CreateBool(true));
+    if (args.IsNull() || !args.IsMember("FontSelect") || !args["FontSelect"].IsBool()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     ILOG("FontSelect finished, currentSelect is: %s", args["FontSelect"].AsBool() ? "true" : "false");
 }
 
@@ -606,9 +661,13 @@ bool LoadDocumentCommand::IsSetArgValid() const
         return false;
     }
     Json2::Value previewParam = args["previewParam"];
-    if (!previewParam["width"].IsInt() || !previewParam["height"].IsInt() || !previewParam["dpi"].IsInt() ||
-        !previewParam["locale"].IsString() || !previewParam["colorMode"].IsString() ||
-        !previewParam["orientation"].IsString() || !previewParam["deviceType"].IsString()) {
+    if (!previewParam.IsMember("width") || !previewParam["width"].IsInt() ||
+        !previewParam.IsMember("height") || !previewParam["height"].IsInt() ||
+        !previewParam.IsMember("dpi") || !previewParam["dpi"].IsInt() ||
+        !previewParam.IsMember("locale") || !previewParam["locale"].IsString() ||
+        !previewParam.IsMember("colorMode") || !previewParam["colorMode"].IsString() ||
+        !previewParam.IsMember("orientation") || !previewParam["orientation"].IsString() ||
+        !previewParam.IsMember("deviceType") || !previewParam["deviceType"].IsString()) {
         return false;
     }
     if (!IsIntValValid(previewParam) || !IsStrValVailid(previewParam)) {
@@ -619,6 +678,12 @@ bool LoadDocumentCommand::IsSetArgValid() const
 
 bool LoadDocumentCommand::IsIntValValid(const Json2::Value& previewParam) const
 {
+    if (previewParam.IsNull() || !previewParam.IsMember("width") || !previewParam["width"].IsInt() ||
+        !previewParam.IsMember("height") || !previewParam["height"].IsInt() ||
+        !previewParam.IsMember("dpi") || !previewParam["dpi"].IsInt()) {
+        ELOG("Invalid parameters of arguments!");
+        return false;
+    }
     int width = previewParam["width"].AsInt();
     int height = previewParam["height"].AsInt();
     int dpi = previewParam["dpi"].AsInt();
@@ -662,6 +727,12 @@ void LoadDocumentCommand::RunSet()
 {
     VirtualScreenImpl::GetInstance().SetLoadDocFlag(VirtualScreen::LoadDocType::START);
     ILOG("LoadDocumentCommand begin.");
+    if (args.IsNull() || !args.IsMember("url") || !args["url"].IsString() ||
+        !args.IsMember("className") || !args["className"].IsString() ||
+        !args.IsMember("previewParam") || !args["previewParam"].IsObject()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     std::string pageUrl = args["url"].AsString();
     std::string className = args["className"].AsString();
     VirtualScreenImpl::GetInstance().InitFlushEmptyTime();
@@ -689,6 +760,10 @@ bool ReloadRuntimePageCommand::IsSetArgValid() const
 
 void ReloadRuntimePageCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("ReloadRuntimePage") || !args["ReloadRuntimePage"].IsString()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     std::string currentPage = args["ReloadRuntimePage"].AsString();
     JsAppImpl::GetInstance().ReloadRuntimePage(currentPage);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -765,6 +840,10 @@ void LanguageCommand::RunGet()
 
 void LanguageCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("Language") || !args["Language"].IsString()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     std::string language(args["Language"].AsString());
     SharedData<std::string>::SetData(SharedDataType::LANGUAGE, language);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -805,7 +884,8 @@ LocationCommand::LocationCommand(CommandType commandType, const Json2::Value& ar
 
 bool LocationCommand::IsSetArgValid() const
 {
-    if (args.IsNull() || !args.IsMember("latitude") || !args.IsMember("longitude")) {
+    if (args.IsNull() || !args.IsMember("latitude") || !args.IsMember("longitude") || !args["latitude"].IsString() ||
+        !args["longitude"].IsString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
@@ -842,6 +922,11 @@ void LocationCommand::RunGet()
 
 void LocationCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("latitude") || !args["latitude"].IsString() ||
+        !args.IsMember("longitude") || !args["longitude"].IsString()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
+    }
     std::string latitude(args["latitude"].AsString());
     std::string longitude(args["longitude"].AsString());
     SharedData<double>::SetData(SharedDataType::LONGITUDE, atof(longitude.data()));
@@ -861,6 +946,13 @@ DistributedCommunicationsCommand::DistributedCommunicationsCommand(CommandType c
 void DistributedCommunicationsCommand::RunAction()
 {
     MessageInfo info;
+    if (args.IsNull() || !args.IsMember("DeviceId") || !args.IsMember("bundleName") ||
+        !args.IsMember("abilityName") || !args.IsMember("message") ||
+        !args["DeviceId"].IsString() || !args["bundleName"].IsString() ||
+        !args["abilityName"].IsString() || !args["message"].IsString()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
+    }
     info.deviceID = args["DeviceId"].AsString();
     info.bundleName = args["bundleName"].AsString();
     info.abilityName = args["abilityName"].AsString();
@@ -874,7 +966,8 @@ void DistributedCommunicationsCommand::RunAction()
 bool DistributedCommunicationsCommand::IsActionArgValid() const
 {
     if (args.IsNull() || !args.IsMember("DeviceId") || !args.IsMember("bundleName") || !args.IsMember("abilityName") ||
-        !args.IsMember("message")) {
+        !args.IsMember("message") || !args["DeviceId"].IsString() || !args["bundleName"].IsString() ||
+        !args["abilityName"].IsString() || !args["message"].IsString()) {
         ELOG("Invalid number of arguments!");
         return false;
     }
@@ -910,6 +1003,10 @@ void KeepScreenOnStateCommand::RunGet()
 
 void KeepScreenOnStateCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("KeepScreenOnState") || !args["KeepScreenOnState"].IsBool()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<bool>::SetData(SharedDataType::KEEP_SCREEN_ON, args["KeepScreenOnState"].AsBool());
     SetCommandResult("result", JsonReader::CreateBool(true));
     ILOG("Set keepScreenOnState run finished, the value is: %s",
@@ -977,6 +1074,10 @@ void BrightnessModeCommand::RunGet()
 
 void BrightnessModeCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("BrightnessMode") || !args["BrightnessMode"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<uint8_t>::SetData(SharedDataType::BRIGHTNESS_MODE,
                                  static_cast<uint8_t>(args["BrightnessMode"].AsInt()));
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -1016,6 +1117,10 @@ void ChargeModeCommand::RunGet()
 
 void ChargeModeCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("ChargeMode") || !args["ChargeMode"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<uint8_t>::SetData(SharedDataType::BATTERY_STATUS,
                                  static_cast<uint8_t>(args["ChargeMode"].AsInt()));
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -1055,6 +1160,10 @@ void BrightnessCommand::RunGet()
 
 void BrightnessCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("Brightness") || !args["Brightness"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<uint8_t>::SetData(SharedDataType::BRIGHTNESS_VALUE,
                                  static_cast<uint8_t>(args["Brightness"].AsInt()));
     Json2::Value result = JsonReader::CreateBool(true);
@@ -1095,6 +1204,10 @@ void HeartRateCommand::RunGet()
 
 void HeartRateCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("HeartRate") || !args["HeartRate"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<uint8_t>::SetData(SharedDataType::HEARTBEAT_VALUE,
                                  static_cast<uint8_t>(args["HeartRate"].AsInt()));
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -1138,6 +1251,10 @@ void StepCountCommand::RunGet()
 
 void StepCountCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("StepCount") || !args["StepCount"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     SharedData<uint32_t>::SetData(SharedDataType::SUMSTEP_VALUE,
                                   static_cast<uint32_t>(args["StepCount"].AsInt()));
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -1150,7 +1267,7 @@ bool StepCountCommand::IsSetArgValid() const
         ELOG("Invalid number of arguments!");
         return false;
     }
-    if (!args["StepCount"].IsInt()) {
+    if (!args["StepCount"].IsUInt()) {
         ELOG("StepCount is not int");
         return false;
     }
@@ -1287,6 +1404,10 @@ bool DropFrameCommand::IsSetArgValid() const
 void DropFrameCommand::RunSet()
 {
     ILOG("Set DropFrame frequency start.");
+    if (args.IsNull() || !args.IsMember("frequency") || !args["frequency"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     int frequency = args["frequency"].AsInt();
     VirtualScreenImpl::GetInstance().SetDropFrameFrequency(frequency);
     SetCommandResult("result", JsonReader::CreateBool(true));
@@ -1318,7 +1439,7 @@ bool KeyPressCommand::IsImeArgsValid() const
 
 bool KeyPressCommand::IsKeyArgsValid() const
 {
-    if (!args.IsMember("keyCode") || !args["keyCode"].IsInt() || !args["keyAction"].IsInt() ||
+    if (args.IsNull() || !args.IsMember("keyCode") || !args["keyCode"].IsInt() ||
         !args.IsMember("keyAction") || !args["keyAction"].IsInt() ||
         !args.IsMember("pressedCodes") || !args["pressedCodes"].IsArray() ||
         args["pressedCodes"].GetArraySize() < 1 || (args.IsMember("keyString") && !args["keyString"].IsString())) {
@@ -1363,14 +1484,28 @@ void KeyPressCommand::RunAction()
     if (CommandParser::GetInstance().GetScreenMode() == CommandParser::ScreenMode::STATIC) {
         return;
     }
+    if (args.IsNull() || !args.IsMember("isInputMethod") || !args["isInputMethod"].IsBool()) {
+        ELOG("Invalid parameter of arguments!");
+        return;
+    }
     bool isInputMethod = args["isInputMethod"].AsBool();
     if (isInputMethod) {
         VirtualScreen::inputMethodCountPerMinute++;
+        if (!args.IsMember("codePoint") || !args["codePoint"].IsInt()) {
+            ELOG("Invalid parameter of arguments!");
+            return;
+        }
         unsigned int codePoint = args["codePoint"].AsInt();
         KeyInputImpl::GetInstance().SetCodePoint(codePoint);
         KeyInputImpl::GetInstance().DispatchOsInputMethodEvent();
     } else {
         VirtualScreen::inputKeyCountPerMinute++;
+        if (!args.IsMember("keyCode") || !args["keyCode"].IsInt() ||
+            !args.IsMember("keyAction") || !args["keyAction"].IsInt()||
+            !args.IsMember("pressedCodes") || !args["pressedCodes"].IsArray()) {
+            ELOG("Invalid parameters of arguments!");
+            return;
+        }
         int32_t keyCode = args["keyCode"].AsInt();
         int32_t keyAction = args["keyAction"].AsInt();
         Json2::Value pressedCodes = args["pressedCodes"];
@@ -1416,6 +1551,15 @@ bool PointEventCommand::IsArgsExist() const
 
 bool PointEventCommand::IsArgsValid() const
 {
+    if (args.IsNull() || !args.IsMember("x") || !args["x"].IsInt() ||
+        !args.IsMember("y") || !args["y"].IsInt() ||
+        !args.IsMember("button") || !args["button"].IsInt() ||
+        !args.IsMember("action") || !args["action"].IsInt() ||
+        !args.IsMember("sourceType") || !args["sourceType"].IsInt() ||
+        !args.IsMember("sourceTool") || !args["sourceTool"].IsInt()) {
+        ELOG("Invalid parameters of arguments!");
+        return false;
+    }
     int32_t pointX = args["x"].AsInt();
     int32_t pointY = args["y"].AsInt();
     int32_t button = args["button"].AsInt();
@@ -1453,11 +1597,11 @@ void PointEventCommand::RunAction()
 {
     int type = 9;
     EventParams param;
-    if (args.IsMember("pressedButtons") && args["pressedButtons"].IsArray()) {
+    if (!args.IsNull() && args.IsMember("pressedButtons") && args["pressedButtons"].IsArray()) {
         Json2::Value pressedCodes = args["pressedButtons"];
         for (unsigned int i = 0; i < pressedCodes.GetArraySize(); i++) {
             Json2::Value val = pressedCodes.GetArrayItem(i);
-            if (!val.IsInt() || val.AsInt() < -1) {
+            if (val.IsNull() || !val.IsInt() || val.AsInt() < -1) {
                 continue;
             }
             param.pressedBtnsVec.insert(val.AsInt());
@@ -1466,7 +1610,18 @@ void PointEventCommand::RunAction()
     std::vector<double> axisVec; // 13 is array size
     Json2::Value axisCodes = args["axisValues"];
     for (unsigned int i = 0; i < axisCodes.GetArraySize(); i++) {
-        param.axisVec.push_back(axisCodes.GetArrayItem(i).AsDouble());
+        if (axisCodes.GetArrayItem(i).IsDouble()) {
+            param.axisVec.push_back(axisCodes.GetArrayItem(i).AsDouble());
+        }
+    }
+    if (!args.IsMember("x") || !args["x"].IsDouble() ||
+        !args.IsMember("y") || !args["y"].IsDouble()||
+        !args.IsMember("button") || !args["button"].IsInt() ||
+        !args.IsMember("action") || !args["action"].IsInt() ||
+        !args.IsMember("sourceType") || !args["sourceType"].IsInt()||
+        !args.IsMember("sourceTool") || !args["sourceTool"].IsInt()) {
+        ELOG("Invalid parameters of arguments!");
+        return;
     }
     param.x = args["x"].AsDouble();
     param.y = args["y"].AsDouble();
@@ -1511,6 +1666,12 @@ bool FoldStatusCommand::IsSetArgValid() const
 
 void FoldStatusCommand::RunSet()
 {
+    if (args.IsNull() || !args.IsMember("FoldStatus") || !args["FoldStatus"].IsString() ||
+        !args.IsMember("width") || !args["width"].IsInt() ||
+        !args.IsMember("height") || !args["height"].IsInt()) {
+        ELOG("Invalid number of arguments!");
+        return;
+    }
     std::string commandStatus = args["FoldStatus"].AsString();
     int32_t width = args["width"].AsInt();
     int32_t height = args["height"].AsInt();
@@ -1573,6 +1734,10 @@ bool AvoidAreaCommand::IsObjectValid(const Json2::Value& val) const
 
 void AvoidAreaCommand::RunSet()
 {
+    if (!IsSetArgValid()) {
+        ELOG("Invalid values of arguments!");
+        return;
+    }
     Json2::Value topRectObj = args.GetValue("topRect");
     AvoidRect topRect = AvoidRect(topRectObj["posX"].AsInt(), topRectObj["posY"].AsInt(),
         topRectObj["width"].AsUInt(), topRectObj["height"].AsUInt());

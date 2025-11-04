@@ -88,7 +88,9 @@ void StageContext::GetModulePathMapFromLoaderJson()
     }
     Json2::Value jsonObj = rootJson["modulePathMap"];
     for (const auto& key : jsonObj.GetMemberNames()) {
-        modulePathMap[key] = jsonObj[key].AsString();
+        if (jsonObj[key].IsString()) {
+            modulePathMap[key] = jsonObj[key].AsString();
+        }
     }
     Json2::Value jsonObjOhm = rootJson["harNameOhmMap"];
     if (rootJson.IsMember("hspNameOhmMap")) {
@@ -98,15 +100,21 @@ void StageContext::GetModulePathMapFromLoaderJson()
         }
     }
     for (const auto& key : jsonObjOhm.GetMemberNames()) {
-        hspNameOhmMap[key] = jsonObjOhm[key].AsString();
+        if (jsonObjOhm[key].IsString()) {
+            hspNameOhmMap[key] = jsonObjOhm[key].AsString();
+        }
     }
-    projectRootPath = rootJson["projectRootPath"].AsString();
-    if (rootJson.IsMember("buildConfigPath")) {
+    if (rootJson["projectRootPath"].IsString()) {
+        projectRootPath = rootJson["projectRootPath"].AsString();
+    }
+    if (rootJson.IsMember("buildConfigPath") && rootJson["buildConfigPath"].IsString()) {
         buildConfigPath = rootJson["buildConfigPath"].AsString();
     }
     Json2::Value jsonObjResources = rootJson["hspResourcesMap"];
     for (const auto& key : jsonObjResources.GetMemberNames()) {
-        hspResourcesMap[key] = jsonObjResources[key].AsString();
+        if (jsonObjResources[key].IsString()) {
+            hspResourcesMap[key] = jsonObjResources[key].AsString();
+        }
     }
 }
 
@@ -122,7 +130,7 @@ std::string StageContext::GetHspAceModuleBuild(const std::string& hspConfigPath)
         ELOG("Get hsp buildConfig.json content failed.");
         return "";
     }
-    if (!rootJson.IsMember("aceModuleBuild")) {
+    if (!rootJson.IsMember("aceModuleBuild") || !rootJson["aceModuleBuild"].IsString()) {
         ELOG("Don't find aceModuleBuild node in hsp buildConfig.json.");
         return "";
     }
@@ -562,6 +570,10 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
     std::string jsonPath = CommandParser::GetInstance().GetLoaderJsonPath();
     std::string flag = "loader.json";
     int idx = jsonPath.find_last_of(flag);
+    if (idx == std::string::npos) {
+        ELOG("loader.json not found in path.");
+        return;
+    }
     std::string dirPath = jsonPath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string ctxPath = dirPath + "pkgContextInfo.json";
     std::string ctxInfoJsonStr = JsonReader::ReadFile(ctxPath);
@@ -576,7 +588,7 @@ void StageContext::SetPkgContextInfo(std::map<std::string, std::string>& pkgCont
         return;
     }
     for (const auto& element : rootJson.GetMemberNames()) {
-        if (!rootJson[element]["moduleName"].IsString()) {
+        if (!rootJson[element].IsMember("moduleName") || !rootJson[element]["moduleName"].IsString()) {
             return;
         }
         packageNameMap[element] = rootJson[element]["moduleName"].AsString();
@@ -695,6 +707,10 @@ bool StageContext::GetLocalModuleInfo(HspInfo& hspInfo)
     // 读取hsp的module.json和resources.index
     std::string flag = "ResourceTable.txt";
     int idx = modulePath.find_last_of(flag);
+    if (idx == std::string::npos) {
+        ELOG("ResourceTable.txt not found in path.");
+        return false;
+    }
     std::string dirPath = modulePath.substr(0, idx - flag.size() + 1); // 1 is for \ or /
     std::string moduleJsonPath = dirPath + "module.json";
     std::string resources = dirPath + "resources.index";

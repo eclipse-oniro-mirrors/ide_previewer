@@ -72,6 +72,8 @@ void SystemCapability::ReadCapability()
         if (!cap["register-on-startup"].IsBool()) {
             ELOG("Invalid systemCapability json object");
         }
-        capabilities[cap["name"].AsString()] = cap["register"].AsBool();
+        if (cap.IsMember("register") && cap["register"].IsBool() && cap["name"].IsString()) {
+            capabilities[cap["name"].AsString()] = cap["register"].AsBool();
+        }
     }
 }

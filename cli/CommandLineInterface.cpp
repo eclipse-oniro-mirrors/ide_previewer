@@ -160,7 +160,7 @@ bool CommandLineInterface::ProcessCommandValidate(bool parsingSuccessful,
         return false;
     }
 
-    if (!regex_match(jsonData["version"].AsString(),
+    if (!jsonData["version"].IsString() || !regex_match(jsonData["version"].AsString(),
         std::regex("(([0-9]|([1-9]([0-9]*))).){2}([0-9]|([1-9]([0-9]*)))"))) {
         ELOG("Invalid command version!");
         return false;
