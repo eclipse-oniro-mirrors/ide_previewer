@@ -785,6 +785,16 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
         SetLanguage(args, SharedData<std::string>::GetData(SharedDataType::LAN));
         SetRegion(args, SharedData<std::string>::GetData(SharedDataType::REGION));
     } else {
+        if (!paramObj.IsMember("width") || !paramObj["width"].IsInt() ||
+            !paramObj.IsMember("height") || !paramObj["height"].IsInt() ||
+            !paramObj.IsMember("colorMode") || !paramObj["colorMode"].IsString() ||
+            !paramObj.IsMember("orientation") || !paramObj["orientation"].IsString() ||
+            !paramObj.IsMember("deviceType") || !paramObj["deviceType"].IsString() ||
+            !paramObj.IsMember("dpi") || !paramObj["dpi"].IsDouble() ||
+            !paramObj.IsMember("locale") || !paramObj["locale"].IsString()) {
+            ELOG("Invalid parameters of arguments!");
+            return;
+        }
         SetDeviceWidth(args, paramObj["width"].AsInt());
         SetDeviceHeight(args, paramObj["height"].AsInt());
         AssignValueForWidthAndHeight(args.deviceWidth, args.deviceHeight,
@@ -811,8 +821,11 @@ void JsAppImpl::SetSystemParams(OHOS::Ace::Platform::SystemParams& params, const
     params.orientation = aceRunArgs.deviceConfig.orientation;
     params.deviceType = aceRunArgs.deviceConfig.deviceType;
     params.density = aceRunArgs.deviceConfig.density;
-    params.isRound = (paramObj.IsNull()) ? (commandInfo.screenShape == "circle") :
-        paramObj["roundScreen"].AsBool();
+    if (paramObj.IsNull() || !paramObj.IsMember("roundScreen")|| !paramObj["roundScreen"].IsBool()) {
+        params.isRound = commandInfo.screenShape == "circle";
+    } else {
+        params.isRound = paramObj["roundScreen"].AsBool();
+    }
 }
 
 void JsAppImpl::LoadDocument(const std::string filePath,
