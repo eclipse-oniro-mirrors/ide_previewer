@@ -43,6 +43,7 @@ void CommandLineInterface::InitPipe(const std::string name)
     socket = std::make_unique<LocalSocket>();
     if (socket == nullptr) {
         FLOG("CommandLineInterface::Connect socket memory allocation failed!");
+        return;
     }
 
     if (!socket->ConnectToServer(socket->GetCommandPipeName(name), LocalSocket::READ_WRITE)) {
