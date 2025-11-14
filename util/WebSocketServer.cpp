@@ -157,6 +157,7 @@ void WebSocketServer::Run()
     });
     if (serverThread == nullptr) {
         ELOG("WebSocketServer::Start serverThread memory allocation failed");
+        return;
     }
     serverThread->detach();
 }

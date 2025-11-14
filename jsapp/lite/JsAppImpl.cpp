@@ -131,6 +131,7 @@ void JsAppImpl::Start()
     });
     if (jsThread == nullptr) {
         ELOG("JsApp::Start jsThread memory allocation failed");
+        return;
     }
     jsThread->detach();
 }

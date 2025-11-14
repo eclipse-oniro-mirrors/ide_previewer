@@ -30,6 +30,7 @@ void TraceTool::InitPipe()
     socket = std::make_unique<LocalSocket>();
     if (socket == nullptr) {
         FLOG("TraceTool::Connect socket memory allocation failed!");
+        return;
     }
     std::string name = GetTracePipeName();
     if (!socket->ConnectToServer(socket->GetTracePipeName(name), LocalSocket::READ_WRITE)) {

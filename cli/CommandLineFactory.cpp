@@ -94,6 +94,7 @@ std::unique_ptr<CommandLine> CommandLineFactory::CreateCommandLine(std::string c
     std::unique_ptr<CommandLine> cmdLine = typeMap[command](type, val, socket);
     if (cmdLine == nullptr) {
         ELOG("CommandLineFactory::CreateCommandLine:cmdLine is null");
+        return nullptr;
     }
     cmdLine->SetCommandName(command);
     return cmdLine;
