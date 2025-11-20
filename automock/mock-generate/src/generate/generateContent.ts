@@ -36,7 +36,7 @@ import {
   OverloadedFunctionType,
   CallbackParamMockData
 } from '../types';
-import { generateKeyValue } from '../common/commonUtils';
+import { generateKeyValue, isMockedDeclarations } from '../common/commonUtils';
 
 /**
  * 生成文件内容
@@ -1305,10 +1305,13 @@ function handleDependOnGlobals(
     return;
   }
   keyValue.dependOnGlobals.forEach(dependKeyValue => {
-    if (dependKeyValue.isGlobalDeclare) {
+    const isMockedDeclarationsHas = isMockedDeclarations(DECLARES[dependKeyValue.key], mockedDeclarations);
+    if (dependKeyValue.isGlobalDeclare && !isMockedDeclarationsHas) {
       handleDeclare(DECLARES[dependKeyValue.key], declarations, mockedDeclarations);
     } else if (dependKeyValue.parent.isGlobalDeclare) {
       handleDeclare(DECLARES[dependKeyValue.parent.key], declarations, mockedDeclarations, dependKeyValue);
+    } else if (isMockedDeclarationsHas) {
+      return;
     } else {
       throw new Error(`${keyValue.key}非全局节点。`);
     }

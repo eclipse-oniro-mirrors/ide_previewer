@@ -16,7 +16,7 @@
 import path from 'path';
 import fs from 'fs';
 import { Node, SourceFile, JSDoc } from 'typescript';
-import { KeyValue, Members, MockBuffer } from '../types';
+import { Declare, KeyValue, Members, MockBuffer } from '../types';
 import { D_ETS, D_TS, KeyValueTypes, NAPI_DIR_PATH, needShieldingDirOrFile } from './constants';
 import { getProjectDir } from './systemUtils';
 
@@ -225,4 +225,32 @@ const OVERLOAD = 'overload';
 export function removeArktsTwoContent(content: string): string {
   return content.replace(/struct /g, ' class ').replace(regex, '')
     .replace(regexForOverload, OVERLOAD).replace(regexForConstructor, '');
+}
+
+/**
+ * Determine whether to continue the mock
+ * @param declaration
+ * @param mockedDeclarations
+ * @returns
+ */
+export function isMockedDeclarations(declaration: Declare, mockedDeclarations: Set<string>): boolean {
+  const keyValue = declaration?.keyValue;
+  const key = keyValue?.key;
+  let isMocked = false;
+  if (!mockedDeclarations.has(key)) {
+    return isMocked;
+  }
+  switch (keyValue?.type) {
+    case KeyValueTypes.CLASS:
+    case KeyValueTypes.MODULE:
+    case KeyValueTypes.INTERFACE: {
+      isMocked = false;
+      break;
+    }
+    default: {
+      isMocked = true;
+      break;
+    }
+  }
+  return isMocked;
 }
