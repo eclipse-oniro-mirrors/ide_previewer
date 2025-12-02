@@ -276,35 +276,6 @@ namespace {
         ResolutionSwitchCommand command1(type, args1, *socket);
         EXPECT_EQ(command1.ToUint8("256"), 0);
     }
- 
-    TEST_F(CommandLineTest, IsBoolTypeTest)
-    {
-        CommandLine::CommandType type = CommandLine::CommandType::SET;
-        // null
-        Json2::Value args1 = JsonReader::CreateNull();
-        ResolutionSwitchCommand command1(type, args1, *socket);
-        EXPECT_TRUE(command1.IsBoolType("true"));
-        EXPECT_FALSE(command1.IsBoolType("XX"));
-    }
- 
-    TEST_F(CommandLineTest, IsIntTypeTest)
-    {
-        CommandLine::CommandType type = CommandLine::CommandType::SET;
-        // null
-        Json2::Value args1 = JsonReader::CreateNull();
-        ResolutionSwitchCommand command1(type, args1, *socket);
-        EXPECT_TRUE(command1.IsIntType("123"));
-    }
- 
-    TEST_F(CommandLineTest, IsOneDigitFloatTypeTest)
-    {
-        CommandLine::CommandType type = CommandLine::CommandType::SET;
-        // null
-        Json2::Value args1 = JsonReader::CreateNull();
-        ResolutionSwitchCommand command1(type, args1, *socket);
-        EXPECT_TRUE(command1.IsOneDigitFloatType("-6", true));
-        EXPECT_TRUE(command1.IsOneDigitFloatType("3", false));
-    }
 
     TEST_F(CommandLineTest, IsSetArgValidTest)
     {

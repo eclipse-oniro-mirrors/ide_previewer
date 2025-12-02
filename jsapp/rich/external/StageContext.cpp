@@ -395,25 +395,25 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
 {
     unzFile zipfile = unzOpen2(hspFilePath.c_str(), nullptr);
     if (zipfile == NULL) {
-        ELOG("Failed to open the zip file: %s\n", hspFilePath.c_str());
+        ELOG("Failed to open the zip file: %s", hspFilePath.c_str());
         return nullptr;
     }
 
     if (unzLocateFile(zipfile, fileName.c_str(), 1) != UNZ_OK) {
-        ELOG("Failed to locate the file: %s\n", fileName.c_str());
+        ELOG("Failed to locate the file: %s", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
 
     unz_file_info file_info;
     if (unzGetCurrentFileInfo(zipfile, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
-        ELOG("Failed to get the file info: %s\n", fileName.c_str());
+        ELOG("Failed to get the file info: %s", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
 
     if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
-        ELOG("Failed to open the file: %s\n", fileName.c_str());
+        ELOG("Failed to open the file: %s", fileName.c_str());
         unzClose(zipfile);
         return nullptr;
     }
@@ -600,25 +600,25 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
 {
     unzFile zipfile = unzOpen(hspFilePath.c_str());
     if (zipfile == NULL) {
-        ELOG("Error: Unable to open zip file %s\n", hspFilePath.c_str());
+        ELOG("Error: Unable to open zip file %s", hspFilePath.c_str());
         return false;
     }
 
     bool isUnzipSuccess = true;
     for (const auto& fileName : fileNames) {
         if (unzLocateFile(zipfile, fileName.c_str(), 1) != UNZ_OK) {
-            ELOG("Failed to locate the file: %s\n", fileName.c_str());
+            ELOG("Failed to locate the file: %s", fileName.c_str());
             unzClose(zipfile);
             return false;
         }
         unz_file_info file_info;
         if (unzGetCurrentFileInfo(zipfile, &file_info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
-            ELOG("Failed to get the file info: %s\n", fileName.c_str());
+            ELOG("Failed to get the file info: %s", fileName.c_str());
             unzClose(zipfile);
             return false;
         }
         if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
-            ELOG("Failed to open the file: %s\n", fileName.c_str());
+            ELOG("Failed to open the file: %s", fileName.c_str());
             unzClose(zipfile);
             return false;
         }
@@ -626,7 +626,7 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
         std::string filePath = writePath + FileSystem::GetSeparator() + fileName;
         FILE *outputFile = fopen(filePath.c_str(), "wb");
         if (outputFile == NULL) {
-            ELOG("Error: Unable to open output file %s\n", fileName.c_str());
+            ELOG("Error: Unable to open output file %s", fileName.c_str());
             unzCloseCurrentFile(zipfile);
             break;
         }
@@ -636,7 +636,7 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
         do {
             bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer));
             if (bytesRead < 0 || bytesRead != fwrite(buffer, 1, bytesRead, outputFile)) {
-                ELOG("Failed to unzip all elements to the output file.\n");
+                ELOG("Failed to unzip all elements to the output file.");
                 isUnzipSuccess = false;
                 break;
             }
@@ -645,7 +645,7 @@ bool StageContext::UnzipHspFile(const std::string& hspFilePath, const std::strin
         fclose(outputFile);
         unzCloseCurrentFile(zipfile);
         if (!isUnzipSuccess) {
-            ELOG("Failed to unzip hsp file.\n");
+            ELOG("Failed to unzip hsp file.");
             break;
         }
     }
