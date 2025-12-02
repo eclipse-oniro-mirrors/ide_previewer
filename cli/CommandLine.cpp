@@ -136,32 +136,6 @@ void CommandLine::Run()
     }
 }
 
-bool CommandLine::IsBoolType(std::string arg) const
-{
-    std::regex tofrx("^(true)|(false)$");
-    if (regex_match(arg, tofrx)) {
-        return true;
-    }
-    return false;
-}
-
-bool CommandLine::IsIntType(std::string arg) const
-{
-    std::regex isInt("^\\d+$");
-    return regex_match(arg, isInt);
-}
-
-bool CommandLine::IsOneDigitFloatType(std::string arg, bool allowNegativeNumber) const
-{
-    if (allowNegativeNumber) {
-        std::regex isFloat("^-?\\d+(\\.\\d+)?$");
-        return regex_match(arg, isFloat);
-    } else {
-        std::regex isFloat("^\\d(\\.\\d+)?$");
-        return regex_match(arg, isFloat);
-    }
-}
-
 void TouchAndMouseCommand::SetEventParams(EventParams& params)
 {
     if (CommandParser::GetInstance().GetScreenMode() == CommandParser::ScreenMode::STATIC) {
