@@ -998,6 +998,9 @@ function handleModuleReference(
     case SyntaxKind.QualifiedName: {
       return handleQualifiedName(node as ts.QualifiedName, mockBuffer, members, parent, type);
     }
+    case SyntaxKind.Identifier: {
+      return handleEntityName(node, mockBuffer, members, parent, type);
+    }
     default: {
       throw new Error('未知的ModuleReference类型');
     }
