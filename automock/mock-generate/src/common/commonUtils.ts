@@ -244,7 +244,6 @@ export function isMockedDeclarations(declaration: Declare, mockedDeclarations: S
     case KeyValueTypes.CLASS:
     case KeyValueTypes.MODULE:
     case KeyValueTypes.INTERFACE: {
-      isMocked = false;
       break;
     }
     default: {
