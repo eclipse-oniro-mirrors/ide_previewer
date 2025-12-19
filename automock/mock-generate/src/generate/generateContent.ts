@@ -1080,7 +1080,7 @@ function handleReferenceKeyValue(
   if (value !== 'this') {
     switch (keyValueInfo.keyValue.type) {
       case KeyValueTypes.CLASS: {
-        value = value.startsWith('global.') ? value : `new (${value})()`;
+        value = value.includes('global.uiMaterial') ? value : `new (${value})()`;
         break;
       }
       case KeyValueTypes.ENUM: {
