@@ -223,18 +223,16 @@ function handleClassKeyValue(
       memberKeyValue.value = undefined;
       elementName = memberKeyValue.key;
     }
-    const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property)
-      .replace(/^function\*?/, '');
-
+    const value = handleKeyValue(memberKey, memberKeyValue, mockBuffer, kvPath, rootKeyValue, memberKeyValue.property);
     if (memberKeyValue.type === KeyValueTypes.FUNCTION) {
       if (memberKeyValue.members.IterableIterator) {
-        memberLines.push(`*${elementName}${value}`);
+        memberLines.push(`*${elementName}${value.replace(/^function\*?/, '')}`);
       } else {
-        memberLines.push(`${memberKeyValue.isStatic ? 'static ' : ''}${elementName}${value}`);
+        memberLines.push(`${memberKeyValue.isStatic ? 'static ' : ''}${elementName}${value.replace(/^function\*?/, '')}`);
       }
     } else {
       if (memberKeyValue.isStatic) {
-        memberLines.push(`static get ${elementName}(){return ${value}}`);
+        memberLines.push(`static get ${elementName}(){return ${value.replace(/^function\*?/, '')}}`);
       } else {
         dynamicProperties.push(`this.${elementName} = ${value}`);
       }
