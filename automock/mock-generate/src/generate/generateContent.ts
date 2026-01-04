@@ -25,7 +25,8 @@ import {
   TSTypes,
   specialOverloadedFunctionArr,
   callbackError, ClassNotInEts,
-  undefinedTypes
+  undefinedTypes,
+  windowDeclaration
 } from '../common/constants';
 import {
   Declare,
@@ -57,7 +58,9 @@ export function generateContent(mockBuffer: MockBuffer, members: Members): strin
     if (keyValue.type === KeyValueTypes.IMPORT) {
       return;
     }
-    if (keyValue.isGlobalDeclare) {
+    if (keyValue.isGlobalDeclare && windowDeclaration.includes(memberKey)) {
+      membersContent.push(`export const ${memberKey}=global.${memberKey}_temp;`);
+    } else if (keyValue.isGlobalDeclare) {
       membersContent.push(`export const ${memberKey}=global.${memberKey};`);
     } else {
       const memberBody = handleKeyValue(memberKey, keyValue, mockBuffer, [], keyValue, keyValue.property);
@@ -1206,12 +1209,20 @@ export function handleDeclares(outMockJsFileDir: string): void {
     const keyValue = DECLARES[key].keyValue;
     switch (keyValue.type) {
       case KeyValueTypes.CLASS: {
-        declarations.push(`global.${key}_temp = class {constructor(){this.isAutoMock=true}};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        if (windowDeclaration.includes(key)) {
+          declarations.push(`global.${key}_temp = class {constructor(){this.isAutoMock=true}};`);
+        } else {
+          declarations.push(`global.${key}_temp = class {constructor(){this.isAutoMock=true}};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        }
         break;
       }
       case KeyValueTypes.INTERFACE:
       case KeyValueTypes.MODULE: {
-        declarations.push(`global.${key}_temp = {isAutoMock: true};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        if (windowDeclaration.includes(key)) {
+          declarations.push(`global.${key}_temp = {isAutoMock: true};`);
+        } else {
+          declarations.push(`global.${key}_temp = {isAutoMock: true};\nglobal.${key} = global.${key} || global.${key}_temp;`);
+        }
       }
     }
   });
