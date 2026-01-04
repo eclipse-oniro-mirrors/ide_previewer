@@ -176,3 +176,6 @@ export const undefinedTypes = {
   'VpnConnectState': 'undefined',
   'Intl': 'undefined'
 };
+
+// Native methods and declarations of Window
+export const windowDeclaration = ['document', 'print', 'prompt'];
