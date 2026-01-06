@@ -705,7 +705,7 @@ function findInLibFunction(
   let value: string;
   // 判断是否是函数
   if (typeof global[key].constructor === 'function') {
-    value = `new ${key}(${params})`;
+    value = key === 'Function' ? '() => {}' : `new ${key}(${params})`;
   } else {
     value = `${key}(${params})`;
   }
