@@ -76,7 +76,9 @@ namespace Json2 {
         if (jsonPtr) {
             cJSON* item = jsonPtr->child;
             while (item != nullptr) {
-                names.push_back(item->string);
+                if (item->string != nullptr) {
+                    names.push_back(item->string);
+                }
                 item = item->next;
             }
         }
