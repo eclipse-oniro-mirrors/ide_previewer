@@ -796,6 +796,10 @@ std::vector<RouterItem> StageContext::GetRouterMap(const std::string& inputPath)
     int arraySize = rootJson["routerMap"].GetArraySize();
     for (int i = 0; i < arraySize; i++) {
         Json2::Value item = jsonObj.GetArrayItem(i);
+        if (!item.IsObject()) {
+            ELOG("Invalid router map item type");
+            continue;
+        }
         RouterItem routerItem;
         if (item.IsMember("name") && item["name"].IsString()) {
             routerItem.name = item["name"].AsString();
