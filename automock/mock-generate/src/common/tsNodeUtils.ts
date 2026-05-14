@@ -1173,6 +1173,11 @@ function handleOthersTypeNode(
     case SyntaxKind.EmptyStatement:
     case SyntaxKind.Block:
     case SyntaxKind.SemicolonClassElement:
+    case SyntaxKind.ThisType:
+    case SyntaxKind.TypePredicate:
+    case SyntaxKind.SymbolKeyword:
+    case SyntaxKind.ConstructorType:
+    case SyntaxKind.ConditionalType:
     case SyntaxKind.ExpressionStatement: {
       return undefined;
     }
