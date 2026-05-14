@@ -164,7 +164,9 @@ export const needShieldingDirOrFile = [
   path.join('arkui', 'component'),
   path.join('arkui', 'external'),
   path.join('arkui', 'runtime-api'),
-  path.join('arkui', 'stateManagement')
+  path.join('arkui', 'stateManagement'),
+  path.join('arkui', 'incremental'),
+  path.join('arkts', 'builtin')
 ];
 
 // Special handling for interface types not found globally
