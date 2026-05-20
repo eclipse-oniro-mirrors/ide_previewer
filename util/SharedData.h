@@ -65,8 +65,10 @@ public:
     static T GetData(SharedDataType type)
     {
         const std::lock_guard<std::mutex> lock(staticDataMutex);
-        if (dataMap.find(type) == dataMap.end()) {
+        auto it = dataMap.find(type);
+        if (it == dataMap.end()) {
             FLOG("SharedData::GetData invalid data type.");
+            return T();
         }
 
         return dataMap[type].value;
