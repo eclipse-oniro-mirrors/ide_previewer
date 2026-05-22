@@ -37,9 +37,19 @@ const std::string ClipboardHelper::GetClipboardData()
     if (!IsClipboardFormatAvailable(CF_TEXT)) {
         return data;
     }
-    OpenClipboard(NULL);
+    if (!OpenClipboard(NULL)) {
+        return data;
+    }
     HANDLE h = ::GetClipboardData(CF_TEXT);
+    if (h == nullptr) {
+        CloseClipboard();
+        return data;
+    }
     char* p = (char*)GlobalLock(h);
+    if (p == nullptr) {
+        CloseClipboard();
+        return data;
+    }
     std::string str(p);
     data = str;
     GlobalUnlock(h);
