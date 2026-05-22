@@ -79,7 +79,7 @@ static void InitSharedData()
     SharedData<uint32_t>(SharedDataType::PRESSURE_VALUE, 101325, 0, 999900);
     SharedData<bool>(SharedDataType::WEARING_STATE, true);
     SharedData<std::string>(SharedDataType::LANGUAGE, "zh-CN");
-    // The value ranges from 180 to 180. The default value is 0.
+    // The value ranges from -180 to 180. The default value is 0.
     SharedData<double>(SharedDataType::LONGITUDE, 0, -180, 180);
     // The value ranges from -90 to 90. The default value is 0.
     SharedData<double>(SharedDataType::LATITUDE, 0, -90, 90);

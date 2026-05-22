@@ -20,18 +20,15 @@ prebuilts_path=${9}
 
 # copy runtime to target out, and runtime/css-what is solt link, copy it always follow symbolic links in SOURCE
 if [ "${8}" == 'true' ];then
-  #cp -R -L $3 $8
   if [ "${12}" == 'true' ];then
     cp -R ${11} $7
   fi
 else
-  #cp -r -L $3 $8
   if [ "${12}" == 'true' ];then
     cp -r ${11} $7
   fi
 fi
 
-# $2 => node $3 => node_modules
 cp -f $4 $7
 
 if [ -d "$prebuilts_path" ]; then
