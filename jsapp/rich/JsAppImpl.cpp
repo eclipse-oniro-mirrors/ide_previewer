@@ -110,7 +110,9 @@ std::string JsAppImpl::GetJSONTree()
         auto uiContent = GetWindow()->GetUIContent();
         jsonTree = uiContent->GetJSONTree();
     } else {
-        jsonTree = ability->GetJSONTree();
+        if (ability != nullptr) {
+            jsonTree = ability->GetJSONTree();
+        }
     }
     return jsonTree;
 }
@@ -788,7 +790,9 @@ bool JsAppImpl::MemoryRefresh(const std::string memoryRefreshArgs) const
         return ability->OperateComponent(memoryRefreshArgs);
     } else {
         auto uiContent = GetWindow()->GetUIContent();
-        return uiContent->OperateComponent(memoryRefreshArgs);
+        if (uiContent != nullptr) {
+            return uiContent->OperateComponent(memoryRefreshArgs);
+        }
     }
     return false;
 }

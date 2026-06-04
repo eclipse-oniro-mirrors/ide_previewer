@@ -35,6 +35,10 @@ bool LocalSocket::ConnectToServer(std::string name, OpenMode openMode, TransMode
     (void)transMode;
     struct sockaddr_un un;
     un.sun_family = AF_UNIX;
+    if (name.size() >= sizeof(un.sun_path)) {
+        ELOG("Socket name too long");
+        return false;
+    }
     std::size_t length = name.copy(un.sun_path, name.size());
     un.sun_path[length] = '\0';
     socketHandle = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -68,7 +72,9 @@ std::string LocalSocket::GetImagePipeName(std::string baseName) const
 
 void LocalSocket::DisconnectFromServer()
 {
-    shutdown(socketHandle, SHUT_RDWR);
+    if (socketHandle >= 0) {
+        shutdown(socketHandle, SHUT_RDWR);
+    }
 }
 
 int64_t LocalSocket::ReadData(char* data, size_t length) const

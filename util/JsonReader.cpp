@@ -617,9 +617,8 @@ namespace Json2 {
 
     std::string Value::GetKey()
     {
-        const char* key = jsonPtr->string;
-        if (key) {
-            return std::string(key);
+        if (jsonPtr && jsonPtr->string) {
+            return std::string(jsonPtr->string);
         }
         return std::string();
     }

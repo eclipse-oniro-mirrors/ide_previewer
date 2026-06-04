@@ -193,7 +193,6 @@ std::vector<uint8_t>* StageContext::GetModuleBuffer(const std::string& inputPath
             return buf;
         } else { // system hsp
             std::vector<uint8_t>* buf = GetSystemModuleBuffer(inputPath, moduleName);
-            ILOG("system hsp buf size is %d", buf->size());
             return buf;
         }
     }
@@ -522,8 +521,17 @@ std::vector<uint8_t>* StageContext::GetSystemModuleBuffer(const std::string& inp
 {
     std::string head = "com.huawei";
     std::string tail = moduleName;
-    size_t pos1 = inputPath.find(head) + head.size();
+    size_t pos1 = inputPath.find(head);
+    if (pos1 == std::string::npos) {
+        ELOG("Invalid inputPath format.");
+        return nullptr;
+    }
+    pos1 += head.size();
     size_t pos2 = inputPath.find(tail);
+    if (pos2 == std::string::npos) {
+        ELOG("Invalid inputPath format.");
+        return nullptr;
+    }
     std::string relativePath = inputPath.substr(pos1, pos2 - pos1);
     size_t found = relativePath.find(".");
     int len = 1;

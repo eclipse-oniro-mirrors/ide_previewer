@@ -145,6 +145,9 @@ void JsAppImpl::Restart()
 void JsAppImpl::Interrupt()
 {
     AsyncWorkManager::GetInstance().ClearAllAsyncWork();
+    if (jsAbility == nullptr) {
+        return;
+    }
     jsAbility->Hide();
     jsAbility->TransferToDestroy();
     jsAbility.reset();
