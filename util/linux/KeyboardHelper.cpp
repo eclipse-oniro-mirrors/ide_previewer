@@ -28,6 +28,9 @@ short KeyboardHelper::GetKeyStateByKeyName(const std::string& keyName)
     }
     Bool state;
     Display* display = XOpenDisplay((char*)0);
+    if (display == nullptr) {
+        return -1;
+    }
     Atom capsLock = XInternAtom(display, name.c_str(), False);
     XkbGetNamedIndicator(display, capsLock, NULL, &state, NULL, NULL);
     return state ? 1 : 0;

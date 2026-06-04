@@ -21,6 +21,9 @@
 void ClipboardX11::SetClipboardData(const std::string& str)
 {
     display = XOpenDisplay(nullptr);
+    if (display == nullptr) {
+        return;
+    }
     int ret = DefaultScreen(display);
     window = XCreateSimpleWindow(display, RootWindow(display, ret), 0, 0, 1, 1, 0,
         BlackPixel(display, ret), WhitePixel(display, ret));
@@ -37,6 +40,9 @@ void ClipboardX11::SetClipboardData(const std::string& str)
 const std::string ClipboardX11::GetClipboardData()
 {
     display = XOpenDisplay(nullptr);
+    if (display == nullptr) {
+        return nullptr;
+    }
     int ret = DefaultScreen(display);
     window = XCreateSimpleWindow(display, RootWindow(display, ret), 0, 0, 1, 1, 0,
                                  BlackPixel(display, ret), WhitePixel(display, ret));
@@ -110,6 +116,7 @@ std::string ClipboardX11::GetPasteType(const Atom& atom)
             XGetWindowProperty(event.xselection.display, event.xselection.requestor, event.xselection.property, 0L,
                                (~0L), 0, AnyPropertyType, &target, &format, &size, &num, (unsigned char**)&data);
             if (target == UTF8 || target == XA_STRING) {
+                data ? std::string(data) : std::string();
                 std::string str(data);
                 retStr = str;
             }

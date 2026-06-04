@@ -24,7 +24,15 @@ void ClipboardHelper::SetClipboardData(const std::string& data)
     OpenClipboard(NULL);
     EmptyClipboard();
     HANDLE hHandle = GlobalAlloc(GMEM_FIXED, newData.size() + 1);
+    if (hHandle == nullptr) {
+        CloseClipboard();
+        return;
+    }
     char* pData = (char*)GlobalLock(hHandle);
+    if (pData == nullptr) {
+        CloseClipboard();
+        return;
+    }
     copy(newData.begin(), newData.end(), pData);
     ::SetClipboardData(CF_TEXT, hHandle);
     GlobalUnlock(hHandle);

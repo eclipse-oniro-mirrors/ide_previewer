@@ -24,7 +24,7 @@ void CallbackQueue::AddCallback(const std::function<void()> callback)
 
 void CallbackQueue::ConsumingCallback()
 {
-    callBackMutex.lock();
+    std::lock_guard<std::mutex> lock(callBackMutex);
     while (!callBackList.empty()) {
         std::function<void()> functional = callBackList.back();
         functional();

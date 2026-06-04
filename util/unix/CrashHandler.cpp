@@ -44,7 +44,7 @@ void CrashHandler::ApplicationCrashHandler(int signal)
     write(STDERR_FILENO, stackIntLog, itoaLength);
 
     // get void*'s for all entries on the stack
-    void *array[10];
+    void *array[MAX_STACK_SIZE];
     size_t size = backtrace(array, MAX_STACK_SIZE);
     // print out all the frames to stdout
     backtrace_symbols_fd(array, size, STDERR_FILENO);

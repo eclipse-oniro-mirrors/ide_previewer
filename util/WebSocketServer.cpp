@@ -98,7 +98,8 @@ int WebSocketServer::ProtocolCallback(struct lws* wsi, enum lws_callback_reasons
             break;
         case LWS_CALLBACK_SERVER_WRITEABLE:
             ILOG("Engine websocket server writeable");
-            if (firstImagebufferSize > 0 && webSocketWritable == WebSocketState::UNWRITEABLE) {
+            if (firstImagebufferSize > 0 && webSocketWritable == WebSocketState::UNWRITEABLE &&
+                firstImageBuffer != nullptr) {
                 ILOG("Send last image after websocket reconnected");
                 std::lock_guard<std::mutex> guard(WebSocketServer::GetInstance().mutex);
                 lws_write(wsi,

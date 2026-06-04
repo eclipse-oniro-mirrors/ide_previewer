@@ -42,6 +42,7 @@ std::string StringHelper::StringToUtf8(const std::string& str)
     char* pBuf = new(std::nothrow) char[nLen + 1];
     if (!pBuf) {
         ELOG("Memory allocation failed : pBuf.");
+        delete[] pwBuf;
         return str;
     }
     ZeroMemory(pBuf, nLen + 1);
@@ -83,6 +84,7 @@ std::string StringHelper::Utf8ToString(const std::string& str)
     char* pBuf = new(std::nothrow) char[lenAdd];
     if (!pBuf) {
         ELOG("Memory allocation failed : pBuf.");
+        delete[] pwBuf;
         return str;
     }
     if (EOK != memset_s(pBuf, lenAdd, 0, lenAdd)) {
