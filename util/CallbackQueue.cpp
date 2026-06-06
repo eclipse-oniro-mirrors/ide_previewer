@@ -30,5 +30,4 @@ void CallbackQueue::ConsumingCallback()
         functional();
         callBackList.pop_back();
     }
-    callBackMutex.unlock();
 }
