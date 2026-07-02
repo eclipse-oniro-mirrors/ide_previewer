@@ -28,58 +28,76 @@ bool JsApp::IsLiteDevice(std::string deviceType)
     return true;
 }
 
-std::string JsApp::GetJSONTree() {
+std::string JsApp::GetJSONTree()
+{
     //Only for mock test, no specific implementation
 }
-std::string JsApp::GetDefaultJSONTree() {
+std::string JsApp::GetDefaultJSONTree()
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::OrientationChanged(std::string commandOrientation) {
+void JsApp::OrientationChanged(std::string commandOrientation)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason) {
+void JsApp::ResolutionChanged(ResolutionParam& param, int32_t screenDensity, std::string reason)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::SetArgsColorMode(const std::string& value) {
+void JsApp::SetArgsColorMode(const std::string& value)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::SetArgsAceVersion(const std::string& value) {
+void JsApp::SetArgsAceVersion(const std::string& value)
+{
     //Only for mock test, no specific implementation
 }
-std::string JsApp::GetOrientation() const {
+std::string JsApp::GetOrientation() const
+{
     //Only for mock test, no specific implementation
 }
-std::string JsApp::GetColorMode() const {
+std::string JsApp::GetColorMode() const
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::ColorModeChanged(const std::string commandColorMode) {
+void JsApp::ColorModeChanged(const std::string commandColorMode)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::ReloadRuntimePage(const std::string) {
+void JsApp::ReloadRuntimePage(const std::string)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::SetScreenDensity(const std::string value) {
+void JsApp::SetScreenDensity(const std::string value)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::SetConfigChanges(const std::string value) {
+void JsApp::SetConfigChanges(const std::string value)
+{
     //Only for mock test, no specific implementation
 }
-bool JsApp::MemoryRefresh(const std::string) const {
+bool JsApp::MemoryRefresh(const std::string) const
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::LoadDocument(const std::string, const std::string, const Json2::Value&) {
+void JsApp::LoadDocument(const std::string, const std::string, const Json2::Value&)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t currentWidth, int32_t currentHeight) {
+void JsApp::FoldStatusChanged(const std::string commandFoldStatus, int32_t currentWidth, int32_t currentHeight)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::SetAvoidArea(const AvoidAreas& areas) {
+void JsApp::SetAvoidArea(const AvoidAreas& areas)
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::Stop() {
+void JsApp::Stop()
+{
     //Only for mock test, no specific implementation
 }
-void JsApp::InitJsApp() {
+void JsApp::InitJsApp()
+{
     //Only for mock test, no specific implementation
 }
 const AvoidAreas JsApp::GetCurrentAvoidArea() const

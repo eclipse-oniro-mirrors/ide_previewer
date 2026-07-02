@@ -92,7 +92,16 @@ static void InitFontEngine()
         return;
     }
     uint32_t lineBrkSize = lseek(fp, 0, SEEK_END);
-    lseek(fp, 0, SEEK_SET);
+    if (lineBrkSize == -1) {
+        ELOG("Failed to seek to end of file.");
+        close(fp);
+        return;
+    }
+    if (lseek(fp, 0, SEEK_SET) == -1) {
+        ELOG("Failed to seek to start of file.");
+        close(fp);
+        return;
+    }
     UILineBreakEngine& lbEngine = UILineBreakEngine::GetInstance();
     lbEngine.SetRuleBinInfo(fp, 0, lineBrkSize);
     lbEngine.Init();
