@@ -48,6 +48,7 @@ void PrintLog(const char* level, const char* file, const char* func, int line, c
     int ret = vsnprintf_s(output, sizeof(output), sizeof(output), fmt, argsList);
     if (ret == -1) {
         std::cout << "PrintLog function error";
+        va_end(argsList);
         return;
     }
     if (stdout != nullptr) {

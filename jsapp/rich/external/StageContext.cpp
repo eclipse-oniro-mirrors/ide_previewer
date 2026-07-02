@@ -422,6 +422,7 @@ std::vector<uint8_t>* StageContext::GetModuleBufferFromHsp(const std::string& hs
     std::vector<uint8_t>* fileContent = new(std::nothrow) std::vector<uint8_t>();
     if (!fileContent) {
         ELOG("Memory allocation failed: fileContent.");
+        unzClose(zipfile);
         return fileContent;
     }
     while ((bytesRead = unzReadCurrentFile(zipfile, buffer, sizeof(buffer))) > 0) {
