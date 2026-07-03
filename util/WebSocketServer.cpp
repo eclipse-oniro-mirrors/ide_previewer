@@ -169,7 +169,31 @@ size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     if (webSocket != nullptr && webSocketWritable == WebSocketState::WRITEABLE) {
-        return lws_write(webSocket, data, length, LWS_WRITE_BINARY);
+        size_t written = 0;
+        const size_t chunkSize = MAX_PAYLOAD_SIZE;
+        while (written < length) {
+            size_t remaining = length - written;
+            size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
+            bool isLastFrame = (written + toWrite >= length);
+            enum lws_write_protocol flags;
+            if (written == 0) {
+                flags = isLastFrame ? LWS_WRITE_BINARY : (enum lws_write_protocol)(LWS_WRITE_BINARY | LWS_WRITE_NO_FIN);
+            } else {
+                flags = isLastFrame ? LWS_WRITE_CONTINUATION :
+                    (enum lws_write_protocol)(LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN);
+            }
+            size_t ret = lws_write(webSocket, data + written, toWrite, flags);
+            if (ret == 0) {
+                ELOG("lws_write fragmented failed at offset %zu,requested = %zu", written, toWrite);
+                break;
+            }
+            written += ret;
+            if (written < length) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+        ILOG("lws_write fragmented:total=%zu, requested = %zu", length, written);
+        return written;
     }
     return 0;
 }
