@@ -44,6 +44,7 @@ private:
     virtual ~WebSocketServer();
     static bool CheckSid(struct lws* wsi);
     static void SignalHandler(int sig);
+    ssize_t WriteChunk(unsigned char* data, size_t offset, size_t toWrite, bool isLastFrame);
     std::unique_ptr<std::thread> serverThread;
     int serverPort;
     const char* serverHostname = "127.0.0.1";
