@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <thread>
+#include "securec.h"
 #include "CommandLineInterface.h"
 #include "PreviewerEngineLog.h"
 #include "WebSocketServer.h"
@@ -163,37 +164,69 @@ void WebSocketServer::Run()
     serverThread->detach();
 }
 
+ssize_t WebSocketServer::WriteChunk(unsigned char* data, size_t offset, size_t toWrite, bool isLastFrame)
+{
+    size_t totalBufSize = LWS_PRE + toWrite;
+    unsigned char* sendBuf = (unsigned char*)malloc(totalBufSize);
+    if (!sendBuf) {
+        ELOG("Failed to allocate send buffer for chunk at offset %zu.", offset);
+        return -1;
+    }
+    if (EOK != memset_s(sendBuf, totalBufSize, 0, totalBufSize)) {
+        free(sendBuf);
+        ELOG("sendBuf memset_s failed.");
+        return -1;
+    }
+    if (EOK != memcpy_s(sendBuf + LWS_PRE, totalBufSize - LWS_PRE, data + offset, toWrite)) {
+        free(sendBuf);
+        ELOG("sendBuf memcpy_s failed.");
+        return -1;
+    }
+
+    enum lws_write_protocol flags;
+    if (offset == 0) {
+        flags = isLastFrame ? LWS_WRITE_BINARY : (enum lws_write_protocol)(LWS_WRITE_BINARY | LWS_WRITE_NO_FIN);
+    } else {
+        flags = isLastFrame ? LWS_WRITE_CONTINUATION :
+            (enum lws_write_protocol)(LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN);
+    }
+    size_t ret = lws_write(webSocket, sendBuf + LWS_PRE, toWrite, flags);
+    free(sendBuf);
+
+    if (ret == static_cast<size_t>(-1)) {
+        ELOG("lws_write failed at offset %zu, error = %s", offset, strerror(errno));
+        return -1;
+    }
+    if (ret != toWrite) {
+        WLOG("lws_write partial send at offset %zu, sent = %zu, expected = %zu", offset, ret, toWrite);
+        return static_cast<ssize_t>(ret);
+    }
+    return static_cast<ssize_t>(ret);
+}
+
 size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
 {
-    while (webSocketWritable != WebSocketState::WRITEABLE) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    if (webSocket != nullptr && webSocketWritable == WebSocketState::WRITEABLE) {
-        size_t written = 0;
-        const size_t chunkSize = MAX_PAYLOAD_SIZE;
-        while (written < length) {
-            size_t remaining = length - written;
-            size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
-            bool isLastFrame = (written + toWrite >= length);
-            enum lws_write_protocol flags;
-            if (written == 0) {
-                flags = isLastFrame ? LWS_WRITE_BINARY : (enum lws_write_protocol)(LWS_WRITE_BINARY | LWS_WRITE_NO_FIN);
-            } else {
-                flags = isLastFrame ? LWS_WRITE_CONTINUATION :
-                    (enum lws_write_protocol)(LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN);
-            }
-            size_t ret = lws_write(webSocket, data + written, toWrite, flags);
-            if (ret == 0) {
-                ELOG("lws_write fragmented failed at offset %zu,requested = %zu", written, toWrite);
-                break;
-            }
-            written += ret;
-            if (written < length) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
+    size_t written = 0;
+    const size_t chunkSize = MAX_PAYLOAD_SIZE;
+    while (written < length) {
+        while (webSocketWritable != WebSocketState::WRITEABLE) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-        ILOG("lws_write fragmented:total=%zu, requested = %zu", length, written);
-        return written;
+        if (webSocket == nullptr || webSocketWritable != WebSocketState::WRITEABLE) {
+            return 0;
+        }
+        size_t remaining = length - written;
+        size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
+        bool isLastFrame = (written + toWrite >= length);
+
+        ssize_t ret = WriteChunk(data, written, toWrite, isLastFrame);
+        if (ret < 0) {
+            break;
+        }
+        if (ret > 0) {
+            written += static_cast<size_t>(ret);
+        }
     }
-    return 0;
+    ILOG("lws_write fragmented:total = %zu, written = %zu", length, written);
+    return written;
 }
