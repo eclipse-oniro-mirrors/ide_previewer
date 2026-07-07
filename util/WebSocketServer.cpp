@@ -164,23 +164,23 @@ void WebSocketServer::Run()
     serverThread->detach();
 }
 
-ssize_t WebSocketServer::WriteChunk(unsigned char* data, size_t offset, size_t toWrite, bool isLastFrame)
+bool WebSocketServer::WriteChunk(unsigned char* data, size_t offset, size_t toWrite, bool isLastFrame)
 {
     size_t totalBufSize = LWS_PRE + toWrite;
     unsigned char* sendBuf = (unsigned char*)malloc(totalBufSize);
     if (!sendBuf) {
         ELOG("Failed to allocate send buffer for chunk at offset %zu.", offset);
-        return -1;
+        return false;
     }
     if (EOK != memset_s(sendBuf, totalBufSize, 0, totalBufSize)) {
         free(sendBuf);
         ELOG("sendBuf memset_s failed.");
-        return -1;
+        return false;
     }
     if (EOK != memcpy_s(sendBuf + LWS_PRE, totalBufSize - LWS_PRE, data + offset, toWrite)) {
         free(sendBuf);
         ELOG("sendBuf memcpy_s failed.");
-        return -1;
+        return false;
     }
 
     enum lws_write_protocol flags;
@@ -192,39 +192,39 @@ ssize_t WebSocketServer::WriteChunk(unsigned char* data, size_t offset, size_t t
     }
     size_t ret = lws_write(webSocket, sendBuf + LWS_PRE, toWrite, flags);
     free(sendBuf);
-
-    if (ret == static_cast<size_t>(-1)) {
-        ELOG("lws_write failed at offset %zu, error = %s", offset, strerror(errno));
-        return -1;
-    }
     if (ret != toWrite) {
-        WLOG("lws_write partial send at offset %zu, sent = %zu, expected = %zu", offset, ret, toWrite);
-        return static_cast<ssize_t>(ret);
+        if (ret == static_cast<size_t>(-1)) {
+            ELOG("lws_write failed at offset %zu, error = %s", offset, strerror(errno));
+        } else {
+            WLOG("lws_write partial send at offset offset %zu, sent = %zu", offset, toWrite);
+        }
+        return false;
     }
-    return static_cast<ssize_t>(ret);
+    return true;
 }
 
 size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
 {
+    while (webSocketWritable != WebSocketState::WRITEABLE) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (webSocket == nullptr || webSocketWritable != WebSocketState::WRITEABLE) {
+        return 0;
+    }
     size_t written = 0;
     const size_t chunkSize = MAX_PAYLOAD_SIZE;
     while (written < length) {
-        while (webSocketWritable != WebSocketState::WRITEABLE) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        if (webSocket == nullptr || webSocketWritable != WebSocketState::WRITEABLE) {
-            return 0;
-        }
         size_t remaining = length - written;
         size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
         bool isLastFrame = (written + toWrite >= length);
 
-        ssize_t ret = WriteChunk(data, written, toWrite, isLastFrame);
-        if (ret < 0) {
+        if (!WriteChunk(data, written, toWrite, isLastFrame)) {
             break;
         }
-        if (ret > 0) {
-            written += static_cast<size_t>(ret);
+        written += toWrite;
+        if (written < length) {
+            const int timeOut = 30;
+            std::this_thread::sleep_for(std::chrono::milliseconds(timeOut));
         }
     }
     ILOG("lws_write fragmented:total = %zu, written = %zu", length, written);
