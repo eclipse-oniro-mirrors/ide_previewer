@@ -31,6 +31,7 @@ config("jsapp_config_rich") {
 }
 
 ohos_source_set("jsapp_rich") {
+  branch_protector_ret = "pac_ret"
   defines = []
   if (platform == "mingw_x86_64" && defined(enable_component_test) &&
       enable_component_test) {
@@ -70,6 +71,7 @@ ohos_source_set("jsapp_rich") {
 }
 
 ohos_source_set("jsapp_lite") {
+  branch_protector_ret = "pac_ret"
   defines = [ "ENABLE_ICU" ]
   if (build_lite_full) {
     defines += [ "LITEWEARABLE_SUPPORTED=1" ]

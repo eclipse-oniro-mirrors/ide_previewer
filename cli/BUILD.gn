@@ -18,6 +18,7 @@ config("cli_config") {
   cflags = [ "-std=c++17" ]
 }
 ohos_source_set("cli_lite") {
+  branch_protector_ret = "pac_ret"
   configs = [ ":cli_config" ]
   sources = [
     "CommandLine.cpp",
@@ -59,6 +60,7 @@ ohos_source_set("cli_lite") {
 }
 
 ohos_source_set("cli_rich") {
+  branch_protector_ret = "pac_ret"
   configs = [ ":cli_config" ]
   sources = [
     "CommandLine.cpp",

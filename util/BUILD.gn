@@ -15,6 +15,7 @@ import("//build/ohos.gni")
 import("../gn/config.gni")
 
 ohos_source_set("util_lite") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "CallbackQueue.cpp",
     "CommandParser.cpp",
@@ -73,6 +74,7 @@ ohos_source_set("util_lite") {
 }
 
 ohos_source_set("util_rich") {
+  branch_protector_ret = "pac_ret"
   libs = []
   sources = [
     "CallbackQueue.cpp",
