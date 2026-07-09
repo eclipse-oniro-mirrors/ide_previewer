@@ -16,6 +16,7 @@ import("./gn/config.gni")
 
 template("previewer_executable") {
   ohos_executable(target_name) {
+    branch_protector_ret = "pac_ret"
     subsystem_name = "ide"
     part_name = invoker.part_name
     output_name = invoker.output_name

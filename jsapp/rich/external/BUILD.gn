@@ -19,6 +19,7 @@ config("jsmock_util_config") {
 }
 
 ohos_shared_library("ide_extension") {
+  branch_protector_ret = "pac_ret"
   if (is_linux || is_mac || is_mingw) {
     libs = []
     sources = [

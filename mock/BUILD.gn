@@ -20,6 +20,7 @@ config("myconfig") {
 }
 
 ohos_source_set("mock_rich") {
+  branch_protector_ret = "pac_ret"
   cflags = [ "-std=c++17" ]
 
   include_dirs = [
@@ -60,6 +61,7 @@ ohos_source_set("mock_rich") {
 }
 
 ohos_source_set("mock_lite") {
+  branch_protector_ret = "pac_ret"
   configs = [ ":myconfig" ]
   include_dirs = [
     ".",
