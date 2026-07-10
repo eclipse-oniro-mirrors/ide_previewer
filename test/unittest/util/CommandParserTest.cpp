@@ -81,6 +81,8 @@ namespace {
     std::vector<std::string> CommandParserTest::validParamVec = {};
     std::string CommandParserTest::invalidParams = "-refresh region "
         "-projectID 138968279 "
+        "-bn com.exampe.application "
+        "-pjId bb4c825c9ecadaf850458aee9aac3bc75f01f2cf9866864787bdb8fd279 "
         "-ts trace_70259_commandPipe "
         "-j =dir= "
         "-s componentpreviewinstance_1712054594321_1 "
@@ -994,6 +996,18 @@ namespace {
     {
         std::string str = "138968279";
         EXPECT_EQ(CommandParser::GetInstance().GetProjectID(), str);
+    }
+
+    TEST_F(CommandParserTest, GetBundleNameTest)
+    {
+        std::string str = "com.exampe.application";
+        EXPECT_EQ(CommandParser::GetInstance().GetBundleName(), str);
+    }
+
+    TEST_F(CommandParserTest, GetProjIdTest)
+    {
+        std::string str = "bb4c825c9ecadaf850458aee9aac3bc75f01f2cf9866864787bdb8fd279";
+        EXPECT_EQ(CommandParser::GetInstance().GetProjId(), str);
     }
 
     TEST_F(CommandParserTest, GetScreenModeTest)

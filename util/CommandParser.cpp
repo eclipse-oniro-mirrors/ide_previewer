@@ -37,6 +37,8 @@ CommandParser::CommandParser()
       isRegionRefresh(false),
       isCardDisplay(false),
       projectID(""),
+      bundleName(""),
+      projId(""),
       screenMode(CommandParser::ScreenMode::DYNAMIC),
       configChanges(""),
       appResourcePath(""),
@@ -71,6 +73,8 @@ CommandParser::CommandParser()
     Register("-refresh", 1, "Screen <refresh mode>, support region and full");
     Register("-card", 1, "Controls the display <type> to switch between the app and card.");
     Register("-projectID", 1, "the ID of current project.");
+    Register("-bn", 1, "the bundleName of current project.");
+    Register("-pjId", 1, "the project_id of current project.");
     Register("-ts", 1, "Trace socket name");
     Register("-cm", 1, "Set colormode for the theme.");
     Register("-o", 1, "Set orientation for the display.");
@@ -141,6 +145,7 @@ bool CommandParser::IsCommandValid()
     partRet = partRet && IsAbilityNameValid() && IsLanguageValid() && IsTracePipeNameValid();
     partRet = partRet && IsLocalSocketNameValid() && IsConfigChangesValid() && IsScreenDensityValid();
     partRet = partRet && IsSidValid() && EnableFileOperationValid() && IsSrmPathValid();
+    partRet = partRet && IsBundleNameValid() && IsProjIdValid();
     if (partRet) {
         return true;
     }
@@ -213,6 +218,16 @@ std::string CommandParser::GetConfigPath() const
 std::string CommandParser::GetProjectID() const
 {
     return projectID;
+}
+
+std::string CommandParser::GetBundleName() const
+{
+    return bundleName;
+}
+
+std::string CommandParser::GetProjId() const
+{
+    return projId;
 }
 
 std::string CommandParser::GetAppResourcePath() const
@@ -600,6 +615,31 @@ bool CommandParser::IsProjectIDValid()
         projectID = Value("projectID");
         if (CheckParamInvalidity(projectID, false)) {
             errorInfo = "Launch -projectID parameters is not match regex.";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CommandParser::IsBundleNameValid()
+{
+    if (IsSet("bn")) {
+        bundleName = Value("bn");
+        if (CheckParamInvalidity(bundleName, false)) {
+            errorInfo = "Launch -bundleName parameters is not match regex.";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CommandParser::IsProjIdValid()
+{
+    if (IsSet("pjId")) {
+        projId = Value("pjId");
+        std::regex reg(regex4Sid);
+        if (!std::regex_match(projId.cbegin(), projId.cend(), reg)) {
+            errorInfo = "Launch -project_id parameters is not match regex.";
             return false;
         }
     }

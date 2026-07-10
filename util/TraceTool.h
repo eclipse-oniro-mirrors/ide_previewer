@@ -36,6 +36,7 @@ private:
     ~TraceTool();
     std::unique_ptr<LocalSocket> socket;
     std::string GetTracePipeName() const;
+    std::string GetCurrentProcessIdStr() const;
     bool isReady;
 };
 
