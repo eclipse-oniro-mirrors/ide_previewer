@@ -20,6 +20,20 @@
 #include "TimeTool.h"
 #include "LocalSocket.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+    #include <windows.h>
+#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+    #include <unistd.h>
+#endif
+
+std::string TraceTool::GetCurrentProcessIdStr() const
+{
+#if defined(_WIN32) || defined(_WIN64)
+    return std::to_string(GetCurrentProcessId());
+#elif defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+    return std::to_string(getpid());
+#endif
+}
 void TraceTool::InitPipe()
 {
     if (socket != nullptr) {
@@ -60,10 +74,15 @@ void TraceTool::HandleTrace(const std::string msg) const
     }
     Json2::Value val = JsonReader::CreateObject();
     val.Add("sid", "10007");
+    val.Add("bundleName", CommandParser::GetInstance().GetBundleName().c_str());
+    val.Add("projectId", CommandParser::GetInstance().GetProjId().c_str());
     Json2::Value detail = JsonReader::CreateObject();
     detail.Add("ProjectId", CommandParser::GetInstance().GetProjectID().c_str());
     detail.Add("device", CommandParser::GetInstance().GetDeviceType().c_str());
     detail.Add("time", TimeTool::GetTraceFormatTime().c_str());
+    if (msg == "Enter the main function") {
+        detail.Add("pid", GetCurrentProcessIdStr().c_str());
+    }
     val.Add("detail", detail);
     val.Add("action", msg.c_str());
     SendTraceData(val);

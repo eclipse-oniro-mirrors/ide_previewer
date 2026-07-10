@@ -73,6 +73,8 @@ public:
     bool IsCardDisplay() const;
     std::string GetConfigPath() const;
     std::string GetProjectID() const;
+    std::string GetBundleName() const;
+    std::string GetProjId() const;
     enum class ScreenMode { DYNAMIC = 0, STATIC = 1};
     CommandParser::ScreenMode GetScreenMode() const;
     std::string GetConfigChanges() const;
@@ -146,6 +148,8 @@ private:
     bool isRegionRefresh;
     bool isCardDisplay;
     std::string projectID;
+    std::string bundleName;
+    std::string projId;
     CommandParser::ScreenMode screenMode;
     std::string configChanges;
     std::string appResourcePath;
@@ -188,6 +192,8 @@ private:
     bool IsRefreshValid();
     bool IsCardValid();
     bool IsProjectIDValid();
+    bool IsBundleNameValid();
+    bool IsProjIdValid();
     bool IsColorModeValid();
     bool IsAceVersionValid();
     bool IsOrientationValid();

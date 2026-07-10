@@ -141,6 +141,7 @@ void VirtualScreenImpl::StartTimer()
 bool VirtualScreenImpl::LoadDocCallback(const void* data, const size_t length, const int32_t width,
                                         const int32_t height, const uint64_t timeStamp)
 {
+    ILOG("LoadDocCallback start.");
     if (timeStamp < GetInstance().loadDocTimeStamp) {
         return false;
     }
