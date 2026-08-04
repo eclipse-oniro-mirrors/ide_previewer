@@ -292,8 +292,13 @@ bool VirtualScreen::StopSendStaticCardImage(const int duration)
 
 void VirtualScreen::RgbToJpg(unsigned char* data, const int32_t width, const int32_t height)
 {
+    if (data == nullptr) {
+        ELOG("VirtualScreen::RgbToJpg data is null.");
+        return;
+    }
     if (width < 1 || height < 1) {
         FLOG("VirtualScreenImpl::RgbToJpg the width or height is invalid value");
+        return;
     }
     jpeg_compress_struct jpeg = {0};
     jpeg_error_mgr jerr;

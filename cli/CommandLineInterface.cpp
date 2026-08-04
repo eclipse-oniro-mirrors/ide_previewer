@@ -156,7 +156,8 @@ bool CommandLineInterface::ProcessCommandValidate(bool parsingSuccessful,
         return false;
     }
 
-    if (!jsonData.IsMember("type") || !jsonData.IsMember("command") || !jsonData.IsMember("version")) {
+    if (!jsonData.IsMember("type") || !jsonData.IsMember("command") || !jsonData.IsMember("version") ||
+        !jsonData["type"].IsString() || !jsonData["command"].IsString()) {
         ELOG("Command error!");
         return false;
     }

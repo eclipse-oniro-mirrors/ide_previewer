@@ -61,6 +61,10 @@ void CrashHandler::RecordCallStack(const CONTEXT *context)
 {
     HANDLE hProcess = GetCurrentProcess();
     SymInitialize(hProcess, NULL, TRUE);
+    if (context == NULL) {
+        ELOG("CrashHandler::RecordCallStack context is null.");
+        return;
+    }
     CONTEXT crashContext = *context;
     STACKFRAME64 sf = {};
     DWORD imageType = IMAGE_FILE_MACHINE_I386;

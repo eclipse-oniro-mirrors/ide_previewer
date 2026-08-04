@@ -50,7 +50,9 @@ void CppTimerManager::RunTimerTick()
     auto iter = tempTimers.cbegin();
     while (iter != tempTimers.cend()) {
         CppTimer* timer = *iter;
-        timer->RunTimerTick(callbackQueue);
+        if (timer != nullptr) {
+            timer->RunTimerTick(callbackQueue);
+        }
 
         iter++;
     }

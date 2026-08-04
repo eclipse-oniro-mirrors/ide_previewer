@@ -16,11 +16,16 @@
 #include "js_async_work.h"
 
 #include "AsyncWorkManager.h"
+#include "PreviewerEngineLog.h"
 
 using namespace OHOS::ACELite;
 
 bool JsAsyncWork::DispatchAsyncWork(AsyncWorkHandler workHandler, void* data)
 {
+    if (workHandler == nullptr || data == nullptr) {
+        ELOG("Error: workHandler or data is null.");
+        return false;
+    }
     AsyncWorkManager::GetInstance().AppendAsyncWork(workHandler, data);
     return true;
 }

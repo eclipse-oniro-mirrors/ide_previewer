@@ -1584,8 +1584,9 @@ void PointEventCommand::RunAction()
     std::vector<double> axisVec; // 13 is array size
     Json2::Value axisCodes = args["axisValues"];
     for (unsigned int i = 0; i < axisCodes.GetArraySize(); i++) {
-        if (axisCodes.GetArrayItem(i).IsDouble()) {
-            param.axisVec.push_back(axisCodes.GetArrayItem(i).AsDouble());
+        Json2::Value val = axisCodes.GetArrayItem(i);
+        if (!val.IsNull() && val.IsDouble()) {
+            param.axisVec.push_back(val.AsDouble());
         }
     }
     if (!args.IsMember("x") || !args["x"].IsDouble() ||
