@@ -105,6 +105,10 @@ int64_t LocalSocket::ReadData(char* data, size_t length) const
 
 size_t LocalSocket::WriteData(const void* data, size_t length) const
 {
+    if (data == nullptr) {
+        ELOG("LocalSocket::WriteData data is null.");
+        return 0;
+    }
     if (length > UINT32_MAX) {
         ELOG("LocalSocket::WriteData length must < %d", UINT32_MAX);
         return 0;

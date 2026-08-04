@@ -68,7 +68,9 @@ void CppTimer::RunTimerTick(CallbackQueue& queue)
     }
 
     if (shotTimes != 0) {
-        queue.AddCallback(functional);
+        if (functional != nullptr) {
+            queue.AddCallback(functional);
+        }
         startTime = endTime;
     }
 

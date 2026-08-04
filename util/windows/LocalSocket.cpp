@@ -63,6 +63,10 @@ void LocalSocket::DisconnectFromServer()
 
 int64_t LocalSocket::ReadData(char* data, size_t length) const
 {
+    if (data == nullptr) {
+        ELOG("LocalSocket::ReadData data is null.");
+        return -1;
+    }
     if (length > UINT32_MAX) {
         ELOG("LocalSocket::ReadData length must < %d", UINT32_MAX);
         return -1;

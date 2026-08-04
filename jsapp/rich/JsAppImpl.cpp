@@ -831,8 +831,11 @@ void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const J
         SetDeviceScreenDensity(atoi(screenDensity.c_str()), deviceType);
         AdaptDeviceType(args, deviceType, args.deviceWidth, paramObj["dpi"].AsDouble());
         std::string lanInfo = paramObj["locale"].AsString();
-        SetLanguage(args, lanInfo.substr(0, lanInfo.find("_")));
-        SetRegion(args, lanInfo.substr(lanInfo.find("_") + 1, lanInfo.length() - 1));
+        size_t pos = lanInfo.find("_");
+        if (pos != std::string::npos) {
+            SetLanguage(args, lanInfo.substr(0, pos));
+            SetRegion(args, lanInfo.substr(pos + 1));
+        }
     }
 }
 
@@ -1078,6 +1081,10 @@ OHOS::Rosen::Window* JsAppImpl::GetWindow() const
 
 void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window)
 {
+    if (!window) {
+        ELOG("JsAppImpl::InitAvoidAreas get window failed.");
+        return;
+    }
     CalculateAvoidAreaByType(OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR,
         window->GetSystemBarPropertyByType(OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR));
     CalculateAvoidAreaByType(OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR,

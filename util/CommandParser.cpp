@@ -747,7 +747,8 @@ bool CommandParser::IsTracePipeNameValid()
         return true;
     }
     std::string tsName = Value("ts");
-    if (CheckParamInvalidity(tsName, false)) {
+    std::regex pipeNameRegex(R"(^[a-zA-Z0-9_\-]+$)");
+    if (!std::regex_match(tsName, pipeNameRegex)) {
         errorInfo = "Launch -ts parameters is not match regex.";
         return false;
     }
