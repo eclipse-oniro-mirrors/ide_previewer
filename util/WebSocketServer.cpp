@@ -15,6 +15,7 @@
 
 #include <atomic>
 #include <thread>
+#include "securec.h"
 #include "CommandLineInterface.h"
 #include "PreviewerEngineLog.h"
 #include "WebSocketServer.h"
@@ -163,37 +164,93 @@ void WebSocketServer::Run()
     serverThread->detach();
 }
 
+int WebSocketServer::WriteChunk(unsigned char* data, size_t offset, size_t toWrite, bool isLastFrame)
+{
+    if (webSocket == nullptr) {
+        ELOG("WriteChunk called with null webSocket.");
+        return -1;
+    }
+    size_t totalBufSize = LWS_PRE + toWrite;
+    unsigned char* sendBuf = (unsigned char*)malloc(totalBufSize);
+    if (!sendBuf) {
+        ELOG("Failed to allocate send buffer for chunk at offset %zu.", offset);
+        return -1;
+    }
+    if (EOK != memset_s(sendBuf, totalBufSize, 0, totalBufSize)) {
+        free(sendBuf);
+        ELOG("sendBuf memset_s failed.");
+        return -1;
+    }
+    if (EOK != memcpy_s(sendBuf + LWS_PRE, totalBufSize - LWS_PRE, data + offset, toWrite)) {
+        free(sendBuf);
+        ELOG("sendBuf memcpy_s failed.");
+        return -1;
+    }
+
+    enum lws_write_protocol flags;
+    if (offset == 0) {
+        flags = isLastFrame ? LWS_WRITE_BINARY : (enum lws_write_protocol)(LWS_WRITE_BINARY | LWS_WRITE_NO_FIN);
+    } else {
+        flags = isLastFrame ? LWS_WRITE_CONTINUATION :
+            (enum lws_write_protocol)(LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN);
+    }
+    int ret = lws_write(webSocket, sendBuf + LWS_PRE, toWrite, flags);
+    free(sendBuf);
+
+    if (ret < 0) {
+        ELOG("lws_write failed at offset %zu, error = %s", offset, strerror(errno));
+        return -1;
+    }
+    if (ret == 0) {
+        WLOG("lws_write busy at offset %zu, will retry", offset);
+        return 0;
+    }
+    if (static_cast<size_t>(ret) != toWrite) {
+        WLOG("lws_write partial send at offset %zu, sent = %d,expected = %zu", offset, ret, toWrite);
+    }
+    return ret;
+}
+
 size_t WebSocketServer::WriteData(unsigned char* data, size_t length)
 {
     while (webSocketWritable != WebSocketState::WRITEABLE) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    if (webSocket != nullptr && webSocketWritable == WebSocketState::WRITEABLE) {
-        size_t written = 0;
-        const size_t chunkSize = MAX_PAYLOAD_SIZE;
-        while (written < length) {
-            size_t remaining = length - written;
-            size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
-            bool isLastFrame = (written + toWrite >= length);
-            enum lws_write_protocol flags;
-            if (written == 0) {
-                flags = isLastFrame ? LWS_WRITE_BINARY : (enum lws_write_protocol)(LWS_WRITE_BINARY | LWS_WRITE_NO_FIN);
-            } else {
-                flags = isLastFrame ? LWS_WRITE_CONTINUATION :
-                    (enum lws_write_protocol)(LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN);
+    if (webSocket == nullptr || webSocketWritable != WebSocketState::WRITEABLE) {
+        return 0;
+    }
+    size_t written = 0;
+    const size_t chunkSize = MAX_PAYLOAD_SIZE;
+    while (written < length) {
+        size_t remaining = length - written;
+        size_t toWrite = (remaining < chunkSize) ? remaining : chunkSize;
+        bool isLastFrame = (written + toWrite >= length);
+
+        int sendRet = WriteChunk(data, written, toWrite, isLastFrame);
+        if (sendRet < 0) {
+            ELOG("WriteChunk fatal error at written = %zu", written);
+            break;
+        } else if (sendRet == 0) {
+            webSocketWritable = WebSocketState::UNWRITEABLE;
+            if (webSocket != nullptr) {
+                lws_callback_on_writable(webSocket);
             }
-            size_t ret = lws_write(webSocket, data + written, toWrite, flags);
-            if (ret == 0) {
-                ELOG("lws_write fragmented failed at offset %zu,requested = %zu", written, toWrite);
-                break;
-            }
-            written += ret;
-            if (written < length) {
+            while (webSocket != nullptr && webSocketWritable != WebSocketState::WRITEABLE) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
+            if (webSocket == nullptr) {
+                ELOG("webSocket disconnected while waiting for writable");
+                break;
+            }
+            continue;
+        } else {
+            written += sendRet;
+            if (written < length) {
+                const int timeOut = 30;
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeOut));
+            }
         }
-        ILOG("lws_write fragmented:total=%zu, requested = %zu", length, written);
-        return written;
     }
-    return 0;
+    ILOG("lws_write fragmented:total = %zu, written = %zu", length, written);
+    return written;
 }
