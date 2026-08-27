@@ -37,6 +37,7 @@ private:
     static std::string bundleName;
     static std::string fileSystemPath;
     static unsigned short GetFileMode(std::string path);
+    static std::string GetFilePath();
     static const uint32_t MAX_PATH_LEN = 260;
 };
 
