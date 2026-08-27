@@ -17,7 +17,9 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string>
 
+#include "CommandParser.h"
 #include "PreviewerEngineLog.h"
 #include "NativeFileSystem.h"
 
@@ -52,6 +54,23 @@ std::string FileSystem::GetApplicationPath()
     return path;
 }
 
+std::string FileSystem::GetFilePath()
+{
+    CommandParser& parser = CommandParser::GetInstance();
+    std::string path = parser.Value("f");
+    if (path.empty()) {
+        ELOG("The configuration file is not set");
+        return nullptr;
+    }
+
+    size_t pos = path.find("previewer");
+    if (pos != std::string::npos) {
+        return path.substr(0, pos + 9); //9:previewer size
+    } else {
+        return path;
+    }
+}
+
 const std::string& FileSystem::GetVirtualFileSystemPath()
 {
     return fileSystemPath;
@@ -59,7 +78,7 @@ const std::string& FileSystem::GetVirtualFileSystemPath()
 
 void FileSystem::MakeVirtualFileSystemPath()
 {
-    std::string dirToMake = GetApplicationPath();
+    std::string dirToMake = GetFilePath();
     if (!IsDirectoryExists(dirToMake)) {
         ELOG("Application path is not exists.");
         return;
