@@ -123,4 +123,8 @@ extern bool g_taskHandler;
 // MockGlobal
 extern bool g_globalConfigLanguage;
 
+// UicontentMock
+extern bool g_uiContentGetJSonTree;
+extern bool g_uiContentLoadDocument;
+extern bool g_uiContentOperateComponent;
 #endif // GLOBAL_VARIABLES_H

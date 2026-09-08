@@ -57,4 +57,23 @@ namespace OHOS {
     }
 
     void SoftEngine::FreeBuffer(uint8_t* buffer, uint32_t usage) {}
+
+    void SoftEngine::DrawLetter(BufferInfo& gfxDstBuffer,
+                                const Rect& subRect,
+                                LetterDataInfo& dataInfo) {}
+
+    void SoftEngine::DrawLetterPath(BufferInfo& gfxDstBuffer,
+                                    const Rect& subRect,
+                                    LetterPathDataInfo& dataInfo,
+                                    const TransformMap* transMap,
+                                    const TransformDataInfo* transDataInfo) {}
+
+    void SoftEngine::DrawLetterPathWithClip(BufferInfo& dst,
+                                            const Rect& subRect,
+                                            const Rect& clipRect,
+                                            LetterPathDataInfo& dataInfo,
+                                            const TransformMap* transMap,
+                                            const TransformDataInfo* transDataInfo) {}
+
+    void SoftEngine::ClipScreenShape(const ImageInfo* info, float x, float y, float width, float height) {}
 }

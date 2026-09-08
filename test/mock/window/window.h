@@ -42,6 +42,12 @@ class RSUIContext;
 using ContentInfoCallback = std::function<void(std::string contentInfo)>;
 using SendRenderDataCallback = bool (*)(const void*, const size_t, const int32_t, const int32_t, const uint64_t);
 
+class ITouchOutsideListener : virtual public RefBase {
+};
+
+class IWindowDragListener : virtual public RefBase {
+};
+
 class IIgnoreViewSafeAreaListener : virtual public RefBase {
 public:
     void SetIgnoreViewSafeArea(bool ignoreViewSafeArea) {}
@@ -76,6 +82,7 @@ public:
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) = 0;
     virtual void UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) = 0;
     virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) const = 0;
+    virtual OHOS::Ace::UIContent* GetUIContent() const = 0;
 };
 }
 }

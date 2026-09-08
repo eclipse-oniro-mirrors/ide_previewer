@@ -154,3 +154,54 @@ void JsAppImpl::SetAvoidArea(const AvoidAreas& areas)
 }
 
 void JsAppImpl::InitJsApp() {}
+
+OHOS::Ace::WindowSizeChangeReason JsAppImpl::ConvertResizeReason(std::string reason)
+{
+    if (reason == "undefined") {
+        return OHOS::Ace::WindowSizeChangeReason::UNDEFINED;
+    } else if (reason == "rotation") {
+        return OHOS::Ace::WindowSizeChangeReason::ROTATION;
+    } else {
+        return OHOS::Ace::WindowSizeChangeReason::RESIZE;
+    }
+}
+
+void JsAppImpl::InitCommandInfo() {}
+
+void JsAppImpl::SetResolutionParams(int32_t changedOriginWidth, int32_t changedOriginHeight,
+    int32_t changedWidth, int32_t changedHeight, int32_t screenDensity) {}
+
+void JsAppImpl::SetDeviceOrentation(const std::string& value) {}
+
+void JsAppImpl::SetJsAppArgs(OHOS::Ace::Platform::AceRunArgs& args) {}
+
+void JsAppImpl::SetPkgContextInfo() {}
+
+void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::Rect& value) {}
+
+void JsAppImpl::AdaptDeviceType(OHOS::Ace::Platform::AceRunArgs& args, const std::string,
+    const int32_t, double screenDendity) const {}
+
+void JsAppImpl::SetDeviceScreenDensity(const int32_t screenDensity, const std::string type) {}
+
+void JsAppImpl::ParseSystemParams(OHOS::Ace::Platform::AceRunArgs& args, const Json2::Value& paramObj) {}
+
+
+std::string JsAppImpl::GetDeviceTypeName(const OHOS::Ace::DeviceType) const
+{
+    return "";
+}
+
+void JsAppImpl::CalculateAvoidAreaByType(OHOS::Rosen::WindowType type,
+    const OHOS::Rosen::SystemBarProperty& property) {}
+
+void JsAppImpl::InitGlfwEnv() {}
+
+void JsAppImpl::RunJsApp() {}
+
+OHOS::Rosen::Window* JsAppImpl::GetWindow() const
+{
+    return nullptr;
+}
+
+void JsAppImpl::InitAvoidAreas(OHOS::Rosen::Window* window) {}

@@ -121,3 +121,8 @@ bool g_taskHandler = false;
 
 // MockGlobal
 bool g_globalConfigLanguage = false;
+
+// UicontentMock
+bool g_uiContentGetJSonTree = false;
+bool g_uiContentLoadDocument = false;
+bool g_uiContentOperateComponent = false;

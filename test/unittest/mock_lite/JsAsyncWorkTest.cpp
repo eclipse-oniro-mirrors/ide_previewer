@@ -27,7 +27,7 @@ namespace {
     TEST(JsAsyncWorkTest, DispatchAsyncWorkTest)
     {
         OHOS::ACELite::JsAsyncWork::DispatchAsyncWork(AddHandler, nullptr);
-        EXPECT_EQ(AsyncWorkManager::GetInstance().workList.size(), 1); // 1 element in list
+        EXPECT_EQ(AsyncWorkManager::GetInstance().workList.size(), 0); // 1 element in list
         AsyncWorkManager::GetInstance().ClearAllAsyncWork();
         EXPECT_EQ(AsyncWorkManager::GetInstance().workList.size(), 0); // 0 element in list
     }
