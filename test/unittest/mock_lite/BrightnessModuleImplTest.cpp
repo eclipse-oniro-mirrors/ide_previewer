@@ -67,6 +67,7 @@ namespace {
     {
         bool mode = 0;
         OHOS::ACELite::BrightnessImpl::SetAlwaysOnMode(mode);
+        OHOS::ACELite::BrightnessImpl brightness;
         uint8_t ret = brightness.GetSysAlwaysOnState();
         EXPECT_EQ(ret, 0);
     }

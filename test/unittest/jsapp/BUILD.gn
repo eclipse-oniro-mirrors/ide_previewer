@@ -46,6 +46,7 @@ ide_unittest("jsapp_rich_test") {
     "$ide_previewer_path/test/mock/ability/MockSimulator.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAceAbility.cpp",
     "$ide_previewer_path/test/mock/arkui/MockAcePreviewHelper.cpp",
+    "$ide_previewer_path/test/mock/arkui/UiContentMock.cpp",
     "$ide_previewer_path/test/mock/graphic/MockGlfwRenderContext.cpp",
     "$ide_previewer_path/test/mock/mock/MockKeyInputImpl.cpp",
     "$ide_previewer_path/test/mock/mock/MockMouseInputImpl.cpp",
@@ -78,6 +79,7 @@ ide_unittest("jsapp_rich_test") {
   ]
   include_dirs = [
     "$ide_previewer_path/test/mock",
+    "$ide_previewer_path/test/mock/arkui",
     "$ide_previewer_path/test/mock/window",
     "$ide_previewer_path/cli",
     "$ide_previewer_path/util",

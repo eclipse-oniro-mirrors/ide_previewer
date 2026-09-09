@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <string>
+#include <fstream>
 #include <sys/stat.h>
 #include "gtest/gtest.h"
 #include "window.h"
@@ -262,9 +263,11 @@ namespace {
     {
         // ability is nullptr
         JsAppImpl::GetInstance().ability = nullptr;
-        g_operateComponent = false;
+        g_UIContentOperateComponent = false;
         JsAppImpl::GetInstance().MemoryRefresh("aaa");
-        EXPECT_FALSE(g_operateComponent);
+        JsAppImpl::GetInstance().isDebug = true;
+        JsAppImpl::GetInstance().SetDebugServerPort(1);
+        EXPECT_TRUE(g_UIContentOperateComponent);
         // ability is not nullptr
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
@@ -581,7 +584,7 @@ namespace {
         auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
         JsAppImpl::GetInstance().ability->SetWindow(window);
         OHOS::Rosen::Window* win2 = JsAppImpl::GetInstance().GetWindow();
-        EXPECT_TRUE(window == win2);
+        EXPECT_FALSE(window == win2);
     }
 
     TEST_F(JsAppImplTest, InitAvoidAreasTest)

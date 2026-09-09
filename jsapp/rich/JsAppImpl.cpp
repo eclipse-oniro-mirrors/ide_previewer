@@ -34,7 +34,11 @@
 #include "ace_preview_helper.h"
 #include "ClipboardHelper.h"
 #include "CommandLineInterface.h"
+#if defined(REPLACE_WINDOW_HEADER)
+#include "UiContentMock.h"
+#else
 #include "adapter/preview/entrance/ui_content_impl.h"
+#endif
 #if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
@@ -789,9 +793,12 @@ bool JsAppImpl::MemoryRefresh(const std::string memoryRefreshArgs) const
     if (ability != nullptr) {
         return ability->OperateComponent(memoryRefreshArgs);
     } else {
-        auto uiContent = GetWindow()->GetUIContent();
-        if (uiContent != nullptr) {
-            return uiContent->OperateComponent(memoryRefreshArgs);
+        auto window = GetWindow();
+        if (window != nullptr) {
+            auto uiContent = window->GetUIContent();
+            if (uiContent != nullptr) {
+                return uiContent->OperateComponent(memoryRefreshArgs);
+            }
         }
     }
     return false;

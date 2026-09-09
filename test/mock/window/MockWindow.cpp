@@ -15,6 +15,7 @@
 
 #include "window.h"
 #include "MockGlobalResult.h"
+#include "UiContentMock.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -49,9 +50,14 @@ public:
         g_getSystemBarPropertyByType = true;
         return property;
     }
+    OHOS::Ace::UIContent* GetUIContent() const override
+    {
+        return uiContent_.get();
+    }
 private:
     SystemBarProperty property;
     ContentInfoCallback contentInfoCallback;
+    std::unique_ptr<Ace::UIContent> uiContent_;
 };
 
 sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& option,
