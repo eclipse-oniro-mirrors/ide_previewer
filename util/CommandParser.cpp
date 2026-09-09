@@ -365,7 +365,8 @@ bool CommandParser::IsAppPathValid()
 bool CommandParser::IsAppNameValid()
 {
     if (IsSet("n")) {
-        if (CheckParamInvalidity(Value("n"), false)) {
+        const std::regex safePattern("a-zA-Z0-9_\\-\\.]+$");
+        if (!std::regex_match(Value("n"), safePattern)) {
             errorInfo = "Launch -n parameters is not match regex.";
             return false;
         }

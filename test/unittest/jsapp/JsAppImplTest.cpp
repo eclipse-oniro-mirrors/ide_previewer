@@ -263,11 +263,11 @@ namespace {
     {
         // ability is nullptr
         JsAppImpl::GetInstance().ability = nullptr;
-        g_UIContentOperateComponent = false;
-        JsAppImpl::GetInstance().MemoryRefresh("aaa");
+        g_uiContentOperateComponent = false;
         JsAppImpl::GetInstance().isDebug = true;
         JsAppImpl::GetInstance().SetDebugServerPort(1);
-        EXPECT_TRUE(g_UIContentOperateComponent);
+        JsAppImpl::GetInstance().MemoryRefresh("aaa");
+        EXPECT_TRUE(g_uiContentOperateComponent);
         // ability is not nullptr
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
