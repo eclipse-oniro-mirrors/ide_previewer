@@ -63,9 +63,9 @@ std::string FileSystem::GetFilePath()
         return nullptr;
     }
 
-    size_t pos = path.find("previewer");
+    size_t pos = path.find(".idea");
     if (pos != std::string::npos) {
-        return path.substr(0, pos + 9); //9:previewer size
+        return path.substr(0, pos + 5) + FileSystem::GetSeparator() + "previewer"; //5:.idea size
     } else {
         return path;
     }

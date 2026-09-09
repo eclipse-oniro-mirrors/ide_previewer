@@ -118,7 +118,7 @@ namespace {
             "projectRootPath":"./MyApplication32", "nodeModulesPath":"node_modules", "moduleName":"entry",
             "harNameOhmMap":{"lib1":"lib1"}, "hspNameOhmMap":{"lib1":"lib1"}, "buildConfigPath":"buildConfig.json",
             "packageManagerType":"ohpm", "compileEntry":[], "dynamicImportLibInfo":{}, "routerMap":[],
-            "anBuildOutPut":"arm64-v8a", "anBuildMode":"type"})";
+            "anBuildOutPut":"arm64-v8a", "hspResourcesMap":{}, "anBuildMode":"type"})";
 
     TEST_F(StageContextTest, ReadFileContentsTest)
     {
