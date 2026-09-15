@@ -1368,8 +1368,8 @@ bool DropFrameCommand::IsSetArgValid() const
         ELOG("Invalid DropFrame of arguments!");
         return false;
     }
-    if (args["frequency"].AsInt() < 0) {
-        ELOG("DropFrame param frequency must greater than or equal to 0");
+    if (args["frequency"].AsInt() < 0 || args["frequency"].AsInt() > maxFrequency) {
+        ELOG("Frequency out of range.");
         return false;
     }
     return true;

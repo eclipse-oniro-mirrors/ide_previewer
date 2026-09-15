@@ -63,6 +63,7 @@ protected:
     const int minActionVal = 0;
     const int maxLoadDocWidth = 3000;
     const int minLoadDocWidth = 20;
+    const int maxFrequency = 1001;
 
     virtual bool IsSetArgValid() const
     {

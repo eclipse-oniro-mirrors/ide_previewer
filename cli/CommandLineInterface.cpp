@@ -87,6 +87,10 @@ void CommandLineInterface::SendWebsocketStartupSignal() const
     result.Add("MessageType", "imageWebsocket");
     args.Add("port", VirtualScreen::webSocketPort.c_str());
     result.Add("args", args);
+    if (socket == nullptr) {
+        ELOG("CommandLineInterface::SendWebsocketStartupSignal socket is null");
+        return;
+    }
     *socket << result.ToStyledString();
 }
 
@@ -133,6 +137,10 @@ void CommandLineInterface::ProcessCommandMessage(std::string message) const
         return;
     }
     Json2::Value val = jsonData["args"];
+    if (socket == nullptr) {
+        ELOG("CommandLineInterface::ProcessCommandMessage socket is null");
+        return;
+    }
     std::unique_ptr<CommandLine> commandLine =
         CommandLineFactory::CreateCommandLine(command, type, val, *socket);
     if (commandLine == nullptr) {
@@ -219,6 +227,10 @@ void CommandLineInterface::ApplyConfigMembers(const Json2::Value& commands,
             continue;
         }
         Json2::Value val = commands[key]["args"];
+        if (socket == nullptr) {
+            ELOG("CommandLineInterface::ApplyConfigMembers socket is null");
+            return;
+        }
         std::unique_ptr<CommandLine> command =
             CommandLineFactory::CreateCommandLine(key, CommandLine::CommandType::SET, val, *socket);
         ApplyConfigCommands(key, command);
@@ -259,6 +271,10 @@ void CommandLineInterface::CreatCommandToSendData(const std::string commandName,
                                                   const std::string type) const
 {
     CommandLine::CommandType commandType = GetCommandType(type);
+    if (socket == nullptr) {
+        ELOG("CommandLineInterface::ApplyConfigMembers socket is null");
+        return;
+    }
     std::unique_ptr<CommandLine> commandLine =
         CommandLineFactory::CreateCommandLine(commandName, commandType, jsonData, *socket);
     if (commandLine == nullptr) {

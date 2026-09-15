@@ -111,8 +111,13 @@ std::string JsAppImpl::GetJSONTree()
 {
     std::string jsonTree = "";
     if (isDebug && debugServerPort >= 0) {
-        auto uiContent = GetWindow()->GetUIContent();
-        jsonTree = uiContent->GetJSONTree();
+        auto window = GetWindow();
+        if (window != nullptr) {
+            auto uiContent = window->GetUIContent();
+            if (uiContent != nullptr) {
+                jsonTree = uiContent->GetJSONTree();
+            }
+        }
     } else {
         if (ability != nullptr) {
             jsonTree = ability->GetJSONTree();
@@ -667,6 +672,10 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
         OHOS::AppExecFwk::EventHandler::PostTask([this]() {
             glfwRenderContext->SetWindowSize(aceRunArgs.deviceWidth, aceRunArgs.deviceHeight);
         });
+        if (!simulator) {
+            ELOG("ResolutionChanged: simulator is null.");
+            return;
+        }
         simulator->UpdateConfiguration(*(UpdateConfiguration(aceRunArgs).get()));
         window->SetViewportConfig(config);
 #endif
@@ -889,15 +898,25 @@ void JsAppImpl::LoadDocument(const std::string filePath,
     if (ability != nullptr) {
         ability->LoadDocument(filePath, componentName, params);
     } else {
-        auto uiContent = GetWindow()->GetUIContent();
-        uiContent->LoadDocument(filePath, componentName, params);
+        auto window = GetWindow();
+        if (window != nullptr) {
+            auto uiContent = window->GetUIContent();
+            if (uiContent != nullptr) {
+                uiContent->LoadDocument(filePath, componentName, params);
+            }
+        }
     }
 }
 
 void JsAppImpl::DispatchBackPressedEvent() const
 {
+    if (ability == nullptr) {
+        ELOG("JsAppImpl::DispatchBackPressedEvent ability is null.");
+        return;
+    }
     ability->OnBackPressed();
 }
+
 void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
@@ -910,9 +929,12 @@ void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& key
         window->ConsumeKeyEvent(keyEvent);
 #endif
     } else {
-        ability->OnInputEvent(keyEvent);
+        if (ability != nullptr) {
+            ability->OnInputEvent(keyEvent);
+        }
     }
 }
+
 void JsAppImpl::DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
@@ -925,15 +947,27 @@ void JsAppImpl::DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEve
         window->ConsumePointerEvent(pointerEvent);
 #endif
     } else {
-        ability->OnInputEvent(pointerEvent);
+        if (ability != nullptr) {
+            ability->OnInputEvent(pointerEvent);
+        }
     }
 }
+
 void JsAppImpl::DispatchAxisEvent(const std::shared_ptr<OHOS::MMI::AxisEvent>& axisEvent) const
 {
+    if (ability == nullptr) {
+        ELOG("JsAppImpl::DispatchAxisEvent ability is null.");
+        return;
+    }
     ability->OnInputEvent(axisEvent);
 }
+
 void JsAppImpl::DispatchInputMethodEvent(const unsigned int codePoint) const
 {
+    if (ability == nullptr) {
+        ELOG("JsAppImpl::DispatchInputMethodEvent ability is null.");
+        return;
+    }
     ability->OnInputMethodEvent(codePoint);
 }
 

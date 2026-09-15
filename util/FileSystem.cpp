@@ -60,7 +60,7 @@ std::string FileSystem::GetFilePath()
     std::string path = parser.Value("f");
     if (path.empty()) {
         ELOG("The configuration file is not set");
-        return nullptr;
+        return "";
     }
 
     size_t pos = path.find(".idea");
