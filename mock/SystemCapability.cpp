@@ -30,11 +30,15 @@ SystemCapability& SystemCapability::GetInstance()
 
 bool SystemCapability::HasSystemCapability(const char* sysCapName)
 {
-    std::string capName = sysCapName;
-    if (capabilities.find(sysCapName) == capabilities.end()) {
+    if (sysCapName == nullptr) {
+        ELOG("SystemCapability::HasSystemCapability sysCapName is null.");
         return false;
     }
-    return capabilities[sysCapName];
+    std::string capName = sysCapName;
+    if (capabilities.find(capName) == capabilities.end()) {
+        return false;
+    }
+    return capabilities[capName];
 }
 
 SystemCapability::SystemCapability()
@@ -68,12 +72,10 @@ void SystemCapability::ReadCapability()
         Json2::Value cap = val2.GetArrayItem(i);
         if (!cap.IsMember("name") || !cap.IsMember("register-on-startup")) {
             ELOG("Invalid systemCapability json object");
+            return;
         }
-        if (!cap["register-on-startup"].IsBool()) {
-            ELOG("Invalid systemCapability json object");
-        }
-        if (cap.IsMember("register") && cap["register"].IsBool() && cap["name"].IsString()) {
-            capabilities[cap["name"].AsString()] = cap["register"].AsBool();
+        if (cap["register-on-startup"].IsBool() && cap["name"].IsString()) {
+            capabilities[cap["name"].AsString()] = cap["register-on-startup"].AsBool();
         }
     }
 }
