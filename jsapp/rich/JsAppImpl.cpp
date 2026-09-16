@@ -910,10 +910,6 @@ void JsAppImpl::LoadDocument(const std::string filePath,
 
 void JsAppImpl::DispatchBackPressedEvent() const
 {
-    if (ability == nullptr) {
-        ELOG("JsAppImpl::DispatchBackPressedEvent ability is null.");
-        return;
-    }
     ability->OnBackPressed();
 }
 
