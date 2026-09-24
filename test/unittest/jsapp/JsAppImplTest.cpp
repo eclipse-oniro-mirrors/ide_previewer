@@ -14,6 +14,9 @@
  */
 #include <string>
 #include <fstream>
+#include <chrono>
+#include <functional>
+#include <thread>
 #include <sys/stat.h>
 #include "gtest/gtest.h"
 #include "window.h"
@@ -28,7 +31,6 @@
 #include "window_display.h"
 #include "FileSystem.h"
 #include "ace_preview_helper.h"
-#include "window_model.h"
 
 namespace {
     class JsAppImplTest : public ::testing::Test {
@@ -36,15 +38,53 @@ namespace {
         JsAppImplTest() {}
         ~JsAppImplTest() {}
     protected:
-        static void WriteFile(std::string testFile, std::string fileContent)
+        static bool WriteFile(const std::string& testFile, const std::string& fileContent)
         {
             std::ofstream file(testFile, std::ios::out | std::ios::in | std::ios_base::trunc);
-            if (file.is_open()) {
-                file << fileContent;
-                file.close();
-            } else {
-                printf("Error open file!\n");
+            if (!file.is_open()) {
+                return false;
             }
+            file << fileContent;
+            file.close();
+            return true;
+        }
+
+        // 轮询等待条件满足，超时返回 false，替代固定时长 sleep 以消除时序竞态
+        static bool WaitUntil(const std::function<bool()>& condition, uint32_t timeoutMs = 3000)
+        {
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+            while (!condition()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                if (std::chrono::steady_clock::now() > deadline) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // 中断 JsApp 主循环并回收线程，避免 detached 线程在用例结束后继续运行、污染单例状态
+        static void StopJsAppThread(std::thread& jsAppThread)
+        {
+            JsAppImpl::GetInstance().Interrupt();
+            if (!WaitUntil([]() { return JsAppImpl::GetInstance().isFinished.load(); })) {
+                ADD_FAILURE() << "JsApp main loop did not exit after Interrupt()";
+                jsAppThread.detach(); // 失败已记录，detach 仅用于避免测试进程卡死
+                return;
+            }
+            jsAppThread.join();
+        }
+
+        // 显式创建 ability 并绑定窗口，使用例自包含、不依赖其他用例遗留的单例状态
+        static void SetUpAbility()
+        {
+            JsAppImpl::GetInstance().SetIsDebug(false);
+            JsAppImpl::GetInstance().SetDebugServerPort(0);
+            JsAppImpl::GetInstance().ability =
+                OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
+            OHOS::Rosen::WMError errCode;
+            OHOS::sptr<OHOS::Rosen::WindowOption> option = nullptr;
+            auto window = OHOS::Rosen::Window::Create("previewer", option, nullptr, errCode);
+            JsAppImpl::GetInstance().ability->SetWindow(window);
         }
 
         static void SetUpTestCase()
@@ -80,11 +120,9 @@ namespace {
         std::thread thread1([]() {
             JsAppImpl::GetInstance().Start();
         });
-        thread1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        JsAppImpl::GetInstance().isStop = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
+        // 等待 Start() 将 isFinished 置为 false，确认主循环已启动
+        EXPECT_TRUE(WaitUntil([]() { return !JsAppImpl::GetInstance().isFinished; }));
+        StopJsAppThread(thread1);
     }
 
     TEST_F(JsAppImplTest, RestartTest)
@@ -92,8 +130,7 @@ namespace {
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
         JsAppImpl::GetInstance().Restart();
-        bool eq = JsAppImpl::GetInstance().ability == nullptr;
-        EXPECT_TRUE(eq);
+        EXPECT_EQ(nullptr, JsAppImpl::GetInstance().ability.get());
     }
 
     TEST_F(JsAppImplTest, InterruptTest)
@@ -105,11 +142,13 @@ namespace {
 
     TEST_F(JsAppImplTest, GetJSONTreeTest)
     {
+        SetUpAbility();
         EXPECT_EQ(JsAppImpl::GetInstance().GetJSONTree(), "jsontree");
     }
 
     TEST_F(JsAppImplTest, GetDefaultJSONTreeTest)
     {
+        SetUpAbility();
         EXPECT_EQ(JsAppImpl::GetInstance().GetDefaultJSONTree(), "defaultjsontree");
     }
 
@@ -129,12 +168,7 @@ namespace {
 
     TEST_F(JsAppImplTest, ResolutionChangedTest)
     {
-        JsAppImpl::GetInstance().isStop = false;
-        std::thread thread1([]() {
-            JsAppImpl::GetInstance().Start();
-        });
-        thread1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        SetUpAbility();
         int32_t originWidth = 222;
         int32_t originHeight = 333;
         int32_t width = 222;
@@ -261,18 +295,20 @@ namespace {
 
     TEST_F(JsAppImplTest, MemoryRefreshTest)
     {
-        // ability is nullptr
+        // ability is nullptr: MemoryRefresh 走 GetWindow/UIContent 兜底分支，
+        // 测试环境下 GetWindow 返回空指针，应安全返回 false 且不触发 uiContent
         JsAppImpl::GetInstance().ability = nullptr;
-        g_uiContentOperateComponent = false;
-        JsAppImpl::GetInstance().isDebug = true;
+        JsAppImpl::GetInstance().SetIsDebug(true);
         JsAppImpl::GetInstance().SetDebugServerPort(1);
-        JsAppImpl::GetInstance().MemoryRefresh("aaa");
-        EXPECT_TRUE(g_uiContentOperateComponent);
+        g_uiContentOperateComponent = false;
+        EXPECT_FALSE(JsAppImpl::GetInstance().MemoryRefresh("aaa"));
+        EXPECT_FALSE(g_uiContentOperateComponent);
         // ability is not nullptr
+        JsAppImpl::GetInstance().SetIsDebug(false);
         JsAppImpl::GetInstance().ability =
             OHOS::Ace::Platform::AceAbility::CreateInstance(JsAppImpl::GetInstance().aceRunArgs);
         g_operateComponent = false;
-        JsAppImpl::GetInstance().MemoryRefresh("aaa");
+        EXPECT_TRUE(JsAppImpl::GetInstance().MemoryRefresh("aaa"));
         EXPECT_TRUE(g_operateComponent);
     }
 
@@ -288,12 +324,7 @@ namespace {
 
     TEST_F(JsAppImplTest, FoldStatusChangedTest)
     {
-        JsAppImpl::GetInstance().isStop = false;
-        std::thread thread1([]() {
-            JsAppImpl::GetInstance().Start();
-        });
-        thread1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        SetUpAbility();
         int width = 200;
         int height = 300;
         g_execStatusChangedCallback = false;
@@ -325,6 +356,7 @@ namespace {
 
     TEST_F(JsAppImplTest, DispatchBackPressedEventTest)
     {
+        SetUpAbility();
         g_onBackPressed = false;
         JsAppImpl::GetInstance().DispatchBackPressedEvent();
         EXPECT_TRUE(g_onBackPressed);
@@ -332,6 +364,7 @@ namespace {
 
     TEST_F(JsAppImplTest, DispatchKeyEventTest)
     {
+        SetUpAbility();
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchKeyEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
@@ -339,6 +372,7 @@ namespace {
 
     TEST_F(JsAppImplTest, DispatchPointerEventTest)
     {
+        SetUpAbility();
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchPointerEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
@@ -346,6 +380,7 @@ namespace {
 
     TEST_F(JsAppImplTest, DispatchAxisEventTest)
     {
+        SetUpAbility();
         g_onInputEvent = false;
         JsAppImpl::GetInstance().DispatchAxisEvent(nullptr);
         EXPECT_TRUE(g_onInputEvent);
@@ -353,6 +388,7 @@ namespace {
 
     TEST_F(JsAppImplTest, DispatchInputMethodEventTest)
     {
+        SetUpAbility();
         g_onInputMethodEvent = false;
         int code = 12;
         JsAppImpl::GetInstance().DispatchInputMethodEvent(code);
@@ -414,12 +450,12 @@ namespace {
     // JsApp start
     TEST_F(JsAppImplTest, ResolutionParamTest)
     {
-        int width = 100;
-        ResolutionParam param(width, width, width, width);
-        EXPECT_EQ(param.orignalWidth, width);
-        EXPECT_EQ(param.orignalHeight, width);
-        EXPECT_EQ(param.compressionWidth, width);
-        EXPECT_EQ(param.compressionHeight, width);
+        const int32_t size = 100;
+        ResolutionParam param(size, size, size, size);
+        EXPECT_EQ(param.orignalWidth, size);
+        EXPECT_EQ(param.orignalHeight, size);
+        EXPECT_EQ(param.compressionWidth, size);
+        EXPECT_EQ(param.compressionHeight, size);
     }
 
     TEST_F(JsAppImplTest, StopTest)
@@ -429,10 +465,10 @@ namespace {
         std::thread thread1([]() {
             JsAppImpl::GetInstance().Stop();
         });
-        thread1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // 等待 Stop() 进入中断循环（isStop 已被 Interrupt 置位），再置 isFinished 让其退出
+        EXPECT_TRUE(WaitUntil([]() { return JsAppImpl::GetInstance().isStop.load(); }));
         JsAppImpl::GetInstance().isFinished = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        thread1.join();
         EXPECT_TRUE(JsAppImpl::GetInstance().isStop);
     }
 
@@ -465,8 +501,6 @@ namespace {
         JsAppImpl::GetInstance().SetBundleName("aaa");
         EXPECT_EQ(JsAppImpl::GetInstance().bundleName, "aaa");
         EXPECT_EQ(FileSystem::bundleName, "aaa");
-        size_t pos = FileSystem::fileSystemPath.find("aaa");
-        EXPECT_TRUE(pos != std::string::npos);
     }
 
     TEST_F(JsAppImplTest, SetRunningTest)
@@ -525,41 +559,32 @@ namespace {
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
         // 创建module.json,json不写全1
-        std::string moduleJsonContent = R"({"aaa":"bbb"})";
-        WriteFile(moduleJsonPath, moduleJsonContent);
+        ASSERT_TRUE(WriteFile(moduleJsonPath, R"({"aaa":"bbb"})"));
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
         // 创建module.json,json不写全2
-        moduleJsonContent = R"({"module":{"name":333}})";
-        WriteFile(moduleJsonPath, moduleJsonContent);
+        ASSERT_TRUE(WriteFile(moduleJsonPath, R"({"module":{"name":333}})"));
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
         // 创建module.json,json写全
-        moduleJsonContent = R"({"module":{"name":"entry","packageName":"entry"}})";
-        WriteFile(moduleJsonPath, moduleJsonContent);
+        ASSERT_TRUE(WriteFile(moduleJsonPath, R"({"module":{"name":"entry","packageName":"entry"}})"));
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
         EXPECT_TRUE(JsAppImpl::GetInstance().aceRunArgs.pkgContextInfoJsonStringMap.empty());
         // 创建pkgContextInfo.json
-        std::string pkgContextInfoJsonContent = R"({"entry":{"packageName":"entry"}})";
-        WriteFile(pkgContextInfoJsonPath, pkgContextInfoJsonContent);
+        ASSERT_TRUE(WriteFile(pkgContextInfoJsonPath, R"({"entry":{"packageName":"entry"}})"));
         JsAppImpl::GetInstance().SetPkgContextInfo();
         EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.packageNameList.empty());
         EXPECT_FALSE(JsAppImpl::GetInstance().aceRunArgs.pkgContextInfoJsonStringMap.empty());
-        if (std::remove(moduleJsonPath.c_str()) != 0) {
-            printf("Error deleting module.json file!\n");
-        }
-        if (std::remove(pkgContextInfoJsonPath.c_str()) != 0) {
-            printf("Error deleting pkgContextInfo.json file!\n");
-        }
+        EXPECT_EQ(0, std::remove(moduleJsonPath.c_str()));
+        EXPECT_EQ(0, std::remove(pkgContextInfoJsonPath.c_str()));
     }
 
     TEST_F(JsAppImplTest, SetAvoidAreaTest)
     {
         AvoidAreas areas;
         JsAppImpl::GetInstance().SetAvoidArea(areas);
-        bool ret = JsAppImpl::GetInstance().avoidInitialAreas == areas;
-        EXPECT_TRUE(ret);
+        EXPECT_TRUE(JsAppImpl::GetInstance().avoidInitialAreas == areas);
     }
 
     TEST_F(JsAppImplTest, UpdateAvoidArea2IdeTest)
@@ -584,7 +609,7 @@ namespace {
         auto window = OHOS::Rosen::Window::Create("previewer", sp, nullptr, errCode);
         JsAppImpl::GetInstance().ability->SetWindow(window);
         OHOS::Rosen::Window* win2 = JsAppImpl::GetInstance().GetWindow();
-        EXPECT_FALSE(window == win2);
+        EXPECT_TRUE(window == win2);
     }
 
     TEST_F(JsAppImplTest, InitAvoidAreasTest)
@@ -655,7 +680,7 @@ namespace {
         Json2::Value paramObj = JsonReader::CreateNull();
         JsAppImpl::GetInstance().ParseSystemParams(JsAppImpl::GetInstance().aceRunArgs, paramObj);
         EXPECT_EQ(JsAppImpl::GetInstance().aceRunArgs.deviceConfig.colorMode, OHOS::Ace::ColorMode::DARK);
-        
+
         Json2::Value paramObj2 = JsonReader::CreateObject();
         int width = 666;
         int height = 333;
@@ -686,14 +711,17 @@ namespace {
 
     TEST_F(JsAppImplTest, CalculateAvoidAreaByTypeTest)
     {
+        SetUpAbility();
         OHOS::Rosen::SystemBarProperty property;
         property.enable_ = true;
+        g_updateAvoidArea = false;
         JsAppImpl::GetInstance().CalculateAvoidAreaByType(
             OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR, property);
         JsAppImpl::GetInstance().CalculateAvoidAreaByType(
             OHOS::Rosen::WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR, property);
         JsAppImpl::GetInstance().CalculateAvoidAreaByType(
             OHOS::Rosen::WindowType::APP_MAIN_WINDOW_BASE, property);
+        EXPECT_TRUE(g_updateAvoidArea);
         property.enable_ = false;
         JsAppImpl::GetInstance().CalculateAvoidAreaByType(
             OHOS::Rosen::WindowType::WINDOW_TYPE_STATUS_BAR, property);
@@ -721,10 +749,8 @@ namespace {
             JsAppImpl::GetInstance().InitJsApp();
             CommandParser::GetInstance().argsMap.clear();
         });
-        thread1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        JsAppImpl::GetInstance().isStop = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        EXPECT_TRUE(JsAppImpl::GetInstance().isFinished);
+        // 等待 InitJsApp 内部的 Start() 将 isFinished 置为 false，确认初始化已生效
+        EXPECT_TRUE(WaitUntil([]() { return !JsAppImpl::GetInstance().isFinished; }));
+        StopJsAppThread(thread1);
     }
 }

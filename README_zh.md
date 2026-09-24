@@ -27,16 +27,16 @@ DevEco Studio预览器通过命令行启动预览器组件，传递ArkTS编译�
 
 ## 构建编译
 
-构建编译相关介绍请见[build](https://gitee.com/openharmony/build)仓的README文档。
+构建编译相关介绍请见[build](https://gitcode.com/openharmony/build)仓的README文档。
 
 ## 相关仓
 
 **ide_previewer**
 
-[arkui\_ace\_engine\_lite](https://gitee.com/openharmony/arkui_ace_engine_lite)
+[arkui\_ace\_engine\_lite](https://gitcode.com/openharmony/arkui_ace_engine_lite)
 
-[arkui\_ace\_engine](https://gitee.com/openharmony/arkui_ace_engine)
+[arkui\_ace\_engine](https://gitcode.com/openharmony/arkui_ace_engine)
 
 ## 贡献
 
-详情请参考[贡献指南](https://gitee.com/openharmony/docs/blob/master/zh-cn/contribute/Readme-CN.md)。
+详情请参考[贡献指南](https://gitcode.com/openharmony/docs/blob/master/zh-cn/contribute/Readme-CN.md)。

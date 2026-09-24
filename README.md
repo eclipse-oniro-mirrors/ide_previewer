@@ -28,16 +28,16 @@ The Previewer component is built and released with the OpenHarmony SDK. You can 
 
 ## Building and Compilation
 
-For details, see the README in the [build](https://gitee.com/openharmony/build) repository.
+For details, see the README in the [build](https://gitcode.com/openharmony/build) repository.
 
 ## Repositories Involved
 
 **ide_previewer**
 
-[arkui\_ace\_engine\_lite](https://gitee.com/openharmony/arkui_ace_engine_lite)
+[arkui\_ace\_engine\_lite](https://gitcode.com/openharmony/arkui_ace_engine_lite)
 
-[arkui\_ace\_engine](https://gitee.com/openharmony/arkui_ace_engine)
+[arkui\_ace\_engine](https://gitcode.com/openharmony/arkui_ace_engine)
 
 ## How to Contribute
 
-For details about how to contribute, see [Contribution Guide](https://gitee.com/openharmony/docs/blob/master/en/contribute/Readme-EN.md).
+For details about how to contribute, see [Contribution Guide](https://gitcode.com/openharmony/docs/blob/master/en/contribute/Readme-EN.md).
