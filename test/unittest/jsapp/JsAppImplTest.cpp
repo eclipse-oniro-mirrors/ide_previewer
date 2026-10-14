@@ -500,7 +500,19 @@ namespace {
     {
         JsAppImpl::GetInstance().SetBundleName("aaa");
         EXPECT_EQ(JsAppImpl::GetInstance().bundleName, "aaa");
+        char buffer[FILENAME_MAX];
+        if (getcwd(buffer, FILENAME_MAX) != nullptr) {
+            testDir = std::string(buffer);
+            std::string hspDir = testDir + "./idea";
+            if (!FileSystem::IsDirectoryExists(hspDir)) {
+                FileSystem::MakeDir(testDir + "/.idea");
+                FileSystem::MakeDir(testDir + "/.idea" + "/previewer");
+            }
+        }
+        CommandParser::GetInstance().argsMap["-f"] = { "./.idea/previewer" };
+        JsAppImpl::GetInstance().SetBundleName("aaa");
         EXPECT_EQ(FileSystem::bundleName, "aaa");
+        EXPECT_EQ(FileSystem::GetVirtualFileSystemPath(), "./.idea/previewer");
     }
 
     TEST_F(JsAppImplTest, SetRunningTest)
