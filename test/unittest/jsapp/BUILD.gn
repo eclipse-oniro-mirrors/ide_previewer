@@ -75,6 +75,7 @@ ide_unittest("jsapp_rich_test") {
     "$ide_previewer_path/util/unix/NativeFileSystem.cpp",
     "EventHandlerTest.cpp",
     "JsAppImplTest.cpp",
+    "JsAppTest.cpp",
     "StageContextTest.cpp",
   ]
   include_dirs = [

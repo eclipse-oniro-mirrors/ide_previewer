@@ -1587,7 +1587,7 @@ namespace {
         ExitCommand command1(type, args1, *socket);
         g_output = false;
         command1.CheckAndRun();
-        EXPECT_TRUE(Interrupter::isInterrupt);
+        EXPECT_TRUE(Interrupter::IsInterrupt());
         EXPECT_TRUE(g_output);
     }
 
