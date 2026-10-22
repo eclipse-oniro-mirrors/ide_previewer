@@ -34,6 +34,8 @@ void CrashHandler::InitExceptionHandler()
 
 void CrashHandler::ApplicationCrashHandler(int signal)
 {
+    // Unix 惯例：进程因信号 N 终止时，退出码为 128 + N（对应 shell 中的 $?）
+    constexpr uint32_t SIGNAL_EXIT_CODE_BASE = 128;
     const uint32_t MAX_STACK_SIZE = 128;
     int8_t crashBeginLog[] = "[JsEngine Crash]Engine Crash Info Begin.\n";
     write(STDERR_FILENO, crashBeginLog, sizeof(crashBeginLog) - 1);
@@ -51,4 +53,9 @@ void CrashHandler::ApplicationCrashHandler(int signal)
 
     int8_t crashEndLog[] = "\n[JsEngine Crash]Engine Crash Info End.\n";
     write(STDERR_FILENO, crashEndLog, sizeof(crashEndLog) - 1);
+
+    // 恢复默认处理并重新触发信号，避免返回后重复执行出错指令导致循环打印
+    std::signal(signal, SIG_DFL);
+    std::raise(signal);
+    _exit(SIGNAL_EXIT_CODE_BASE + signal);
 }

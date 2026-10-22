@@ -39,7 +39,6 @@ namespace Rosen {
     struct SystemBarProperty;
     struct Rect;
 }
-#if defined(__APPLE__) || defined(_WIN32)
 namespace AbilityRuntime {
     class Simulator;
     struct Options;
@@ -49,7 +48,6 @@ namespace AppExecFwk {
     class Configuration;
     struct RouterItem;
 }
-#endif
 }
 
 class JsAppImpl : public JsApp {
@@ -165,7 +163,6 @@ private:
 #ifdef COMPONENT_TEST_ENABLED
     std::string componentTestModeConfig;
 #endif // COMPONENT_TEST_ENABLED
-#if defined(__APPLE__) || defined(_WIN32)
     std::shared_ptr<OHOS::AbilityRuntime::Simulator> simulator;
     int64_t debugAbilityId = -1;
     void SetSimulatorParams(OHOS::AbilityRuntime::Options& options);
@@ -219,7 +216,6 @@ private:
             return T::ORIENTATION_UNDEFINED;
         }
     }
-#endif
 };
 
 #endif // JSAPPIMPL_H
