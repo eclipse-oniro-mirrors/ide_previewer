@@ -39,10 +39,8 @@
 #else
 #include "adapter/preview/entrance/ui_content_impl.h"
 #endif
-#if defined(__APPLE__) || defined(_WIN32)
 #include "options.h"
 #include "simulator.h"
-#endif
 #include <fstream>
 
 using namespace OHOS;
@@ -69,9 +67,7 @@ OHOS::sptr<PreviewerListener> listener = nullptr;
 
 JsAppImpl::JsAppImpl() noexcept : ability(nullptr), isStop(false)
 {
-#if defined(__APPLE__) || defined(_WIN32)
     windowModel = std::make_shared<OHOS::Previewer::PreviewerWindowModel>();
-#endif
 }
 
 JsAppImpl::~JsAppImpl() {}
@@ -279,7 +275,6 @@ void JsAppImpl::RunNormalAbility()
     ability->InitEnv();
 }
 
-#if defined(__APPLE__) || defined(_WIN32)
 void JsAppImpl::RunDebugAbility()
 {
     // init window params
@@ -454,13 +449,6 @@ void JsAppImpl::SetWindowParams() const
     windowModel->orientation = SetOrientation<OHOS::Previewer::Orientation>(aceRunArgs.deviceConfig.orientation);
     windowModel->colorMode = SetColorMode<OHOS::Previewer::ColorMode>(aceRunArgs.deviceConfig.colorMode);
 }
-#else
-    void JsAppImpl::RunDebugAbility()
-    {
-        ELOG("JsApp::Run ability start failed.Linux is not supported.");
-        return;
-    }
-#endif
 
 void JsAppImpl::AdaptDeviceType(Platform::AceRunArgs& args, const std::string type,
                                 const int32_t realDeviceWidth, double screenDendity) const
@@ -655,7 +643,6 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
     SetResolutionParams(param.orignalWidth, param.orignalHeight, param.compressionWidth,
         param.compressionHeight, screenDensity);
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         SetWindowParams();
         OHOS::Ace::ViewportConfig config;
         config.SetSize(windowModel->originWidth, windowModel->originHeight);
@@ -678,7 +665,6 @@ void JsAppImpl::ResolutionChanged(ResolutionParam& param, int32_t screenDensity,
         }
         simulator->UpdateConfiguration(*(UpdateConfiguration(aceRunArgs).get()));
         window->SetViewportConfig(config);
-#endif
     } else {
         if (ability != nullptr) {
             InitAvoidAreas(ability->GetWindow());
@@ -916,14 +902,12 @@ void JsAppImpl::DispatchBackPressedEvent() const
 void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& keyEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         OHOS::Rosen::Window* window = OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
         if (!window) {
             ELOG("JsApp::Run get window failed.");
             return;
         }
         window->ConsumeKeyEvent(keyEvent);
-#endif
     } else {
         if (ability != nullptr) {
             ability->OnInputEvent(keyEvent);
@@ -934,14 +918,12 @@ void JsAppImpl::DispatchKeyEvent(const std::shared_ptr<OHOS::MMI::KeyEvent>& key
 void JsAppImpl::DispatchPointerEvent(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent) const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         OHOS::Rosen::Window* window = OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
         if (!window) {
             ELOG("JsApp::Run get window failed.");
             return;
         }
         window->ConsumePointerEvent(pointerEvent);
-#endif
     } else {
         if (ability != nullptr) {
             ability->OnInputEvent(pointerEvent);
@@ -1001,9 +983,7 @@ void JsAppImpl::SetMockJsonInfo()
 {
     std::string filePath = commandInfo.appResourcePath + FileSystem::GetSeparator() + "mock-config.json";
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         simulator->SetMockList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
-#endif
     } else {
         ability->SetMockModuleList(Ide::StageContext::GetInstance().ParseMockJsonFile(filePath));
     }
@@ -1106,11 +1086,7 @@ void JsAppImpl::UpdateAvoidArea2Ide(const std::string& key, const OHOS::Rosen::R
 OHOS::Rosen::Window* JsAppImpl::GetWindow() const
 {
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         return OHOS::Previewer::PreviewerWindow::GetInstance().GetWindowObject();
-#else
-        return nullptr;
-#endif
     } else {
         return ability->GetWindow();
     }
@@ -1197,11 +1173,9 @@ void JsAppImpl::StopAbility()
         }
     }
     if (isDebug && debugServerPort >= 0) {
-#if defined(__APPLE__) || defined(_WIN32)
         if (simulator) {
             simulator->TerminateAbility(debugAbilityId);
         }
-#endif
     } else {
         ability = nullptr;
     }
