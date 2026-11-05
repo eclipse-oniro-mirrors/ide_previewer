@@ -62,7 +62,7 @@ group("rich_ace_previewer") {
     deps = [ ":rich_previewer(${windows_buildtool})" ]
   } else if (platform == "mac_arm64" || platform == "mac_x64") {
     deps = [ ":rich_previewer(${mac_buildtool})" ]
-  } else if (platform == "linux_x64") {
+  } else if (platform == "linux_x64" || platform == "linux_arm64") {
     deps = [ ":rich_previewer(${linux_buildtool})" ]
   }
 }
